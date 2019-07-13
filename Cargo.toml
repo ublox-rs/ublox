@@ -1,0 +1,20 @@
+[package]
+name = "ublox"
+version = "0.1.0"
+authors = ["Lane Kolbly <lane@rscheme.org>"]
+edition = "2018"
+
+[dependencies]
+#proc-macro2 = "0.4"
+#syn = {version = "0.15.22", features = ["full"]}
+#quote = "0.6.3"
+serde = "1.0"
+serde_derive = "1.0"
+serialport = "3.3.0"
+bincode = "1.1.4"
+#bitfield = "0.13.2"
+chrono = "0.4"
+crc = "1.8.1"
+
+[lib]
+#proc-macro = true
