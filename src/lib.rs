@@ -9,7 +9,7 @@ use crc::{crc16, Hasher16};
 //use super::UbxPackets::UbxPacket;
 mod UbxPackets;
 use crate::UbxPackets::*;
-pub use crate::UbxPackets::Position;
+pub use crate::UbxPackets::{Position, Velocity};
 
 #[derive(Debug)]
 pub enum Error {
@@ -59,16 +59,16 @@ pub struct Device {
 }
 
 impl Device {
-    pub fn new() -> Result<Device, Error> {
+    pub fn new(device: &str) -> Result<Device, Error> {
         let s = serialport::SerialPortSettings{
             baud_rate: 9600,
             data_bits: serialport::DataBits::Eight,
             flow_control: serialport::FlowControl::None,
             parity: serialport::Parity::None,
             stop_bits: serialport::StopBits::One,
-            timeout: Duration::from_millis(500),
+            timeout: Duration::from_millis(1),
         };
-        let port = serialport::open_with_settings("/dev/ttyUSB0", &s).unwrap();
+        let port = serialport::open_with_settings(device, &s).unwrap();
         let mut dev = Device{
             port: port,
             buf: Vec::new(),
@@ -231,7 +231,9 @@ impl Device {
                 };
 
                 let time = if has_time {
-                    Some(Utc.ymd(sol.year as i32, sol.month.into(), sol.day.into()).and_hms_nano(sol.hour.into(), sol.min.into(), sol.sec.into(), sol.nanosecond as u32))
+                    //println!("{:?}", sol);
+                    let ns = if sol.nanosecond < 0 { 0 } else { sol.nanosecond } as u32;
+                    Some(Utc.ymd(sol.year as i32, sol.month.into(), sol.day.into()).and_hms_nano(sol.hour.into(), sol.min.into(), sol.sec.into(), ns))
                 } else {
                     None
                 };
