@@ -6,12 +6,17 @@ use chrono::prelude::*;
 pub struct Position {
     pub lon: f32,
     pub lat: f32,
+
+    /// In meters above sea level.
     pub alt: f32,
 }
 
 #[derive(Debug)]
 pub struct Velocity {
-    pub speed: f32, // m/s over ground
+    /// In meters/second over the ground
+    pub speed: f32,
+
+    /// Degrees
     pub heading: f32, // degrees
 }
 

@@ -1,15 +1,19 @@
+//! # ublox
+//!
+//! `ublox` is a library to talk to u-blox GPS devices using the UBX protocol.
+//! At time of writing this library is developed for a device which behaves like
+//! a NEO-6M device.
+
 use std::result::Result;
-//use std::io::{ErrorKind};
 use std::str;
 use std::io;
 use std::convert;
 use std::time::{Duration,Instant};
 use chrono::prelude::*;
 use crc::{crc16, Hasher16};
-//use super::UbxPackets::UbxPacket;
-mod UbxPackets;
-use crate::UbxPackets::*;
-pub use crate::UbxPackets::{Position, Velocity};
+mod ubx_packets;
+use crate::ubx_packets::*;
+pub use crate::ubx_packets::{Position, Velocity};
 
 #[derive(Debug)]
 pub enum Error {
@@ -31,17 +35,15 @@ enum InternalPacket {
     AckAck(AckAck),
 }
 
-/*#[derive(Debug)]
-pub struct Position {
-    lon: f32,
-    lat: f32,
-    alt: f32,
-}*/
-
 #[derive(Debug)]
 pub enum ResetType {
+    /// The fastest, clears only the SV data.
     Hot,
+
+    /// Clears the ephemeris.
     Warm,
+
+    /// Clears everything. This takes the longest.
     Cold,
 }
 
@@ -59,6 +61,23 @@ pub struct Device {
 }
 
 impl Device {
+    /// Returns a new u-blox GPS device connected on the given serial port.
+    /// Opens the device with a 9600 baud 8 bit serial port, and configures the
+    /// device to talk the UBX protocol over port 1.
+    ///
+    /// Note that port 1 may not be the port you're currently talking over! If
+    /// not and you have trouble, please open an issue.
+    ///
+    /// This function will take approximately 200ms to execute.
+    ///
+    /// # Errors
+    ///
+    /// The function can error if there is an issue setting the protocol,
+    /// usually if a packet sent is not acknowledged.
+    ///
+    /// # Panics
+    ///
+    /// This function will panic if it cannot open the serial port.
     pub fn new(device: &str) -> Result<Device, Error> {
         let s = serialport::SerialPortSettings{
             baud_rate: 9600,
@@ -106,9 +125,6 @@ impl Device {
         self.wait_for_ack(0x06, 0x00)?;
 
         self.enable_packet(0x01, 0x07)?; // Nav pos vel time
-        //self.enable_packet(0x01, 0x02)?; // Nav pos
-        //self.enable_packet(0x01, 0x03)?; // Nav status
-        //self.enable_packet(0x01, 0x12)?; // Nav velocity NED
 
         // Go get mon-ver
         self.send(UbxPacket{
@@ -116,7 +132,7 @@ impl Device {
             id: 0x04,
             payload: vec![],
         })?;
-        self.poll_for(Duration::from_millis(200));
+        self.poll_for(Duration::from_millis(200))?;
 
         Ok(())
     }
@@ -156,6 +172,8 @@ impl Device {
         return Err(Error::TimedOutWaitingForAck(classid, msgid));
     }
 
+    /// Runs the processing loop for the given amount of time. You must run the
+    /// processing loop in order to receive updates from the device.
     pub fn poll_for(&mut self, duration: Duration) -> Result<(), Error> {
         let start = Instant::now();
         while start.elapsed() < duration {
@@ -164,11 +182,15 @@ impl Device {
         Ok(())
     }
 
+    /// Processes all messages not yet processed. You must periodically call
+    /// poll (or poll_for) to process messages in order to receive position
+    /// updates.
     pub fn poll(&mut self) -> Result<(), Error> {
         self.get_next_message()?;
         Ok(())
     }
 
+    /// DO NOT USE. Use get_solution instead.
     pub fn get_position(&mut self) -> Option<Position> {
         match (&self.navstatus, &self.navpos) {
             (Some(status), Some(pos)) => {
@@ -188,6 +210,7 @@ impl Device {
         }
     }
 
+    /// DO NOT USE. Use get_solution instead.
     pub fn get_velocity(&mut self) -> Option<Velocity> {
         match (&self.navstatus, &self.navvel) {
             (Some(status), Some(vel)) => {
@@ -206,6 +229,10 @@ impl Device {
         }
     }
 
+    /// Returns the most recent solution, as a tuple of position/velocity/time
+    /// options. Note that a position may have any combination of these,
+    /// including none of them - if no solution has been returned from the
+    /// device, all fields will be None.
     pub fn get_solution(&mut self) -> (Option<Position>, Option<Velocity>, Option<DateTime<Utc>>) {
         match &self.solution {
             Some(sol) => {
@@ -243,6 +270,7 @@ impl Device {
         }
     }
 
+    /// Performs a reset of the device, and waits for the device to fully reset.
     pub fn reset(&mut self, temperature: &ResetType) -> Result<(), Error> {
         match temperature {
             ResetType::Hot => {
@@ -285,6 +313,16 @@ impl Device {
         Ok(())
     }
 
+    /// If the position and time are known, you can pass them to the GPS device
+    /// on startup using this method.
+    ///
+    /// # Errors
+    ///
+    /// Will throw an error if there is an error sending the packet.
+    ///
+    /// # Panics
+    ///
+    /// Panics if there is an issue serializing the message.
     pub fn load_aid_data(&mut self, position: Option<Position>, tm: Option<DateTime<Utc>>) -> Result<(), Error> {
         let mut aid = AidIni::new();
         match position {
@@ -308,6 +346,7 @@ impl Device {
         Ok(())
     }
 
+    /// DO NOT USE. Experimental!
     pub fn set_alp_offline(&mut self, data: &[u8]) -> Result<(), Error> {
         self.alp_data = vec![0; data.len()];
         self.alp_data.copy_from_slice(data);
@@ -331,12 +370,10 @@ impl Device {
             Some(packet) => {
                 if packet.class == 0x01 && packet.id == 0x02 {
                     let packet: NavPosLLH = bincode::deserialize(&packet.payload).unwrap();
-                    //println!("{:?}", packet);
                     self.navpos = Some(packet);
                     return Ok(None);
                 } else if packet.class == 0x01 && packet.id == 0x03 {
                     let packet: NavStatus = bincode::deserialize(&packet.payload).unwrap();
-                    //println!("{:?}", packet);
                     self.navstatus = Some(packet);
                     return Ok(None);
                 } else if packet.class == 0x01 && packet.id == 0x12 {
@@ -349,7 +386,6 @@ impl Device {
                     return Ok(None);
                 } else if packet.class == 0x05 && packet.id == 0x01 {
                     // This is an acknowledge packet
-                    //println!("Acknowledge: {:?}", packet);
                     let packet: AckAck = bincode::deserialize(&packet.payload).unwrap();
                     return Ok(Some(InternalPacket::AckAck(packet)));
                 } else if packet.class == 0x0B && packet.id == 0x32 {
@@ -388,9 +424,9 @@ impl Device {
 
                     return Ok(None);
                 } else if packet.class == 0x0A && packet.id == 0x04 {
-                    let swVersion = str::from_utf8(&packet.payload[0..30]).unwrap();
-                    let hwVersion = str::from_utf8(&packet.payload[31..40]).unwrap();
-                    println!("Got versions: SW={} HW={}", swVersion, hwVersion);
+                    let sw_version = str::from_utf8(&packet.payload[0..30]).unwrap();
+                    let hw_version = str::from_utf8(&packet.payload[31..40]).unwrap();
+                    println!("Got versions: SW={} HW={}", sw_version, hw_version);
                     return Ok(None);
                 } else {
                     println!("Unrecognized packet: {:?}", packet);
@@ -403,15 +439,13 @@ impl Device {
         }
     }
 
-    pub fn send(&mut self, packet: UbxPacket) -> Result<(), Error> {
+    fn send(&mut self, packet: UbxPacket) -> Result<(), Error> {
         let serialized = packet.serialize();
-        //println!("About to try sending {} bytes", serialized.len());
         self.port.write_all(&serialized)?;
-        //println!("{} bytes successfully written, of {}", bytes_written, serialized.len());
         Ok(())
     }
 
-    pub fn recv(&mut self) -> Result<Option<UbxPacket>, Error> {
+    fn recv(&mut self) -> Result<Option<UbxPacket>, Error> {
         // Read bytes until we see the header 0xB5 0x62
         loop {
             let mut local_buf = [0; 1];
@@ -456,7 +490,6 @@ impl Device {
                         if packet.check_checksum(cka, ckb) {
                             return Ok(Some(packet));
                         } else {
-                            //panic!("Got bad checksum for otherwise fine packet!");
                             // @TODO: Throw an error
                             println!("Got bad checksum for packet {:?}", packet);
                             return Ok(None);
