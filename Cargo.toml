@@ -10,6 +10,6 @@ description = "A crate to communicate with u-blox GPS devices using the UBX prot
 serde = "1.0"
 serde_derive = "1.0"
 serialport = "3.3.0"
-bincode = "1.1.4"
+bincode = "1.2.1"
 chrono = "0.4"
 crc = "1.8.1"
