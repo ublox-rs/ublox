@@ -3,6 +3,8 @@ name = "ublox"
 version = "0.1.0"
 authors = ["Lane Kolbly <lane@rscheme.org>"]
 edition = "2018"
+license = "MIT"
+description = "A crate to communicate with u-blox GPS devices using the UBX protocol"
 
 [dependencies]
 serde = "1.0"

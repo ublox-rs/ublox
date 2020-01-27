@@ -1,5 +1,8 @@
-//use std::result::Result;
-//use std::io::{ErrorKind};
+//! # ublox
+//!
+//! `ublox` is a library to talk to u-blox GPS devices using the UBX protocol.
+//! At time of writing this library is developed for a device which behaves like
+//! a NEO-6M device.
 use chrono::prelude::*;
 use crc::{crc16, Hasher16};
 use std::io;
@@ -15,8 +18,13 @@ mod segmenter;
 
 #[derive(Debug)]
 pub enum ResetType {
+    /// The fastest, clears only the SV data.
     Hot,
+
+    /// Clears the ephemeris.
     Warm,
+
+    /// Clears everything. This takes the longest.
     Cold,
 }
 
@@ -35,20 +43,36 @@ pub struct Device {
 }
 
 impl Device {
-    pub fn new() -> Result<Device> {
-        let s = serialport::SerialPortSettings {
+    /// Returns a new u-blox GPS device connected on the given serial port.
+    /// Opens the device with a 9600 baud 8 bit serial port, and configures the
+    /// device to talk the UBX protocol over port 1.
+    ///
+    /// Note that port 1 may not be the port you're currently talking over! If
+    /// not and you have trouble, please open an issue.
+    ///
+    /// This function will take approximately 200ms to execute.
+    ///
+    /// # Errors
+    ///
+    /// The function can error if there is an issue setting the protocol,
+    /// usually if a packet sent is not acknowledged.
+    ///
+    /// # Panics
+    ///
+    /// This function will panic if it cannot open the serial port.
+    pub fn new(device: &str) -> Result<Device> {
+        let s = serialport::SerialPortSettings{
             baud_rate: 9600,
             data_bits: serialport::DataBits::Eight,
             flow_control: serialport::FlowControl::None,
             parity: serialport::Parity::None,
             stop_bits: serialport::StopBits::One,
-            timeout: Duration::from_millis(500),
+            timeout: Duration::from_millis(1),
         };
-        let port = serialport::open_with_settings("/dev/ttyUSB0", &s).unwrap();
-        let mut dev = Device {
+        let port = serialport::open_with_settings(device, &s).unwrap();
+        let mut dev = Device{
             port: port,
             segmenter: Segmenter::new(),
-            //buf: Vec::new(),
             alp_data: Vec::new(),
             alp_file_id: 0,
             navpos: None,
@@ -82,9 +106,6 @@ impl Device {
         self.wait_for_ack(0x06, 0x00)?;
 
         self.enable_packet(0x01, 0x07)?; // Nav pos vel time
-        //self.enable_packet(0x01, 0x02)?; // Nav pos
-        //self.enable_packet(0x01, 0x03)?; // Nav status
-        //self.enable_packet(0x01, 0x12)?; // Nav velocity NED
 
         // Go get mon-ver
         self.send(UbxPacket {
@@ -131,6 +152,8 @@ impl Device {
         return Err(Error::TimedOutWaitingForAck(classid, msgid));
     }
 
+    /// Runs the processing loop for the given amount of time. You must run the
+    /// processing loop in order to receive updates from the device.
     pub fn poll_for(&mut self, duration: Duration) -> Result<()> {
         let start = Instant::now();
         while start.elapsed() < duration {
@@ -139,11 +162,15 @@ impl Device {
         Ok(())
     }
 
+    /// Processes all messages not yet processed. You must periodically call
+    /// poll (or poll_for) to process messages in order to receive position
+    /// updates.
     pub fn poll(&mut self) -> Result<()> {
         self.get_next_message()?;
         Ok(())
     }
 
+    /// DO NOT USE. Use get_solution instead.
     pub fn get_position(&mut self) -> Option<Position> {
         match (&self.navstatus, &self.navpos) {
             (Some(status), Some(pos)) => {
@@ -159,6 +186,7 @@ impl Device {
         }
     }
 
+    /// DO NOT USE. Use get_solution instead.
     pub fn get_velocity(&mut self) -> Option<Velocity> {
         match (&self.navstatus, &self.navvel) {
             (Some(status), Some(vel)) => {
@@ -174,15 +202,17 @@ impl Device {
         }
     }
 
+    /// Returns the most recent solution, as a tuple of position/velocity/time
+    /// options. Note that a position may have any combination of these,
+    /// including none of them - if no solution has been returned from the
+    /// device, all fields will be None.
     pub fn get_solution(&mut self) -> (Option<Position>, Option<Velocity>, Option<DateTime<Utc>>) {
         match &self.solution {
             Some(sol) => {
                 let has_time = sol.fix_type == 0x03 || sol.fix_type == 0x04 || sol.fix_type == 0x05;
                 let has_posvel = sol.fix_type == 0x03 || sol.fix_type == 0x04;
                 let pos = if has_posvel { Some(sol.into()) } else { None };
-
                 let vel = if has_posvel { Some(sol.into()) } else { None };
-
                 let time = if has_time { Some(sol.into()) } else { None };
                 (pos, vel, time)
             }
@@ -190,6 +220,7 @@ impl Device {
         }
     }
 
+    /// Performs a reset of the device, and waits for the device to fully reset.
     pub fn reset(&mut self, temperature: &ResetType) -> Result<()> {
         match temperature {
             ResetType::Hot => {
@@ -220,10 +251,20 @@ impl Device {
         Ok(())
     }
 
+    /// If the position and time are known, you can pass them to the GPS device
+    /// on startup using this method.
+    ///
+    /// # Errors
+    ///
+    /// Will throw an error if there is an error sending the packet.
+    ///
+    /// # Panics
+    ///
+    /// Panics if there is an issue serializing the message.
     pub fn load_aid_data(
         &mut self,
         position: Option<Position>,
-        tm: Option<DateTime<Utc>>,
+        tm: Option<DateTime<Utc>>
     ) -> Result<()> {
         let mut aid = AidIni::new();
         match position {
@@ -247,6 +288,7 @@ impl Device {
         Ok(())
     }
 
+    /// DO NOT USE. Experimental!
     pub fn set_alp_offline(&mut self, data: &[u8]) -> Result<()> {
         self.alp_data = vec![0; data.len()];
         self.alp_data.copy_from_slice(data);
@@ -268,7 +310,6 @@ impl Device {
         let packet = self.recv()?;
         match packet {
             Some(Packet::AckAck(packet)) => {
-                //let packet: AckAck = bincode::deserialize(&packet.payload).unwrap();
                 return Ok(Some(Packet::AckAck(packet)));
             }
             Some(Packet::MonVer(packet)) => {
@@ -340,15 +381,13 @@ impl Device {
         }
     }
 
-    pub fn send(&mut self, packet: UbxPacket) -> Result<()> {
+    fn send(&mut self, packet: UbxPacket) -> Result<()> {
         let serialized = packet.serialize();
-        //println!("About to try sending {} bytes", serialized.len());
         self.port.write_all(&serialized)?;
-        //println!("{} bytes successfully written, of {}", bytes_written, serialized.len());
         Ok(())
     }
 
-    pub fn recv(&mut self) -> Result<Option<Packet>> {
+    fn recv(&mut self) -> Result<Option<Packet>> {
         // Read bytes until we see the header 0xB5 0x62
         loop {
             let mut local_buf = [0; 1];

@@ -214,12 +214,13 @@ impl From<&NavPosVelTime> for Velocity {
 
 impl From<&NavPosVelTime> for DateTime<Utc> {
     fn from(sol: &NavPosVelTime) -> Self {
+        let ns = if sol.nanosecond < 0 { 0 } else { sol.nanosecond } as u32;
         Utc.ymd(sol.year as i32, sol.month.into(), sol.day.into())
             .and_hms_nano(
                 sol.hour.into(),
                 sol.min.into(),
                 sol.sec.into(),
-                sol.nanosecond as u32,
+                ns,
             )
     }
 }
