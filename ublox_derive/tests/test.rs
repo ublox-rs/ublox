@@ -1,6 +1,3 @@
-/*
-use num_derive::{FromPrimitive, ToPrimitive};
-use num_traits::{FromPrimitive, ToPrimitive};
 use std::convert::TryInto;
 use ublox_derive::ubx_packet;
 
@@ -25,21 +22,22 @@ struct TestPacket2 {
     field3: u32,
 }
 
-#[no_mangle]
-#[inline(never)]
 fn helper(packet: &TestPacket2) -> u32 {
     packet.get_field3()
 }
 
 #[test]
-#[no_mangle]
-#[inline(never)]
 fn foo2() {
     let data = [1, 0, 0, 0, 0, 2, 0, 0, 0];
     let packet = TestPacket2::new(data);
     assert_eq!(helper(&packet), 2);
     assert_eq!(packet.get_field2(), 0);
 }
+
+/*
+use num_derive::{FromPrimitive, ToPrimitive};
+use num_traits::{FromPrimitive, ToPrimitive};
+
 
 #[derive(Debug, PartialEq, FromPrimitive, ToPrimitive)]
 enum CfgPrtId {
