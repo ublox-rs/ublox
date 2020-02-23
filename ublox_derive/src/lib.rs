@@ -3,8 +3,6 @@ extern crate proc_macro;
 use proc_macro2::TokenStream;
 use proc_macro_error::{abort, proc_macro_error};
 use quote::{format_ident, quote, quote_spanned};
-use std::convert::TryInto;
-use syn::parse::Parse;
 use syn::parse::Parser;
 use syn::spanned::Spanned;
 use syn::{
