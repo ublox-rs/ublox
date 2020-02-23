@@ -1,6 +1,5 @@
 extern crate proc_macro;
-use inflector::Inflector;
-use itertools::Itertools;
+
 use proc_macro2::TokenStream;
 use proc_macro_error::{abort, proc_macro_error};
 use quote::{format_ident, quote, quote_spanned};
