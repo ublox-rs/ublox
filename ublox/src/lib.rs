@@ -3,18 +3,18 @@
 //! `ublox` is a library to talk to u-blox GPS devices using the UBX protocol.
 //! At time of writing this library is developed for a device which behaves like
 //! a NEO-6M device.
+use crate::error::{Error, Result};
 use chrono::prelude::*;
 use crc::{crc16, Hasher16};
 use std::io;
 use std::time::{Duration, Instant};
-use crate::error::{Error, Result};
 
-pub use crate::ubx_packets::*;
 pub use crate::segmenter::Segmenter;
+pub use crate::ubx_packets::*;
 
 mod error;
-mod ubx_packets;
 mod segmenter;
+mod ubx_packets;
 
 #[derive(Debug)]
 pub enum ResetType {
@@ -32,7 +32,6 @@ pub struct Device {
     port: Box<dyn serialport::SerialPort>,
     segmenter: Segmenter,
     //buf: Vec<u8>,
-
     alp_data: Vec<u8>,
     alp_file_id: u16,
 
@@ -61,7 +60,7 @@ impl Device {
     ///
     /// This function will panic if it cannot open the serial port.
     pub fn new(device: &str) -> Result<Device> {
-        let s = serialport::SerialPortSettings{
+        let s = serialport::SerialPortSettings {
             baud_rate: 9600,
             data_bits: serialport::DataBits::Eight,
             flow_control: serialport::FlowControl::None,
@@ -70,7 +69,7 @@ impl Device {
             timeout: Duration::from_millis(1),
         };
         let port = serialport::open_with_settings(device, &s).unwrap();
-        let mut dev = Device{
+        let mut dev = Device {
             port: port,
             segmenter: Segmenter::new(),
             alp_data: Vec::new(),
@@ -264,7 +263,7 @@ impl Device {
     pub fn load_aid_data(
         &mut self,
         position: Option<Position>,
-        tm: Option<DateTime<Utc>>
+        tm: Option<DateTime<Utc>>,
     ) -> Result<()> {
         let mut aid = AidIni::new();
         match position {
@@ -313,7 +312,10 @@ impl Device {
                 return Ok(Some(Packet::AckAck(packet)));
             }
             Some(Packet::MonVer(packet)) => {
-                println!("Got versions: SW={} HW={}", packet.sw_version, packet.hw_version);
+                println!(
+                    "Got versions: SW={} HW={}",
+                    packet.sw_version, packet.hw_version
+                );
                 return Ok(None);
             }
             Some(Packet::NavPosVelTime(packet)) => {
@@ -382,7 +384,12 @@ impl Device {
     }
 
     fn send(&mut self, packet: UbxPacket) -> Result<()> {
-        CfgMsg{classid: 5, msgid: 4, rates: [0, 0, 0, 0, 0, 0]}.to_bytes();
+        CfgMsg {
+            classid: 5,
+            msgid: 4,
+            rates: [0, 0, 0, 0, 0, 0],
+        }
+        .to_bytes();
         let serialized = packet.serialize();
         self.port.write_all(&serialized)?;
         Ok(())
