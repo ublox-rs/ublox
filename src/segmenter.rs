@@ -90,6 +90,7 @@ impl Segmenter {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::ubx_packets::AckAck;
 
     #[test]
     fn segmentation_works() {
@@ -129,7 +130,7 @@ mod tests {
 
     #[test]
     fn consume_all_consumes_all() {
-        let mut buf = vec![
+        let buf = vec![
             0x64, 0x12, 0x06, 0xb5, 0x01, 0x62, 0xb5, 0x62, 0x05, 0x01, 0x02, 0x00, 0x02, 0x03,
             0x0d, 0x32, 0x1, 0x2, 0x3,
         ];
