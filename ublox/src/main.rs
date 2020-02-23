@@ -1,16 +1,20 @@
-use ublox::{Device, Position};
-use std::time::Duration;
 use chrono::prelude::*;
+use std::time::Duration;
+use ublox::{Device, Position};
 
 fn main() {
     let mut dev = Device::new("/dev/ttyUSB0").unwrap();
 
-    let pos = Position{lon: -97.5, lat: 30.2, alt: 200.0};
+    let pos = Position {
+        lon: -97.5,
+        lat: 30.2,
+        alt: 200.0,
+    };
     println!("Setting AID data...");
     match dev.load_aid_data(Some(pos), Some(Utc::now())) {
         Err(e) => {
             println!("Got error setting AID data: {:?}", e);
-        },
+        }
         _ => {}
     }
 

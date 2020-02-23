@@ -2,15 +2,15 @@ use crate::error::Result;
 use bincode;
 use chrono::prelude::*;
 use serde_derive::{Deserialize, Serialize};
-use std::vec::Vec;
 use std::str;
+use std::vec::Vec;
 //use syn::{parse_macro_input, parse_quote, DeriveInput, Data, TokenStream};
 use ublox_derive::ubx_packet;
 
 // These are needed for ubx_packet
-use std::convert::TryInto;
 use num_derive::{FromPrimitive, ToPrimitive};
 use num_traits::{FromPrimitive, ToPrimitive};
+use std::convert::TryInto;
 
 #[derive(Debug)]
 pub struct Position {
@@ -301,14 +301,13 @@ impl From<&NavPosVelTime> for Velocity {
 
 impl From<&NavPosVelTime> for DateTime<Utc> {
     fn from(sol: &NavPosVelTime) -> Self {
-        let ns = if sol.nanosecond < 0 { 0 } else { sol.nanosecond } as u32;
+        let ns = if sol.nanosecond < 0 {
+            0
+        } else {
+            sol.nanosecond
+        } as u32;
         Utc.ymd(sol.year as i32, sol.month.into(), sol.day.into())
-            .and_hms_nano(
-                sol.hour.into(),
-                sol.min.into(),
-                sol.sec.into(),
-                ns,
-            )
+            .and_hms_nano(sol.hour.into(), sol.min.into(), sol.sec.into(), ns)
     }
 }
 
@@ -482,8 +481,12 @@ pub struct MonVer {
 }
 
 impl UbxMeta for MonVer {
-    fn get_classid() -> u8 { 0x0a }
-    fn get_msgid() -> u8 { 0x04 }
+    fn get_classid() -> u8 {
+        0x0a
+    }
+    fn get_msgid() -> u8 {
+        0x04
+    }
 
     fn to_bytes(&self) -> Vec<u8> {
         unimplemented!("Sending MonVer packets is unimplemented");
@@ -517,15 +520,15 @@ impl Packet {
     pub fn deserialize(classid: u8, msgid: u8, payload: &[u8]) -> Result<Packet> {
         match (classid, msgid) {
             //(0x01, 0x02) => parse_packet_branch!(Packet::NavPosLLH, payload),
-            (0x01, 0x02) => {
-                Ok(Packet::NavPosLLH(NavPosLLH::new(payload.try_into().unwrap())))
-            },
+            (0x01, 0x02) => Ok(Packet::NavPosLLH(NavPosLLH::new(
+                payload.try_into().unwrap(),
+            ))),
             (0x01, 0x03) => parse_packet_branch!(Packet::NavStatus, payload),
             (0x01, 0x07) => parse_packet_branch!(Packet::NavPosVelTime, payload),
             //(0x01, 0x12) => parse_packet_branch!(Packet::NavVelNED, payload),
-            (0x01, 0x12) => {
-                Ok(Packet::NavVelNED(NavVelNED::new(payload.try_into().unwrap())))
-            }
+            (0x01, 0x12) => Ok(Packet::NavVelNED(NavVelNED::new(
+                payload.try_into().unwrap(),
+            ))),
             (0x05, 0x01) => parse_packet_branch!(Packet::AckAck, payload),
             (0x06, 0x00) => {
                 // Depending on the port ID, we parse different packets
@@ -542,11 +545,11 @@ impl Packet {
             (0x0A, 0x04) => {
                 let sw_version = str::from_utf8(&payload[0..30]).unwrap();
                 let hw_version = str::from_utf8(&payload[31..40]).unwrap();
-                return Ok(Packet::MonVer(MonVer{
+                return Ok(Packet::MonVer(MonVer {
                     sw_version: sw_version.to_string(),
                     hw_version: hw_version.to_string(),
                 }));
-            },
+            }
             (0x0B, 0x01) => parse_packet_branch!(Packet::AidIni, payload),
             (0x0B, 0x32) => parse_packet_branch!(Packet::AlpSrv, payload),
             (c, m) => {

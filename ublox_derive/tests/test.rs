@@ -1,7 +1,7 @@
-use std::convert::TryInto;
-use ublox_derive::{ubx_packet};
 use num_derive::{FromPrimitive, ToPrimitive};
 use num_traits::{FromPrimitive, ToPrimitive};
+use std::convert::TryInto;
+use ublox_derive::ubx_packet;
 
 #[ubx_packet]
 struct TestPacket {
