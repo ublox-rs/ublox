@@ -1,3 +1,4 @@
+/*
 use num_derive::{FromPrimitive, ToPrimitive};
 use num_traits::{FromPrimitive, ToPrimitive};
 use std::convert::TryInto;
@@ -136,3 +137,4 @@ fn bitfields() {
     packet.set_parity(2);
     assert_eq!(packet.get_mode_charlen(), Some(CfgPrtCharLen::SixBit));
 }
+*/
