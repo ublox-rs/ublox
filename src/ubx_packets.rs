@@ -228,7 +228,7 @@ impl From<&NavVelNED> for Velocity {
     }
 }
 
-pub struct NavPosVelTime {
+/*pub struct NavPosVelTime {
     itow: u32,
     year: u16,
     month: u8,
@@ -242,7 +242,7 @@ pub struct NavPosVelTime {
     valid: bool,
 
     // etc.
-}
+}*/
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct NavPosVelTime {
