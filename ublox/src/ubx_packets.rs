@@ -73,35 +73,6 @@ impl UbxPacket {
     }
 }
 
-/*#[proc_macro_attribute]
-fn ubx_packet(attr: TokenStream, input: TokenStream) -> TokenStream {
-    let input = parse_macro_input!(input as DeriveInput);
-    match input.data {
-        Data::Struct(ref data) => {
-            match data.fields {
-                Fields::Named(ref fields) => {
-                    println!("{:?}", fields);
-                }
-                Fields::Unnamed(ref fields) => {
-                    //
-                }
-            }
-        }
-        Data::Enum(_) | Data::Union(_) => unimplemented!()
-    }
-}*/
-
-/*#[ubx_packet]
-struct MyPacket {
-    tow: u32,
-    lon: i32,
-    lat: i32,
-    height: i32,
-    height_msl: i32,
-    h_acc: u32,
-    v_acc: u32,
-}*/
-
 pub trait UbxMeta {
     fn get_classid() -> u8;
     fn get_msgid() -> u8;
@@ -178,19 +149,6 @@ impl From<&NavPosLLH> for Position {
             lon: packet.get_lon() as f32 / 10_000_000.0,
             lat: packet.get_lat() as f32 / 10_000_000.0,
             alt: packet.get_height_msl() as f32 / 1000.0,
-        }
-    }
-}
-
-trait FooTrait {
-    fn foo() -> u32;
-}
-
-impl<T: FooTrait> From<&T> for Velocity {
-    fn from(packet: &T) -> Self {
-        Velocity {
-            speed: 0.0,
-            heading: 0.0,
         }
     }
 }
