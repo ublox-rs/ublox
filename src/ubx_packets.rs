@@ -4,6 +4,13 @@ use chrono::prelude::*;
 use serde_derive::{Deserialize, Serialize};
 use std::vec::Vec;
 use std::str;
+//use syn::{parse_macro_input, parse_quote, DeriveInput, Data, TokenStream};
+use ublox_derive::ubx_packet;
+
+// These are needed for ubx_packet
+use std::convert::TryInto;
+use num_derive::{FromPrimitive, ToPrimitive};
+use num_traits::{FromPrimitive, ToPrimitive};
 
 #[derive(Debug)]
 pub struct Position {
@@ -66,6 +73,35 @@ impl UbxPacket {
     }
 }
 
+/*#[proc_macro_attribute]
+fn ubx_packet(attr: TokenStream, input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+    match input.data {
+        Data::Struct(ref data) => {
+            match data.fields {
+                Fields::Named(ref fields) => {
+                    println!("{:?}", fields);
+                }
+                Fields::Unnamed(ref fields) => {
+                    //
+                }
+            }
+        }
+        Data::Enum(_) | Data::Union(_) => unimplemented!()
+    }
+}*/
+
+/*#[ubx_packet]
+struct MyPacket {
+    tow: u32,
+    lon: i32,
+    lat: i32,
+    height: i32,
+    height_msl: i32,
+    h_acc: u32,
+    v_acc: u32,
+}*/
+
 pub trait UbxMeta {
     fn get_classid() -> u8;
     fn get_msgid() -> u8;
@@ -75,7 +111,7 @@ pub trait UbxMeta {
 
 macro_rules! ubx_meta {
     ($struct:ident, $classid:literal, $msgid:literal) => {
-        impl UbxMeta for $struct {
+        impl $struct {
             fn get_classid() -> u8 {
                 $classid
             }
@@ -84,7 +120,7 @@ macro_rules! ubx_meta {
                 $msgid
             }
 
-            fn to_bytes(&self) -> Vec<u8> {
+            pub fn to_bytes(&self) -> Vec<u8> {
                 let upacket: UbxPacket = self.into();
                 upacket.serialize()
             }
@@ -112,7 +148,18 @@ macro_rules! ubx_meta {
     };
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[ubx_packet]
+pub struct NavPosLLH {
+    itow: u32,
+    lon: i32,
+    lat: i32,
+    height: i32,
+    height_msl: i32,
+    horizontal_accuracy: u32,
+    vertical_accuracy: u32,
+}
+
+/*#[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct NavPosLLH {
     pub itow: u32,
     pub lon: i32,
@@ -121,21 +168,34 @@ pub struct NavPosLLH {
     pub height_msl: i32,
     pub horizontal_accuracy: u32,
     pub vertical_accuracy: u32,
-}
+}*/
 
-ubx_meta!(NavPosLLH, 0x01, 0x02);
+//ubx_meta!(NavPosLLH, 0x01, 0x02);
 
 impl From<&NavPosLLH> for Position {
     fn from(packet: &NavPosLLH) -> Self {
         Position {
-            lon: packet.lon as f32 / 10_000_000.0,
-            lat: packet.lat as f32 / 10_000_000.0,
-            alt: packet.height_msl as f32 / 1000.0,
+            lon: packet.get_lon() as f32 / 10_000_000.0,
+            lat: packet.get_lat() as f32 / 10_000_000.0,
+            alt: packet.get_height_msl() as f32 / 1000.0,
         }
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+trait FooTrait {
+    fn foo() -> u32;
+}
+
+impl<T: FooTrait> From<&T> for Velocity {
+    fn from(packet: &T) -> Self {
+        Velocity {
+            speed: 0.0,
+            heading: 0.0,
+        }
+    }
+}
+
+#[ubx_packet]
 pub struct NavVelNED {
     pub itow: u32,
     pub vel_north: i32, // cm/s
@@ -146,15 +206,42 @@ pub struct NavVelNED {
     pub heading: i32, // 1e-5 degrees
 }
 
-ubx_meta!(NavVelNED, 0x01, 0x12);
+/*#[derive(Serialize, Deserialize, Debug, PartialEq)]
+pub struct NavVelNED {
+    pub itow: u32,
+    pub vel_north: i32, // cm/s
+    pub vel_east: i32,
+    pub vel_down: i32,
+    pub speed: u32,
+    pub ground_speed: u32,
+    pub heading: i32, // 1e-5 degrees
+}
+
+ubx_meta!(NavVelNED, 0x01, 0x12);*/
 
 impl From<&NavVelNED> for Velocity {
     fn from(packet: &NavVelNED) -> Self {
         Velocity {
-            speed: packet.ground_speed as f32 / 1_000.0,
-            heading: packet.heading as f32 / 100_000.0,
+            speed: packet.get_ground_speed() as f32 / 1_000.0,
+            heading: packet.get_heading() as f32 / 100_000.0,
         }
     }
+}
+
+pub struct NavPosVelTime {
+    itow: u32,
+    year: u16,
+    month: u8,
+    day: u8,
+    hour: u8,
+    min: u8,
+    sec: u8,
+
+    #[ubx_bitfield(8)]
+    #[ubx_range(0:0)]
+    valid: bool,
+
+    // etc.
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
@@ -429,10 +516,16 @@ macro_rules! parse_packet_branch {
 impl Packet {
     pub fn deserialize(classid: u8, msgid: u8, payload: &[u8]) -> Result<Packet> {
         match (classid, msgid) {
-            (0x01, 0x02) => parse_packet_branch!(Packet::NavPosLLH, payload),
+            //(0x01, 0x02) => parse_packet_branch!(Packet::NavPosLLH, payload),
+            (0x01, 0x02) => {
+                Ok(Packet::NavPosLLH(NavPosLLH::new(payload.try_into().unwrap())))
+            },
             (0x01, 0x03) => parse_packet_branch!(Packet::NavStatus, payload),
             (0x01, 0x07) => parse_packet_branch!(Packet::NavPosVelTime, payload),
-            (0x01, 0x12) => parse_packet_branch!(Packet::NavVelNED, payload),
+            //(0x01, 0x12) => parse_packet_branch!(Packet::NavVelNED, payload),
+            (0x01, 0x12) => {
+                Ok(Packet::NavVelNED(NavVelNED::new(payload.try_into().unwrap())))
+            }
             (0x05, 0x01) => parse_packet_branch!(Packet::AckAck, payload),
             (0x06, 0x00) => {
                 // Depending on the port ID, we parse different packets
