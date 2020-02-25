@@ -1,138 +1,83 @@
-use std::convert::TryInto;
-use ublox_derive::ubx_packet;
+use ublox_derive::{UbxDefineSubTypes, UbxPacketRecv, UbxPacketSend};
 
-#[ubx_packet]
-struct TestPacket {
-    field1: u32,
-    field2: u32,
-    field3: u8,
-    field4: u16,
-    field5: i32,
+trait UbxPacket {
+    const class: u8;
+    const id: u8;
+    const fixed_length: Option<u16>;
 }
 
-#[test]
-fn foo() {
-    assert_eq!(std::mem::size_of::<TestPacket>(), 15);
+#[derive(UbxPacketRecv, UbxDefineSubTypes)]
+#[ubx(class = 1, id = 2, fixed_len = 28)]
+#[repr(packed)]
+/// Geodetic Position Solution
+struct NavPosLLHRaw {
+    itow: u32,
+    #[ubx(map_type = f64, scale = 1e-7, alias = lon_degrees)]
+    lon: i32,
+    lat: i32,
+    #[ubx(map_type = f64, scale = 1e-3, alias = height_ellipsoid_meters)]
+    height_ellipsoid: i32,
+    height_msl: i32,
+    /// Horizontal Accuracy Estimate
+    horizontal_accuracy: u32,
+    vertical_accuracy: u32,
 }
 
-#[ubx_packet]
-struct TestPacket2 {
-    field1: u32,
-    field2: u8,
-    field3: u32,
+#[derive(UbxPacketRecv, UbxDefineSubTypes)]
+#[repr(packed)]
+#[ubx(class = 1, id = 3, fixed_len = 16)]
+struct NavStatusRaw {
+    itow: u32,
+    #[ubx(enum {
+	NoFix = 0,
+	DeadReckoningOnly = 1,
+	Fix2D = 2,
+	Fix3D = 3,
+	GpsDeadReckoningCombine = 4,
+	TimeOnlyFix = 5,
+    })]
+    gps_fix: u8,
+    #[ubx(bitflags {
+	GpsFixOk = bit0,
+	DiffSoln = bit1,
+	WknSet = bit2,
+	TowSet = bit3,
+    })]
+    flags: u8,
+    fix_status: u8,
+    flags2: u8,
+    time_to_first_fix: u32,
+    uptime_ms: u32,
 }
 
-fn helper(packet: &TestPacket2) -> u32 {
-    packet.get_field3()
+#[derive(UbxPacketSend, UbxDefineSubTypes)]
+#[repr(packed)]
+#[ubx(class = 5, id = 1, fixed_len = 0)]
+struct AckAckRaw {}
+
+#[derive(UbxPacketSend, UbxDefineSubTypes)]
+#[repr(packed)]
+#[ubx(class = 6, id = 4)]
+struct CfgRstRaw {
+    #[ubx(bitflags {
+	Eph = bit0,
+	Alm = bit1,
+	Health = bit2,
+	/// Klobuchard
+	Klob = bit3,
+	Pos = bit4,
+	Clkd = bit5,
+	Osc = bit6,
+	Utc = bit7,
+	Rtc = bit8,
+	HotStart = mask0,
+    })]
+    nav_bbr_mask: u16,
+    #[ubx(enum {
+	/// Hardware reset (Watchdog) immediately
+	HardwareReset = 0,
+	ControlledSoftwareReset = 1,
+    })]
+    reset_mode: u8,
+    reserved1: u8,
 }
-
-#[test]
-fn foo2() {
-    let data = [1, 0, 0, 0, 0, 2, 0, 0, 0];
-    let packet = TestPacket2::new(data);
-    assert_eq!(helper(&packet), 2);
-    assert_eq!(packet.get_field2(), 0);
-}
-
-/*
-use num_derive::{FromPrimitive, ToPrimitive};
-use num_traits::{FromPrimitive, ToPrimitive};
-
-
-#[derive(Debug, PartialEq, FromPrimitive, ToPrimitive)]
-enum CfgPrtId {
-    Usb = 1,
-    Spi = 2,
-}
-
-#[derive(Debug, PartialEq, FromPrimitive, ToPrimitive)]
-enum CfgPrtCharLen {
-    FiveBit = 0,
-    SixBit = 1,
-    SevenBit = 2,
-    EightBit = 3,
-}
-
-#[ubx_packet]
-struct TestPacket3 {
-    #[ubx_enum(CfgPrtId)]
-    port_id: u8,
-
-    rfu0: u8, // TODO: This should be hidden from the user
-
-    #[ubx_bitfield(16)]
-    #[ubx_bitrange(0:0)]
-    tx_ready_en: bool,
-
-    #[ubx_bitrange(1:1)]
-    tx_ready_polarity: bool,
-
-    #[ubx_bitrange(6:2)]
-    tx_ready_pin: u8,
-
-    #[ubx_bitrange(15:7)]
-    tx_ready_threshold: u16, // TODO: u8 should throw an error
-
-    #[ubx_bitfield(32)]
-    #[ubx_bitrange(7:6)]
-    #[ubx_enum(CfgPrtCharLen)]
-    mode_charlen: u8,
-
-    #[ubx_bitrange(11:9)]
-    parity: u8,
-
-    #[ubx_bitrange(13:12)]
-    num_stop_bits: u8,
-
-    baudrate: u32,
-
-    #[ubx_bitfield(16)] // TODO: Bitfield without bitrange should error
-    #[ubx_bitrange(0:0)]
-    in_ubx: bool,
-
-    #[ubx_bitrange(1:1)]
-    in_nmea: bool,
-
-    #[ubx_bitrange(2:2)] // TODO: Bitrange without bitfield should error
-    in_rtcm: bool,
-
-    #[ubx_bitfield(16)]
-    #[ubx_bitrange(0:0)]
-    out_ubx: bool,
-
-    #[ubx_bitrange(1:1)]
-    out_nmea: bool,
-
-    #[ubx_bitfield(16)]
-    #[ubx_bitrange(0:0)]
-    extended_tx_timeout: bool,
-
-    rfu5: u16,
-}
-
-#[test]
-#[no_mangle]
-#[inline(never)]
-fn bitfields() {
-    let mut data = [0; std::mem::size_of::<TestPacket3>()];
-    data[0] = 1;
-    data[2] = 0x5;
-    data[3] = 0x1;
-    data[16] = 0x1;
-    let mut packet = TestPacket3::new(data);
-    assert_eq!(packet.get_port_id(), Some(CfgPrtId::Usb));
-    assert_eq!(packet.get_tx_ready_en(), true);
-    assert_eq!(packet.get_tx_ready_polarity(), false);
-    assert_eq!(packet.get_tx_ready_pin(), 1);
-    assert_eq!(packet.get_tx_ready_threshold(), 2);
-    assert_eq!(packet.get_extended_tx_timeout(), true);
-    assert_eq!(packet.get_mode_charlen(), Some(CfgPrtCharLen::FiveBit));
-
-    packet.set_baudrate(9600);
-    assert_eq!(packet.get_baudrate(), 9600);
-
-    packet.set_mode_charlen(CfgPrtCharLen::SixBit);
-    packet.set_parity(2);
-    assert_eq!(packet.get_mode_charlen(), Some(CfgPrtCharLen::SixBit));
-}
-*/
