@@ -77,7 +77,7 @@ pub fn generate_send_code_for_packet(pack_descr: &PackDesc) -> TokenStream {
             }
             impl #payload_struct {
                 #[inline]
-                fn to_packet(s: #payload_struct) -> [u8; #packet_size] {
+                fn to_packet(self) -> [u8; #packet_size] {
                 unimplemented!();
                 }
             }
@@ -90,7 +90,7 @@ pub fn generate_send_code_for_packet(pack_descr: &PackDesc) -> TokenStream {
             }
             impl #payload_struct {
                 #[inline]
-                fn to_packet(s: payload_struct, out: &mut Vec<u8>) {
+                fn to_packet(self, out: &mut Vec<u8>) {
                 unimplemented!();
                 }
             }

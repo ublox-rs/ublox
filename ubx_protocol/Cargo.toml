@@ -1,0 +1,10 @@
+[package]
+name = "ubx_protocol"
+version = "0.0.1"
+authors = ["Evgeniy A. Dushistov <dushistov@mail.ru>", "Lane Kolbly <lane@rscheme.org>"]
+edition = "2018"
+license = "MIT"
+description = "A crate to parse/generate messages of UBX protocol (proprietary u-blox GPS devices protocol)"
+
+[dependencies]
+ublox_derive = "0.0.0"
