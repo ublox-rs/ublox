@@ -5,6 +5,11 @@ authors = ["Evgeniy A. Dushistov <dushistov@mail.ru>", "Lane Kolbly <lane@rschem
 edition = "2018"
 license = "MIT"
 description = "A crate to parse/generate messages of UBX protocol (proprietary u-blox GPS devices protocol)"
+build = "build.rs"
 
 [dependencies]
-ublox_derive = "0.0.0"
+bitflags = "1.2.1"
+
+[build-dependencies]
+ublox_derive = "0.0.1"
+env_logger = "0.7"

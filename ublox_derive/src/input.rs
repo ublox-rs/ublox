@@ -1,61 +1,157 @@
 use crate::types::{
-    PackDesc, PackField, PackFieldBitflagItemValue, PackFieldEnum, PackFieldEnumItemValue,
-    PackFieldFlagValue, PackFieldFlags, PackFieldMap, PackFieldRepr, PackHeader,
+    PackDesc, PackField, PackFieldMap, PackHeader, UbxEnum, UbxEnumRestHandling, UbxTypeFromFn,
 };
-use heck::CamelCase;
-use quote::ToTokens;
+use log::trace;
+use std::num::NonZeroUsize;
 use syn::{parse::Parse, spanned::Spanned, Attribute, Error, Ident, Token, Type};
 
-pub fn parse_packet_description(input: syn::DeriveInput) -> syn::Result<PackDesc> {
+pub fn parse_packet_description(input: syn::ItemStruct) -> syn::Result<PackDesc> {
     let struct_name = &input.ident;
+    let main_sp = input.span();
 
-    const REQUIRED_SUFFIX: &str = "Raw";
-    let name = struct_name.to_string();
-    if !name.ends_with(REQUIRED_SUFFIX) {
-        return Err(Error::new(
-            input.ident.span(),
-            format!(
-                "Invalid name \"{}\", should ends with \"{}\"",
-                struct_name, REQUIRED_SUFFIX
-            ),
-        ));
-    }
-    let name = &name[0..(name.len() - REQUIRED_SUFFIX.len())];
-
-    trace!("attrs: {:?}", input.attrs);
-    validate_has_repr_packed(&input.attrs, &struct_name)?;
     let header = parse_ubx_attr(&input.attrs, &struct_name)?;
     let struct_comment = extract_item_comment(&input.attrs)?;
 
-    let struct_data = match input.data {
-        syn::Data::Struct(x) => x,
-        _ => return Err(Error::new(input.span(), "Should be struct")),
-    };
-    let fields = parse_fields(struct_data)?;
+    let name = struct_name.to_string();
+    let fields = parse_fields(input)?;
 
-    Ok(PackDesc {
-        name: name.to_string(),
+    let ret = PackDesc {
+        name,
         header,
         comment: struct_comment,
         fields,
-    })
+    };
+
+    if ret.header.fixed_payload_len.map(usize::from) == ret.packet_payload_size() {
+        Ok(ret)
+    } else {
+        Err(Error::new(
+            main_sp,
+            format!(
+                "Calculated packet size ({:?}) doesn't match specified ({:?})",
+                ret.packet_payload_size(),
+                ret.header.fixed_payload_len
+            ),
+        ))
+    }
 }
 
-fn validate_has_repr_packed(attrs: &[Attribute], struct_name: &Ident) -> syn::Result<()> {
-    let attr = attrs
+pub fn parse_ubx_enum_type(input: syn::ItemEnum) -> syn::Result<UbxEnum> {
+    let enum_name = &input.ident;
+    let attr = input
+        .attrs
+        .iter()
+        .find(|a| a.path.is_ident("ubx"))
+        .ok_or_else(|| {
+            Error::new(
+                enum_name.span(),
+                format!("No ubx attribute for ubx_type enum {}", enum_name),
+            )
+        })?;
+    let meta = attr.parse_meta()?;
+    trace!("parse_ubx_enum_type: ubx_type meta {:?}", meta);
+    let mut from_fn = None;
+    let mut to_fn = false;
+    let mut rest_handling = None;
+    match meta {
+        syn::Meta::List(list) => {
+            for item in list.nested {
+                if let syn::NestedMeta::Meta(syn::Meta::Path(p)) = item {
+                    if p.is_ident("from") {
+                        from_fn = Some(UbxTypeFromFn::From);
+                    } else if p.is_ident("to") {
+                        to_fn = true;
+                    } else if p.is_ident("from_unchecked") {
+                        from_fn = Some(UbxTypeFromFn::FromUnchecked);
+                    } else if p.is_ident("rest_reserved") {
+                        rest_handling = Some(UbxEnumRestHandling::Reserved);
+                    } else if p.is_ident("rest_error") {
+                        rest_handling = Some(UbxEnumRestHandling::ErrorProne);
+                    } else {
+                        return Err(syn::Error::new(p.span(), "Invalid ubx attribute"));
+                    }
+                } else {
+                    return Err(syn::Error::new(item.span(), "Invalid ubx attribute"));
+                }
+            }
+        }
+        _ => return Err(syn::Error::new(attr.span(), "Invalid ubx attributes")),
+    }
+
+    let attr = input
+        .attrs
         .iter()
         .find(|a| a.path.is_ident("repr"))
         .ok_or_else(|| {
             Error::new(
-                struct_name.span(),
-                format!("No repr(packed) for payload struct {}", struct_name),
+                enum_name.span(),
+                format!("No repr attribute for ubx_type enum {}", enum_name),
             )
         })?;
-    if attr.into_token_stream().to_string() != "# [repr (packed)]" {
-        return Err(Error::new(attr.span(), "Expect repr(packed) here"));
+    let meta = attr.parse_meta()?;
+    let repr: Type = match meta {
+        syn::Meta::List(list) if list.nested.len() == 1 => {
+            if let syn::NestedMeta::Meta(syn::Meta::Path(ref p)) = list.nested[0] {
+                if !p.is_ident("u8") {
+                    unimplemented!();
+                }
+            } else {
+                return Err(syn::Error::new(
+                    list.nested[0].span(),
+                    "Invalid repr attribute for ubx_type enum",
+                ));
+            }
+            syn::parse_quote! { u8 }
+        }
+        _ => {
+            return Err(syn::Error::new(
+                attr.span(),
+                "Invalid repr attribute for ubx_type enum",
+            ))
+        }
+    };
+    let mut variants = Vec::with_capacity(input.variants.len());
+    for var in input.variants {
+        if syn::Fields::Unit != var.fields {
+            return Err(syn::Error::new(
+                var.fields.span(),
+                "Invalid variant for ubx_type enum",
+            ));
+        }
+        let var_sp = var.ident.span();
+        let (_, expr) = var
+            .discriminant
+            .ok_or_else(|| Error::new(var_sp, "ubx_type enum variant should has value"))?;
+        let variant_value = if let syn::Expr::Lit(syn::ExprLit {
+            lit: syn::Lit::Int(litint),
+            ..
+        }) = expr
+        {
+            litint.base10_parse::<u8>()?
+        } else {
+            return Err(syn::Error::new(
+                expr.span(),
+                "Invalid variant value for ubx_type enum",
+            ));
+        };
+        variants.push((var.ident, variant_value));
     }
 
-    Ok(())
+    let attrs = input
+        .attrs
+        .into_iter()
+        .filter(|x| !x.path.is_ident("ubx") && !x.path.is_ident("ubx_type"))
+        .collect();
+
+    Ok(UbxEnum {
+        attrs,
+        name: input.ident,
+        repr,
+        from_fn,
+        to_fn,
+        rest_handling,
+        variants,
+    })
 }
 
 fn parse_ubx_attr(attrs: &[Attribute], struct_name: &Ident) -> syn::Result<PackHeader> {
@@ -77,13 +173,14 @@ fn parse_ubx_attr(attrs: &[Attribute], struct_name: &Ident) -> syn::Result<PackH
 
     let mut class = None;
     let mut id = None;
-    let mut fixed_len = None;
+    let mut fixed_payload_len = None;
 
     for e in &meta.nested {
         match e {
             syn::NestedMeta::Meta(syn::Meta::NameValue(syn::MetaNameValue {
                 path, lit, ..
             })) => {
+                println!("checked path {:?}", path);
                 if path.is_ident("class") {
                     if class.is_some() {
                         return Err(Error::new(e.span(), "Duplicate \"class\" attribute"));
@@ -100,11 +197,14 @@ fn parse_ubx_attr(attrs: &[Attribute], struct_name: &Ident) -> syn::Result<PackH
                         syn::Lit::Int(x) => Some(x.base10_parse::<u8>()?),
                         _ => return Err(Error::new(lit.span(), "Should be integer literal")),
                     };
-                } else if path.is_ident("fixed_len") {
-                    if fixed_len.is_some() {
-                        return Err(Error::new(e.span(), "Duplicate \"fixed_len\" attribute"));
+                } else if path.is_ident("fixed_payload_len") {
+                    if fixed_payload_len.is_some() {
+                        return Err(Error::new(
+                            e.span(),
+                            "Duplicate \"fixed_payload_len\" attribute",
+                        ));
                     }
-                    fixed_len = match lit {
+                    fixed_payload_len = match lit {
                         syn::Lit::Int(x) => Some(x.base10_parse::<u16>()?),
                         _ => return Err(Error::new(lit.span(), "Should be integer literal")),
                     };
@@ -121,7 +221,7 @@ fn parse_ubx_attr(attrs: &[Attribute], struct_name: &Ident) -> syn::Result<PackH
     Ok(PackHeader {
         class,
         id,
-        fixed_len,
+        fixed_payload_len,
     })
 }
 
@@ -145,7 +245,7 @@ fn extract_item_comment(attrs: &[Attribute]) -> syn::Result<String> {
     Ok(doc_comments)
 }
 
-fn parse_fields(struct_data: syn::DataStruct) -> syn::Result<Vec<PackField>> {
+fn parse_fields(struct_data: syn::ItemStruct) -> syn::Result<Vec<PackField>> {
     let fields = match struct_data.fields {
         syn::Fields::Named(x) => x,
         _ => {
@@ -166,31 +266,31 @@ fn parse_fields(struct_data: syn::DataStruct) -> syn::Result<Vec<PackField>> {
         } = f;
         let size_bytes = field_size_bytes(&ty)?;
         let name = name.ok_or_else(|| Error::new(f_sp, "No field name"))?;
-        let mut repr = PackFieldRepr::Plain;
         let comment = extract_item_comment(&attrs)?;
+        let mut map = PackFieldMap::none();
         for a in attrs {
             if !a.path.is_ident("doc") {
-                match repr {
-                    PackFieldRepr::Plain => (),
-                    _ => return Err(Error::new(a.span(), "Two attributes for the same field")),
+                if !map.is_none() {
+                    return Err(Error::new(
+                        a.span(),
+                        "Two map attributes for the same field",
+                    ));
                 }
-                repr = a.parse_args()?;
+                map = a.parse_args::<PackFieldMap>()?;
             }
         }
-        let name_camel_case = name.to_string().to_camel_case();
-        let field_name_as_type: Type = syn::parse_str(&name_camel_case).map_err(|err| {
-            Error::new(
-                name.span(),
-                format!("can not parse {} as type: {}", name_camel_case, err),
-            )
-        })?;
+
+        if let Some(ref map_ty) = map.map_type {
+            if *map_ty == ty {
+                return Err(Error::new(map_ty.span(), "You map type to the same type"));
+            }
+        }
 
         ret.push(PackField {
             name,
             ty,
-            repr,
+            map,
             comment,
-            field_name_as_type,
             size_bytes,
         });
     }
@@ -199,127 +299,40 @@ fn parse_fields(struct_data: syn::DataStruct) -> syn::Result<Vec<PackField>> {
 }
 
 mod kw {
-    syn::custom_keyword!(bitflags);
     syn::custom_keyword!(map_type);
     syn::custom_keyword!(scale);
     syn::custom_keyword!(alias);
 }
 
-impl Parse for PackFieldRepr {
+impl Parse for PackFieldMap {
     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
-        let lookahead = input.lookahead1();
-        if lookahead.peek(kw::bitflags) {
-            input.parse::<kw::bitflags>()?;
-            let mut name = None;
-            if input.peek(Ident) {
-                name = Some(input.parse::<Type>()?);
-            }
-            let content;
-            let _brace_token = syn::braced!(content in input);
-
-            Ok(PackFieldRepr::Flags(PackFieldFlags {
-                explicit_name: name,
-                values: content.parse_terminated(PackFieldBitflagItemValue::parse)?,
-            }))
-        } else if lookahead.peek(Token![enum]) {
-            input.parse::<Token![enum]>()?;
-            let mut name = None;
-            if input.peek(Ident) {
-                name = Some(input.parse::<Type>()?);
-            }
-
-            let content;
-            let _brace_token = syn::braced!(content in input);
-            Ok(PackFieldRepr::Enum(PackFieldEnum {
-                explicit_name: name,
-                values: content.parse_terminated(PackFieldEnumItemValue::parse)?,
-            }))
-        } else if lookahead.peek(kw::map_type)
-            || lookahead.peek(kw::scale)
-            || lookahead.peek(kw::alias)
-        {
-            let mut map = PackFieldMap::none();
-
-            if input.peek(kw::map_type) {
-                input.parse::<kw::map_type>()?;
-                input.parse::<Token![=]>()?;
-                map.out_type = Some(input.parse()?);
-            }
-            if input.peek(Token![,]) {
-                input.parse::<Token![,]>()?;
-            }
-            if input.peek(kw::scale) {
-                input.parse::<kw::scale>()?;
-                input.parse::<Token![=]>()?;
-                map.scale = Some(input.parse()?);
-            }
-            if input.peek(Token![,]) {
-                input.parse::<Token![,]>()?;
-            }
-            if input.peek(kw::alias) {
-                input.parse::<kw::alias>()?;
-                input.parse::<Token![=]>()?;
-                map.alias = Some(input.parse()?);
-            }
-
-            assert!(!map.is_none());
-
-            Ok(PackFieldRepr::Map(map))
-        } else {
-            Err(lookahead.error())
+        let mut map = PackFieldMap::none();
+        if input.peek(kw::map_type) {
+            input.parse::<kw::map_type>()?;
+            input.parse::<Token![=]>()?;
+            map.map_type = Some(input.parse()?);
         }
-    }
-}
-
-impl Parse for PackFieldEnumItemValue {
-    fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
-        let comment: Comment = input.parse()?;
-        Ok(Self {
-            comment: comment.0,
-            name: input.parse()?,
-            _eq_token: input.parse()?,
-            value: input.parse()?,
-        })
-    }
-}
-
-impl Parse for PackFieldBitflagItemValue {
-    fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
-        let comment: Comment = input.parse()?;
-        Ok(Self {
-            comment: comment.0,
-            name: input.parse()?,
-            _eq_token: input.parse()?,
-            value: input.parse()?,
-        })
-    }
-}
-
-impl Parse for PackFieldFlagValue {
-    fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
-        let ident = input.parse::<Ident>()?;
-        let value = ident.to_string();
-        if value.starts_with("bit") {
-            let number_str = &value[3..];
-            let n: u8 = number_str.parse().map_err(|err| {
-                Error::new(
-                    ident.span(),
-                    format!("Can not parse {} as number: {}", number_str, err),
-                )
-            })?;
-            Ok(PackFieldFlagValue::Bit(n))
-        } else if value.starts_with("mask") {
-            let number_str = &value[4..];
-            let n: u64 = number_str.parse().map_err(|err| {
-                Error::new(
-                    ident.span(),
-                    format!("Can not parse {} as number: {}", number_str, err),
-                )
-            })?;
-            Ok(PackFieldFlagValue::Mask(n))
-        } else {
-            Err(Error::new(ident.span(), "Expect bitX or maskX here"))
+        if input.peek(Token![,]) {
+            input.parse::<Token![,]>()?;
         }
+        if input.peek(kw::scale) {
+            input.parse::<kw::scale>()?;
+            input.parse::<Token![=]>()?;
+            map.scale = Some(input.parse()?);
+        }
+        if input.peek(Token![,]) {
+            input.parse::<Token![,]>()?;
+        }
+        if input.peek(kw::alias) {
+            input.parse::<kw::alias>()?;
+            input.parse::<Token![=]>()?;
+            map.alias = Some(input.parse()?);
+        }
+        if input.peek(Token![,]) {
+            input.parse::<Token![,]>()?;
+        }
+
+        Ok(map)
     }
 }
 
@@ -337,17 +350,16 @@ impl Parse for Comment {
     }
 }
 
-fn field_size_bytes(ty: &Type) -> syn::Result<Option<usize>> {
+fn field_size_bytes(ty: &Type) -> syn::Result<Option<NonZeroUsize>> {
     //TODO: make this array static
-    let valid_types: [(Type, usize); 8] = [
-        (syn::parse_quote!(u8), 1),
-        (syn::parse_quote!(i8), 1),
-        (syn::parse_quote!(u16), 2),
-        (syn::parse_quote!(i16), 2),
-        (syn::parse_quote!(u32), 4),
-        (syn::parse_quote!(i32), 4),
-        (syn::parse_quote!(f32), 4),
-        (syn::parse_quote!(f64), 8),
+    //TODO: support f32, f64
+    let valid_types: [(Type, NonZeroUsize); 6] = [
+        (syn::parse_quote!(u8), NonZeroUsize::new(1).unwrap()),
+        (syn::parse_quote!(i8), NonZeroUsize::new(1).unwrap()),
+        (syn::parse_quote!(u16), NonZeroUsize::new(2).unwrap()),
+        (syn::parse_quote!(i16), NonZeroUsize::new(2).unwrap()),
+        (syn::parse_quote!(u32), NonZeroUsize::new(4).unwrap()),
+        (syn::parse_quote!(i32), NonZeroUsize::new(4).unwrap()),
     ];
     if let Some((_ty, size)) = valid_types.iter().find(|x| x.0 == *ty) {
         Ok(Some(*size))

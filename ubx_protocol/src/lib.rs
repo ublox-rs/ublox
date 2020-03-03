@@ -1,84 +1,76 @@
-use ublox_derive::{UbxPacketRecv, UbxPacketSend, UbxDefineSubTypes};
+mod error;
 
+pub use error::NotEnoughMem;
+
+/// Information about concrete UBX protocol's packet
 pub trait UbxPacket {
-    const class: u8;
-    const id: u8;
-    const fixed_length: Option<u16>;
+    const CLASS: u8;
+    const ID: u8;
+    const FIXED_PAYLOAD_LENGTH: Option<u16>;
 }
 
+const SYNC_CHAR_1: u8 = 0xb5;
+const SYNC_CHAR_2: u8 = 0x62;
 
-#[derive(UbxPacketRecv, UbxDefineSubTypes)]
-#[ubx(class = 1, id = 2, fixed_len = 28)]
-#[repr(packed)]
-/// Geodetic Position Solution
-struct NavPosLLHRaw {
-    itow: u32,
-    #[ubx(map_type = f64, scale = 1e-7, alias = lon_degrees)]
-    lon: i32,
-    lat: i32,
-    #[ubx(map_type = f64, scale = 1e-3, alias = height_ellipsoid_meters)]
-    height_ellipsoid: i32,
-    height_msl: i32,
-    /// Horizontal Accuracy Estimate
-    horizontal_accuracy: u32,
-    vertical_accuracy: u32,
+/// The checksum is calculated over the packet, starting and including the CLASS field,
+/// up until, but excluding, the Checksum Field
+/// So slice should starts with class id
+/// Return ck_a and ck_b
+fn ubx_checksum(data: &[u8]) -> (u8, u8) {
+    let mut ck_a = 0_u8;
+    let mut ck_b = 0_u8;
+    for byte in data {
+        ck_a = ck_a.overflowing_add(*byte).0;
+        ck_b = ck_b.overflowing_add(ck_a).0;
+    }
+    (ck_a, ck_b)
 }
 
-#[derive(UbxPacketRecv, UbxDefineSubTypes)]
-#[repr(packed)]
-#[ubx(class = 1, id = 3, fixed_len = 16)]
-struct NavStatusRaw {
-    itow: u32,
-    #[ubx(enum {
-	NoFix = 0,
-	DeadReckoningOnly = 1,
-	Fix2D = 2,
-	Fix3D = 3,
-	GpsDeadReckoningCombine = 4,
-	TimeOnlyFix = 5,
-    })]
-    gps_fix: u8,
-    #[ubx(bitflags {
-	GpsFixOk = bit0,
-	DiffSoln = bit1,
-	WknSet = bit2,
-	TowSet = bit3,
-    })]
-    flags: u8,
-    fix_status: u8,
-    flags2: u8,
-    time_to_first_fix: u32,
-    uptime_ms: u32,
+/// For ubx checksum on the fly
+#[derive(Default)]
+struct UbxChecksumCalc {
+    ck_a: u8,
+    ck_b: u8,
 }
 
-#[derive(UbxPacketSend, UbxDefineSubTypes)]
-#[repr(packed)]
-#[ubx(class = 5, id = 1, fixed_len = 0)]
-struct AckAckRaw {}
-
-#[derive(UbxPacketSend, UbxDefineSubTypes)]
-#[repr(packed)]
-#[ubx(class = 6, id = 4)]
-struct CfgRstRaw {
-    #[ubx(bitflags {
-	Eph = bit0,
-	Alm = bit1,
-	Health = bit2,
-	/// Klobuchard
-	Klob = bit3,	
-	Pos = bit4,
-	Clkd = bit5,
-	Osc = bit6,
-	Utc = bit7,
-	Rtc = bit8,
-	HotStart = mask0,
-    })]
-    nav_bbr_mask: u16,
-    #[ubx(enum {
-	/// Hardware reset (Watchdog) immediately
-	HardwareReset = 0,
-	ControlledSoftwareReset = 1,
-    })]
-    reset_mode: u8,
-    reserved1: u8,
+impl UbxChecksumCalc {
+    fn update(&mut self, chunk: &[u8]) {
+        for byte in chunk {
+            self.ck_a = self.ck_a.overflowing_add(*byte).0;
+            self.ck_b = self.ck_b.overflowing_add(self.ck_a).0;
+        }
+    }
+    fn result(self) -> (u8, u8) {
+        (self.ck_a, self.ck_b)
+    }
 }
+
+/// Abstraction for buffer creation/reallocation
+/// to storing packet
+pub trait MemWriter {
+    /// make sure that we have at least `len` bytes for writing
+    fn reserve_allocate(&mut self, len: usize) -> Result<(), NotEnoughMem>;
+    fn write(&mut self, buf: &[u8]) -> Result<(), NotEnoughMem>;
+}
+
+impl MemWriter for Vec<u8> {
+    fn reserve_allocate(&mut self, len: usize) -> Result<(), NotEnoughMem> {
+        self.reserve(len);
+        Ok(())
+    }
+    fn write(&mut self, buf: &[u8]) -> Result<(), NotEnoughMem> {
+        let ret = <dyn std::io::Write>::write(self, buf).map_err(|_| NotEnoughMem)?;
+        if ret == buf.len() {
+            Ok(())
+        } else {
+            Err(NotEnoughMem)
+        }
+    }
+}
+
+pub trait UbxPacketCreator {
+    /// Create packet and store bytes sequence to somewhere using `out`
+    fn create_packet(self, out: &mut dyn MemWriter) -> Result<(), NotEnoughMem>;
+}
+
+include!(concat!(env!("OUT_DIR"), "/packets.rs"));
