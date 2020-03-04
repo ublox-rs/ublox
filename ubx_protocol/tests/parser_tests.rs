@@ -132,7 +132,7 @@ fn test_parse_big_file() {
                     PacketRef::AckAck(_) => ack_ack += 1,
                     PacketRef::NavPosLLH(_) => nav_pos_llh += 1,
                     PacketRef::NavStatus(_) => nav_stat += 1,
-                    PacketRef::Unknown(_) => unknown += 1,
+                    _ => unknown += 1,
                 },
                 Err(ParserError::InvalidChecksum) => wrong_chksum += 1,
                 Err(_) => other_errors += 1,

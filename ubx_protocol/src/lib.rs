@@ -5,7 +5,7 @@ pub use error::{NotEnoughMem, ParserError};
 pub use parser::{Parser, ParserIter};
 
 /// Information about concrete UBX protocol's packet
-trait UbxPacket {
+pub trait UbxPacket {
     const CLASS: u8;
     const ID: u8;
     const FIXED_PAYLOAD_LENGTH: Option<u16>;

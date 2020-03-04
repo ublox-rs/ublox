@@ -49,7 +49,6 @@ bitflags::bitflags! {
         const WKN_SET = 4;
         /// Time of Week valid
         const TOW_SET = 8;
-
     }
 }
 
@@ -131,6 +130,87 @@ struct NavStatus {
     ttff: u32,
     /// Milliseconds since Startup / Reset
     msss: u32,
+}
+
+bitflags::bitflags! {
+    /// Validity Flags of `NavTimeUTC`
+    pub struct NavTimeUtcFlags: u8 {
+        /// Valid Time of Week
+        const VALID_TOW = 1;
+        /// Valid Week Number
+        const VALID_WKN = 2;
+        /// Valid UTC (Leap Seconds already known)
+        const VALID_UTC = 4;
+        const RESERVED3 = (1u8 << 3);
+        const RESERVED4 = (1u8 << 4);
+        const RESERVED5 = (1u8 << 5);
+        const RESERVED6 = (1u8 << 6);
+        const RESERVED7 = (1u8 << 7);
+    }
+}
+
+impl NavTimeUtcFlags {
+    const fn from(x: u8) -> Self {
+        Self::from_bits_truncate(x)
+    }
+}
+
+/// UTC Time Solution
+#[ubx_packet_recv]
+#[ubx(class = 1, id = 0x21, fixed_payload_len = 20)]
+struct NavTimeUTC {
+    /// GPS Millisecond Time of Week
+    itow: u32,
+    time_accuracy_estimate_ns: u32,
+    /// Nanoseconds of second, range -1e9 .. 1e9
+    nanos: i32,
+    /// Year, range 1999..2099
+    year: u16,
+    /// Month, range 1..12
+    month: u8,
+    /// Day of Month, range 1..31
+    day: u8,
+    /// Hour of Day, range 0..23
+    hour: u8,
+    /// Minute of Hour, range 0..59
+    min: u8,
+    /// Seconds of Minute, range 0..59
+    sec: u8,
+    /// Validity Flags
+    #[ubx(map_type = NavTimeUtcFlags)]
+    valid: u8,
+}
+
+/// Velocity Solution in NED
+#[ubx_packet_recv]
+#[ubx(class = 1, id = 0x12, fixed_payload_len = 36)]
+struct NavVelNed {
+    /// GPS Millisecond Time of Week
+    itow: u32,
+    /// north velocity (m/s)
+    #[ubx(map_type = f64, scale = 1e-2)]
+    vel_north: i32,
+    /// east velocity (m/s)
+    #[ubx(map_type = f64, scale = 1e-2)]
+    vel_east: i32,
+    /// down velocity (m/s)
+    #[ubx(map_type = f64, scale = 1e-2)]
+    vel_down: i32,
+    /// Speed 3-D (m/s)
+    #[ubx(map_type = f64, scale = 1e-2)]
+    speed_3d: u32,
+    /// Ground speed (m/s)
+    #[ubx(map_type = f64, scale = 1e-2)]
+    ground_speed: u32,
+    /// Heading of motion 2-D (degrees)
+    #[ubx(map_type = f64, scale = 1e-5, alias = heading_degrees)]
+    heading: i32,
+    /// Speed Accuracy Estimate (m/s)
+    #[ubx(map_type = f64, scale = 1e-2)]
+    speed_accuracy_estimate: u32,
+    /// Course / Heading Accuracy Estimate (degrees)
+    #[ubx(map_type = f64, scale = 1e-5)]
+    course_heading_accuracy_estimate: u32,
 }
 
 bitflags::bitflags! {
@@ -217,6 +297,16 @@ struct CfgRate {
     /// Alignment to reference time
     #[ubx(map_type = AlignmentToReferenceTime)]
     time_ref: u16,
+}
+
+/// Set Message Rate
+#[ubx_packet_send]
+#[ubx(class = 6, id = 1, fixed_payload_len = 3)]
+struct CfgMsg3 {
+    msg_class: u8,
+    msg_id: u8,
+    /// Send rate on current Target
+    rate: u8,
 }
 
 /// Messages in this class are sent as a result of a CFG message being
