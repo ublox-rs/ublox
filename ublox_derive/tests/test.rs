@@ -70,6 +70,27 @@ fn test_nav_pos_llh() {
                     ])
                 }
             }
+
+            #[doc = "All possible packets enum"]
+            pub enum PacketRef<'a> {
+                NavPosLLH(NavPosLLHRef<'a>),
+                Unknown(UnknownPacketRef<'a>),
+            }
+            fn match_packet(class: u8, msg_id: u8, payload: &[u8]) -> Option<Result<PacketRef, ParserError>> {
+                match (class, msg_id) {
+                    (NavPosLLH::CLASS, NavPosLLH::ID) => {
+                        if 12usize != payload.len() {
+                            return Some(Err(ParserError::InvalidPacketLen("NavPosLLH")));
+                        }
+                        Some(Ok(PacketRef::NavPosLLH(NavPosLLHRef(payload))))
+                    }
+                    _ => Some(Ok(PacketRef::Unknown(UnknownPacketRef {
+                        payload,
+                        class,
+                        msg_id,
+                    }))),
+                }
+            }
         },
         Flags::Equal,
     );

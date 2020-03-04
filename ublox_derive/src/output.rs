@@ -122,6 +122,83 @@ pub fn generate_code_for_ubx_enum(ubx_enum: &UbxEnum) -> String {
     code.to_string()
 }
 
+pub fn generate_code_for_packet_parser(
+    all_packs: &[(PackDesc, HowCodeForPackage)],
+    ubx_types: &HashMap<String, UbxEnum>,
+) -> String {
+    let mut packet_enum_variants = vec![];
+    let mut matches = vec![];
+
+    for (pack_descr, mode) in all_packs {
+        if *mode == HowCodeForPackage::RecvOnly || *mode == HowCodeForPackage::SendRecv {
+            let ref_name = format_ident!("{}Ref", pack_descr.name);
+            let name = Ident::new(&pack_descr.name, Span::call_site());
+            packet_enum_variants.push(quote! {
+                #name(#ref_name <'a>)
+            });
+            let packet_name = &pack_descr.name;
+            let check_len = match pack_descr.packet_payload_size() {
+                Some(len) => quote! {
+                    if #len != payload.len() {
+                        return Some(Err(ParserError::InvalidPacketLen(#packet_name)));
+                    }
+                },
+                None => quote! {},
+            };
+
+            let mut validators = vec![];
+            for f in &pack_descr.fields {
+                if let Some(ref out_ty) = f.map.map_type {
+                    if let Some(ubx_type) = ubx_types.get(&out_ty.into_token_stream().to_string()) {
+                        if ubx_type.from_fn == Some(UbxTypeFromFn::FromUnchecked) {
+                            let name = &ubx_type.name;
+                            let name_str = name.to_string();
+
+                            validators.push(quote! {
+                                if ! #name::is_valid_to_convert(TODO) {
+                                    return Some(Err(ParserError::InvalidField(#name_str)));
+                                }
+                            });
+                        }
+                    }
+                }
+            }
+
+            matches.push(quote! {
+                (#name::CLASS, #name::ID) => {
+                    #check_len
+                    #(#validators)*
+                    Some(Ok(PacketRef::#name(#ref_name(payload))))
+                }
+            });
+        }
+    }
+
+    let packet_enum_define = quote! {
+        #[doc = "All possible packets enum"]
+        pub enum PacketRef<'a> {
+            #(#packet_enum_variants),*,
+            Unknown(UnknownPacketRef<'a>)
+        }
+    };
+
+    let matcher_func = quote! {
+        fn match_packet(class: u8, msg_id: u8, payload: &[u8]) -> Option<Result<PacketRef, ParserError>> {
+            match (class, msg_id) {
+                #(#matches)*
+                _ => Some(Ok(PacketRef::Unknown(UnknownPacketRef {
+                    payload,
+                    class,
+                    msg_id
+                }))),
+            }
+        }
+    };
+    let mut code = packet_enum_define.to_string();
+    code.push_str(&matcher_func.into_token_stream().to_string());
+    code
+}
+
 fn generate_recv_code_for_packet(
     pack_descr: &PackDesc,
     ubx_types: &HashMap<String, UbxEnum>,

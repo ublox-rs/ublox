@@ -54,7 +54,7 @@ bitflags::bitflags! {
 }
 
 impl NavStatusFlags {
-    fn from(x: u8) -> Self {
+    const fn from(x: u8) -> Self {
         NavStatusFlags::from_bits_truncate(x)
     }
 }
@@ -65,7 +65,7 @@ impl NavStatusFlags {
 pub struct FixStatusInfo(u8);
 
 impl FixStatusInfo {
-    pub fn has_pr_prr_correction(self) -> bool {
+    pub const fn has_pr_prr_correction(self) -> bool {
         (self.0 & 1) == 1
     }
     pub fn map_matching(self) -> MapMatchingStatus {
@@ -78,7 +78,7 @@ impl FixStatusInfo {
             _ => unreachable!(),
         }
     }
-    pub fn from(x: u8) -> Self {
+    pub const fn from(x: u8) -> Self {
         Self(x)
     }
 }
@@ -225,7 +225,7 @@ struct CfgRate {
 #[ubx(class = 5, id = 1, fixed_payload_len = 2)]
 struct AckAck {
     /// Class ID of the Acknowledged Message
-    class_id: u8,
+    class: u8,
     /// Message ID of the Acknowledged Message
     msg_id: u8,
 }

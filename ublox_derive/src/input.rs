@@ -180,7 +180,6 @@ fn parse_ubx_attr(attrs: &[Attribute], struct_name: &Ident) -> syn::Result<PackH
             syn::NestedMeta::Meta(syn::Meta::NameValue(syn::MetaNameValue {
                 path, lit, ..
             })) => {
-                println!("checked path {:?}", path);
                 if path.is_ident("class") {
                     if class.is_some() {
                         return Err(Error::new(e.span(), "Duplicate \"class\" attribute"));

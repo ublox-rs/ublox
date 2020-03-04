@@ -10,3 +10,13 @@ impl fmt::Display for NotEnoughMem {
 }
 
 impl std::error::Error for NotEnoughMem {}
+
+/// Error that possible during packets parsing
+#[derive(Debug, PartialEq)]
+pub enum ParserError {
+    InvalidChecksum,
+    InvalidField(&'static str),
+    InvalidPacketLen(&'static str),
+}
+
+//impl std::error::Error for ParserError {}

@@ -1,9 +1,11 @@
 mod error;
+mod parser;
 
-pub use error::NotEnoughMem;
+pub use error::{NotEnoughMem, ParserError};
+pub use parser::{Parser, ParserIter};
 
 /// Information about concrete UBX protocol's packet
-pub trait UbxPacket {
+trait UbxPacket {
     const CLASS: u8;
     const ID: u8;
     const FIXED_PAYLOAD_LENGTH: Option<u16>;
@@ -71,6 +73,14 @@ impl MemWriter for Vec<u8> {
 pub trait UbxPacketCreator {
     /// Create packet and store bytes sequence to somewhere using `out`
     fn create_packet(self, out: &mut dyn MemWriter) -> Result<(), NotEnoughMem>;
+}
+
+/// Packet not supported yet by this crate
+#[derive(Debug)]
+pub struct UnknownPacketRef<'a> {
+    pub payload: &'a [u8],
+    pub class: u8,
+    pub msg_id: u8,
 }
 
 include!(concat!(env!("OUT_DIR"), "/packets.rs"));

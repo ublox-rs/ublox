@@ -89,11 +89,17 @@ pub fn expand_ubx_packets_code_in_str(src_cnt: &str) -> syn::Result<String> {
         }
     }
 
+    let mut all_packs = Vec::with_capacity(packets.len());
+
     for (pack_desc, mode) in packets {
         let pack = input::parse_packet_description(pack_desc)?;
         let code = output::generate_code_for_packet(&pack, &ubx_types, mode);
+        all_packs.push((pack, mode));
         ret.push_str(&code);
     }
+
+    let code = output::generate_code_for_packet_parser(&all_packs, &ubx_types);
+    ret.push_str(&code);
 
     Ok(ret)
 }
