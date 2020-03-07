@@ -1,14 +1,13 @@
 extern crate proc_macro;
+
 use proc_macro2::TokenStream;
-use syn::{parse_macro_input, parse_quote, DeriveInput, Data, Fields, FieldsNamed, Ident, Attribute};
+use proc_macro_error::{abort, proc_macro_error};
+use quote::{format_ident, quote, quote_spanned};
 use syn::parse::Parser;
 use syn::spanned::Spanned;
-use quote::{quote, quote_spanned, format_ident};
-use std::convert::TryInto;
-use inflector::Inflector;
-use proc_macro_error::{abort, proc_macro_error};
-use syn::parse::Parse;
-use itertools::Itertools;
+use syn::{
+    parse_macro_input, parse_quote, Attribute, Data, DeriveInput, Fields, FieldsNamed, Ident,
+};
 
 #[derive(Clone, Debug)]
 struct Bitrange {
@@ -29,7 +28,7 @@ impl Bitfield {
     fn new(num_bits: usize) -> Bitfield {
         Bitfield {
             num_bits: num_bits,
-            ranges: vec!(),
+            ranges: vec![],
         }
     }
 
@@ -52,7 +51,8 @@ enum UbxAttribute {
 
 fn parse_attribute(attr: &Attribute) -> Option<UbxAttribute> {
     //println!("{:#?}", attr);
-    let parser = syn::punctuated::Punctuated::<TokenStream, syn::token::Comma>::parse_separated_nonempty;
+    let parser =
+        syn::punctuated::Punctuated::<TokenStream, syn::token::Comma>::parse_separated_nonempty;
 
     let name = attr.path.get_ident().unwrap();
     let arguments = attr.parse_args_with(parser).unwrap();
@@ -67,7 +67,9 @@ fn parse_attribute(attr: &Attribute) -> Option<UbxAttribute> {
                 syn::Lit::Int(litint) => {
                     Some(UbxAttribute::UbxBitField(litint.base10_parse().unwrap()))
                 }
-                _ => { abort!(&arguments[0], "Only int literals allowed!"); }
+                _ => {
+                    abort!(&arguments[0], "Only int literals allowed!");
+                }
             }
         }
         "ubx_bitrange" => {
@@ -80,16 +82,16 @@ fn parse_attribute(attr: &Attribute) -> Option<UbxAttribute> {
                 panic!("Bit slice may only contain 2 elements in ubx_bitrange");
             }
             let msb: usize = match &bits[0] {
-                syn::Lit::Int(litint) => {
-                    litint.base10_parse().unwrap()
+                syn::Lit::Int(litint) => litint.base10_parse().unwrap(),
+                _ => {
+                    abort!(&bits[0], "Only int literals allowed!");
                 }
-                _ => { abort!(&bits[0], "Only int literals allowed!"); }
             };
             let lsb: usize = match &bits[1] {
-                syn::Lit::Int(litint) => {
-                    litint.base10_parse().unwrap()
+                syn::Lit::Int(litint) => litint.base10_parse().unwrap(),
+                _ => {
+                    abort!(&bits[1], "Only int literals allowed!");
                 }
-                _ => { abort!(&bits[1], "Only int literals allowed!"); }
             };
             Some(UbxAttribute::UbxBitRange((msb, lsb)))
         }
@@ -97,42 +99,49 @@ fn parse_attribute(attr: &Attribute) -> Option<UbxAttribute> {
             if arguments.len() != 1 {
                 panic!("Incorrect number of arguments to ubx_enum");
             }
-            Some(UbxAttribute::UbxEnum(match arguments[0].clone().into_iter().next().unwrap() {
-                proc_macro2::TokenTree::Ident(ident) => ident,
-                _ => { abort!(arguments[0], "Must specify an identifier for ubx_enum"); }
-            }))
+            Some(UbxAttribute::UbxEnum(
+                match arguments[0].clone().into_iter().next().unwrap() {
+                    proc_macro2::TokenTree::Ident(ident) => ident,
+                    _ => {
+                        abort!(arguments[0], "Must specify an identifier for ubx_enum");
+                    }
+                },
+            ))
         }
-        _ => { None }
+        _ => None,
     }
 }
 
 fn find_struct_segments(fields: &FieldsNamed) -> Vec<Member> {
-    let mut segments = vec!();
+    let mut segments = vec![];
     let mut current_bitfield: Option<Bitfield> = None;
     for field in fields.named.iter() {
         let tags: Vec<_> = field.attrs.iter().map(parse_attribute).collect();
-        let bitfield: Vec<_> = tags.iter().filter_map(|x| {
-            match x {
+        let bitfield: Vec<_> = tags
+            .iter()
+            .filter_map(|x| match x {
                 Some(UbxAttribute::UbxBitField(size)) => Some(size),
                 _ => None,
-            }
-        }).collect();
+            })
+            .collect();
         let has_bitfield = bitfield.len() > 0;
 
-        let bitrange: Vec<_> = tags.iter().filter_map(|x| {
-            match x {
+        let bitrange: Vec<_> = tags
+            .iter()
+            .filter_map(|x| match x {
                 Some(UbxAttribute::UbxBitRange((msb, lsb))) => Some((msb, lsb)),
                 _ => None,
-            }
-        }).collect();
+            })
+            .collect();
         let has_bitrange = bitrange.len() > 0;
 
-        let enum_type: Vec<_> = tags.iter().filter_map(|x| {
-            match x {
+        let enum_type: Vec<_> = tags
+            .iter()
+            .filter_map(|x| match x {
                 Some(UbxAttribute::UbxEnum(e)) => Some(e),
                 _ => None,
-            }
-        }).collect();
+            })
+            .collect();
         let enum_type = if enum_type.len() > 0 {
             Some(enum_type[0].clone())
         } else {
@@ -148,19 +157,17 @@ fn find_struct_segments(fields: &FieldsNamed) -> Vec<Member> {
 
         if has_bitrange {
             let (msb, lsb) = bitrange[0];
-            let bitrange = Bitrange{
+            let bitrange = Bitrange {
                 lsb: *lsb,
                 msb: *msb,
                 ident: field.ident.as_ref().unwrap().clone(),
                 enum_type: enum_type,
                 field_type: match &field.ty {
-                    syn::Type::Path(path) => {
-                        path.clone()
-                    }
+                    syn::Type::Path(path) => path.clone(),
                     _ => {
                         abort!(field, "Only path types allowed for bitmap ranges");
                     }
-                }
+                },
             };
             match &mut current_bitfield {
                 Some(bitfield) => {
@@ -194,7 +201,11 @@ struct Accessor {
 }
 
 //fn build_bitrange_accessors(offset: &TokenStream, bitfield: &Bitfield, bitrange: &Bitrange) -> (TokenStream, TokenStream, TokenStream) {
-fn build_bitrange_accessors(offset: &TokenStream, bitfield: &Bitfield, bitrange: &Bitrange) -> Accessor {
+fn build_bitrange_accessors(
+    offset: &TokenStream,
+    bitfield: &Bitfield,
+    bitrange: &Bitrange,
+) -> Accessor {
     let underlying_fn_name = format_ident!("get_{}_underlying", bitrange.ident);
     let underlying_set_fn_name = format_ident!("set_{}_underlying", bitrange.ident);
     let underlying_type = format_ident!("u{}", bitfield.num_bits);
@@ -203,12 +214,12 @@ fn build_bitrange_accessors(offset: &TokenStream, bitfield: &Bitfield, bitrange:
     let span = bitrange.ident.span();
     let return_type = if let Some(ident) = &bitrange.enum_type {
         let field_type = &ident;
-        parse_quote!{ Option<#field_type> }
+        parse_quote! { Option<#field_type> }
     } else {
         bitrange.field_type.clone()
     };
     let field_type = if let Some(ident) = &bitrange.enum_type {
-        parse_quote!{ #ident }
+        parse_quote! { #ident }
     } else {
         bitrange.field_type.clone()
     };
@@ -305,14 +316,19 @@ fn build_bitrange_accessors(offset: &TokenStream, bitfield: &Bitfield, bitrange:
 fn process_struct(struct_name: &Ident, fields: &FieldsNamed) -> TokenStream {
     let segments = find_struct_segments(fields);
 
-    let fs: Vec<_> = fields.named.iter().map(|f| {
-        for attr in f.attrs.iter() {
-            parse_attribute(&attr);
-        }
-    }).collect();
+    let fs: Vec<_> = fields
+        .named
+        .iter()
+        .map(|f| {
+            for attr in f.attrs.iter() {
+                parse_attribute(&attr);
+            }
+        })
+        .collect();
 
-    let sizes: Vec<_> = segments.iter().map(|f| {
-        match f {
+    let sizes: Vec<_> = segments
+        .iter()
+        .map(|f| match f {
             Member::Bitfield(bitfield) => {
                 let nbits = bitfield.num_bits;
                 quote_spanned! {
@@ -327,16 +343,19 @@ fn process_struct(struct_name: &Ident, fields: &FieldsNamed) -> TokenStream {
                         std::mem::size_of::<#ftype>()
                 }
             }
-        }
-    }).collect();
+        })
+        .collect();
 
-    let offsets: Vec<_> = sizes.iter().scan(quote! { 0 }, |state, size| {
-        let orig_state = state.clone();
-        *state = quote! {
-            #state + #size
-        };
-        Some(orig_state)
-    }).collect();
+    let offsets: Vec<_> = sizes
+        .iter()
+        .scan(quote! { 0 }, |state, size| {
+            let orig_state = state.clone();
+            *state = quote! {
+                #state + #size
+            };
+            Some(orig_state)
+        })
+        .collect();
 
     let accessors: Vec<Accessor> = segments.iter().zip(offsets).map(|(f, o)| {
         match f {
@@ -437,10 +456,10 @@ fn process_struct(struct_name: &Ident, fields: &FieldsNamed) -> TokenStream {
     }).flatten().collect();
     //let (getters, trait_getters) = getters.iter().unzip();
 
-    let mut getters = vec!();
-    let mut trait_getters = vec!();
-    let mut setters = vec!();
-    let mut trait_setters = vec!();
+    let mut getters = vec![];
+    let mut trait_getters = vec![];
+    let mut setters = vec![];
+    let mut trait_setters = vec![];
     for accessor in accessors.iter() {
         getters.push(&accessor.getter);
         trait_getters.push(&accessor.trait_getter);
@@ -525,22 +544,23 @@ fn process_struct(struct_name: &Ident, fields: &FieldsNamed) -> TokenStream {
 
 #[proc_macro_error]
 #[proc_macro_attribute]
-pub fn ubx_packet(attr: proc_macro::TokenStream, input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+pub fn ubx_packet(
+    attr: proc_macro::TokenStream,
+    input: proc_macro::TokenStream,
+) -> proc_macro::TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     match input.data {
-        Data::Struct(ref data) => {
-            match data.fields {
-                Fields::Named(ref fields) => {
-                    proc_macro::TokenStream::from(process_struct(&input.ident, fields))
-                }
-                Fields::Unnamed(ref fields) => {
-                    unimplemented!();
-                }
-                Fields::Unit => {
-                    unimplemented!();
-                }
+        Data::Struct(ref data) => match data.fields {
+            Fields::Named(ref fields) => {
+                proc_macro::TokenStream::from(process_struct(&input.ident, fields))
             }
-        }
-        Data::Enum(_) | Data::Union(_) => unimplemented!()
+            Fields::Unnamed(ref fields) => {
+                unimplemented!();
+            }
+            Fields::Unit => {
+                unimplemented!();
+            }
+        },
+        Data::Enum(_) | Data::Union(_) => unimplemented!(),
     }
 }
