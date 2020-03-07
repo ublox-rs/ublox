@@ -4,7 +4,6 @@ use chrono::prelude::*;
 use serde_derive::{Deserialize, Serialize};
 use std::str;
 use std::vec::Vec;
-//use syn::{parse_macro_input, parse_quote, DeriveInput, Data, TokenStream};
 use ublox_derive::ubx_packet;
 
 // These are needed for ubx_packet
