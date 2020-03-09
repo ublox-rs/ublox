@@ -9,6 +9,9 @@ matrix:
   allow_failures:
     - rust: nightly
   fast_finish: true
+before_script:
+  - rustup component add rustfmt-preview
+  - which rustfmt
 script:
   - cargo test --verbose --workspace
   - cargo test --release --verbose --workspace
