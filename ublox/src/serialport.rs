@@ -165,7 +165,7 @@ impl Device {
     pub fn get_position(&mut self) -> Option<Position> {
         match (&self.navstatus, &self.navpos) {
             (Some(status), Some(pos)) => {
-                if status.itow != pos.itow {
+                if status.itow != pos.get_itow() {
                     None
                 } else if status.flags & 0x1 == 0 {
                     None
@@ -181,7 +181,7 @@ impl Device {
     pub fn get_velocity(&mut self) -> Option<Velocity> {
         match (&self.navstatus, &self.navvel) {
             (Some(status), Some(vel)) => {
-                if status.itow != vel.itow {
+                if status.itow != vel.get_itow() {
                     None
                 } else if status.flags & 0x1 == 0 {
                     None

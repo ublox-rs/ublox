@@ -9,3 +9,11 @@ matrix:
   allow_failures:
     - rust: nightly
   fast_finish: true
+script:
+  - cargo test --verbose --workspace
+  - cargo test --release --verbose --workspace
+  - cd ublox
+  - cargo build --examples
+  - cargo doc
+  - cargo build --features "serial" --examples
+  - cargo doc --features "serial"
