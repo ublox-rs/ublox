@@ -157,6 +157,77 @@ struct NavStatus {
     uptime_ms: u32,
 }
 
+/// Dilution of precision
+#[ubx_packet_recv]
+#[ubx(class = 1, id = 4, fixed_payload_len = 18)]
+struct NavDop {
+    /// GPS Millisecond Time of Week
+    itow: u32,
+    #[ubx(map_type = f32, scale = 1e-2)]
+    geometric_dop: u16,
+    #[ubx(map_type = f32, scale = 1e-2)]
+    position_dop: u16,
+    #[ubx(map_type = f32, scale = 1e-2)]
+    time_dop: u16,
+    #[ubx(map_type = f32, scale = 1e-2)]
+    vertical_dop: u16,
+    #[ubx(map_type = f32, scale = 1e-2)]
+    horizontal_dop: u16,
+    #[ubx(map_type = f32, scale = 1e-2)]
+    northing_dop: u16,
+    #[ubx(map_type = f32, scale = 1e-2)]
+    easting_dop: u16,
+}
+
+/// Navigation Solution Information
+#[ubx_packet_recv]
+#[ubx(class = 1, id = 6, fixed_payload_len = 52)]
+struct NavSolution {
+    /// GPS Millisecond Time of Week
+    itow: u32,
+    /// Fractional part of iTOW (range: +/-500000).
+    ftow_ns: i32,
+    /// GPS week number of the navigation epoch
+    week: i16,
+    /// GPS fix Type
+    #[ubx(map_type = GpsFix)]
+    fix_type: u8,
+    /// Navigation Status Flags
+    #[ubx(map_type = NavStatusFlags)]
+    flags: u8,
+    /// ECEF X coordinate (meters)
+    #[ubx(map_type = f64, scale = 1e-2)]
+    ecef_x: i32,
+    /// ECEF Y coordinate (meters)
+    #[ubx(map_type = f64, scale = 1e-2)]
+    ecef_y: i32,
+    /// ECEF Z coordinate (meters)
+    #[ubx(map_type = f64, scale = 1e-2)]
+    ecef_z: i32,
+    /// 3D Position Accuracy Estimate
+    #[ubx(map_type = f64, scale = 1e-2)]
+    position_accuracy_estimate: u32,
+    /// ECEF X velocity (m/s)
+    #[ubx(map_type = f64, scale = 1e-2)]
+    ecef_vx: i32,
+    /// ECEF Y velocity (m/s)
+    #[ubx(map_type = f64, scale = 1e-2)]
+    ecef_vy: i32,
+    /// ECEF Z velocity (m/s)
+    #[ubx(map_type = f64, scale = 1e-2)]
+    ecef_vz: i32,
+    /// Speed Accuracy Estimate
+    #[ubx(map_type = f64, scale = 1e-2)]
+    speed_accuracy_estimate: u32,
+    /// Position DOP
+    #[ubx(map_type = f32, scale = 1e-2)]
+    pdop: u16,
+    reserved1: u8,
+    /// Number of SVs used in Nav Solution
+    num_sv: u8,
+    reserved2: [u8; 4],
+}
+
 /// GPS fix Type
 #[ubx_extend]
 #[ubx(from, rest_reserved)]
@@ -176,7 +247,7 @@ pub enum GpsFix {
 bitflags! {
     /// Navigation Status Flags
     pub struct NavStatusFlags: u8 {
-        /// position and velocity valid and within DOP and ACC Masks,
+        /// position and velocity valid and within DOP and ACC Masks
         const GPS_FIX_OK = 1;
         /// DGPS used
         const DIFF_SOLN = 2;
@@ -303,6 +374,16 @@ struct AlpSrv {
 #[ubx_packet_recv]
 #[ubx(class = 5, id = 1, fixed_payload_len = 2)]
 struct AckAck {
+    /// Class ID of the Acknowledged Message
+    class: u8,
+    /// Message ID of the Acknowledged Message
+    msg_id: u8,
+}
+
+/// Message Not-Acknowledge
+#[ubx_packet_recv]
+#[ubx(class = 5, id = 0, fixed_payload_len = 2)]
+struct AckNak {
     /// Class ID of the Acknowledged Message
     class: u8,
     /// Message ID of the Acknowledged Message
@@ -609,11 +690,14 @@ define_recv_packets!(
     enum PacketRef {
         _ = UbxUnknownPacketRef,
         NavPosLlh,
-        NavVelNed,
-        NavPosVelTime,
         NavStatus,
+        NavDop,
+        NavPosVelTime,
+        NavSolution,
+        NavVelNed,
         AlpSrv,
         AckAck,
+        AckNak,
         CfgPrtSpi,
         CfgPrtUart,
         NavTimeUTC,
