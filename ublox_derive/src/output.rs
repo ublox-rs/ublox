@@ -245,9 +245,11 @@ pub fn generate_send_code_for_packet(pack_descr: &PackDesc) -> Vec<TokenStream> 
         let packet_payload_size_u16 = u16::try_from(packet_payload_size).unwrap();
         ret.push(quote! {
             impl #payload_struct {
+                pub const PACKET_LEN: usize = #packet_size;
+
                 #[inline]
-                pub fn to_packet_bytes(self) -> [u8; #packet_size] {
-                    let mut ret = [0u8; #packet_size];
+                pub fn to_packet_bytes(self) -> [u8; Self::PACKET_LEN] {
+                    let mut ret = [0u8; Self::PACKET_LEN];
                     ret[0] = SYNC_CHAR_1;
                     ret[1] = SYNC_CHAR_2;
                     ret[2] = #main_name::CLASS;

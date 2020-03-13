@@ -94,6 +94,8 @@ pub struct UbxPacketRequest {
 }
 
 impl UbxPacketRequest {
+    pub const PACKET_LEN: usize = 8;
+
     #[inline]
     pub fn request_for<T: UbxPacketMeta>() -> Self {
         Self {
@@ -107,7 +109,7 @@ impl UbxPacketRequest {
     }
 
     #[inline]
-    pub fn to_packet_bytes(self) -> [u8; 8] {
+    pub fn to_packet_bytes(self) -> [u8; Self::PACKET_LEN] {
         let mut ret = [
             SYNC_CHAR_1,
             SYNC_CHAR_2,

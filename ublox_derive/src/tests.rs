@@ -222,9 +222,11 @@ fn test_ubx_packet_send() {
                 pub a: u8,
             }
             impl TestBuilder {
+                pub const PACKET_LEN: usize = 17usize;
+
                 #[inline]
-                pub fn to_packet_bytes(self) -> [u8; 17usize] {
-                    let mut ret = [0u8; 17usize];
+                pub fn to_packet_bytes(self) -> [u8; Self::PACKET_LEN] {
+                    let mut ret = [0u8; Self::PACKET_LEN];
                     ret[0] = SYNC_CHAR_1;
                     ret[1] = SYNC_CHAR_2;
                     ret[2] = Test::CLASS;
