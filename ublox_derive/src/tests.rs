@@ -12,7 +12,7 @@ use which::which;
 fn test_ubx_packet_recv_simple() {
     let src_code = quote! {
         #[ubx_packet_recv]
-        #[ubx(class = 1, id = 2, fixed_payload_len = 15)]
+        #[ubx(class = 1, id = 2, fixed_payload_len = 16)]
         #[doc = "Some comment"]
         struct Test {
             itow: u32,
@@ -24,6 +24,7 @@ fn test_ubx_packet_recv_simple() {
             reserved1: [u8; 5],
             #[ubx(map_type = Flags, may_failed)]
             flags: u8,
+            b: i8,
         }
     };
     let src_code = src_code.to_string();
@@ -42,7 +43,7 @@ fn test_ubx_packet_recv_simple() {
             impl UbxPacketMeta for Test {
                 const CLASS: u8 = 1u8;
                 const ID: u8 = 2u8;
-                const FIXED_PAYLOAD_LENGTH: Option<u16> = Some(15u16);
+                const FIXED_PAYLOAD_LENGTH: Option<u16> = Some(16u16);
             }
 
             #[doc = "Some comment"]
@@ -93,9 +94,14 @@ fn test_ubx_packet_recv_simple() {
                     let val = self.0[14usize];
                     <Flags>::from_unchecked(val)
                 }
+                #[doc = ""]
+                #[inline]
+                pub fn b(&self) -> i8 {
+                    <i8>::from_le_bytes([self.0[15usize]])
+                }
 
                 fn validate(payload: &[u8]) -> Result<(), ParserError> {
-                    let expect = 15usize;
+                    let expect = 16usize;
                     let got = payload.len();
                     if got ==  expect {
                         let val = payload[14usize];

@@ -6,7 +6,7 @@ use crate::types::{
 use proc_macro2::{Span, TokenStream};
 use quote::{format_ident, quote};
 use std::{collections::HashSet, convert::TryFrom};
-use syn::Ident;
+use syn::{parse_quote, Ident, Type};
 
 pub fn generate_recv_code_for_packet(pack_descr: &PackDesc) -> TokenStream {
     let pack_name = &pack_descr.name;
@@ -98,7 +98,7 @@ pub fn generate_recv_code_for_packet(pack_descr: &PackDesc) -> TokenStream {
             let out_ty = if f.has_intermidiate_type() {
                 ty.clone()
             } else {
-                syn::parse_quote! { &[u8] }
+                parse_quote! { &[u8] }
             };
             getters.push(quote! {
                 #[doc = #field_comment]
@@ -302,7 +302,7 @@ pub fn generate_send_code_for_packet(pack_descr: &PackDesc) -> Vec<TokenStream> 
 
 pub fn generate_code_to_extend_enum(ubx_enum: &UbxExtendEnum) -> TokenStream {
     assert_eq!(ubx_enum.repr, {
-        let ty: syn::Type = syn::parse_quote! { u8 };
+        let ty: Type = parse_quote! { u8 };
         ty
     });
     let name = &ubx_enum.name;
@@ -550,9 +550,11 @@ fn get_raw_field_code(field: &PackField, cur_off: usize, data: TokenStream) -> T
     }
     let raw_ty = &field.ty;
 
+    let signed_byte: Type = parse_quote! { i8 };
+
     if field.is_field_raw_ty_byte_array() {
         quote! { [#(#bytes),*] }
-    } else if size_bytes.get() != 1 {
+    } else if size_bytes.get() != 1 || *raw_ty == signed_byte {
         quote! { <#raw_ty>::from_le_bytes([#(#bytes),*]) }
     } else {
         quote! { #data[#cur_off] }
