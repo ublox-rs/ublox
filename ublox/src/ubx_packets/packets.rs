@@ -380,6 +380,12 @@ struct AckAck {
     msg_id: u8,
 }
 
+impl<'a> AckAckRef<'a> {
+    pub fn is_ack_for<T: UbxPacketMeta>(&self) -> bool {
+        self.class() == T::CLASS && self.msg_id() == T::ID
+    }
+}
+
 /// Message Not-Acknowledge
 #[ubx_packet_recv]
 #[ubx(class = 5, id = 0, fixed_payload_len = 2)]
@@ -388,6 +394,12 @@ struct AckNak {
     class: u8,
     /// Message ID of the Acknowledged Message
     msg_id: u8,
+}
+
+impl<'a> AckNakRef<'a> {
+    pub fn is_nak_for<T: UbxPacketMeta>(&self) -> bool {
+        self.class() == T::CLASS && self.msg_id() == T::ID
+    }
 }
 
 /// Reset Receiver / Clear Backup Data Structures
@@ -556,7 +568,7 @@ bitflags! {
 #[ubx_packet_send]
 #[ubx(class = 6, id = 8, fixed_payload_len = 6)]
 struct CfgRate {
-    /// Measurement Rate, GPS measurements aretaken every `measure_rate_ms` milliseconds
+    /// Measurement Rate, GPS measurements are taken every `measure_rate_ms` milliseconds
     measure_rate_ms: u16,
     /// Navigation Rate, in number of measurement cycles.
     /// On u-blox 5 and u-blox 6, this parametercannot be changed, and is always equals 1.
