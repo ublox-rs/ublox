@@ -95,10 +95,15 @@ pub fn generate_recv_code_for_packet(pack_descr: &PackDesc) -> TokenStream {
                     });
                 }
             }
+            let out_ty = if f.has_intermidiate_type() {
+                ty.clone()
+            } else {
+                syn::parse_quote! { &[u8] }
+            };
             getters.push(quote! {
                 #[doc = #field_comment]
                 #[inline]
-                pub fn #get_name(&self) -> &[u8] {
+                pub fn #get_name(&self) -> #out_ty {
                     #(#get_value_lines)*
                 }
             });

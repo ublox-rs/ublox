@@ -549,11 +549,16 @@ impl CfgMsg8Builder {
 #[ubx_packet_recv]
 #[ubx(class = 0x0a, id = 0x04)]
 struct MonVer {
-    #[ubx(map_type = &str, may_failed, from = mon_ver::convert_to_str_unchecked, is_valid = mon_ver::is_cstr_valid, get_as_ref)]
+    #[ubx(map_type = &str, may_failed, from = mon_ver::convert_to_str_unchecked,
+          is_valid = mon_ver::is_cstr_valid, get_as_ref)]
     software_version: [u8; 30],
-    #[ubx(map_type = &str, may_failed, from = mon_ver::convert_to_str_unchecked, is_valid = mon_ver::is_cstr_valid, get_as_ref)]
+    #[ubx(map_type = &str, may_failed, from = mon_ver::convert_to_str_unchecked,
+          is_valid = mon_ver::is_cstr_valid, get_as_ref)]
     hardware_version: [u8; 10],
     /// Extended software information strings
+    #[ubx(map_type = impl Iterator<Item=&str>, may_failed,
+          from = mon_ver::extension_to_iter,
+          is_valid = mon_ver::is_extension_valid)]
     extension: [u8; 0],
 }
 
@@ -580,6 +585,23 @@ mod mon_ver {
         } else {
             false
         }
+    }
+
+    pub(crate) fn is_extension_valid(payload: &[u8]) -> bool {
+        if payload.len() % 30 == 0 {
+            for chunk in payload.chunks(30) {
+                if !is_cstr_valid(chunk) {
+                    return false;
+                }
+            }
+            true
+        } else {
+            false
+        }
+    }
+
+    pub(crate) fn extension_to_iter(payload: &[u8]) -> impl Iterator<Item = &str> {
+        payload.chunks(30).map(|x| convert_to_str_unchecked(x))
     }
 }
 
