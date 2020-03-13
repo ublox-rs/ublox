@@ -517,7 +517,7 @@ pub fn generate_code_for_parse(recv_packs: &RecvPackets) -> TokenStream {
         pub(crate) fn match_packet(class: u8, msg_id: u8, payload: &[u8]) -> Result<PacketRef, ParserError> {
             match (class, msg_id) {
                 #(#matches)*
-                _ => Ok(PacketRef::Unknown(UnknownPacketRef {
+                _ => Ok(PacketRef::Unknown(#unknown_var {
                     payload,
                     class,
                     msg_id

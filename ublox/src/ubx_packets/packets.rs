@@ -1,6 +1,6 @@
 use super::{
     ubx_checksum, MemWriter, Position, UbxChecksumCalc, UbxPacketCreator, UbxPacketMeta,
-    UnknownPacketRef, SYNC_CHAR_1, SYNC_CHAR_2,
+    UbxUnknownPacketRef, SYNC_CHAR_1, SYNC_CHAR_2,
 };
 use crate::error::{MemWriterError, ParserError};
 use bitflags::bitflags;
@@ -585,7 +585,7 @@ mod mon_ver {
 
 define_recv_packets!(
     enum PacketRef {
-        _ = UnknownPacketRef,
+        _ = UbxUnknownPacketRef,
         NavPosLlh,
         NavVelNed,
         NavPosVelTime,
