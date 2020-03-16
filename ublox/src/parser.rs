@@ -16,13 +16,12 @@ impl Parser {
     pub fn is_buffer_empty(&self) -> bool {
         self.buf.is_empty()
     }
+
     pub fn buffer_len(&self) -> usize {
         self.buf.len()
     }
-    pub fn consume<'a, 'b, 'c>(&'a mut self, new_data: &'b [u8]) -> ParserIter<'c>
-    where
-        'a: 'c,
-    {
+
+    pub fn consume(&mut self, new_data: &[u8]) -> ParserIter {
         match self
             .buf
             .iter()
@@ -74,10 +73,7 @@ impl<'a> ParserIter<'a> {
     pub fn next(&mut self) -> Option<Result<PacketRef, ParserError>> {
         while self.off < self.buf.len() {
             let data = &self.buf[self.off..];
-            let pos = match data.iter().position(|x| *x == SYNC_CHAR_1) {
-                Some(x) => x,
-                None => return None,
-            };
+            let pos = data.iter().position(|x| *x == SYNC_CHAR_1)?;
 
             if (pos + 1) >= data.len() {
                 return None;
@@ -96,7 +92,7 @@ impl<'a> ParserIter<'a> {
                 self.off += pos + 1;
                 continue;
             }
-            if (pos + pack_len + 6 + 2 - 1) >= data.len() {
+            if (pos + pack_len + 6 + 2) > data.len() {
                 return None;
             }
             let (ck_a, ck_b) = ubx_checksum(&data[(pos + 2)..(pos + pack_len + 4 + 2)]);

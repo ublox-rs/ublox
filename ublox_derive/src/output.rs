@@ -17,8 +17,8 @@ pub fn generate_recv_code_for_packet(pack_descr: &PackDesc) -> TokenStream {
 
     let mut off = 0usize;
     for (field_index, f) in pack_descr.fields.iter().enumerate() {
-        let ty = f.intermidiate_type();
-        let get_name = f.intermidiate_field_name();
+        let ty = f.intermediate_type();
+        let get_name = f.intermediate_field_name();
         let field_comment = &f.comment;
 
         if let Some(size_bytes) = f.size_bytes.map(|x| x.get()) {
@@ -95,7 +95,7 @@ pub fn generate_recv_code_for_packet(pack_descr: &PackDesc) -> TokenStream {
                     });
                 }
             }
-            let out_ty = if f.has_intermidiate_type() {
+            let out_ty = if f.has_intermediate_type() {
                 ty.clone()
             } else {
                 parse_quote! { &[u8] }
@@ -184,8 +184,8 @@ pub fn generate_send_code_for_packet(pack_descr: &PackDesc) -> Vec<TokenStream> 
     let mut write_fields = Vec::with_capacity(pack_descr.fields.len());
     let mut off = 6usize;
     for f in &pack_descr.fields {
-        let ty = f.intermidiate_type();
-        let name = f.intermidiate_field_name();
+        let ty = f.intermediate_type();
+        let name = f.intermediate_field_name();
         let field_comment = &f.comment;
         fields.push(quote! {
             #[doc = #field_comment]
@@ -195,7 +195,7 @@ pub fn generate_send_code_for_packet(pack_descr: &PackDesc) -> Vec<TokenStream> 
             Some(x) => x,
             None => unimplemented!(),
         };
-        if f.has_intermidiate_type() {
+        if f.has_intermediate_type() {
             pack_fields.push(quote! {
                 let bytes = self.#name.into_raw().to_le_bytes()
             });

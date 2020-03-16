@@ -22,7 +22,7 @@ fn test_ubx_packet_recv_simple() {
             #[doc = "this is a"]
             a: u8,
             reserved1: [u8; 5],
-            #[ubx(map_type = Flags, may_failed)]
+            #[ubx(map_type = Flags, may_fail)]
             flags: u8,
             b: i8,
         }

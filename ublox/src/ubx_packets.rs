@@ -15,9 +15,9 @@ pub trait UbxPacketMeta {
 pub(crate) const SYNC_CHAR_1: u8 = 0xb5;
 pub(crate) const SYNC_CHAR_2: u8 = 0x62;
 
-/// The checksum is calculated over the packet, starting and including the CLASS field,
-/// up until, but excluding, the Checksum Field
-/// So slice should starts with class id
+/// The checksum is calculated over the packet, starting and including
+/// the CLASS field, up until, but excluding, the checksum field.
+/// So slice should starts with class id.
 /// Return ck_a and ck_b
 pub(crate) fn ubx_checksum(data: &[u8]) -> (u8, u8) {
     let mut ck_a = 0_u8;

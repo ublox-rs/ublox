@@ -16,21 +16,27 @@ use ublox_derive::{
 struct NavPosLlh {
     /// GPS Millisecond Time of Week
     itow: u32,
+
     /// Longitude
     #[ubx(map_type = f64, scale = 1e-7, alias = lon_degrees)]
     lon: i32,
+
     /// Latitude
     #[ubx(map_type = f64, scale = 1e-7, alias = lat_degrees)]
     lat: i32,
+
     /// Height above Ellipsoid
     #[ubx(map_type = f64, scale = 1e-3)]
     height_meters: i32,
+
     /// Height above mean sea level
     #[ubx(map_type = f64, scale = 1e-3)]
     height_msl: i32,
+
     /// Horizontal Accuracy Estimate
     #[ubx(map_type = f64, scale = 1e-3)]
     h_ack: u32,
+
     /// Vertical Accuracy Estimate
     #[ubx(map_type = f64, scale = 1e-3)]
     v_acc: u32,
@@ -42,27 +48,35 @@ struct NavPosLlh {
 struct NavVelNed {
     /// GPS Millisecond Time of Week
     itow: u32,
+
     /// north velocity (m/s)
     #[ubx(map_type = f64, scale = 1e-2)]
     vel_north: i32,
+
     /// east velocity (m/s)
     #[ubx(map_type = f64, scale = 1e-2)]
     vel_east: i32,
+
     /// down velocity (m/s)
     #[ubx(map_type = f64, scale = 1e-2)]
     vel_down: i32,
+
     /// Speed 3-D (m/s)
     #[ubx(map_type = f64, scale = 1e-2)]
     speed_3d: u32,
+
     /// Ground speed (m/s)
     #[ubx(map_type = f64, scale = 1e-2)]
     ground_speed: u32,
+
     /// Heading of motion 2-D (degrees)
     #[ubx(map_type = f64, scale = 1e-5, alias = heading_degrees)]
     heading: i32,
+
     /// Speed Accuracy Estimate (m/s)
     #[ubx(map_type = f64, scale = 1e-2)]
     speed_accuracy_estimate: u32,
+
     /// Course / Heading Accuracy Estimate (degrees)
     #[ubx(map_type = f64, scale = 1e-5)]
     course_heading_accuracy_estimate: u32,
@@ -83,6 +97,7 @@ struct NavPosVelTime {
     valid: u8,
     time_accuracy: u32,
     nanosecond: i32,
+
     /// GNSS fix Type
     #[ubx(map_type = GpsFix)]
     fix_type: u8,
@@ -93,32 +108,41 @@ struct NavPosVelTime {
     lon: i32,
     #[ubx(map_type = f64, scale = 1e-7, alias = lat_degrees)]
     lat: i32,
+
     /// Height above Ellipsoid
     #[ubx(map_type = f64, scale = 1e-3)]
     height_meters: i32,
+
     /// Height above mean sea level
     #[ubx(map_type = f64, scale = 1e-3)]
     height_msl: i32,
     horiz_accuracy: u32,
     vert_accuracy: u32,
+
     /// north velocity (m/s)
     #[ubx(map_type = f64, scale = 1e-3)]
     vel_north: i32,
+
     /// east velocity (m/s)
     #[ubx(map_type = f64, scale = 1e-3)]
     vel_east: i32,
+
     /// down velocity (m/s)
     #[ubx(map_type = f64, scale = 1e-3)]
     vel_down: i32,
+
     /// Ground speed (m/s)
     #[ubx(map_type = f64, scale = 1e-3)]
     ground_speed: u32,
+
     /// Heading of motion 2-D (degrees)
     #[ubx(map_type = f64, scale = 1e-5, alias = heading_degrees)]
     heading: i32,
+
     /// Speed Accuracy Estimate (m/s)
     #[ubx(map_type = f64, scale = 1e-3)]
     speed_accuracy_estimate: u32,
+
     /// Course / Heading Accuracy Estimate (degrees)
     #[ubx(map_type = f64, scale = 1e-5)]
     course_heading_accuracy_estimate: u32,
@@ -138,21 +162,28 @@ struct NavPosVelTime {
 struct NavStatus {
     /// GPS Millisecond Time of Week
     itow: u32,
+
     /// GPS fix Type, this value does not qualify a fix as
+
     /// valid and within the limits
     #[ubx(map_type = GpsFix)]
     fix_type: u8,
+
     /// Navigation Status Flags
     #[ubx(map_type = NavStatusFlags)]
     flags: u8,
+
     /// Fix Status Information
     #[ubx(map_type = FixStatusInfo)]
     fix_stat: u8,
+
     /// further information about navigation output
     #[ubx(map_type = NavStatusFlags2)]
     flags2: u8,
+
     /// Time to first fix (millisecond time tag)
     time_to_first_fix: u32,
+
     /// Milliseconds since Startup / Reset
     uptime_ms: u32,
 }
@@ -185,44 +216,58 @@ struct NavDop {
 struct NavSolution {
     /// GPS Millisecond Time of Week
     itow: u32,
+
     /// Fractional part of iTOW (range: +/-500000).
     ftow_ns: i32,
+
     /// GPS week number of the navigation epoch
     week: i16,
+
     /// GPS fix Type
     #[ubx(map_type = GpsFix)]
     fix_type: u8,
+
     /// Navigation Status Flags
     #[ubx(map_type = NavStatusFlags)]
     flags: u8,
+
     /// ECEF X coordinate (meters)
     #[ubx(map_type = f64, scale = 1e-2)]
     ecef_x: i32,
+
     /// ECEF Y coordinate (meters)
     #[ubx(map_type = f64, scale = 1e-2)]
     ecef_y: i32,
+
     /// ECEF Z coordinate (meters)
     #[ubx(map_type = f64, scale = 1e-2)]
     ecef_z: i32,
+
     /// 3D Position Accuracy Estimate
     #[ubx(map_type = f64, scale = 1e-2)]
     position_accuracy_estimate: u32,
+
     /// ECEF X velocity (m/s)
     #[ubx(map_type = f64, scale = 1e-2)]
     ecef_vx: i32,
+
     /// ECEF Y velocity (m/s)
     #[ubx(map_type = f64, scale = 1e-2)]
     ecef_vy: i32,
+
     /// ECEF Z velocity (m/s)
     #[ubx(map_type = f64, scale = 1e-2)]
     ecef_vz: i32,
+
     /// Speed Accuracy Estimate
     #[ubx(map_type = f64, scale = 1e-2)]
     speed_accuracy_estimate: u32,
+
     /// Position DOP
     #[ubx(map_type = f32, scale = 1e-2)]
     pdop: u16,
     reserved1: u8,
+
     /// Number of SVs used in Nav Solution
     num_sv: u8,
     reserved2: [u8; 4],
@@ -376,6 +421,7 @@ struct AlpSrv {
 struct AckAck {
     /// Class ID of the Acknowledged Message
     class: u8,
+
     /// Message ID of the Acknowledged Message
     msg_id: u8,
 }
@@ -392,6 +438,7 @@ impl<'a> AckAckRef<'a> {
 struct AckNak {
     /// Class ID of the Acknowledged Message
     class: u8,
+
     /// Message ID of the Acknowledged Message
     msg_id: u8,
 }
@@ -409,6 +456,7 @@ struct CfgRst {
     /// Battery backed RAM sections to clear
     #[ubx(map_type = NavBbrMask)]
     nav_bbr_mask: u16,
+
     /// Reset Type
     #[ubx(map_type = ResetMode)]
     reset_mode: u8,
@@ -477,7 +525,7 @@ impl ResetMode {
 #[ubx_packet_recv_send]
 #[ubx(class = 0x06, id = 0x00, fixed_payload_len = 20)]
 struct CfgPrtUart {
-    #[ubx(map_type = UartPortId, may_failed)]
+    #[ubx(map_type = UartPortId, may_fail)]
     portid: u8,
     reserved0: u8,
     tx_ready: u16,
@@ -503,7 +551,7 @@ pub enum UartPortId {
 #[ubx_packet_recv_send]
 #[ubx(class = 0x06, id = 0x00, fixed_payload_len = 20)]
 struct CfgPrtSpi {
-    #[ubx(map_type = SpiPortId, may_failed)]
+    #[ubx(map_type = SpiPortId, may_fail)]
     portid: u8,
     reserved0: u8,
     tx_ready: u16,
@@ -531,20 +579,28 @@ struct NavTimeUTC {
     /// GPS Millisecond Time of Week
     itow: u32,
     time_accuracy_estimate_ns: u32,
+
     /// Nanoseconds of second, range -1e9 .. 1e9
     nanos: i32,
+
     /// Year, range 1999..2099
     year: u16,
+
     /// Month, range 1..12
     month: u8,
+
     /// Day of Month, range 1..31
     day: u8,
+
     /// Hour of Day, range 0..23
     hour: u8,
+
     /// Minute of Hour, range 0..59
     min: u8,
+
     /// Seconds of Minute, range 0..59
     sec: u8,
+
     /// Validity Flags
     #[ubx(map_type = NavTimeUtcFlags)]
     valid: u8,
@@ -570,9 +626,12 @@ bitflags! {
 struct CfgRate {
     /// Measurement Rate, GPS measurements are taken every `measure_rate_ms` milliseconds
     measure_rate_ms: u16,
+
     /// Navigation Rate, in number of measurement cycles.
+
     /// On u-blox 5 and u-blox 6, this parametercannot be changed, and is always equals 1.
     nav_rate: u16,
+
     /// Alignment to reference time
     #[ubx(map_type = AlignmentToReferenceTime)]
     time_ref: u16,
@@ -598,8 +657,8 @@ impl AlignmentToReferenceTime {
 struct CfgMsg3 {
     msg_class: u8,
     msg_id: u8,
+
     /// Send rate on current Target
-    ///
     rate: u8,
 }
 
@@ -616,13 +675,14 @@ impl CfgMsg3Builder {
 
 /// Set Message rate configuration
 /// Send rate is relative to the event a message is registered on.
-/// For example, ifthe rate of a navigation message is set to 2,
-/// the message is sent every secondnavigation solution
+/// For example, if the rate of a navigation message is set to 2,
+/// the message is sent every second navigation solution
 #[ubx_packet_send]
 #[ubx(class = 6, id = 1, fixed_payload_len = 8)]
 struct CfgMsg8 {
     msg_class: u8,
     msg_id: u8,
+
     /// Send rate on I/O Port (6 Ports)
     rates: [u8; 6],
 }
@@ -642,14 +702,15 @@ impl CfgMsg8Builder {
 #[ubx_packet_recv]
 #[ubx(class = 0x0a, id = 0x04)]
 struct MonVer {
-    #[ubx(map_type = &str, may_failed, from = mon_ver::convert_to_str_unchecked,
+    #[ubx(map_type = &str, may_fail, from = mon_ver::convert_to_str_unchecked,
           is_valid = mon_ver::is_cstr_valid, get_as_ref)]
     software_version: [u8; 30],
-    #[ubx(map_type = &str, may_failed, from = mon_ver::convert_to_str_unchecked,
+    #[ubx(map_type = &str, may_fail, from = mon_ver::convert_to_str_unchecked,
           is_valid = mon_ver::is_cstr_valid, get_as_ref)]
     hardware_version: [u8; 10],
+
     /// Extended software information strings
-    #[ubx(map_type = impl Iterator<Item=&str>, may_failed,
+    #[ubx(map_type = impl Iterator<Item=&str>, may_fail,
           from = mon_ver::extension_to_iter,
           is_valid = mon_ver::is_extension_valid)]
     extension: [u8; 0],

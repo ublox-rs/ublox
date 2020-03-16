@@ -48,17 +48,17 @@ pub struct PackField {
 }
 
 impl PackField {
-    pub fn has_intermidiate_type(&self) -> bool {
+    pub fn has_intermediate_type(&self) -> bool {
         self.map.map_type.is_some()
     }
-    pub fn intermidiate_type(&self) -> &Type {
+    pub fn intermediate_type(&self) -> &Type {
         self.map
             .map_type
             .as_ref()
             .map(|x| &x.ty)
             .unwrap_or(&self.ty)
     }
-    pub fn intermidiate_field_name(&self) -> &Ident {
+    pub fn intermediate_field_name(&self) -> &Ident {
         self.map.alias.as_ref().unwrap_or(&self.name)
     }
     pub fn is_field_raw_ty_byte_array(&self) -> bool {

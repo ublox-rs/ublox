@@ -399,7 +399,7 @@ mod kw {
     syn::custom_keyword!(scale);
     syn::custom_keyword!(alias);
     syn::custom_keyword!(default_for_builder);
-    syn::custom_keyword!(may_failed);
+    syn::custom_keyword!(may_fail);
     syn::custom_keyword!(from);
     syn::custom_keyword!(is_valid);
     syn::custom_keyword!(get_as_ref);
@@ -427,8 +427,8 @@ impl Parse for PackFieldMap {
                 input.parse::<kw::alias>()?;
                 input.parse::<Token![=]>()?;
                 map.alias = Some(input.parse()?);
-            } else if lookahead.peek(kw::may_failed) {
-                input.parse::<kw::may_failed>()?;
+            } else if lookahead.peek(kw::may_fail) {
+                input.parse::<kw::may_fail>()?;
                 map.convert_may_fail = true;
             } else if lookahead.peek(kw::from) {
                 input.parse::<kw::from>()?;
