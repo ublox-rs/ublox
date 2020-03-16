@@ -74,31 +74,32 @@ impl<'a> ParserIter<'a> {
         while self.off < self.buf.len() {
             let data = &self.buf[self.off..];
             let pos = data.iter().position(|x| *x == SYNC_CHAR_1)?;
+            let maybe_pack = &data[pos..];
 
-            if (pos + 1) >= data.len() {
+            if maybe_pack.len() <= 1 {
                 return None;
             }
-            if data[pos + 1] != SYNC_CHAR_2 {
-                self.off += pos + 1;
+            if maybe_pack[1] != SYNC_CHAR_2 {
+                self.off += pos + 2;
                 continue;
             }
 
-            if (pos + 5) >= data.len() {
+            if maybe_pack.len() <= 5 {
                 return None;
             }
 
-            let pack_len: usize = u16::from_le_bytes([data[pos + 4], data[pos + 5]]).into();
+            let pack_len: usize = u16::from_le_bytes([maybe_pack[4], maybe_pack[5]]).into();
             if pack_len > MAX_PACK_LEN {
-                self.off += pos + 1;
+                self.off += pos + 2;
                 continue;
             }
-            if (pos + pack_len + 6 + 2) > data.len() {
+            if (pack_len + 6 + 2) > maybe_pack.len() {
                 return None;
             }
-            let (ck_a, ck_b) = ubx_checksum(&data[(pos + 2)..(pos + pack_len + 4 + 2)]);
+            let (ck_a, ck_b) = ubx_checksum(&maybe_pack[2..(4 + pack_len + 2)]);
 
             let (expect_ck_a, expect_ck_b) =
-                (data[pos + 6 + pack_len], data[pos + 6 + pack_len + 1]);
+                (maybe_pack[6 + pack_len], maybe_pack[6 + pack_len + 1]);
             if (ck_a, ck_b) != (expect_ck_a, expect_ck_b) {
                 self.off += pos + 2;
                 return Some(Err(ParserError::InvalidChecksum {
@@ -106,9 +107,9 @@ impl<'a> ParserIter<'a> {
                     got: u16::from_le_bytes([ck_a, ck_b]),
                 }));
             }
-            let msg_data = &data[(pos + 6)..(pos + 6 + pack_len)];
-            let class_id = data[pos + 2];
-            let msg_id = data[pos + 3];
+            let msg_data = &maybe_pack[6..(6 + pack_len)];
+            let class_id = maybe_pack[2];
+            let msg_id = maybe_pack[3];
             self.off += pos + 6 + pack_len + 2;
             return Some(match_packet(class_id, msg_id, msg_data));
         }
