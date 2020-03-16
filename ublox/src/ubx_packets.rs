@@ -109,7 +109,7 @@ impl UbxPacketRequest {
     }
 
     #[inline]
-    pub fn to_packet_bytes(self) -> [u8; Self::PACKET_LEN] {
+    pub fn into_packet_bytes(self) -> [u8; Self::PACKET_LEN] {
         let mut ret = [
             SYNC_CHAR_1,
             SYNC_CHAR_2,

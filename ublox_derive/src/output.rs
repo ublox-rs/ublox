@@ -199,17 +199,16 @@ pub fn generate_send_code_for_packet(pack_descr: &PackDesc) -> Vec<TokenStream> 
             pack_fields.push(quote! {
                 let bytes = self.#name.into_raw().to_le_bytes()
             });
+        } else if !f.is_field_raw_ty_byte_array() {
+            pack_fields.push(quote! {
+                let bytes = self.#name.to_le_bytes()
+            });
         } else {
-            if !f.is_field_raw_ty_byte_array() {
-                pack_fields.push(quote! {
-                    let bytes = self.#name.to_le_bytes()
-                });
-            } else {
-                pack_fields.push(quote! {
-                    let bytes: &[u8] = &self.#name;
-                });
-            }
+            pack_fields.push(quote! {
+                let bytes: &[u8] = &self.#name;
+            });
         }
+
         write_fields.push(pack_fields.last().unwrap().clone());
         write_fields.push(quote! {
             out.write(&bytes)?;
@@ -253,7 +252,7 @@ pub fn generate_send_code_for_packet(pack_descr: &PackDesc) -> Vec<TokenStream> 
                 pub const PACKET_LEN: usize = #packet_size;
 
                 #[inline]
-                pub fn to_packet_bytes(self) -> [u8; Self::PACKET_LEN] {
+                pub fn into_packet_bytes(self) -> [u8; Self::PACKET_LEN] {
                     let mut ret = [0u8; Self::PACKET_LEN];
                     ret[0] = SYNC_CHAR_1;
                     ret[1] = SYNC_CHAR_2;
@@ -271,7 +270,7 @@ pub fn generate_send_code_for_packet(pack_descr: &PackDesc) -> Vec<TokenStream> 
             }
             impl From<#payload_struct> for [u8; #packet_size] {
                 fn from(x: #payload_struct) -> Self {
-                    x.to_packet_bytes()
+                    x.into_packet_bytes()
                 }
             }
         });

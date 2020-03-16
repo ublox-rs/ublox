@@ -116,7 +116,7 @@ impl Device {
                 flags: 0,
                 reserved5: 0,
             }
-            .to_packet_bytes(),
+            .into_packet_bytes(),
         )?;
 
         // Eat the acknowledge and let the device start
@@ -125,14 +125,15 @@ impl Device {
 
         // Go get mon-ver
         self.port
-            .write_all(&UbxPacketRequest::request_for::<MonVer>().to_packet_bytes())?;
+            .write_all(&UbxPacketRequest::request_for::<MonVer>().into_packet_bytes())?;
         self.poll_for(Duration::from_millis(200))?;
         Ok(())
     }
 
     fn enable_packet<T: UbxPacketMeta>(&mut self) -> Result<()> {
-        self.port
-            .write_all(&CfgMsg8Builder::set_rate_for::<T>([0, 1, 0, 0, 0, 0]).to_packet_bytes())?;
+        self.port.write_all(
+            &CfgMsg8Builder::set_rate_for::<T>([0, 1, 0, 0, 0, 0]).into_packet_bytes(),
+        )?;
         self.wait_for_ack::<CfgMsg8>()?;
         Ok(())
     }
@@ -247,7 +248,7 @@ impl Device {
                 reset_mode: ResetMode::ControlledSoftwareReset,
                 reserved1: 0,
             }
-            .to_packet_bytes(),
+            .into_packet_bytes(),
         )?;
 
         // Clear our device state

@@ -231,7 +231,7 @@ fn test_ubx_packet_send() {
                 pub const PACKET_LEN: usize = 17usize;
 
                 #[inline]
-                pub fn to_packet_bytes(self) -> [u8; Self::PACKET_LEN] {
+                pub fn into_packet_bytes(self) -> [u8; Self::PACKET_LEN] {
                     let mut ret = [0u8; Self::PACKET_LEN];
                     ret[0] = SYNC_CHAR_1;
                     ret[1] = SYNC_CHAR_2;
@@ -260,7 +260,7 @@ fn test_ubx_packet_send() {
             }
             impl From<TestBuilder> for [u8; 17usize] {
                 fn from(x: TestBuilder) -> Self {
-                    x.to_packet_bytes()
+                    x.into_packet_bytes()
                 }
             }
             impl UbxPacketCreator for TestBuilder {

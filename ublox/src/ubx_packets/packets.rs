@@ -724,14 +724,13 @@ mod mon_ver {
             .iter()
             .position(|x| *x == 0)
             .expect("is_cstr_valid bug?");
-        let cstr =
-            CStr::from_bytes_with_nul(&bytes[0..(null_pos + 1)]).expect("is_cstr_valid bug?");
+        let cstr = CStr::from_bytes_with_nul(&bytes[0..=null_pos]).expect("is_cstr_valid bug?");
         cstr.to_str().expect("is_cstr_valid bug?")
     }
 
     pub(crate) fn is_cstr_valid(bytes: &[u8]) -> bool {
         if let Some(pos) = bytes.iter().position(|x| *x == 0) {
-            if let Ok(cstr) = CStr::from_bytes_with_nul(&bytes[0..(pos + 1)]) {
+            if let Ok(cstr) = CStr::from_bytes_with_nul(&bytes[0..=pos]) {
                 cstr.to_str().is_ok()
             } else {
                 false

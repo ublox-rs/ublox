@@ -63,11 +63,7 @@ impl PackField {
     }
     pub fn is_field_raw_ty_byte_array(&self) -> bool {
         if let syn::Type::Array(ref fixed_array) = self.ty {
-            if *fixed_array.elem == syn::parse_quote!(u8) {
-                true
-            } else {
-                false
-            }
+            *fixed_array.elem == syn::parse_quote!(u8)
         } else {
             false
         }
