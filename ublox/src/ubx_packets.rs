@@ -9,7 +9,8 @@ pub use types::*;
 pub trait UbxPacketMeta {
     const CLASS: u8;
     const ID: u8;
-    const FIXED_PAYLOAD_LENGTH: Option<u16>;
+    const FIXED_PAYLOAD_LEN: Option<u16>;
+    const MAX_PAYLOAD_LEN: u16;
 }
 
 pub(crate) const SYNC_CHAR_1: u8 = 0xb5;

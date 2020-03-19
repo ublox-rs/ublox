@@ -1,6 +1,6 @@
 use crate::types::BitFlagsMacro;
 use crate::types::{
-    PackDesc, PackField, PacketFlag, RecvPackets, UbxEnumRestHandling, UbxExtendEnum,
+    PackDesc, PackField, PacketFlag, PayloadLen, RecvPackets, UbxEnumRestHandling, UbxExtendEnum,
     UbxTypeFromFn, UbxTypeIntoFn,
 };
 use proc_macro2::{Span, TokenStream};
@@ -158,11 +158,15 @@ pub fn generate_types_for_packet(pack_descr: &PackDesc) -> TokenStream {
     let name = Ident::new(&pack_descr.name, Span::call_site());
     let class = pack_descr.header.class;
     let id = pack_descr.header.id;
-    let fixed_payload_len = match pack_descr.header.fixed_payload_len {
+    let fixed_payload_len = match pack_descr.header.payload_len.fixed() {
         Some(x) => quote! { Some(#x) },
         None => quote! { None },
     };
     let struct_comment = &pack_descr.comment;
+    let max_payload_len = match pack_descr.header.payload_len {
+        PayloadLen::Fixed(x) => x,
+        PayloadLen::Max(x) => x,
+    };
     quote! {
 
         #[doc = #struct_comment]
@@ -170,7 +174,8 @@ pub fn generate_types_for_packet(pack_descr: &PackDesc) -> TokenStream {
         impl UbxPacketMeta for #name {
             const CLASS: u8 = #class;
             const ID: u8 = #id;
-            const FIXED_PAYLOAD_LENGTH: Option<u16> = #fixed_payload_len;
+            const FIXED_PAYLOAD_LEN: Option<u16> = #fixed_payload_len;
+            const MAX_PAYLOAD_LEN: u16 = #max_payload_len;
         }
     }
 }
@@ -495,6 +500,7 @@ pub fn generate_code_to_extend_bitflags(bitflags: BitFlagsMacro) -> syn::Result<
 pub fn generate_code_for_parse(recv_packs: &RecvPackets) -> TokenStream {
     let mut pack_enum_variants = vec![];
     let mut matches = vec![];
+    let mut max_16_chain = None;
 
     for name in &recv_packs.all_packets {
         let ref_name = format_ident!("{}Ref", name);
@@ -507,19 +513,22 @@ pub fn generate_code_for_parse(recv_packs: &RecvPackets) -> TokenStream {
                 Ok(PacketRef::#name(#ref_name(payload)))
             }
         });
+        if let Some(prev_max_16_chain) = max_16_chain {
+            max_16_chain = Some(quote! { max_u16(#name::MAX_PAYLOAD_LEN, #prev_max_16_chain) });
+        } else {
+            max_16_chain = Some(quote! { #name::MAX_PAYLOAD_LEN });
+        }
     }
 
     let union_enum_name = &recv_packs.union_enum_name;
     let unknown_var = &recv_packs.unknown_ty;
-    let mut tokens = quote! {
+    quote! {
         #[doc = "All possible packets enum"]
         pub enum #union_enum_name<'a> {
             #(#pack_enum_variants),*,
             Unknown(#unknown_var<'a>)
         }
-    };
 
-    let matcher_func = quote! {
         pub(crate) fn match_packet(class: u8, msg_id: u8, payload: &[u8]) -> Result<PacketRef, ParserError> {
             match (class, msg_id) {
                 #(#matches)*
@@ -530,10 +539,12 @@ pub fn generate_code_for_parse(recv_packs: &RecvPackets) -> TokenStream {
                 })),
             }
         }
-    };
-    tokens.extend(matcher_func);
 
-    tokens
+        const fn max_u16(a: u16, b: u16) -> u16 {
+            [a, b][(a < b) as usize]
+        }
+        pub(crate) const MAX_PACK_LEN: u16 = #max_16_chain;
+    }
 }
 
 fn get_raw_field_code(field: &PackField, cur_off: usize, data: TokenStream) -> TokenStream {

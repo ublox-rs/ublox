@@ -1,10 +1,7 @@
 use crate::{
     error::ParserError,
-    ubx_packets::{match_packet, ubx_checksum, PacketRef, SYNC_CHAR_1, SYNC_CHAR_2},
+    ubx_packets::{match_packet, ubx_checksum, PacketRef, MAX_PACK_LEN, SYNC_CHAR_1, SYNC_CHAR_2},
 };
-
-/// Some big number, TODO: need validation against all known packets
-const MAX_PACK_LEN: usize = 1022;
 
 /// Streaming parser for UBX protocol with buffer
 #[derive(Default)]
@@ -89,7 +86,7 @@ impl<'a> ParserIter<'a> {
             }
 
             let pack_len: usize = u16::from_le_bytes([maybe_pack[4], maybe_pack[5]]).into();
-            if pack_len > MAX_PACK_LEN {
+            if pack_len > usize::from(MAX_PACK_LEN) {
                 self.off += pos + 2;
                 continue;
             }
@@ -115,4 +112,9 @@ impl<'a> ParserIter<'a> {
         }
         None
     }
+}
+
+#[test]
+fn test_max_packet_len() {
+    assert!(MAX_PACK_LEN >= 1240);
 }

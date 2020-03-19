@@ -700,7 +700,7 @@ impl CfgMsg8Builder {
 
 /// Receiver/Software Version
 #[ubx_packet_recv]
-#[ubx(class = 0x0a, id = 0x04)]
+#[ubx(class = 0x0a, id = 0x04, max_payload_len = 1240)]
 struct MonVer {
     #[ubx(map_type = &str, may_fail, from = mon_ver::convert_to_str_unchecked,
           is_valid = mon_ver::is_cstr_valid, get_as_ref)]

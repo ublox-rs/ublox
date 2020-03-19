@@ -35,8 +35,24 @@ impl PackDesc {
 pub struct PackHeader {
     pub class: u8,
     pub id: u8,
-    pub fixed_payload_len: Option<u16>,
+    pub payload_len: PayloadLen,
     pub flags: Vec<PacketFlag>,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum PayloadLen {
+    Fixed(u16),
+    Max(u16),
+}
+
+impl PayloadLen {
+    pub fn fixed(&self) -> Option<u16> {
+        if let PayloadLen::Fixed(len) = self {
+            Some(*len)
+        } else {
+            None
+        }
+    }
 }
 
 pub struct PackField {

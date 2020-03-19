@@ -1,6 +1,7 @@
 use crate::types::{
     BitFlagsMacro, BitFlagsMacroItem, MapType, PackDesc, PackField, PackFieldMap, PackHeader,
-    PacketFlag, RecvPackets, UbxEnumRestHandling, UbxExtendEnum, UbxTypeFromFn, UbxTypeIntoFn,
+    PacketFlag, PayloadLen, RecvPackets, UbxEnumRestHandling, UbxExtendEnum, UbxTypeFromFn,
+    UbxTypeIntoFn,
 };
 use proc_macro2::Span;
 use quote::ToTokens;
@@ -37,7 +38,7 @@ pub fn parse_packet_description(
         fields,
     };
 
-    if ret.header.fixed_payload_len.map(usize::from) == ret.packet_payload_size() {
+    if ret.header.payload_len.fixed().map(usize::from) == ret.packet_payload_size() {
         Ok(ret)
     } else {
         Err(Error::new(
@@ -45,7 +46,7 @@ pub fn parse_packet_description(
             format!(
                 "Calculated packet size ({:?}) doesn't match specified ({:?})",
                 ret.packet_payload_size(),
-                ret.header.fixed_payload_len
+                ret.header.payload_len
             ),
         ))
     }
@@ -261,6 +262,7 @@ fn parse_ubx_attr(attrs: &[Attribute], struct_name: &Ident) -> syn::Result<PackH
     let mut id = None;
     let mut fixed_payload_len = None;
     let mut flags = Vec::new();
+    let mut max_payload_len = None;
 
     for e in &meta.nested {
         match e {
@@ -294,6 +296,17 @@ fn parse_ubx_attr(attrs: &[Attribute], struct_name: &Ident) -> syn::Result<PackH
                         syn::Lit::Int(x) => Some(x.base10_parse::<u16>()?),
                         _ => return Err(Error::new(lit.span(), "Should be integer literal")),
                     };
+                } else if path.is_ident("max_payload_len") {
+                    if max_payload_len.is_some() {
+                        return Err(Error::new(
+                            e.span(),
+                            "Duplicate \"max_payload_len\" attribute",
+                        ));
+                    }
+                    max_payload_len = match lit {
+                        syn::Lit::Int(x) => Some(x.base10_parse::<u16>()?),
+                        _ => return Err(Error::new(lit.span(), "Should be integer literal")),
+                    };
                 } else if path.is_ident("flags") {
                     if !flags.is_empty() {
                         return Err(Error::new(path.span(), "Duplicate flags"));
@@ -313,10 +326,27 @@ fn parse_ubx_attr(attrs: &[Attribute], struct_name: &Ident) -> syn::Result<PackH
     let class = class.ok_or_else(|| Error::new(meta.span(), "No \"class\" attribute"))?;
     let id = id.ok_or_else(|| Error::new(meta.span(), "No \"id\" attribute"))?;
 
+    let payload_len = match (max_payload_len, fixed_payload_len) {
+        (Some(x), None) => PayloadLen::Max(x),
+        (None, Some(x)) => PayloadLen::Fixed(x),
+        (Some(_), Some(_)) => {
+            return Err(Error::new(
+                meta.span(),
+                "You should not note max_payload_len AND fixed_payload_len",
+            ))
+        }
+        (None, None) => {
+            return Err(Error::new(
+                meta.span(),
+                "You should note max_payload_len or fixed_payload_len",
+            ))
+        }
+    };
+
     Ok(PackHeader {
         class,
         id,
-        fixed_payload_len,
+        payload_len,
         flags,
     })
 }

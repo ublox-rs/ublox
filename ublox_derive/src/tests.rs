@@ -43,7 +43,8 @@ fn test_ubx_packet_recv_simple() {
             impl UbxPacketMeta for Test {
                 const CLASS: u8 = 1u8;
                 const ID: u8 = 2u8;
-                const FIXED_PAYLOAD_LENGTH: Option<u16> = Some(16u16);
+                const FIXED_PAYLOAD_LEN: Option<u16> = Some(16u16);
+                const MAX_PAYLOAD_LEN: u16 = 16u16;
             }
 
             #[doc = "Some comment"]
@@ -122,7 +123,7 @@ fn test_ubx_packet_recv_simple() {
 fn test_ubx_packet_recv_dyn_len() {
     let src_code = quote! {
         #[ubx_packet_recv]
-        #[ubx(class = 1, id = 2)]
+        #[ubx(class = 1, id = 2, max_payload_len = 38)]
         struct Test {
             #[ubx(map_type = &str, get_as_ref, from = unpack_str)]
             f1: [u8; 8],
@@ -148,7 +149,8 @@ fn test_ubx_packet_recv_dyn_len() {
             impl UbxPacketMeta for Test {
                 const CLASS: u8 = 1u8;
                 const ID: u8 = 2u8;
-                const FIXED_PAYLOAD_LENGTH: Option<u16> = None;
+                const FIXED_PAYLOAD_LEN: Option<u16> = None;
+                const MAX_PAYLOAD_LEN: u16 = 38u16;
             }
 
             #[doc = ""]
@@ -213,7 +215,8 @@ fn test_ubx_packet_send() {
             impl UbxPacketMeta for Test {
                 const CLASS: u8 = 1u8;
                 const ID: u8 = 2u8;
-                const FIXED_PAYLOAD_LENGTH: Option<u16> = Some(9u16);
+                const FIXED_PAYLOAD_LEN: Option<u16> = Some(9u16);
+                const MAX_PAYLOAD_LEN: u16 = 9u16;
             }
 
             #[doc = "Some comment"]
@@ -405,6 +408,11 @@ fn test_define_recv_packets() {
                     })),
                 }
             }
+
+            const fn max_u16(a: u16, b: u16) -> u16 {
+                [a, b][(a < b) as usize]
+            }
+            pub(crate) const MAX_PACK_LEN: u16 = max_u16(Pack2::MAX_PAYLOAD_LEN, Pack1::MAX_PAYLOAD_LEN);
         },
     );
 }
