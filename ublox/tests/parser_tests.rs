@@ -1,6 +1,3 @@
-use cpu_time::ProcessTime;
-use rand::{thread_rng, Rng};
-use std::{env, fs, path::Path};
 use ublox::{PacketRef, Parser, ParserError, ParserIter};
 
 macro_rules! my_vec {
@@ -131,64 +128,4 @@ fn test_parse_ack_ack_garbage_before() {
         "garbage before2"
     );
     assert!(parser.is_buffer_empty());
-}
-
-#[test]
-#[ignore]
-fn test_parse_big_file() {
-    let ubx_big_log_path = env::var("UBX_BIG_LOG_PATH").unwrap();
-    let ubx_big_log_path = Path::new(&ubx_big_log_path);
-
-    let biglog = fs::read(ubx_big_log_path).unwrap();
-    const MAX_SIZE: usize = 100;
-    let mut read_sizes = Vec::with_capacity(biglog.len() / MAX_SIZE / 2);
-    let mut rng = thread_rng();
-    let mut i = 0;
-    while i < biglog.len() {
-        let chunk: usize = rng.gen_range(1, MAX_SIZE);
-        let chunk = (biglog.len() - i).min(chunk);
-        read_sizes.push(chunk);
-        i += chunk;
-    }
-
-    let mut wrong_chksum = 0usize;
-    let mut other_errors = 0usize;
-    let mut nav_pos_llh = 0usize;
-    let mut nav_stat = 0usize;
-    let mut ack_ack = 0usize;
-    let mut unknown = 0usize;
-
-    let mut log = biglog.as_slice();
-    let mut parser = Parser::default();
-
-    let start = ProcessTime::now();
-    for chunk_size in &read_sizes {
-        let (buf, rest) = log.split_at(*chunk_size);
-        log = rest;
-        let mut it = parser.consume(buf);
-        while let Some(pack) = it.next() {
-            match pack {
-                Ok(pack) => match pack {
-                    PacketRef::AckAck(_) => ack_ack += 1,
-                    PacketRef::NavPosLlh(_) => nav_pos_llh += 1,
-                    PacketRef::NavStatus(_) => nav_stat += 1,
-                    _ => unknown += 1,
-                },
-                Err(ParserError::InvalidChecksum { .. }) => wrong_chksum += 1,
-                Err(_) => other_errors += 1,
-            }
-        }
-    }
-    let cpu_time = start.elapsed();
-    println!(
-        "parse time of {}: {:?}",
-        ubx_big_log_path.display(),
-        cpu_time
-    );
-    assert_eq!(0, wrong_chksum);
-    assert_eq!(0, other_errors);
-    assert_eq!(38291, nav_pos_llh);
-    assert_eq!(38291, nav_stat);
-    assert_eq!(120723, unknown);
-    assert_eq!(1, ack_ack);
 }
