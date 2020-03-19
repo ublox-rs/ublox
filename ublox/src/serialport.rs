@@ -132,9 +132,9 @@ impl Device {
 
     fn enable_packet<T: UbxPacketMeta>(&mut self) -> Result<()> {
         self.port.write_all(
-            &CfgMsg8Builder::set_rate_for::<T>([0, 1, 0, 0, 0, 0]).into_packet_bytes(),
+            &CfgMsgAllPortsBuilder::set_rate_for::<T>([0, 1, 0, 0, 0, 0]).into_packet_bytes(),
         )?;
-        self.wait_for_ack::<CfgMsg8>()?;
+        self.wait_for_ack::<CfgMsgAllPorts>()?;
         Ok(())
     }
 

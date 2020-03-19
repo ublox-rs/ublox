@@ -654,7 +654,7 @@ impl AlignmentToReferenceTime {
 /// Set Message Rate the current port
 #[ubx_packet_send]
 #[ubx(class = 6, id = 1, fixed_payload_len = 3)]
-struct CfgMsg3 {
+struct CfgMsgSinglePort {
     msg_class: u8,
     msg_id: u8,
 
@@ -662,7 +662,7 @@ struct CfgMsg3 {
     rate: u8,
 }
 
-impl CfgMsg3Builder {
+impl CfgMsgSinglePortBuilder {
     #[inline]
     pub fn set_rate_for<T: UbxPacketMeta>(rate: u8) -> Self {
         Self {
@@ -679,7 +679,7 @@ impl CfgMsg3Builder {
 /// the message is sent every second navigation solution
 #[ubx_packet_send]
 #[ubx(class = 6, id = 1, fixed_payload_len = 8)]
-struct CfgMsg8 {
+struct CfgMsgAllPorts {
     msg_class: u8,
     msg_id: u8,
 
@@ -687,7 +687,7 @@ struct CfgMsg8 {
     rates: [u8; 6],
 }
 
-impl CfgMsg8Builder {
+impl CfgMsgAllPortsBuilder {
     #[inline]
     pub fn set_rate_for<T: UbxPacketMeta>(rates: [u8; 6]) -> Self {
         Self {
