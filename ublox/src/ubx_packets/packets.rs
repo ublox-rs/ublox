@@ -5,6 +5,7 @@ use super::{
 use crate::error::{MemWriterError, ParserError};
 use bitflags::bitflags;
 use chrono::prelude::*;
+use std::fmt;
 use ublox_derive::{
     define_recv_packets, ubx_extend, ubx_extend_bitflags, ubx_packet_recv, ubx_packet_recv_send,
     ubx_packet_send,
@@ -324,6 +325,15 @@ impl FixStatusInfo {
     }
     pub const fn from(x: u8) -> Self {
         Self(x)
+    }
+}
+
+impl fmt::Debug for FixStatusInfo {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("FixStatusInfo")
+            .field("has_pr_prr_correction", &self.has_pr_prr_correction())
+            .field("map_matching", &self.map_matching())
+            .finish()
     }
 }
 
