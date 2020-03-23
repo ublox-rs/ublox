@@ -180,7 +180,7 @@ pub fn generate_types_for_packet(pack_descr: &PackDesc) -> TokenStream {
     }
 }
 
-pub fn generate_send_code_for_packet(pack_descr: &PackDesc) -> Vec<TokenStream> {
+pub fn generate_send_code_for_packet(pack_descr: &PackDesc) -> TokenStream {
     let main_name = Ident::new(&pack_descr.name, Span::call_site());
     let payload_struct = format_ident!("{}Builder", pack_descr.name);
 
@@ -238,21 +238,20 @@ pub fn generate_send_code_for_packet(pack_descr: &PackDesc) -> Vec<TokenStream> 
     } else {
         quote! {}
     };
-    let mut ret = Vec::with_capacity(4);
     let struct_comment = &pack_descr.comment;
-    ret.push(quote! {
+    let mut ret = quote! {
         #[doc = #struct_comment]
         #[doc = "Struct that used as \"builder\" for packet"]
         #builder_attr
         pub struct #payload_struct {
             #(#fields),*
         }
-    });
+    };
 
     if let Some(packet_payload_size) = pack_descr.packet_payload_size() {
         let packet_size = packet_payload_size + 8;
         let packet_payload_size_u16 = u16::try_from(packet_payload_size).unwrap();
-        ret.push(quote! {
+        ret.extend(quote! {
             impl #payload_struct {
                 pub const PACKET_LEN: usize = #packet_size;
 
@@ -278,9 +277,7 @@ pub fn generate_send_code_for_packet(pack_descr: &PackDesc) -> Vec<TokenStream> 
                     x.into_packet_bytes()
                 }
             }
-        });
 
-        ret.push(quote! {
             impl UbxPacketCreator for #payload_struct {
                 #[inline]
                 fn create_packet<T: MemWriter>(self, out: &mut T) -> Result<(), MemWriterError<T::Error>> {
