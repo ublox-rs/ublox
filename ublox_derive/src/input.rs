@@ -215,10 +215,19 @@ fn parse_ubx_extend_attrs(
                         into_fn = Some(UbxTypeIntoFn::Raw);
                     } else if p.is_ident("from_unchecked") {
                         from_fn = Some(UbxTypeFromFn::FromUnchecked);
-                    } else if p.is_ident("rest_reserved") {
-                        rest_handling = Some(UbxEnumRestHandling::Reserved);
-                    } else if p.is_ident("rest_error") {
-                        rest_handling = Some(UbxEnumRestHandling::ErrorProne);
+                    } else if p.is_ident("rest_reserved") || p.is_ident("rest_error") {
+                        if rest_handling.is_some() {
+                            return Err(Error::new(
+                                p.span(),
+                                "rest_reserved or rest_error already defined",
+                            ));
+                        }
+
+                        rest_handling = Some(if p.is_ident("rest_reserved") {
+                            UbxEnumRestHandling::Reserved
+                        } else {
+                            UbxEnumRestHandling::ErrorProne
+                        });
                     } else {
                         return Err(Error::new(p.span(), "Invalid ubx attribute"));
                     }
