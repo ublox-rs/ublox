@@ -241,7 +241,7 @@ pub fn generate_send_code_for_packet(pack_descr: &PackDesc) -> TokenStream {
     let struct_comment = &pack_descr.comment;
     let mut ret = quote! {
         #[doc = #struct_comment]
-        #[doc = "Struct that used as \"builder\" for packet"]
+        #[doc = "Struct that is used as \"builder\" for packet"]
         #builder_attr
         pub struct #payload_struct {
             #(#fields),*
