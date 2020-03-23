@@ -220,7 +220,7 @@ fn test_ubx_packet_send() {
             }
 
             #[doc = "Some comment"]
-            #[doc = "Struct that used as \"builder\" for packet"]
+            #[doc = "Struct that is used as \"builder\" for packet"]
             #[derive(Default)]
             pub struct TestBuilder {
                 #[doc = ""]
