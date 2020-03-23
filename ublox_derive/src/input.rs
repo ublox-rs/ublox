@@ -77,7 +77,7 @@ pub fn parse_ubx_enum_type(
                     unimplemented!();
                 }
             } else {
-                return Err(syn::Error::new(
+                return Err(Error::new(
                     list.nested[0].span(),
                     "Invalid repr attribute for ubx_type enum",
                 ));
@@ -85,7 +85,7 @@ pub fn parse_ubx_enum_type(
             syn::parse_quote! { u8 }
         }
         _ => {
-            return Err(syn::Error::new(
+            return Err(Error::new(
                 attr.span(),
                 "Invalid repr attribute for ubx_type enum",
             ))
@@ -94,7 +94,7 @@ pub fn parse_ubx_enum_type(
     let mut variants = Vec::with_capacity(in_variants.len());
     for var in in_variants {
         if syn::Fields::Unit != var.fields {
-            return Err(syn::Error::new(
+            return Err(Error::new(
                 var.fields.span(),
                 "Invalid variant for ubx_type enum",
             ));
@@ -110,7 +110,7 @@ pub fn parse_ubx_enum_type(
         {
             litint.base10_parse::<u8>()?
         } else {
-            return Err(syn::Error::new(
+            return Err(Error::new(
                 expr.span(),
                 "Invalid variant value for ubx_type enum",
             ));
@@ -220,14 +220,14 @@ fn parse_ubx_extend_attrs(
                     } else if p.is_ident("rest_error") {
                         rest_handling = Some(UbxEnumRestHandling::ErrorProne);
                     } else {
-                        return Err(syn::Error::new(p.span(), "Invalid ubx attribute"));
+                        return Err(Error::new(p.span(), "Invalid ubx attribute"));
                     }
                 } else {
-                    return Err(syn::Error::new(item.span(), "Invalid ubx attribute"));
+                    return Err(Error::new(item.span(), "Invalid ubx attribute"));
                 }
             }
         }
-        _ => return Err(syn::Error::new(attr.span(), "Invalid ubx attributes")),
+        _ => return Err(Error::new(attr.span(), "Invalid ubx attributes")),
     }
 
     if from_fn == Some(UbxTypeFromFn::From)
