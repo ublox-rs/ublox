@@ -27,7 +27,7 @@ pub fn parse_packet_description(
     if let Some(field) = fields.iter().rev().skip(1).find(|x| x.size_bytes.is_none()) {
         return Err(Error::new(
             field.name.span(),
-            "Not finite size for not last field",
+            "Non-finite size for field which is not the last field",
         ));
     }
 
