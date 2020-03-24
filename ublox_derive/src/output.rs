@@ -495,9 +495,8 @@ pub fn generate_code_to_extend_bitflags(bitflags: BitFlagsMacro) -> syn::Result<
 }
 
 pub fn generate_code_for_parse(recv_packs: &RecvPackets) -> TokenStream {
-    let mut pack_enum_variants = vec![];
-    let mut matches = vec![];
-    let mut max_16_chain = None;
+    let mut pack_enum_variants = Vec::with_capacity(recv_packs.all_packets.len());
+    let mut matches = Vec::with_capacity(recv_packs.all_packets.len());
 
     for name in &recv_packs.all_packets {
         let ref_name = format_ident!("{}Ref", name);
@@ -510,15 +509,18 @@ pub fn generate_code_for_parse(recv_packs: &RecvPackets) -> TokenStream {
                 Ok(PacketRef::#name(#ref_name(payload)))
             }
         });
-        if let Some(prev_max_16_chain) = max_16_chain {
-            max_16_chain = Some(quote! { max_u16(#name::MAX_PAYLOAD_LEN, #prev_max_16_chain) });
-        } else {
-            max_16_chain = Some(quote! { #name::MAX_PAYLOAD_LEN });
-        }
     }
 
     let union_enum_name = &recv_packs.union_enum_name;
     let unknown_var = &recv_packs.unknown_ty;
+
+    let max_payload_len_calc = recv_packs
+        .all_packets
+        .iter()
+        .fold(quote! { 0u16 }, |prev, name| {
+            quote! { max_u16(#name::MAX_PAYLOAD_LEN, #prev) }
+        });
+
     quote! {
         #[doc = "All possible packets enum"]
         pub enum #union_enum_name<'a> {
@@ -540,7 +542,7 @@ pub fn generate_code_for_parse(recv_packs: &RecvPackets) -> TokenStream {
         const fn max_u16(a: u16, b: u16) -> u16 {
             [a, b][(a < b) as usize]
         }
-        pub(crate) const MAX_PACK_LEN: u16 = #max_16_chain;
+        pub(crate) const MAX_PAYLOAD_LEN: u16 = #max_payload_len_calc;
     }
 }
 

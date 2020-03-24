@@ -1,6 +1,8 @@
 use crate::{
     error::ParserError,
-    ubx_packets::{match_packet, ubx_checksum, PacketRef, MAX_PACK_LEN, SYNC_CHAR_1, SYNC_CHAR_2},
+    ubx_packets::{
+        match_packet, ubx_checksum, PacketRef, MAX_PAYLOAD_LEN, SYNC_CHAR_1, SYNC_CHAR_2,
+    },
 };
 
 /// Streaming parser for UBX protocol with buffer
@@ -86,7 +88,7 @@ impl<'a> ParserIter<'a> {
             }
 
             let pack_len: usize = u16::from_le_bytes([maybe_pack[4], maybe_pack[5]]).into();
-            if pack_len > usize::from(MAX_PACK_LEN) {
+            if pack_len > usize::from(MAX_PAYLOAD_LEN) {
                 self.off += pos + 2;
                 continue;
             }
@@ -115,6 +117,6 @@ impl<'a> ParserIter<'a> {
 }
 
 #[test]
-fn test_max_packet_len() {
-    assert!(MAX_PACK_LEN >= 1240);
+fn test_max_payload_len() {
+    assert!(MAX_PAYLOAD_LEN >= 1240);
 }

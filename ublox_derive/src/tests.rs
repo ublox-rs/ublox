@@ -412,7 +412,8 @@ fn test_define_recv_packets() {
             const fn max_u16(a: u16, b: u16) -> u16 {
                 [a, b][(a < b) as usize]
             }
-            pub(crate) const MAX_PACK_LEN: u16 = max_u16(Pack2::MAX_PAYLOAD_LEN, Pack1::MAX_PAYLOAD_LEN);
+            pub(crate) const MAX_PAYLOAD_LEN: u16 =
+                    max_u16(Pack2::MAX_PAYLOAD_LEN, max_u16(Pack1::MAX_PAYLOAD_LEN, 0u16));
         },
     );
 }
