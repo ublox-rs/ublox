@@ -1,25 +1,68 @@
-use std::convert;
-use std::io;
+use std::fmt;
 
 #[derive(Debug)]
-pub enum Error {
-    InvalidChecksum,
-    UnexpectedPacket,
-    TimedOutWaitingForAck(u8, u8),
-    IoError(io::Error),
-    BincodeError(bincode::Error),
+pub enum MemWriterError<E>
+where
+    E: std::error::Error,
+{
+    NotEnoughMem,
+    Custom(E),
 }
 
-impl convert::From<io::Error> for Error {
-    fn from(error: io::Error) -> Self {
-        Error::IoError(error)
+impl<E> fmt::Display for MemWriterError<E>
+where
+    E: std::error::Error,
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            MemWriterError::NotEnoughMem => f.write_str("Not enough memory error"),
+            MemWriterError::Custom(e) => write!(f, "MemWriterError: {}", e),
+        }
     }
 }
 
-impl convert::From<bincode::Error> for Error {
-    fn from(error: bincode::Error) -> Self {
-        Error::BincodeError(error)
+impl<E> std::error::Error for MemWriterError<E> where E: std::error::Error {}
+
+/// Error that possible during packets parsing
+#[derive(Debug, PartialEq)]
+pub enum ParserError {
+    InvalidChecksum {
+        expect: u16,
+        got: u16,
+    },
+    InvalidField {
+        packet: &'static str,
+        field: &'static str,
+    },
+    InvalidPacketLen {
+        packet: &'static str,
+        expect: usize,
+        got: usize,
+    },
+}
+
+impl fmt::Display for ParserError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            ParserError::InvalidChecksum { expect, got } => write!(
+                f,
+                "Not valid packet's checksum, expect {:x}, got {:x}",
+                expect, got
+            ),
+            ParserError::InvalidField { packet, field } => {
+                write!(f, "Invalid field {} of packet {}", field, packet)
+            }
+            ParserError::InvalidPacketLen {
+                packet,
+                expect,
+                got,
+            } => write!(
+                f,
+                "Invalid packet({}) length, expect {}, got {}",
+                packet, expect, got
+            ),
+        }
     }
 }
 
-pub type Result<T> = std::result::Result<T, Error>;
+impl std::error::Error for ParserError {}

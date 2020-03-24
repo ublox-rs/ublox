@@ -1,6 +1,6 @@
 [package]
 name = "ublox_derive"
-version = "0.0.0"
+version = "0.0.1"
 authors = ["Lane Kolbly <lane@rscheme.org>"]
 edition = "2018"
 publish = false
@@ -11,5 +11,8 @@ proc-macro = true
 [dependencies]
 proc-macro2 = "1.0"
 quote = "1.0"
-syn = { version = "1.0.14", features = ["extra-traits"] }
-proc-macro-error = "0.4.8"
+syn = { version = "1.0.14", features = ["extra-traits", "full"] }
+
+[dev-dependencies]
+which = { version = "3.0", default-features = false }
+proc-macro2 = { version = "1.0", features = ["span-locations"] }
