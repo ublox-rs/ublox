@@ -113,6 +113,7 @@ pub struct MapType {
     pub ty: Type,
     pub from_fn: TokenStream,
     pub is_valid_fn: TokenStream,
+    pub into_fn: TokenStream,
 }
 
 impl MapType {
@@ -123,10 +124,12 @@ impl MapType {
             quote! { <#ty>::from_unchecked }
         };
         let is_valid_fn = quote! { <#ty>::is_valid };
+        let into_fn = quote! { <#ty>::into_raw };
         Self {
             ty,
             from_fn,
             is_valid_fn,
+            into_fn,
         }
     }
 }

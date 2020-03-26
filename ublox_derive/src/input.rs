@@ -442,6 +442,7 @@ mod kw {
     syn::custom_keyword!(from);
     syn::custom_keyword!(is_valid);
     syn::custom_keyword!(get_as_ref);
+    syn::custom_keyword!(into);
 }
 
 impl Parse for PackFieldMap {
@@ -449,6 +450,7 @@ impl Parse for PackFieldMap {
         let mut map = PackFieldMap::none();
         let mut map_ty = None;
         let mut custom_from_fn: Option<syn::Path> = None;
+        let mut custom_into_fn: Option<syn::Expr> = None;
         let mut custom_is_valid_fn: Option<syn::Path> = None;
 
         while !input.is_empty() {
@@ -480,6 +482,10 @@ impl Parse for PackFieldMap {
             } else if lookahead.peek(kw::get_as_ref) {
                 input.parse::<kw::get_as_ref>()?;
                 map.get_as_ref = true;
+            } else if lookahead.peek(kw::into) {
+                input.parse::<kw::into>()?;
+                input.parse::<Token![=]>()?;
+                custom_into_fn = Some(input.parse()?);
             } else {
                 return Err(lookahead.error());
             }
@@ -496,6 +502,9 @@ impl Parse for PackFieldMap {
             }
             if let Some(custom_is_valid_fn) = custom_is_valid_fn {
                 map_type.is_valid_fn = custom_is_valid_fn.into_token_stream();
+            }
+            if let Some(custom_into_fn) = custom_into_fn {
+                map_type.into_fn = custom_into_fn.into_token_stream();
             }
             map.map_type = Some(map_type);
         }

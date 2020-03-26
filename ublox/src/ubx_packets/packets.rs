@@ -708,6 +708,240 @@ impl CfgMsgAllPortsBuilder {
     }
 }
 
+/// Navigation Engine Settings
+#[ubx_packet_recv_send]
+#[ubx(
+    class = 0x06,
+    id = 0x24,
+    fixed_payload_len = 36,
+    flags = "default_for_builder"
+)]
+struct CfgNav5 {
+    /// Only the masked parameters will be applied
+    #[ubx(map_type = CfgNav5Params)]
+    mask: u16,
+    #[ubx(map_type = CfgNav5DynModel, may_fail)]
+    dyn_model: u8,
+    #[ubx(map_type = CfgNav5FixMode, may_fail)]
+    fix_mode: u8,
+
+    /// Fixed altitude (mean sea level) for 2D fixmode (m)
+    #[ubx(map_type = f64, scale = 0.01, into = ScaleBack::<f64>(100.).as_i32)]
+    fixed_alt: i32,
+
+    /// Fixed altitude variance for 2D mode (m^2)
+    #[ubx(map_type = f64, scale = 0.0001, into = ScaleBack::<f64>(1e4).as_u32)]
+    fixed_alt_var: u32,
+
+    /// Minimum Elevation for a GNSS satellite to be used in NAV (deg)
+    min_elev_degrees: i8,
+
+    /// Reserved
+    dr_limit: u8,
+
+    /// Position DOP Mask to use
+    #[ubx(map_type = f32, scale = 0.1, into = ScaleBack::<f32>(10.).as_u16)]
+    pdop: u16,
+
+    /// Time DOP Mask to use
+    #[ubx(map_type = f32, scale = 0.1, into = ScaleBack::<f32>(10.).as_u16)]
+    tdop: u16,
+
+    /// Position Accuracy Mask (m)
+    pacc: u16,
+
+    /// Time Accuracy Mask
+    /// according to manual unit is "m", but this looks like typo
+    tacc: u16,
+
+    /// Static hold threshold
+    #[ubx(map_type = f32, scale = 0.01, into = ScaleBack::<f32>(100.).as_u8)]
+    static_hold_thresh: u8,
+
+    /// DGNSS timeout (seconds)
+    dgps_time_out: u8,
+
+    /// Number of satellites required to have
+    /// C/N0 above `cno_thresh` for a fix to be attempted
+    cno_thresh_num_svs: u8,
+
+    /// C/N0 threshold for deciding whether toattempt a fix (dBHz)
+    cno_thresh: u8,
+    reserved1: [u8; 2],
+
+    /// Static hold distance threshold (beforequitting static hold)
+    static_hold_max_dist: u16,
+
+    /// UTC standard to be used
+    #[ubx(map_type = CfgNav5UtcStandard, may_fail)]
+    utc_standard: u8,
+    reserved2: [u8; 5],
+}
+
+#[ubx_extend_bitflags]
+#[ubx(from, into_raw, rest_reserved)]
+bitflags! {
+    /// `CfgNav5` parameters bitmask
+    #[derive(Default)]
+    pub struct CfgNav5Params: u16 {
+        /// Apply dynamic model settings
+        const DYN = 1;
+        /// Apply minimum elevation settings
+        const MIN_EL = 2;
+        /// Apply fix mode settings
+       const POS_FIX_MODE = 4;
+        /// Reserved
+        const DR_LIM = 8;
+        /// position mask settings
+       const POS_MASK_APPLY = 0x10;
+        /// Apply time mask settings
+        const TIME_MASK = 0x20;
+        /// Apply static hold settings
+        const STATIC_HOLD_MASK = 0x40;
+        /// Apply DGPS settings
+        const DGPS_MASK = 0x80;
+        /// Apply CNO threshold settings (cnoThresh, cnoThreshNumSVs)
+        const CNO_THRESHOLD = 0x100;
+        /// Apply UTC settings (not supported in protocol versions less than 16)
+        const UTC = 0x400;
+    }
+}
+
+/// Dynamic platform model
+#[ubx_extend]
+#[ubx(from_unchecked, into_raw, rest_error)]
+#[repr(u8)]
+#[derive(Debug, Copy, Clone)]
+pub enum CfgNav5DynModel {
+    Portable = 0,
+    Stationary = 2,
+    Pedestrian = 3,
+    Automotive = 4,
+    Sea = 5,
+    AirborneWithLess1gAcceleration = 6,
+    AirborneWithLess2gAcceleration = 7,
+    AirborneWith4gAcceleration = 8,
+    /// not supported in protocol versions less than 18
+    WristWornWatch = 9,
+    /// supported in protocol versions 19.2
+    Bike = 10,
+}
+
+impl Default for CfgNav5DynModel {
+    fn default() -> Self {
+        Self::AirborneWith4gAcceleration
+    }
+}
+
+/// Position Fixing Mode
+#[ubx_extend]
+#[ubx(from_unchecked, into_raw, rest_error)]
+#[repr(u8)]
+#[derive(Debug, Copy, Clone)]
+pub enum CfgNav5FixMode {
+    Only2D = 1,
+    Only3D = 2,
+    Auto2D3D = 3,
+}
+
+impl Default for CfgNav5FixMode {
+    fn default() -> Self {
+        CfgNav5FixMode::Auto2D3D
+    }
+}
+
+/// UTC standard to be used
+#[ubx_extend]
+#[ubx(from_unchecked, into_raw, rest_error)]
+#[repr(u8)]
+#[derive(Debug, Copy, Clone)]
+pub enum CfgNav5UtcStandard {
+    /// receiver selects based on GNSS configuration (see GNSS timebases)
+    Automatic = 0,
+    /// UTC as operated by the U.S. NavalObservatory (USNO);
+    /// derived from GPStime
+    Usno = 3,
+    /// UTC as operated by the former Soviet Union; derived from GLONASS time
+    UtcSu = 6,
+    /// UTC as operated by the National TimeService Center, China;
+    /// derived from BeiDou time
+    UtcChina = 7,
+}
+
+impl Default for CfgNav5UtcStandard {
+    fn default() -> Self {
+        Self::Automatic
+    }
+}
+
+#[derive(Clone, Copy)]
+#[repr(transparent)]
+struct ScaleBack<T>(T);
+
+trait ScaleBackF64 {
+    fn as_i32(self, x: f64) -> i32;
+    fn as_u32(self, x: f64) -> u32;
+}
+
+impl ScaleBackF64 for ScaleBack<f64> {
+    fn as_i32(self, x: f64) -> i32 {
+        let x = (x * self.0).round();
+        if x < f64::from(i32::min_value()) {
+            i32::min_value()
+        } else if x > f64::from(i32::max_value()) {
+            i32::max_value()
+        } else {
+            x as i32
+        }
+    }
+
+    fn as_u32(self, x: f64) -> u32 {
+        let x = (x * self.0).round();
+        if !x.is_sign_negative() {
+            if x <= f64::from(u32::max_value()) {
+                x as u32
+            } else {
+                u32::max_value()
+            }
+        } else {
+            0
+        }
+    }
+}
+
+trait ScaleBackF32 {
+    fn as_u16(self, x: f32) -> u16;
+    fn as_u8(self, x: f32) -> u8;
+}
+
+impl ScaleBackF32 for ScaleBack<f32> {
+    fn as_u16(self, x: f32) -> u16 {
+        let x = (x * self.0).round();
+        if !x.is_sign_negative() {
+            if x <= f32::from(u16::max_value()) {
+                x as u16
+            } else {
+                u16::max_value()
+            }
+        } else {
+            0
+        }
+    }
+
+    fn as_u8(self, x: f32) -> u8 {
+        let x = (x * self.0).round();
+        if !x.is_sign_negative() {
+            if x <= f32::from(u8::max_value()) {
+                x as u8
+            } else {
+                u8::max_value()
+            }
+        } else {
+            0
+        }
+    }
+}
+
 /// Receiver/Software Version
 #[ubx_packet_recv]
 #[ubx(class = 0x0a, id = 0x04, max_payload_len = 1240)]
@@ -777,12 +1011,13 @@ define_recv_packets!(
         NavPosVelTime,
         NavSolution,
         NavVelNed,
+        NavTimeUTC,
         AlpSrv,
         AckAck,
         AckNak,
         CfgPrtSpi,
         CfgPrtUart,
-        NavTimeUTC,
+        CfgNav5,
         MonVer
     }
 );

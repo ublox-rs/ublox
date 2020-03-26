@@ -248,7 +248,7 @@ fn test_ubx_packet_send() {
                     ret[7usize] = bytes[1usize];
                     ret[8usize] = bytes[2usize];
                     ret[9usize] = bytes[3usize];
-                    let bytes = self.lat_degrees.into_raw().to_le_bytes();
+                    let bytes = <f64>::into_raw(self.lat_degrees).to_le_bytes();
                     ret[10usize] = bytes[0usize];
                     ret[11usize] = bytes[1usize];
                     ret[12usize] = bytes[2usize];
@@ -285,7 +285,7 @@ fn test_ubx_packet_send() {
                     let bytes = self.itow.to_le_bytes();
                     out.write(&bytes)?;
                     checksum_calc.update(&bytes);
-                    let bytes = self.lat_degrees.into_raw().to_le_bytes();
+                    let bytes = <f64>::into_raw(self.lat_degrees).to_le_bytes();
                     out.write(&bytes)?;
                     checksum_calc.update(&bytes);
                     let bytes = self.a.to_le_bytes();

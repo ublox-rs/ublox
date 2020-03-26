@@ -200,9 +200,9 @@ pub fn generate_send_code_for_packet(pack_descr: &PackDesc) -> TokenStream {
             Some(x) => x,
             None => unimplemented!(),
         };
-        if f.has_intermediate_type() {
+        if let Some(into_fn) = f.map.map_type.as_ref().map(|x| &x.into_fn) {
             pack_fields.push(quote! {
-                let bytes = self.#name.into_raw().to_le_bytes()
+                let bytes = #into_fn(self.#name).to_le_bytes()
             });
         } else if !f.is_field_raw_ty_byte_array() {
             pack_fields.push(quote! {
