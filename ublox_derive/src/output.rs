@@ -495,8 +495,11 @@ pub fn generate_code_to_extend_bitflags(bitflags: BitFlagsMacro) -> syn::Result<
 }
 
 pub fn generate_code_for_parse(recv_packs: &RecvPackets) -> TokenStream {
+    let union_enum_name = &recv_packs.union_enum_name;
+
     let mut pack_enum_variants = Vec::with_capacity(recv_packs.all_packets.len());
     let mut matches = Vec::with_capacity(recv_packs.all_packets.len());
+    let mut class_id_matches = Vec::with_capacity(recv_packs.all_packets.len());
 
     for name in &recv_packs.all_packets {
         let ref_name = format_ident!("{}Ref", name);
@@ -506,12 +509,15 @@ pub fn generate_code_for_parse(recv_packs: &RecvPackets) -> TokenStream {
 
         matches.push(quote! {
             (#name::CLASS, #name::ID) if <#ref_name>::validate(payload).is_ok()  => {
-                Ok(PacketRef::#name(#ref_name(payload)))
+                Ok(#union_enum_name::#name(#ref_name(payload)))
             }
+        });
+
+        class_id_matches.push(quote! {
+            #union_enum_name::#name(_) => (#name::CLASS, #name::ID)
         });
     }
 
-    let union_enum_name = &recv_packs.union_enum_name;
     let unknown_var = &recv_packs.unknown_ty;
 
     let max_payload_len_calc = recv_packs
@@ -528,10 +534,19 @@ pub fn generate_code_for_parse(recv_packs: &RecvPackets) -> TokenStream {
             Unknown(#unknown_var<'a>)
         }
 
-        pub(crate) fn match_packet(class: u8, msg_id: u8, payload: &[u8]) -> Result<PacketRef, ParserError> {
+        impl<'a> #union_enum_name<'a> {
+            pub fn class_and_msg_id(&self) -> (u8, u8) {
+                match *self {
+                    #(#class_id_matches),*,
+                    #union_enum_name::Unknown(ref pack) => (pack.class, pack.msg_id),
+                }
+            }
+        }
+
+        pub(crate) fn match_packet(class: u8, msg_id: u8, payload: &[u8]) -> Result<#union_enum_name, ParserError> {
             match (class, msg_id) {
                 #(#matches)*
-                _ => Ok(PacketRef::Unknown(#unknown_var {
+                _ => Ok(#union_enum_name::Unknown(#unknown_var {
                     payload,
                     class,
                     msg_id
