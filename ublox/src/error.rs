@@ -66,3 +66,22 @@ impl fmt::Display for ParserError {
 }
 
 impl std::error::Error for ParserError {}
+
+#[derive(Debug, Clone, Copy)]
+pub enum DateTimeError {
+    InvalidDate,
+    InvalidTime,
+    InvalidNanoseconds,
+}
+
+impl fmt::Display for DateTimeError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            DateTimeError::InvalidDate => f.write_str("invalid date"),
+            DateTimeError::InvalidTime => f.write_str("invalid time"),
+            DateTimeError::InvalidNanoseconds => f.write_str("invalid nanoseconds"),
+        }
+    }
+}
+
+impl std::error::Error for DateTimeError {}
