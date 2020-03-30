@@ -1,4 +1,7 @@
-use ublox::{PacketRef, Parser, ParserError, ParserIter};
+use ublox::{
+    CfgNav5Builder, CfgNav5DynModel, CfgNav5FixMode, CfgNav5Params, CfgNav5UtcStandard, PacketRef,
+    Parser, ParserError, ParserIter,
+};
 
 macro_rules! my_vec {
         ($($x:expr),*) => {{
@@ -128,4 +131,61 @@ fn test_parse_ack_ack_garbage_before() {
         "garbage before2"
     );
     assert!(parser.is_buffer_empty());
+}
+
+#[test]
+fn test_parse_cfg_nav5() {
+    let bytes = CfgNav5Builder {
+        mask: CfgNav5Params::DYN,
+        dyn_model: CfgNav5DynModel::AirborneWithLess1gAcceleration,
+        fix_mode: CfgNav5FixMode::Only3D,
+        fixed_alt: 100.17,
+        fixed_alt_var: 0.0017,
+        min_elev_degrees: 17,
+        pdop: 1.7,
+        tdop: 1.7,
+        pacc: 17,
+        tacc: 17,
+        static_hold_thresh: 2.17,
+        dgps_time_out: 17,
+        cno_thresh_num_svs: 17,
+        cno_thresh: 17,
+        static_hold_max_dist: 0x1717,
+        utc_standard: CfgNav5UtcStandard::UtcChina,
+        ..CfgNav5Builder::default()
+    }
+    .into_packet_bytes();
+
+    let mut parser = Parser::default();
+    let mut found = false;
+    let mut it = parser.consume(&bytes);
+    while let Some(pack) = it.next() {
+        match pack {
+            Ok(PacketRef::CfgNav5(pack)) => {
+                found = true;
+
+                assert_eq!(CfgNav5Params::DYN, pack.mask());
+                assert_eq!(
+                    CfgNav5DynModel::AirborneWithLess1gAcceleration,
+                    pack.dyn_model()
+                );
+                assert_eq!(CfgNav5FixMode::Only3D, pack.fix_mode());
+                assert!((pack.fixed_alt() - 100.17).abs() < 0.01);
+                assert!((pack.fixed_alt_var() - 0.0017).abs() < 0.000_1);
+                assert_eq!(17, pack.min_elev_degrees());
+                assert!((pack.pdop() - 1.7).abs() < 0.1);
+                assert!((pack.tdop() - 1.7).abs() < 0.1);
+                assert_eq!(17, pack.pacc());
+                assert_eq!(17, pack.tacc());
+                assert!((pack.static_hold_thresh() - 2.17) < 0.01);
+                assert_eq!(17, pack.dgps_time_out());
+                assert_eq!(17, pack.cno_thresh_num_svs());
+                assert_eq!(17, pack.cno_thresh());
+                assert_eq!(0x1717, pack.static_hold_max_dist());
+                assert_eq!(CfgNav5UtcStandard::UtcChina, pack.utc_standard());
+            }
+            _ => assert!(false),
+        }
+    }
+    assert!(found);
 }

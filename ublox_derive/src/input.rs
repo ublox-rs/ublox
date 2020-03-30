@@ -1,9 +1,9 @@
 use crate::types::{
-    BitFlagsMacro, BitFlagsMacroItem, MapType, PackDesc, PackField, PackFieldMap, PackHeader,
+    BitFlagsMacro, BitFlagsMacroItem, PackDesc, PackField, PackFieldMapDesc, PackHeader,
     PacketFlag, PayloadLen, RecvPackets, UbxEnumRestHandling, UbxExtendEnum, UbxTypeFromFn,
     UbxTypeIntoFn,
 };
-use proc_macro2::Span;
+use proc_macro2::{Span, TokenStream};
 use quote::ToTokens;
 use std::num::NonZeroUsize;
 use syn::{
@@ -399,7 +399,7 @@ fn parse_fields(fields: Fields) -> syn::Result<Vec<PackField>> {
         let size_bytes = field_size_bytes(&ty)?;
         let name = name.ok_or_else(|| Error::new(f_sp, "No field name"))?;
         let comment = extract_item_comment(&attrs)?;
-        let mut map = PackFieldMap::none();
+        let mut map = PackFieldMap::default();
         for a in attrs {
             if !a.path.is_ident("doc") {
                 if !map.is_none() {
@@ -420,6 +420,8 @@ fn parse_fields(fields: Fields) -> syn::Result<Vec<PackField>> {
                 ));
             }
         }
+
+        let map = PackFieldMapDesc::new(map, &ty);
 
         ret.push(PackField {
             name,
@@ -445,9 +447,31 @@ mod kw {
     syn::custom_keyword!(into);
 }
 
+#[derive(Default)]
+pub struct PackFieldMap {
+    pub map_type: Option<MapType>,
+    pub scale: Option<syn::LitFloat>,
+    pub alias: Option<Ident>,
+    pub convert_may_fail: bool,
+    pub get_as_ref: bool,
+}
+
+impl PackFieldMap {
+    fn is_none(&self) -> bool {
+        self.map_type.is_none() && self.scale.is_none() && self.alias.is_none()
+    }
+}
+
+pub struct MapType {
+    pub ty: Type,
+    pub from_fn: Option<TokenStream>,
+    pub is_valid_fn: Option<TokenStream>,
+    pub into_fn: Option<TokenStream>,
+}
+
 impl Parse for PackFieldMap {
     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
-        let mut map = PackFieldMap::none();
+        let mut map = PackFieldMap::default();
         let mut map_ty = None;
         let mut custom_from_fn: Option<syn::Path> = None;
         let mut custom_into_fn: Option<syn::Expr> = None;
@@ -496,17 +520,12 @@ impl Parse for PackFieldMap {
         }
 
         if let Some(map_ty) = map_ty {
-            let mut map_type = MapType::new(map_ty, map.convert_may_fail);
-            if let Some(custom_from_fn) = custom_from_fn {
-                map_type.from_fn = custom_from_fn.into_token_stream();
-            }
-            if let Some(custom_is_valid_fn) = custom_is_valid_fn {
-                map_type.is_valid_fn = custom_is_valid_fn.into_token_stream();
-            }
-            if let Some(custom_into_fn) = custom_into_fn {
-                map_type.into_fn = custom_into_fn.into_token_stream();
-            }
-            map.map_type = Some(map_type);
+            map.map_type = Some(MapType {
+                ty: map_ty,
+                from_fn: custom_from_fn.map(ToTokens::into_token_stream),
+                is_valid_fn: custom_is_valid_fn.map(ToTokens::into_token_stream),
+                into_fn: custom_into_fn.map(ToTokens::into_token_stream),
+            });
         }
 
         Ok(map)

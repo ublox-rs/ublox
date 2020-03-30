@@ -726,11 +726,11 @@ struct CfgNav5 {
     fix_mode: u8,
 
     /// Fixed altitude (mean sea level) for 2D fixmode (m)
-    #[ubx(map_type = f64, scale = 0.01, into = ScaleBack::<f64>(100.).as_i32)]
+    #[ubx(map_type = f64, scale = 0.01)]
     fixed_alt: i32,
 
     /// Fixed altitude variance for 2D mode (m^2)
-    #[ubx(map_type = f64, scale = 0.0001, into = ScaleBack::<f64>(1e4).as_u32)]
+    #[ubx(map_type = f64, scale = 0.0001)]
     fixed_alt_var: u32,
 
     /// Minimum Elevation for a GNSS satellite to be used in NAV (deg)
@@ -740,11 +740,11 @@ struct CfgNav5 {
     dr_limit: u8,
 
     /// Position DOP Mask to use
-    #[ubx(map_type = f32, scale = 0.1, into = ScaleBack::<f32>(10.).as_u16)]
+    #[ubx(map_type = f32, scale = 0.1)]
     pdop: u16,
 
     /// Time DOP Mask to use
-    #[ubx(map_type = f32, scale = 0.1, into = ScaleBack::<f32>(10.).as_u16)]
+    #[ubx(map_type = f32, scale = 0.1)]
     tdop: u16,
 
     /// Position Accuracy Mask (m)
@@ -755,7 +755,7 @@ struct CfgNav5 {
     tacc: u16,
 
     /// Static hold threshold
-    #[ubx(map_type = f32, scale = 0.01, into = ScaleBack::<f32>(100.).as_u8)]
+    #[ubx(map_type = f32, scale = 0.01)]
     static_hold_thresh: u8,
 
     /// DGNSS timeout (seconds)
@@ -811,7 +811,7 @@ bitflags! {
 #[ubx_extend]
 #[ubx(from_unchecked, into_raw, rest_error)]
 #[repr(u8)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum CfgNav5DynModel {
     Portable = 0,
     Stationary = 2,
@@ -837,7 +837,7 @@ impl Default for CfgNav5DynModel {
 #[ubx_extend]
 #[ubx(from_unchecked, into_raw, rest_error)]
 #[repr(u8)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum CfgNav5FixMode {
     Only2D = 1,
     Only3D = 2,
@@ -854,7 +854,7 @@ impl Default for CfgNav5FixMode {
 #[ubx_extend]
 #[ubx(from_unchecked, into_raw, rest_error)]
 #[repr(u8)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum CfgNav5UtcStandard {
     /// receiver selects based on GNSS configuration (see GNSS timebases)
     Automatic = 0,
