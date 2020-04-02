@@ -597,18 +597,62 @@ pub enum UartPortId {
 
 /// Port Configuration for SPI Port
 #[ubx_packet_recv_send]
-#[ubx(class = 0x06, id = 0x00, fixed_payload_len = 20)]
+#[ubx(
+    class = 0x06,
+    id = 0x00,
+    fixed_payload_len = 20,
+    flags = "default_for_builder"
+)]
 struct CfgPrtSpi {
     #[ubx(map_type = SpiPortId, may_fail)]
     portid: u8,
     reserved0: u8,
+    /// TX ready PIN configuration
     tx_ready: u16,
+    /// SPI Mode Flags
     mode: u32,
     reserved3: u32,
+    #[ubx(map_type = InProtoMask)]
     in_proto_mask: u16,
+    #[ubx(map_type = OutProtoMask)]
     out_proto_mask: u16,
     flags: u16,
     reserved5: u16,
+}
+
+#[ubx_extend_bitflags]
+#[ubx(from, into_raw, rest_reserved)]
+bitflags! {
+    /// A mask describing which input protocolsare active
+    /// Each bit of this mask is used for aprotocol.
+    /// Through that, multiple protocols can be defined on a single port
+    /// Used in `CfgPrtSpi`
+    #[derive(Default)]
+    pub struct InProtoMask: u16 {
+        const UBOX = 1;
+        const NMEA = 2;
+        const RTCM = 4;
+        /// The bitfield inRtcm3 is not supported in protocol
+        /// versions less than 20
+        const RTCM3 = 0x20;
+    }
+}
+
+#[ubx_extend_bitflags]
+#[ubx(from, into_raw, rest_reserved)]
+bitflags! {
+    /// A mask describing which output protocols are active.
+    /// Each bit of this mask is used for aprotocol.
+    /// Through that, multiple protocols can be defined on a single port
+    /// Used in `CfgPrtSpi`
+    #[derive(Default)]
+    pub struct OutProtoMask: u16 {
+        const UBOX = 1;
+        const NMEA = 2;
+        /// The bitfield outRtcm3 is not supported in protocol
+        /// versions less than 20
+        const RTCM3 = 0x20;
+    }
 }
 
 /// Port Identifier Number (= 4 for SPI port)
@@ -618,6 +662,12 @@ struct CfgPrtSpi {
 #[derive(Debug, Copy, Clone)]
 pub enum SpiPortId {
     Spi = 4,
+}
+
+impl Default for SpiPortId {
+    fn default() -> Self {
+        Self::Spi
+    }
 }
 
 /// UTC Time Solution
