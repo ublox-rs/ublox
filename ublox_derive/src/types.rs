@@ -1,5 +1,5 @@
 use proc_macro2::TokenStream;
-use quote::quote;
+use quote::{quote, ToTokens};
 use std::num::NonZeroUsize;
 use syn::{Attribute, Ident, Type};
 
@@ -58,9 +58,74 @@ impl PayloadLen {
 pub struct PackField {
     pub name: Ident,
     pub ty: Type,
-    pub map: PackFieldMap,
+    pub map: PackFieldMapDesc,
     pub comment: String,
     pub size_bytes: Option<NonZeroUsize>,
+}
+
+pub struct PackFieldMapDesc {
+    pub map_type: Option<MapTypeDesc>,
+    pub scale: Option<syn::LitFloat>,
+    pub alias: Option<Ident>,
+    pub convert_may_fail: bool,
+    pub get_as_ref: bool,
+}
+
+pub struct MapTypeDesc {
+    pub ty: Type,
+    pub from_fn: TokenStream,
+    pub is_valid_fn: TokenStream,
+    pub into_fn: TokenStream,
+}
+
+impl PackFieldMapDesc {
+    pub fn new(x: crate::input::PackFieldMap, raw_ty: &Type) -> Self {
+        let convert_may_fail = x.convert_may_fail;
+        let scale_back = x.scale.as_ref().map(|x| quote! { 1. / #x });
+        let map_type = x.map_type.map(|map_type| {
+            let ty = map_type.ty;
+            let from_fn = map_type.from_fn.unwrap_or_else(|| {
+                if !convert_may_fail {
+                    quote! { <#ty>::from }
+                } else {
+                    quote! { <#ty>::from_unchecked }
+                }
+            });
+
+            let is_valid_fn = map_type.is_valid_fn.unwrap_or_else(|| {
+                quote! { <#ty>::is_valid }
+            });
+
+            let into_fn = map_type.into_fn.unwrap_or_else(|| {
+                if ty == syn::parse_quote! {f32} || ty == syn::parse_quote! {f64} {
+                    if let Some(scale_back) = scale_back {
+                        let conv_method =
+                            quote::format_ident!("as_{}", raw_ty.into_token_stream().to_string());
+
+                        return quote! {
+                            ScaleBack::<#ty>(#scale_back).#conv_method
+                        };
+                    }
+                }
+
+                quote! { <#ty>::into_raw }
+            });
+
+            MapTypeDesc {
+                ty,
+                from_fn,
+                is_valid_fn,
+                into_fn,
+            }
+        });
+        Self {
+            map_type,
+            scale: x.scale,
+            alias: x.alias,
+            convert_may_fail: x.convert_may_fail,
+            get_as_ref: x.get_as_ref,
+        }
+    }
 }
 
 impl PackField {
@@ -82,51 +147,6 @@ impl PackField {
             *fixed_array.elem == syn::parse_quote!(u8)
         } else {
             false
-        }
-    }
-}
-
-pub struct PackFieldMap {
-    pub map_type: Option<MapType>,
-    pub scale: Option<syn::LitFloat>,
-    pub alias: Option<Ident>,
-    pub convert_may_fail: bool,
-    pub get_as_ref: bool,
-}
-
-impl PackFieldMap {
-    pub fn is_none(&self) -> bool {
-        self.map_type.is_none() && self.scale.is_none() && self.alias.is_none()
-    }
-    pub fn none() -> Self {
-        Self {
-            map_type: None,
-            scale: None,
-            alias: None,
-            convert_may_fail: false,
-            get_as_ref: false,
-        }
-    }
-}
-
-pub struct MapType {
-    pub ty: Type,
-    pub from_fn: TokenStream,
-    pub is_valid_fn: TokenStream,
-}
-
-impl MapType {
-    pub fn new(ty: Type, convert_may_fail: bool) -> Self {
-        let from_fn = if !convert_may_fail {
-            quote! { <#ty>::from }
-        } else {
-            quote! { <#ty>::from_unchecked }
-        };
-        let is_valid_fn = quote! { <#ty>::is_valid };
-        Self {
-            ty,
-            from_fn,
-            is_valid_fn,
         }
     }
 }
