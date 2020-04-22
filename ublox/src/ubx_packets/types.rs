@@ -1,5 +1,7 @@
 use super::packets::*;
+use crate::error::DateTimeError;
 use chrono::prelude::*;
+use std::convert::TryFrom;
 
 #[derive(Debug)]
 pub struct Position {
@@ -52,14 +54,29 @@ impl<'a> From<&NavPosVelTimeRef<'a>> for Velocity {
     }
 }
 
-impl<'a> From<&NavPosVelTimeRef<'a>> for DateTime<Utc> {
-    fn from(sol: &NavPosVelTimeRef<'a>) -> Self {
-        let ns = if sol.nanosecond().is_negative() {
-            0
-        } else {
-            sol.nanosecond()
-        } as u32;
-        Utc.ymd(sol.year() as i32, sol.month().into(), sol.day().into())
-            .and_hms_nano(sol.hour().into(), sol.min().into(), sol.sec().into(), ns)
+impl<'a> TryFrom<&NavPosVelTimeRef<'a>> for DateTime<Utc> {
+    type Error = DateTimeError;
+    fn try_from(sol: &NavPosVelTimeRef<'a>) -> Result<Self, Self::Error> {
+        let date = NaiveDate::from_ymd_opt(
+            i32::from(sol.year()),
+            u32::from(sol.month()),
+            u32::from(sol.day()),
+        )
+        .ok_or(DateTimeError::InvalidDate)?;
+        let time = NaiveTime::from_hms_opt(
+            u32::from(sol.hour()),
+            u32::from(sol.min()),
+            u32::from(sol.sec()),
+        )
+        .ok_or(DateTimeError::InvalidTime)?;
+        const NANOS_LIM: u32 = 1_000_000_000;
+        if (sol.nanosecond().wrapping_abs() as u32) >= NANOS_LIM {
+            return Err(DateTimeError::InvalidNanoseconds);
+        }
+
+        let dt = NaiveDateTime::new(date, time)
+            + chrono::Duration::nanoseconds(i64::from(sol.nanosecond()));
+
+        Ok(DateTime::from_utc(dt, Utc))
     }
 }

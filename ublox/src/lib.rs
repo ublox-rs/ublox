@@ -7,7 +7,7 @@
 #[cfg(feature = "serial")]
 pub use crate::serialport::{Device, ResetType};
 pub use crate::{
-    error::{MemWriterError, ParserError},
+    error::{DateTimeError, MemWriterError, ParserError},
     parser::{Parser, ParserIter},
     ubx_packets::*,
 };

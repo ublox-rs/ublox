@@ -102,7 +102,9 @@ struct NavPosVelTime {
     /// GNSS fix Type
     #[ubx(map_type = GpsFix)]
     fix_type: u8,
+    #[ubx(map_type = NavPosVelTimeFlags)]
     flags: u8,
+    #[ubx(map_type = NavPosVelTimeFlags2)]
     flags2: u8,
     num_satellites: u8,
     #[ubx(map_type = f64, scale = 1e-7, alias = lon_degrees)]
@@ -144,10 +146,12 @@ struct NavPosVelTime {
     #[ubx(map_type = f64, scale = 1e-3)]
     speed_accuracy_estimate: u32,
 
-    /// Course / Heading Accuracy Estimate (degrees)
+    /// Heading accuracy estimate (both motionand vehicle) (degrees)
     #[ubx(map_type = f64, scale = 1e-5)]
-    course_heading_accuracy_estimate: u32,
-    pos_dop: u16,
+    heading_accuracy_estimate: u32,
+
+    /// Position DOP
+    pdop: u16,
     reserved1: [u8; 6],
     #[ubx(map_type = f64, scale = 1e-5, alias = heading_of_vehicle_degrees)]
     heading_of_vehicle: i32,
@@ -155,6 +159,40 @@ struct NavPosVelTime {
     magnetic_declination: i16,
     #[ubx(map_type = f64, scale = 1e-2, alias = magnetic_declination_accuracy_degrees)]
     magnetic_declination_accuracy: u16,
+}
+
+#[ubx_extend_bitflags]
+#[ubx(from, rest_reserved)]
+bitflags! {
+    /// Fix status flags for `NavPosVelTime`
+    pub struct NavPosVelTimeFlags: u8 {
+        /// position and velocity valid and within DOP and ACC Masks
+        const GPS_FIX_OK = 1;
+        /// DGPS used
+        const DIFF_SOLN = 2;
+        /// 1 = heading of vehicle is valid
+        const HEAD_VEH_VALID = 0x20;
+        const CARR_SOLN_FLOAT = 0x40;
+        const CARR_SOLN_FIXED = 0x80;
+    }
+}
+
+#[ubx_extend_bitflags]
+#[ubx(from, rest_reserved)]
+bitflags! {
+    /// Additional flags for `NavPosVelTime`
+    pub struct NavPosVelTimeFlags2: u8 {
+        /// 1 = information about UTC Date and Time of Day validity confirmation
+        /// is available. This flag is only supported in Protocol Versions
+        /// 19.00, 19.10, 20.10, 20.20, 20.30, 22.00, 23.00, 23.01,27 and 28.
+        const CONFIRMED_AVAI = 0x20;
+        /// 1 = UTC Date validity could be confirmed
+        /// (confirmed by using an additional independent source)
+        const CONFIRMED_DATE = 0x40;
+        /// 1 = UTC Time of Day could be confirmed
+        /// (confirmed by using an additional independent source)
+        const CONFIRMED_TIME = 0x80;
+    }
 }
 
 ///  Receiver Navigation Status
@@ -559,18 +597,62 @@ pub enum UartPortId {
 
 /// Port Configuration for SPI Port
 #[ubx_packet_recv_send]
-#[ubx(class = 0x06, id = 0x00, fixed_payload_len = 20)]
+#[ubx(
+    class = 0x06,
+    id = 0x00,
+    fixed_payload_len = 20,
+    flags = "default_for_builder"
+)]
 struct CfgPrtSpi {
     #[ubx(map_type = SpiPortId, may_fail)]
     portid: u8,
     reserved0: u8,
+    /// TX ready PIN configuration
     tx_ready: u16,
+    /// SPI Mode Flags
     mode: u32,
     reserved3: u32,
+    #[ubx(map_type = InProtoMask)]
     in_proto_mask: u16,
+    #[ubx(map_type = OutProtoMask)]
     out_proto_mask: u16,
     flags: u16,
     reserved5: u16,
+}
+
+#[ubx_extend_bitflags]
+#[ubx(from, into_raw, rest_reserved)]
+bitflags! {
+    /// A mask describing which input protocolsare active
+    /// Each bit of this mask is used for aprotocol.
+    /// Through that, multiple protocols can be defined on a single port
+    /// Used in `CfgPrtSpi`
+    #[derive(Default)]
+    pub struct InProtoMask: u16 {
+        const UBOX = 1;
+        const NMEA = 2;
+        const RTCM = 4;
+        /// The bitfield inRtcm3 is not supported in protocol
+        /// versions less than 20
+        const RTCM3 = 0x20;
+    }
+}
+
+#[ubx_extend_bitflags]
+#[ubx(from, into_raw, rest_reserved)]
+bitflags! {
+    /// A mask describing which output protocols are active.
+    /// Each bit of this mask is used for aprotocol.
+    /// Through that, multiple protocols can be defined on a single port
+    /// Used in `CfgPrtSpi`
+    #[derive(Default)]
+    pub struct OutProtoMask: u16 {
+        const UBOX = 1;
+        const NMEA = 2;
+        /// The bitfield outRtcm3 is not supported in protocol
+        /// versions less than 20
+        const RTCM3 = 0x20;
+    }
 }
 
 /// Port Identifier Number (= 4 for SPI port)
@@ -580,6 +662,12 @@ struct CfgPrtSpi {
 #[derive(Debug, Copy, Clone)]
 pub enum SpiPortId {
     Spi = 4,
+}
+
+impl Default for SpiPortId {
+    fn default() -> Self {
+        Self::Spi
+    }
 }
 
 /// UTC Time Solution

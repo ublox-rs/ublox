@@ -393,6 +393,16 @@ fn test_define_recv_packets() {
                 Unknown(UnknownPacketRef<'a>)
             }
 
+            impl<'a> PacketRef<'a> {
+                pub fn class_and_msg_id(&self) -> (u8, u8) {
+                    match *self {
+                        PacketRef::Pack1(_) => (Pack1::CLASS, Pack1::ID),
+                        PacketRef::Pack2(_) => (Pack2::CLASS, Pack2::ID),
+                        PacketRef::Unknown(ref pack) => (pack.class, pack.msg_id),
+                    }
+                }
+            }
+
             pub(crate) fn match_packet(
                 class: u8,
                 msg_id: u8,
