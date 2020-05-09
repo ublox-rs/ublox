@@ -6,8 +6,7 @@ mod serial {
 
     pub fn main() {
         let mut dev = Device::new("/dev/ttyUSB0").unwrap();
-        /*
-                let pos = Position {
+        /*let pos = Position {
                     lon: -97.5,
                     lat: 30.2,
                     alt: 200.0,
@@ -18,11 +17,11 @@ mod serial {
                         println!("Got error setting AID data: {:?}", e);
                     }
                     _ => {}
-                }
+                }*/
         loop {
             dev.poll_for(Duration::from_millis(500)).unwrap();
             println!("{:?}", dev.get_solution());
-        }        */
+        }
     }
 }
 

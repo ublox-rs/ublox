@@ -7,6 +7,7 @@ use chrono::prelude::*;
 use crc::{crc16, Hasher16};
 use std::io;
 use std::time::{Duration, Instant};
+use std::convert::TryInto;
 
 #[derive(Debug, Clone, Copy)]
 pub enum ResetType {
@@ -49,13 +50,16 @@ pub struct Device {
     //buf: Vec<u8>,
     alp_data: Vec<u8>,
     alp_file_id: u16,
-    /*
-    TODO: should be something like Position, Velocity, DateTime here,
-    why data copy?
-    navpos: Option<NavPosLlh>,
-    navvel: Option<NavVelNed>,
-    navstatus: Option<NavStatus>,
-    solution: Option<NavPosVelTime>,    */
+    //navpos: Option<Position>,
+    //navvel: Option<Velocity>,
+    //navstatus: Option<NavStatus>,
+    // TODO: This should be a NavPosVelTime
+    //solution: Option<Vec<u8>>,
+    //solution: Option<(Position, Velocity, NavStatus)>,
+    position: Option<Position>,
+    velocity: Option<Velocity>,
+    time: Option<DateTime<Utc>>,
+    //solution: Option<Vec<u8>>,
 }
 
 impl Device {
@@ -91,11 +95,13 @@ impl Device {
             ubx_parser: Parser::default(),
             alp_data: Vec::new(),
             alp_file_id: 0,
-            /*
-            navpos: None,
-            navvel: None,
-            navstatus: None,
-            solution: None,*/
+            //navpos: None,
+            //navvel: None,
+            //navstatus: None,
+            position: None,
+            velocity: None,
+            time: None,
+            //solution: None,
         };
 
         dev.init_protocol()?;
@@ -180,12 +186,22 @@ impl Device {
     /// poll (or poll_for) to process messages in order to receive position
     /// updates.
     pub fn poll(&mut self) -> Result<()> {
-        self.get_next_message()?;
+        match self.get_next_message()? {
+            Some((a, b, c)) => {
+                self.position = a;
+                self.velocity = b;
+                self.time = c;
+                //self.position = None;
+            }
+            _ => {
+                // Ignore
+            }
+        }
         Ok(())
     }
-    /*
+
         /// DO NOT USE. Use get_solution instead.
-        pub fn get_position(&mut self) -> Option<Position> {
+    /*pub fn get_position(&mut self) -> Option<Position> {
             match (&self.navstatus, &self.navpos) {
                 (Some(status), Some(pos)) => {
                     if status.itow != pos.get_itow() {
@@ -214,26 +230,28 @@ impl Device {
                 }
                 _ => None,
             }
-        }
+        }*/
 
-        /// Returns the most recent solution, as a tuple of position/velocity/time
-        /// options. Note that a position may have any combination of these,
-        /// including none of them - if no solution has been returned from the
-        /// device, all fields will be None.
-        pub fn get_solution(&mut self) -> (Option<Position>, Option<Velocity>, Option<DateTime<Utc>>) {
-            match &self.solution {
-                Some(sol) => {
-                    let has_time = sol.fix_type == 0x03 || sol.fix_type == 0x04 || sol.fix_type == 0x05;
-                    let has_posvel = sol.fix_type == 0x03 || sol.fix_type == 0x04;
-                    let pos = if has_posvel { Some(sol.into()) } else { None };
-                    let vel = if has_posvel { Some(sol.into()) } else { None };
-                    let time = if has_time { Some(sol.into()) } else { None };
-                    (pos, vel, time)
-                }
-                None => (None, None, None),
+    /// Returns the most recent solution, as a tuple of position/velocity/time
+    /// options. Note that a position may have any combination of these,
+    /// including none of them - if no solution has been returned from the
+    /// device, all fields will be None.
+    pub fn get_solution(&mut self) -> (Option<Position>, Option<Velocity>, Option<DateTime<Utc>>) {
+        return (self.position, self.velocity, self.time);
+        /*match &self.solution {
+            Some((a, b, c)) => {
+                /*let has_time = sol.fix_type == 0x03 || sol.fix_type == 0x04 || sol.fix_type == 0x05;
+                let has_posvel = sol.fix_type == 0x03 || sol.fix_type == 0x04;
+                let pos = if has_posvel { Some(sol.into()) } else { None };
+                let vel = if has_posvel { Some(sol.into()) } else { None };
+                let time = if has_time { Some(sol.into()) } else { None };
+                (pos, vel, time)*/
+                return (Some(a), Some(b), Some(c))
             }
-        }
-    */
+            None => (None, None, None),
+        }*/
+    }
+
     /// Performs a reset of the device, and waits for the device to fully reset.
     pub fn reset(&mut self, temperature: ResetType) -> Result<()> {
         let reset_mask = match temperature {
@@ -325,13 +343,19 @@ impl Device {
 
     */
 
-    fn get_next_message(&mut self) -> Result<Option<PacketRef>> {
-        let mut it = match self.recv()? {
-            Some(it) => it,
-            None => return Ok(None),
+    //fn get_next_message(&mut self) -> Result<Option<PacketRef>> {
+    fn get_next_message(&mut self) -> Result<Option<(Option<Position>, Option<Velocity>, Option<DateTime<Utc>>)>> {
+        let mut it = {
+            match self.recv()? {
+                Some(it) => it,
+                None => return Ok(None),
+            }
         };
+        // TODO: This shouldn't be a while loop
         while let Some(pack) = it.next() {
+        //if let Some(pack) = it.next() {
             let pack = pack?;
+            //return Ok(Some(pack));
 
             match pack {
                 PacketRef::MonVer(packet) => {
@@ -342,9 +366,22 @@ impl Device {
                     );
                     return Ok(None);
                 }
-                PacketRef::NavPosVelTime(packet) => {
-                    //                    self.solution = Some(packet);
-                    return Ok(None);
+                PacketRef::NavPosVelTime(sol) => {
+                    let has_time = sol.fix_type() == GpsFix::Fix3D
+                        || sol.fix_type() == GpsFix::GPSPlusDeadReckoning
+                        || sol.fix_type() == GpsFix::TimeOnlyFix;
+                    let has_posvel = sol.fix_type() == GpsFix::Fix3D
+                        || sol.fix_type() == GpsFix::GPSPlusDeadReckoning;
+                    println!("{} {}", has_posvel, has_time);
+                    let pos = if has_posvel { Some((&sol).into()) } else { None };
+                    let vel = if has_posvel { Some((&sol).into()) } else { None };
+                    let time = if has_time { Some((&sol).try_into().unwrap()) } else { None };
+                    /*self.position = pos.clone();
+                    self.velocity = vel.clone();
+                    self.time = time;*/
+                    //return Ok(None);
+                    //return Ok(Some(sol));
+                    return Ok(Some((pos.clone(), vel.clone(), time)));
                 }
                 PacketRef::NavVelNed(packet) => {
                     //                  self.navvel = Some(packet);
@@ -400,7 +437,8 @@ impl Device {
                     return Ok(None);
                 }
                 _ => {
-                    println!("Received packet");
+                    let (c, id) = pack.class_and_msg_id();
+                    println!("Received packet {} {}", c, id);
                     return Ok(None);
                 }
             }

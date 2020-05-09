@@ -3,14 +3,14 @@ use crate::error::DateTimeError;
 use chrono::prelude::*;
 use std::convert::TryFrom;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct Position {
     pub lon: f64,
     pub lat: f64,
     pub alt: f64,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct Velocity {
     pub speed: f64,   // m/s over ground
     pub heading: f64, // degrees

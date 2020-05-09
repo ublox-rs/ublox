@@ -316,7 +316,7 @@ struct NavSolution {
 #[ubx_extend]
 #[ubx(from, rest_reserved)]
 #[repr(u8)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum GpsFix {
     NoFix = 0,
     DeadReckoningOnly = 1,

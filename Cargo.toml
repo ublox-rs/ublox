@@ -1,7 +1,2 @@
 [workspace]
 members = ["ublox", "ublox_derive"]
-
-[patch.'crates-io']
-ublox_derive = { path = "ublox_derive" }
-ublox = { path = "ublox" }
-
