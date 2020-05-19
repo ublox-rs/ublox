@@ -8,7 +8,7 @@ use chrono::prelude::*;
 use std::fmt;
 use ublox_derive::{
     define_recv_packets, ubx_extend, ubx_extend_bitflags, ubx_packet_recv, ubx_packet_recv_send,
-    ubx_packet_send,
+    ubx_packet_send, ubx_register,
 };
 
 /// Geodetic Position Solution
@@ -161,7 +161,7 @@ struct NavPosVelTime {
     magnetic_declination_accuracy: u16,
 }
 
-#[ubx_extend_bitflags]
+/*#[ubx_extend_bitflags]
 #[ubx(from, rest_reserved)]
 bitflags! {
     /// Fix status flags for `NavPosVelTime`
@@ -174,6 +174,72 @@ bitflags! {
         const HEAD_VEH_VALID = 0x20;
         const CARR_SOLN_FLOAT = 0x40;
         const CARR_SOLN_FIXED = 0x80;
+    }
+}*/
+
+pub enum CarrierPhaseRangeSolution {
+    None,
+    Floating,
+    Fixed,
+    Unknown(u8),
+}
+
+impl std::convert::From<usize> for CarrierPhaseRangeSolution {
+    fn from(value: usize) -> Self {
+        match value {
+            0 => Self::None,
+            1 => Self::Floating,
+            2 => Self::Fixed,
+            x => Self::Unknown(x as u8),
+        }
+    }
+}
+
+#[ubx_register(u8)]
+pub struct NavPosVelTimeFlags {
+    #[ubx_field(0:0)]
+    gps_fix_ok: bool,
+
+    #[ubx_field(1:1)]
+    diff_soln: bool,
+
+    #[ubx_field(4:2)]
+    psm_state: u8,
+
+    #[ubx_field(5:5)]
+    head_veh_valid: bool,
+
+    #[ubx_field(7:6)]
+    carr_soln: CarrierPhaseRangeSolution,
+}
+
+#[cfg(test)]
+mod test {
+    use ublox_derive::ubx_register;
+
+    #[ubx_register(u8)]
+    struct MyRegister {
+        #[bitrange(0:0)]
+        field1: bool,
+
+        #[bitrange(7:1)]
+        field2: u8,
+    }
+
+    #[test]
+    fn test1() {
+        let raw = 5;
+        let reg = MyRegister(raw);
+        assert_eq!(reg.get_field1(), true);
+        assert_eq!(reg.get_field2(), 2);
+    }
+
+    #[test]
+    fn test2() {
+        let raw = 8;
+        let reg = MyRegister(raw);
+        assert_eq!(reg.get_field1(), false);
+        assert_eq!(reg.get_field2(), 4);
     }
 }
 
@@ -877,11 +943,11 @@ bitflags! {
         /// Apply minimum elevation settings
         const MIN_EL = 2;
         /// Apply fix mode settings
-       const POS_FIX_MODE = 4;
+        const POS_FIX_MODE = 4;
         /// Reserved
         const DR_LIM = 8;
         /// position mask settings
-       const POS_MASK_APPLY = 0x10;
+        const POS_MASK_APPLY = 0x10;
         /// Apply time mask settings
         const TIME_MASK = 0x20;
         /// Apply static hold settings

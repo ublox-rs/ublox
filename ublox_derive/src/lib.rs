@@ -5,6 +5,7 @@ mod output;
 #[cfg(test)]
 mod tests;
 mod types;
+mod ubx_register;
 
 use proc_macro2::TokenStream;
 use quote::ToTokens;
@@ -12,6 +13,7 @@ use syn::{
     parse_macro_input, punctuated::Punctuated, spanned::Spanned, Attribute, Data, DeriveInput,
     Fields, Ident, Variant,
 };
+use crate::ubx_register::generate_ubx_register;
 
 #[proc_macro_attribute]
 pub fn ubx_packet_recv(
@@ -98,6 +100,25 @@ pub fn ubx_extend_bitflags(
 
     extend_bitflags(input)
         .map(|x| x.into())
+        .unwrap_or_else(|err| err.to_compile_error().into())
+}
+
+#[proc_macro_attribute]
+pub fn ubx_register(
+    _attr: proc_macro::TokenStream,
+    input: proc_macro::TokenStream,
+) -> proc_macro::TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+    let ret = if let Data::Struct(data) = input.data {
+        Ok(generate_ubx_register(input.ident, input.attrs, data.fields))
+    } else {
+        Err(syn::Error::new(
+            input.ident.span(),
+            "This attribute can only be used for struct",
+        ))
+    };
+
+    ret.map(|x| x.into())
         .unwrap_or_else(|err| err.to_compile_error().into())
 }
 

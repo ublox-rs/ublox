@@ -678,3 +678,21 @@ impl Parse for RecvPackets {
         })
     }
 }
+
+#[derive(Debug)]
+pub struct UbxBitfield {
+    pub hi: usize,
+    pub lo: usize,
+}
+
+impl syn::parse::Parse for UbxBitfield {
+    fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
+        let hi: syn::LitInt = input.parse()?;
+        let _colon_token: syn::token::Colon = input.parse()?;
+        let lo: syn::LitInt = input.parse()?;
+        Ok(UbxBitfield{
+            hi: hi.base10_parse()?,
+            lo: lo.base10_parse()?,
+        })
+    }
+}

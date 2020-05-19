@@ -3,6 +3,7 @@ use quote::{quote, ToTokens};
 use std::num::NonZeroUsize;
 use syn::{Attribute, Ident, Type};
 
+#[derive(Debug)]
 pub struct PackDesc {
     pub name: String,
     pub header: PackHeader,
@@ -32,6 +33,7 @@ impl PackDesc {
     }
 }
 
+#[derive(Debug)]
 pub struct PackHeader {
     pub class: u8,
     pub id: u8,
@@ -55,6 +57,7 @@ impl PayloadLen {
     }
 }
 
+#[derive(Debug)]
 pub struct PackField {
     pub name: Ident,
     pub ty: Type,
@@ -63,6 +66,7 @@ pub struct PackField {
     pub size_bytes: Option<NonZeroUsize>,
 }
 
+#[derive(Debug)]
 pub struct PackFieldMapDesc {
     pub map_type: Option<MapTypeDesc>,
     pub scale: Option<syn::LitFloat>,
@@ -71,6 +75,7 @@ pub struct PackFieldMapDesc {
     pub get_as_ref: bool,
 }
 
+#[derive(Debug)]
 pub struct MapTypeDesc {
     pub ty: Type,
     pub from_fn: TokenStream,
@@ -151,6 +156,7 @@ impl PackField {
     }
 }
 
+#[derive(Debug)]
 pub struct UbxExtendEnum {
     pub name: Ident,
     pub repr: Type,
@@ -161,13 +167,13 @@ pub struct UbxExtendEnum {
     pub attrs: Vec<syn::Attribute>,
 }
 
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum UbxTypeFromFn {
     From,
     FromUnchecked,
 }
 
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum UbxTypeIntoFn {
     Raw,
 }
@@ -178,6 +184,7 @@ pub enum UbxEnumRestHandling {
     ErrorProne,
 }
 
+#[derive(Debug)]
 pub struct BitFlagsMacro {
     pub nbits: u32,
     pub vis: syn::Visibility,
@@ -190,13 +197,14 @@ pub struct BitFlagsMacro {
     pub rest_handling: Option<UbxEnumRestHandling>,
 }
 
+#[derive(Debug)]
 pub struct BitFlagsMacroItem {
     pub attrs: Vec<Attribute>,
     pub name: Ident,
     pub value: u64,
 }
 
-#[derive(PartialEq, Clone, Copy)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub enum PacketFlag {
     DefaultForBuilder,
 }
@@ -206,3 +214,4 @@ pub struct RecvPackets {
     pub unknown_ty: Ident,
     pub all_packets: Vec<Ident>,
 }
+
