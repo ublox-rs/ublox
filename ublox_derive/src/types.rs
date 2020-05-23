@@ -184,7 +184,7 @@ pub enum UbxEnumRestHandling {
     ErrorProne,
 }
 
-#[derive(Debug)]
+/*#[derive(Debug)]
 pub struct BitFlagsMacro {
     pub nbits: u32,
     pub vis: syn::Visibility,
@@ -202,7 +202,7 @@ pub struct BitFlagsMacroItem {
     pub attrs: Vec<Attribute>,
     pub name: Ident,
     pub value: u64,
-}
+}*/
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum PacketFlag {

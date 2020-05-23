@@ -136,7 +136,7 @@ fn test_parse_ack_ack_garbage_before() {
 #[test]
 fn test_parse_cfg_nav5() {
     let bytes = CfgNav5Builder {
-        mask: CfgNav5Params::DYN,
+        mask: CfgNav5Params::default().with_dynamic(true),
         dyn_model: CfgNav5DynModel::AirborneWithLess1gAcceleration,
         fix_mode: CfgNav5FixMode::Only3D,
         fixed_alt: 100.17,
@@ -164,7 +164,7 @@ fn test_parse_cfg_nav5() {
             Ok(PacketRef::CfgNav5(pack)) => {
                 found = true;
 
-                assert_eq!(CfgNav5Params::DYN, pack.mask());
+                assert_eq!(CfgNav5Params::default().with_dynamic(true), pack.mask());
                 assert_eq!(
                     CfgNav5DynModel::AirborneWithLess1gAcceleration,
                     pack.dyn_model()

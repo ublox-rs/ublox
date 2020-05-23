@@ -1,4 +1,3 @@
-use crate::types::BitFlagsMacro;
 use crate::types::{
     PackDesc, PackField, PacketFlag, PayloadLen, RecvPackets, UbxEnumRestHandling, UbxExtendEnum,
     UbxTypeFromFn, UbxTypeIntoFn,
@@ -404,7 +403,7 @@ pub fn generate_code_to_extend_enum(ubx_enum: &UbxExtendEnum) -> TokenStream {
     code
 }
 
-pub fn generate_code_to_extend_bitflags(bitflags: BitFlagsMacro) -> syn::Result<TokenStream> {
+/*pub fn generate_code_to_extend_bitflags(bitflags: BitFlagsMacro) -> syn::Result<TokenStream> {
     match bitflags.rest_handling {
         Some(UbxEnumRestHandling::ErrorProne) | None => {
             return Err(syn::Error::new(
@@ -492,7 +491,7 @@ pub fn generate_code_to_extend_bitflags(bitflags: BitFlagsMacro) -> syn::Result<
         #from
         #into
     })
-}
+}*/
 
 pub fn generate_code_for_parse(recv_packs: &RecvPackets) -> TokenStream {
     let union_enum_name = &recv_packs.union_enum_name;

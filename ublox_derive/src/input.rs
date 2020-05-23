@@ -1,5 +1,5 @@
 use crate::types::{
-    BitFlagsMacro, BitFlagsMacroItem, PackDesc, PackField, PackFieldMapDesc, PackHeader,
+    PackDesc, PackField, PackFieldMapDesc, PackHeader,
     PacketFlag, PayloadLen, RecvPackets, UbxEnumRestHandling, UbxExtendEnum, UbxTypeFromFn,
     UbxTypeIntoFn,
 };
@@ -134,7 +134,7 @@ pub fn parse_ubx_enum_type(
     })
 }
 
-pub fn parse_bitflags(mac: syn::ItemMacro) -> syn::Result<BitFlagsMacro> {
+/*pub fn parse_bitflags(mac: syn::ItemMacro) -> syn::Result<BitFlagsMacro> {
     let (from_fn, into_fn, rest_handling) =
         parse_ubx_extend_attrs("#[ubx_extend_bitflags]", mac.span(), &mac.attrs)?;
 
@@ -181,7 +181,7 @@ pub fn parse_bitflags(mac: syn::ItemMacro) -> syn::Result<BitFlagsMacro> {
         into_fn,
         rest_handling,
     })
-}
+}*/
 
 pub fn parse_idents_list(input: proc_macro2::TokenStream) -> syn::Result<RecvPackets> {
     syn::parse2(input)
@@ -591,7 +591,7 @@ fn field_size_bytes(ty: &Type) -> syn::Result<Option<NonZeroUsize>> {
     }
 }
 
-struct BitFlagsAst {
+/*struct BitFlagsAst {
     attrs: Vec<Attribute>,
     vis: syn::Visibility,
     _struct_token: Token![struct],
@@ -636,7 +636,7 @@ impl Parse for BitFlagsAstConst {
             value: input.parse()?,
         })
     }
-}
+}*/
 
 impl Parse for PacketFlag {
     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {

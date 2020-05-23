@@ -3,13 +3,13 @@ use super::{
     UbxUnknownPacketRef, SYNC_CHAR_1, SYNC_CHAR_2,
 };
 use crate::error::{MemWriterError, ParserError};
-use bitflags::bitflags;
 use chrono::prelude::*;
 use std::fmt;
 use ublox_derive::{
-    define_recv_packets, ubx_extend, ubx_extend_bitflags, ubx_packet_recv, ubx_packet_recv_send,
+    define_recv_packets, ubx_extend, ubx_packet_recv, ubx_packet_recv_send,
     ubx_packet_send, ubx_register,
 };
+use std::convert::TryInto;
 
 /// Geodetic Position Solution
 #[ubx_packet_recv]
@@ -195,9 +195,11 @@ impl std::convert::From<usize> for CarrierPhaseRangeSolution {
     }
 }
 
+/// Fix status flags for `NavPosVelTime`
 #[ubx_register(u8)]
 pub struct NavPosVelTimeFlags {
     #[ubx_field(0:0)]
+    #[doc = "Position and velocity valid and within DOP and ACC masks"]
     gps_fix_ok: bool,
 
     #[ubx_field(1:1)]
@@ -216,13 +218,14 @@ pub struct NavPosVelTimeFlags {
 #[cfg(test)]
 mod test {
     use ublox_derive::ubx_register;
+    use std::convert::TryInto;
 
     #[ubx_register(u8)]
     struct MyRegister {
-        #[bitrange(0:0)]
+        #[ubx_field(0:0)]
         field1: bool,
 
-        #[bitrange(7:1)]
+        #[ubx_field(7:1)]
         field2: u8,
     }
 
@@ -243,7 +246,20 @@ mod test {
     }
 }
 
-#[ubx_extend_bitflags]
+/// Additional flags for `NavPosVelTime`
+#[ubx_register(u8)]
+pub struct NavPosVelTimeFlags2 {
+    #[ubx_field(5:5)]
+    confirmed_available: bool,
+
+    #[ubx_field(6:6)]
+    confirmed_date: bool,
+
+    #[ubx_field(7:7)]
+    confirmed_time: bool,
+}
+
+/*#[ubx_extend_bitflags]
 #[ubx(from, rest_reserved)]
 bitflags! {
     /// Additional flags for `NavPosVelTime`
@@ -259,7 +275,7 @@ bitflags! {
         /// (confirmed by using an additional independent source)
         const CONFIRMED_TIME = 0x80;
     }
-}
+}*/
 
 ///  Receiver Navigation Status
 #[ubx_packet_recv]
@@ -269,7 +285,6 @@ struct NavStatus {
     itow: u32,
 
     /// GPS fix Type, this value does not qualify a fix as
-
     /// valid and within the limits
     #[ubx(map_type = GpsFix)]
     fix_type: u8,
@@ -392,7 +407,22 @@ pub enum GpsFix {
     TimeOnlyFix = 5,
 }
 
-#[ubx_extend_bitflags]
+#[ubx_register(u8)]
+pub struct NavStatusFlags {
+    #[ubx_field(0:0)]
+    gps_fix_ok: bool,
+
+    #[ubx_field(1:1)]
+    diff_soln: bool,
+
+    #[ubx_field(2:2)]
+    wkn_set: bool,
+
+    #[ubx_field(3:3)]
+    tow_set: bool,
+}
+
+/*#[ubx_extend_bitflags]
 #[ubx(from, rest_reserved)]
 bitflags! {
     /// Navigation Status Flags
@@ -406,7 +436,7 @@ bitflags! {
         /// Time of Week valid
         const TOW_SET = 8;
     }
-}
+}*/
 
 /// Fix Status Information
 #[repr(transparent)]
@@ -453,9 +483,66 @@ pub enum MapMatchingStatus {
     Dr = 3,
 }
 
+pub enum PowerSaveModeState {
+    Acquisition,
+    Tracking,
+    PowerOptimizedTracking,
+    Inactive,
+}
+
+impl std::convert::From<usize> for PowerSaveModeState {
+    fn from(value: usize) -> Self {
+        match value {
+            0 => Self::Acquisition,
+            1 => Self::Tracking,
+            2 => Self::PowerOptimizedTracking,
+            3 => Self::Inactive,
+            _ => {
+                panic!("PowerSaveModeState should only be created from 2-bit values!");
+            }
+        }
+    }
+}
+
+pub enum SpoofingDetectionState {
+    Unknown,
+    NoSpoofing,
+    Spoofing,
+    MultipleSpoofingIndications,
+}
+
+impl std::convert::From<usize> for SpoofingDetectionState {
+    fn from(value: usize) -> Self {
+        match value {
+            0 => Self::Unknown,
+            1 => Self::NoSpoofing,
+            2 => Self::Spoofing,
+            3 => Self::MultipleSpoofingIndications,
+            _ => {
+                panic!("SpoofingDetectionState should only be created from 2-bit values! Received {}", value);
+            }
+        }
+    }
+}
+
+
 /// Further information about navigation output
 /// Only for FW version >= 7.01; undefined otherwise
-#[ubx_extend]
+#[ubx_register(u8)]
+pub struct NavStatusFlags2 {
+    #[ubx_field(1:0)]
+    psm_state: PowerSaveModeState,
+
+    #[ubx_field(4:3)]
+    spoof_det_state: SpoofingDetectionState,
+
+    #[ubx_field(7:6)]
+    carr_soln: CarrierPhaseRangeSolution,
+}
+
+/// Further information about navigation output
+/// Only for FW version >= 7.01; undefined otherwise
+/*#[ubx_extend]
 #[ubx(from, rest_reserved)]
 #[repr(u8)]
 #[derive(Debug, Copy, Clone)]
@@ -464,7 +551,7 @@ enum NavStatusFlags2 {
     Tracking = 1,
     PowerOptimizedTracking = 2,
     Inactive = 3,
-}
+}*/
 
 #[ubx_packet_send]
 #[ubx(
@@ -577,7 +664,7 @@ struct CfgRst {
     reserved1: u8,
 }
 
-#[ubx_extend_bitflags]
+/*#[ubx_extend_bitflags]
 #[ubx(into_raw, rest_reserved)]
 bitflags! {
     /// Battery backed RAM sections to clear
@@ -596,6 +683,50 @@ bitflags! {
         const TCT_PARAMETERS = 0x2000;
         const AUTONOMOUS_ORBIT_PARAMETERS = 0x8000;
     }
+}*/
+
+#[ubx_register(u16)]
+/// Battery backed RAM sections to clear
+pub struct NavBbrMask {
+    #[ubx_field(0:0)]
+    ephemeris: bool,
+
+    #[ubx_field(1:1)]
+    almanac: bool,
+
+    #[ubx_field(2:2)]
+    health: bool,
+
+    #[ubx_field(3:3)]
+    klobuchar: bool,
+
+    #[ubx_field(4:4)]
+    position: bool,
+
+    #[ubx_field(5:5)]
+    clock_drift: bool,
+
+    #[ubx_field(6:6)]
+    oscillator_parameter: bool,
+
+    #[ubx_field(7:7)]
+    utc_correction_parameters: bool,
+
+    #[ubx_field(8:8)]
+    rtc: bool,
+
+    // @TODO: What protocol version uses these?
+    /*#[bitrange(11:11)]
+    sfdr_paramters: bool,
+
+    #[bitrange(12:12)]
+    sfdr_vehicle_monitoring_parameters: bool,
+
+    #[bitrange(13:13)]
+    tct_parameters: bool,*/
+
+    #[ubx_field(15:15)]
+    autonomous_orbit_parameters: bool,
 }
 
 /// Predefined values for `NavBbrMask`
@@ -686,7 +817,7 @@ struct CfgPrtSpi {
     reserved5: u16,
 }
 
-#[ubx_extend_bitflags]
+/*#[ubx_extend_bitflags]
 #[ubx(from, into_raw, rest_reserved)]
 bitflags! {
     /// A mask describing which input protocolsare active
@@ -702,9 +833,24 @@ bitflags! {
         /// versions less than 20
         const RTCM3 = 0x20;
     }
+}*/
+
+#[ubx_register(u16)]
+pub struct InProtoMask {
+    #[ubx_field(0:0)]
+    ublox: bool,
+
+    #[ubx_field(1:1)]
+    nmea: bool,
+
+    #[ubx_field(2:2)]
+    rtcm: bool,
+
+    #[ubx_field(5:5)]
+    rtcm3: bool,
 }
 
-#[ubx_extend_bitflags]
+/*#[ubx_extend_bitflags]
 #[ubx(from, into_raw, rest_reserved)]
 bitflags! {
     /// A mask describing which output protocols are active.
@@ -719,6 +865,18 @@ bitflags! {
         /// versions less than 20
         const RTCM3 = 0x20;
     }
+}*/
+
+#[ubx_register(u16)]
+pub struct OutProtoMask {
+    #[ubx_field(0:0)]
+    ublox: bool,
+
+    #[ubx_field(1:1)]
+    nmea: bool,
+
+    #[ubx_field(5:5)]
+    rtcm3: bool,
 }
 
 /// Port Identifier Number (= 4 for SPI port)
@@ -770,7 +928,7 @@ struct NavTimeUTC {
     valid: u8,
 }
 
-#[ubx_extend_bitflags]
+/*#[ubx_extend_bitflags]
 #[ubx(from, rest_reserved)]
 bitflags! {
     /// Validity Flags of `NavTimeUTC`
@@ -782,6 +940,18 @@ bitflags! {
         /// Valid UTC (Leap Seconds already known)
         const VALID_UTC = 4;
     }
+}*/
+
+#[ubx_register(u8)]
+pub struct NavTimeUtcFlags {
+    #[ubx_field(0:0)]
+    valid_tow: bool,
+
+    #[ubx_field(1:1)]
+    valid_wkn: bool,
+
+    #[ubx_field(2:2)]
+    valid_utc: bool,
 }
 
 /// Navigation/Measurement Rate Settings
@@ -932,7 +1102,7 @@ struct CfgNav5 {
     reserved2: [u8; 5],
 }
 
-#[ubx_extend_bitflags]
+/*#[ubx_extend_bitflags]
 #[ubx(from, into_raw, rest_reserved)]
 bitflags! {
     /// `CfgNav5` parameters bitmask
@@ -959,6 +1129,39 @@ bitflags! {
         /// Apply UTC settings (not supported in protocol versions less than 16)
         const UTC = 0x400;
     }
+}*/
+
+#[ubx_register(u16)]
+pub struct CfgNav5Params {
+    #[ubx_field(0:0)]
+    dynamic: bool,
+
+    #[ubx_field(1:1)]
+    minimum_elevation: bool,
+
+    #[ubx_field(2:2)]
+    pos_fix_mode: bool,
+
+    #[ubx_field(3:3)]
+    dr_lim: bool, // TODO: What is this?
+
+    #[ubx_field(4:4)]
+    pos_mask_apply: bool,
+
+    #[ubx_field(5:5)]
+    time_mask: bool,
+
+    #[ubx_field(6:6)]
+    static_hold_mask: bool,
+
+    #[ubx_field(7:7)]
+    dgps_mask: bool,
+
+    #[ubx_field(8:8)]
+    cno_threshold: bool,
+
+    #[ubx_field(9:9)]
+    utc: bool,
 }
 
 /// Dynamic platform model

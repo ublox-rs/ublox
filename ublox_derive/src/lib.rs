@@ -91,7 +91,7 @@ pub fn ubx_extend(
         .unwrap_or_else(|err| err.to_compile_error().into())
 }
 
-#[proc_macro_attribute]
+/*#[proc_macro_attribute]
 pub fn ubx_extend_bitflags(
     _attr: proc_macro::TokenStream,
     input: proc_macro::TokenStream,
@@ -101,20 +101,29 @@ pub fn ubx_extend_bitflags(
     extend_bitflags(input)
         .map(|x| x.into())
         .unwrap_or_else(|err| err.to_compile_error().into())
+}*/
+
+/*struct UbxRegArg {
+    ident: Ident,
 }
+
+impl Parse for UbxRegArg {
+}*/
 
 #[proc_macro_attribute]
 pub fn ubx_register(
-    _attr: proc_macro::TokenStream,
+    attr: proc_macro::TokenStream,
     input: proc_macro::TokenStream,
 ) -> proc_macro::TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
+    let attr = parse_macro_input!(attr as Ident);
+    println!("{:?}", attr);
     let ret = if let Data::Struct(data) = input.data {
-        Ok(generate_ubx_register(input.ident, input.attrs, data.fields))
+        Ok(generate_ubx_register(attr, input.ident, input.attrs, data.fields))
     } else {
         Err(syn::Error::new(
             input.ident.span(),
-            "This attribute can only be used for struct",
+            "This attribute can only be used for structs",
         ))
     };
 
@@ -180,7 +189,7 @@ fn extend_enum(
     Ok(code)
 }
 
-fn extend_bitflags(mac: syn::ItemMacro) -> syn::Result<TokenStream> {
+/*fn extend_bitflags(mac: syn::ItemMacro) -> syn::Result<TokenStream> {
     if !mac.mac.path.is_ident("bitflags") {
         return Err(syn::Error::new(
             mac.ident
@@ -195,7 +204,7 @@ fn extend_bitflags(mac: syn::ItemMacro) -> syn::Result<TokenStream> {
     }
     let bitflags = input::parse_bitflags(mac)?;
     output::generate_code_to_extend_bitflags(bitflags)
-}
+}*/
 
 fn do_define_recv_packets(input: TokenStream) -> syn::Result<TokenStream> {
     let recv_packs = input::parse_idents_list(input)?;
