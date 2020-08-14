@@ -5,6 +5,7 @@ authors = ["Lane Kolbly <lane@rscheme.org>"]
 edition = "2018"
 license = "MIT"
 description = "A crate to communicate with u-blox GPS devices using the UBX protocol"
+repository = "https://github.com/lkolbly/ublox"
 
 [features]
 default = []
