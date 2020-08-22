@@ -184,13 +184,24 @@ pub enum CarrierPhaseRangeSolution {
     Unknown(u8),
 }
 
-impl std::convert::From<usize> for CarrierPhaseRangeSolution {
-    fn from(value: usize) -> Self {
+impl std::convert::From<CarrierPhaseRangeSolution> for u8 {
+    fn from(value: CarrierPhaseRangeSolution) -> Self {
+        match value {
+            CarrierPhaseRangeSolution::None => 0,
+            CarrierPhaseRangeSolution::Floating => 1,
+            CarrierPhaseRangeSolution::Fixed => 2,
+            CarrierPhaseRangeSolution::Unknown(x) => x,
+        }
+    }
+}
+
+impl std::convert::From<u8> for CarrierPhaseRangeSolution {
+    fn from(value: u8) -> Self {
         match value {
             0 => Self::None,
             1 => Self::Floating,
             2 => Self::Fixed,
-            x => Self::Unknown(x as u8),
+            x => Self::Unknown(x),
         }
     }
 }
@@ -213,37 +224,6 @@ pub struct NavPosVelTimeFlags {
 
     #[ubx_field(7:6)]
     carr_soln: CarrierPhaseRangeSolution,
-}
-
-#[cfg(test)]
-mod test {
-    use ublox_derive::ubx_register;
-    use std::convert::TryInto;
-
-    #[ubx_register(u8)]
-    struct MyRegister {
-        #[ubx_field(0:0)]
-        field1: bool,
-
-        #[ubx_field(7:1)]
-        field2: u8,
-    }
-
-    #[test]
-    fn test1() {
-        let raw = 5;
-        let reg = MyRegister(raw);
-        assert_eq!(reg.get_field1(), true);
-        assert_eq!(reg.get_field2(), 2);
-    }
-
-    #[test]
-    fn test2() {
-        let raw = 8;
-        let reg = MyRegister(raw);
-        assert_eq!(reg.get_field1(), false);
-        assert_eq!(reg.get_field2(), 4);
-    }
 }
 
 /// Additional flags for `NavPosVelTime`
@@ -490,8 +470,19 @@ pub enum PowerSaveModeState {
     Inactive,
 }
 
-impl std::convert::From<usize> for PowerSaveModeState {
-    fn from(value: usize) -> Self {
+impl std::convert::From<PowerSaveModeState> for u8 {
+    fn from(value: PowerSaveModeState) -> Self {
+        match value {
+            PowerSaveModeState::Acquisition => 0,
+            PowerSaveModeState::Tracking => 1,
+            PowerSaveModeState::PowerOptimizedTracking => 2,
+            PowerSaveModeState::Inactive => 3,
+        }
+    }
+}
+
+impl std::convert::From<u8> for PowerSaveModeState {
+    fn from(value: u8) -> Self {
         match value {
             0 => Self::Acquisition,
             1 => Self::Tracking,
@@ -511,8 +502,19 @@ pub enum SpoofingDetectionState {
     MultipleSpoofingIndications,
 }
 
-impl std::convert::From<usize> for SpoofingDetectionState {
-    fn from(value: usize) -> Self {
+impl std::convert::From<SpoofingDetectionState> for u8 {
+    fn from(value: SpoofingDetectionState) -> Self {
+        match value {
+            SpoofingDetectionState::Unknown => 0,
+            SpoofingDetectionState::NoSpoofing => 1,
+            SpoofingDetectionState::Spoofing => 2,
+            SpoofingDetectionState::MultipleSpoofingIndications => 3,
+        }
+    }
+}
+
+impl std::convert::From<u8> for SpoofingDetectionState {
+    fn from(value: u8) -> Self {
         match value {
             0 => Self::Unknown,
             1 => Self::NoSpoofing,

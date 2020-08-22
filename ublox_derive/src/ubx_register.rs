@@ -1,4 +1,3 @@
-//use crate::types::BitFlagsMacro;
 use crate::types::{
     PackDesc, PackField, PacketFlag, PayloadLen, RecvPackets, UbxEnumRestHandling, UbxExtendEnum,
     UbxTypeFromFn, UbxTypeIntoFn,
@@ -22,6 +21,7 @@ pub fn generate_ubx_register(
     let mut getters = vec!();
     let mut setters = vec!();
     let mut with = vec!();
+    let mut utils = vec!();
     for f in fields.iter() {
         //println!("{:?}", f);
         let mut bits = None;//UbxBitfield{ hi: 0, lo: 0 };
@@ -53,12 +53,20 @@ pub fn generate_ubx_register(
         /*println!("{:?}", bits);
         println!("{:?}", f.ident);
         println!("{:?}", f.ty);*/
-        let getter_name = format_ident!("get_{}", f.ident.as_ref().expect("Struct field must have a name"));
-        let setter_name = format_ident!("set_{}", f.ident.as_ref().expect("Struct field must have a name"));
-        let with_name = format_ident!("with_{}", f.ident.as_ref().expect("Struct field must have a name"));
+        let field_name = match f.ident.as_ref() {
+            Some(x) => { x }
+            None => {
+                return quote!{ compile_error!("Struct field must have a name!"); }
+            }
+        };
+
+        let getter_name = format_ident!("get_{}", field_name);
+        let setter_name = format_ident!("set_{}", field_name);
+        let with_name = format_ident!("with_{}", field_name);
         let field_type = &f.ty;
         let lo = bits.lo;
-        let mask: usize = (1 << (bits.hi - bits.lo + 1)) - 1;
+        let hi = bits.hi;
+        //let mask: usize = ((1 << (bits.hi - bits.lo + 1)) - 1) << bits.lo;
         let is_bool = {
             if let syn::Type::Path(path) = field_type {
                 format!("{}", path.path.get_ident().unwrap()) == "bool"
@@ -66,19 +74,25 @@ pub fn generate_ubx_register(
                 false
             }
         };
-        // TODO: We shouldn't cast to usize
+
+        let mask_name = format_ident!("{}_mask", field_name);
+        utils.push(quote!{
+            fn #mask_name(&self) -> #underlying_type {
+                ((1 << (#hi as #underlying_type - #lo as #underlying_type + 1)) - 1) << (#lo as #underlying_type)
+            }
+        });
+
         // TODO: We should find a way to merge these
         if is_bool {
             // TODO: Check that hi == lo
             getters.push(quote!{
                 pub fn #getter_name(&self) -> #field_type {
-                    ((self.0 as usize >> #lo) & #mask) != 0
+                    ((self.0 & self.#mask_name()) >> #lo) != 0
                 }
             });
             setters.push(quote!{
                 pub fn #setter_name(&mut self, value: #field_type) {
-                    // @TODO: Actually implement this
-                    self.0 |= 1;
+                    self.0 = ((self.0 & !self.#mask_name()) | (if value { 1 } else { 0 } << #lo)) as #underlying_type;
                 }
             });
             with.push(quote!{
@@ -88,15 +102,16 @@ pub fn generate_ubx_register(
                 }
             });
         } else {
+            // TODO: If underlying_type is just a bigger integer than field_type, we should "as" instead of into
             getters.push(quote!{
                 pub fn #getter_name(&self) -> #field_type {
-                    ((self.0 as usize >> #lo) & #mask).try_into().unwrap()
+                    ((self.0 & self.#mask_name()) >> #lo).into()
                 }
             });
             setters.push(quote!{
                 pub fn #setter_name(&mut self, value: #field_type) {
-                    // @TODO: Actually implement this
-                    self.0 |= 1;
+                    let raw_value: u8 = value.into();
+                    self.0 = ((self.0 & !self.#mask_name()) | ((raw_value as #underlying_type) << #lo)) as #underlying_type;
                 }
             });
             with.push(quote!{
@@ -123,6 +138,7 @@ pub fn generate_ubx_register(
                 (self.0 >> 1) & 0x7F
             }*/
 
+            #(#utils)*
             #(#getters)*
             #(#with)*
             #(#setters)*
