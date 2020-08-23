@@ -8,13 +8,40 @@ ublox for Rust
 
 This project aims to build a pure-rust I/O library for ublox GPS devices, specifically using the UBX protocol.
 
-In order to use a device, you must open it, and then you must periodically call `poll` to process incoming messages from the device (or call `poll_for`, which will call poll for the given amount of time). As new navigation solutions are created by the device, you can fetch them using the `get_solution` method.
+An example of using this library to talk to a device can be seen in the ublox_cli subfolder of this project.
 
-In order to speed up the time to first fix, you may use the `load_aid_data` method to send the current position and time to the device, if known.
+Constructing Packets
+====================
 
-An example program is in `src/main.rs`
+Constructing packets happens using the `Builder` variant of the packet, for example:
+```
+let packet: Vec<u8> = CfgPrtUartBuilder {
+   portid: UartPortId::Uart1,
+   ...
+}.into_packet_bytes();
+```
+See the documentation for the individual `Builder` structs for information on the fields.
 
-Roadmap
-=======
+Parsing Packets
+===============
 
-- Currently, loading ALP offline data is flaky at best. I want to fix this, so that you can load ALP data to further increase startup times.
+Parsing packets happens by instantiating a `Parser` object and then adding data into it using its `consume()` method. The parser contains an internal buffer of data, and when `consume()` is called that data is copied into the internal buffer and an iterator-like object is returned to access the packets. For example:
+```
+let mut parser = Parser::default();
+let my_raw_data = ...;
+let it = parser.consume(my_raw_data);
+loop {
+    match it.next() {
+        Some(Ok(packet)) => {
+            // We've received a &PacketRef, we can handle it
+        }
+        Some(Err(_)) => {
+            // Received a malformed packet
+        }
+        None => {
+	    // The internal buffer is now empty
+            break;
+        }
+    }
+}
+```

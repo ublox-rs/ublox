@@ -1,11 +1,12 @@
 [package]
 name = "ublox"
-version = "0.2.0"
+version = "0.2.1"
 authors = ["Lane Kolbly <lane@rscheme.org>"]
 edition = "2018"
 license = "MIT"
 description = "A crate to communicate with u-blox GPS devices using the UBX protocol"
 repository = "https://github.com/lkolbly/ublox"
+readme = "../README.md"
 
 [features]
 default = []
