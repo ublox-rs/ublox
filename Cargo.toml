@@ -1,2 +1,2 @@
 [workspace]
-members = ["ublox", "ublox_derive"]
+members = ["ublox", "ublox_derive", "ublox_cli"]
