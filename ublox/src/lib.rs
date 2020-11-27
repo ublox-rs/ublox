@@ -8,8 +8,6 @@
 
 extern crate alloc;
 
-#[cfg(feature = "serial")]
-pub use crate::serialport::{Device, ResetType};
 pub use crate::{
     error::{DateTimeError, MemWriterError, ParserError},
     parser::{Parser, ParserIter},
@@ -18,6 +16,4 @@ pub use crate::{
 
 mod error;
 mod parser;
-#[cfg(feature = "serial")]
-mod serialport;
 mod ubx_packets;
