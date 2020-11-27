@@ -4,6 +4,10 @@
 //! At time of writing this library is developed for a device which behaves like
 //! a NEO-6M device.
 
+#![cfg_attr(not(feature = "std"), no_std)]
+
+extern crate alloc;
+
 #[cfg(feature = "serial")]
 pub use crate::serialport::{Device, ResetType};
 pub use crate::{

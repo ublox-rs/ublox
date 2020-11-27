@@ -1,18 +1,12 @@
-use std::fmt;
+use core::fmt;
 
 #[derive(Debug)]
-pub enum MemWriterError<E>
-where
-    E: std::error::Error,
-{
+pub enum MemWriterError<E> {
     NotEnoughMem,
     Custom(E),
 }
 
-impl<E> fmt::Display for MemWriterError<E>
-where
-    E: std::error::Error,
-{
+impl<E: core::fmt::Display> fmt::Display for MemWriterError<E> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             MemWriterError::NotEnoughMem => f.write_str("Not enough memory error"),
@@ -21,6 +15,7 @@ where
     }
 }
 
+#[cfg(feature = "std")]
 impl<E> std::error::Error for MemWriterError<E> where E: std::error::Error {}
 
 /// Error that possible during packets parsing
@@ -65,6 +60,7 @@ impl fmt::Display for ParserError {
     }
 }
 
+#[cfg(feature = "std")]
 impl std::error::Error for ParserError {}
 
 #[derive(Debug, Clone, Copy)]
@@ -84,4 +80,5 @@ impl fmt::Display for DateTimeError {
     }
 }
 
+#[cfg(feature = "std")]
 impl std::error::Error for DateTimeError {}

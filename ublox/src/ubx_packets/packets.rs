@@ -5,7 +5,9 @@ use super::{
 use crate::error::{MemWriterError, ParserError};
 use bitflags::bitflags;
 use chrono::prelude::*;
-use std::fmt;
+use core::fmt;
+use num_traits::cast::{FromPrimitive, ToPrimitive};
+use num_traits::float::FloatCore;
 use ublox_derive::{
     define_recv_packets, ubx_extend, ubx_extend_bitflags, ubx_packet_recv, ubx_packet_recv_send,
     ubx_packet_send,
@@ -964,30 +966,25 @@ impl Default for CfgNav5UtcStandard {
 
 #[derive(Clone, Copy)]
 #[repr(transparent)]
-struct ScaleBack<T>(T);
+struct ScaleBack<T: FloatCore + FromPrimitive + ToPrimitive>(T);
 
-trait ScaleBackF64 {
-    fn as_i32(self, x: f64) -> i32;
-    fn as_u32(self, x: f64) -> u32;
-}
-
-impl ScaleBackF64 for ScaleBack<f64> {
-    fn as_i32(self, x: f64) -> i32 {
+impl<T: FloatCore + FromPrimitive + ToPrimitive> ScaleBack<T> {
+    fn as_i32(self, x: T) -> i32 {
         let x = (x * self.0).round();
-        if x < f64::from(i32::min_value()) {
+        if x < T::from_i32(i32::min_value()).unwrap() {
             i32::min_value()
-        } else if x > f64::from(i32::max_value()) {
+        } else if x > T::from_i32(i32::max_value()).unwrap() {
             i32::max_value()
         } else {
-            x as i32
+            x.to_i32().unwrap()
         }
     }
 
-    fn as_u32(self, x: f64) -> u32 {
+    fn as_u32(self, x: T) -> u32 {
         let x = (x * self.0).round();
         if !x.is_sign_negative() {
-            if x <= f64::from(u32::max_value()) {
-                x as u32
+            if x <= T::from_u32(u32::max_value()).unwrap() {
+                x.to_u32().unwrap()
             } else {
                 u32::max_value()
             }
@@ -995,19 +992,12 @@ impl ScaleBackF64 for ScaleBack<f64> {
             0
         }
     }
-}
 
-trait ScaleBackF32 {
-    fn as_u16(self, x: f32) -> u16;
-    fn as_u8(self, x: f32) -> u8;
-}
-
-impl ScaleBackF32 for ScaleBack<f32> {
-    fn as_u16(self, x: f32) -> u16 {
+    fn as_u16(self, x: T) -> u16 {
         let x = (x * self.0).round();
         if !x.is_sign_negative() {
-            if x <= f32::from(u16::max_value()) {
-                x as u16
+            if x <= T::from_u16(u16::max_value()).unwrap() {
+                x.to_u16().unwrap()
             } else {
                 u16::max_value()
             }
@@ -1016,11 +1006,11 @@ impl ScaleBackF32 for ScaleBack<f32> {
         }
     }
 
-    fn as_u8(self, x: f32) -> u8 {
+    fn as_u8(self, x: T) -> u8 {
         let x = (x * self.0).round();
         if !x.is_sign_negative() {
-            if x <= f32::from(u8::max_value()) {
-                x as u8
+            if x <= T::from_u8(u8::max_value()).unwrap() {
+                x.to_u8().unwrap()
             } else {
                 u8::max_value()
             }
@@ -1049,27 +1039,23 @@ struct MonVer {
 }
 
 mod mon_ver {
-    use std::ffi::CStr;
-
     pub(crate) fn convert_to_str_unchecked(bytes: &[u8]) -> &str {
         let null_pos = bytes
             .iter()
             .position(|x| *x == 0)
             .expect("is_cstr_valid bug?");
-        let cstr = CStr::from_bytes_with_nul(&bytes[0..=null_pos]).expect("is_cstr_valid bug?");
-        cstr.to_str().expect("is_cstr_valid bug?")
+        core::str::from_utf8(&bytes[0..=null_pos])
+            .expect("is_cstr_valid should have prevented this code from running")
     }
 
     pub(crate) fn is_cstr_valid(bytes: &[u8]) -> bool {
-        if let Some(pos) = bytes.iter().position(|x| *x == 0) {
-            if let Ok(cstr) = CStr::from_bytes_with_nul(&bytes[0..=pos]) {
-                cstr.to_str().is_ok()
-            } else {
-                false
+        let null_pos = match bytes.iter().position(|x| *x == 0) {
+            Some(pos) => pos,
+            None => {
+                return false;
             }
-        } else {
-            false
-        }
+        };
+        core::str::from_utf8(&bytes[0..=null_pos]).is_ok()
     }
 
     pub(crate) fn is_extension_valid(payload: &[u8]) -> bool {

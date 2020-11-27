@@ -52,12 +52,13 @@ impl UbxChecksumCalc {
 /// Abstraction for buffer creation/reallocation
 /// to storing packet
 pub trait MemWriter {
-    type Error: std::error::Error;
+    type Error;
     /// make sure that we have at least `len` bytes for writing
     fn reserve_allocate(&mut self, len: usize) -> Result<(), MemWriterError<Self::Error>>;
     fn write(&mut self, buf: &[u8]) -> Result<(), MemWriterError<Self::Error>>;
 }
 
+#[cfg(feature = "std")]
 impl MemWriter for Vec<u8> {
     type Error = std::io::Error;
 
