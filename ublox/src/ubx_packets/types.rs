@@ -1,7 +1,7 @@
 use super::packets::*;
 use crate::error::DateTimeError;
 use chrono::prelude::*;
-use std::convert::TryFrom;
+use core::convert::TryFrom;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Position {

@@ -1,3 +1,5 @@
+use alloc::vec::Vec;
+
 use crate::{
     error::ParserError,
     ubx_packets::{
