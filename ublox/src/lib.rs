@@ -70,6 +70,7 @@ pub use crate::{
     ubx_packets::*,
 };
 
+mod circular_buffer;
 mod error;
 mod parser;
 mod ubx_packets;
