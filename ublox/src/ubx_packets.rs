@@ -21,30 +21,31 @@ pub(crate) const SYNC_CHAR_2: u8 = 0x62;
 /// So slice should starts with class id.
 /// Return ck_a and ck_b
 pub(crate) fn ubx_checksum(data: &[u8]) -> (u8, u8) {
-    let mut ck_a = 0_u8;
-    let mut ck_b = 0_u8;
-    for byte in data {
-        ck_a = ck_a.overflowing_add(*byte).0;
-        ck_b = ck_b.overflowing_add(ck_a).0;
-    }
-    (ck_a, ck_b)
+    let mut calc = UbxChecksumCalc::new();
+    calc.update(data);
+    calc.result()
 }
 
-/// For ubx checksum on the fly
+/// Used for calculating a UBX checksum one piece at a time
 #[derive(Default)]
-struct UbxChecksumCalc {
+pub(crate) struct UbxChecksumCalc {
     ck_a: u8,
     ck_b: u8,
 }
 
 impl UbxChecksumCalc {
-    fn update(&mut self, chunk: &[u8]) {
+    pub fn new() -> UbxChecksumCalc {
+        UbxChecksumCalc { ck_a: 0, ck_b: 0 }
+    }
+
+    pub fn update(&mut self, chunk: &[u8]) {
         for byte in chunk {
             self.ck_a = self.ck_a.overflowing_add(*byte).0;
             self.ck_b = self.ck_b.overflowing_add(self.ck_a).0;
         }
     }
-    fn result(self) -> (u8, u8) {
+
+    pub fn result(self) -> (u8, u8) {
         (self.ck_a, self.ck_b)
     }
 }
