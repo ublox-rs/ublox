@@ -1,11 +1,11 @@
-struct CircularBuffer<'a> {
+pub struct CircularBuffer<'a> {
     buf: &'a mut [u8],
     head: usize,
     tail: usize,
 }
 
 impl<'a> CircularBuffer<'a> {
-    fn new(buf: &mut [u8]) -> CircularBuffer {
+    pub fn new(buf: &mut [u8]) -> CircularBuffer {
         CircularBuffer {
             buf: buf,
             head: 0,
@@ -13,7 +13,7 @@ impl<'a> CircularBuffer<'a> {
         }
     }
 
-    fn len(&self) -> usize {
+    pub fn len(&self) -> usize {
         let len = self.buf.len() + self.tail - self.head;
         if len >= self.buf.len() {
             len - self.buf.len()
@@ -23,7 +23,7 @@ impl<'a> CircularBuffer<'a> {
     }
 
     /// Returns true if the push was successful, false otherwise
-    fn push(&mut self, data: u8) -> bool {
+    pub fn push(&mut self, data: u8) -> bool {
         if (self.tail + 1) % self.buf.len() == self.head {
             return false;
         }
@@ -33,7 +33,7 @@ impl<'a> CircularBuffer<'a> {
     }
 
     /// Returns None if there was no element available to pop
-    fn pop(&mut self) -> Option<u8> {
+    pub fn pop(&mut self) -> Option<u8> {
         if self.head == self.tail {
             return None;
         }
@@ -43,7 +43,7 @@ impl<'a> CircularBuffer<'a> {
     }
 
     /// Returns the element at the given index, panicing if the index is invalid
-    fn at(&self, idx: usize) -> u8 {
+    pub fn at(&self, idx: usize) -> u8 {
         assert!(idx < self.len());
         let idx = self.head + idx;
         let idx = if idx >= self.len() {
@@ -54,13 +54,13 @@ impl<'a> CircularBuffer<'a> {
         self.buf[idx]
     }
 
-    fn clear(&mut self) {
+    pub fn clear(&mut self) {
         self.head = 0;
         self.tail = 0;
     }
 
     /// Returns the number of elements we could consume
-    fn extend_from_slice(&mut self, new_data: &[u8]) -> usize {
+    pub fn extend_from_slice(&mut self, new_data: &[u8]) -> usize {
         for (i, x) in new_data.iter().enumerate() {
             if !self.push(*x) {
                 return i;
@@ -69,15 +69,27 @@ impl<'a> CircularBuffer<'a> {
         return new_data.len();
     }
 
-    fn iter(&'a self) -> CircularBufferIter<'_, 'a> {
+    pub fn iter(&'a self) -> CircularBufferIter<'_, 'a> {
         CircularBufferIter {
             buf: self,
             offset: 0,
         }
     }
+
+    /// Skips the given number of elements, or empties the buffer if
+    /// there are not enough elements.
+    pub fn skip(&mut self, count: usize) {
+        if count >= self.len() {
+            self.clear();
+        } else {
+            for _ in 0..count {
+                self.pop();
+            }
+        }
+    }
 }
 
-struct CircularBufferIter<'a, 'b> {
+pub struct CircularBufferIter<'a, 'b> {
     buf: &'a CircularBuffer<'b>,
     offset: usize,
 }
@@ -133,6 +145,53 @@ mod test {
         assert_eq!(buf.pop(), Some(15));
         assert_eq!(buf.pop(), Some(16));
         assert_eq!(buf.pop(), None);
+    }
+
+    #[test]
+    fn cb_skip() {
+        let mut buf = [0; 5];
+        let mut buf = CircularBuffer::new(&mut buf);
+        let slice = [13, 14, 15, 16];
+        buf.extend_from_slice(&slice);
+        assert_eq!(buf.len(), 4);
+        buf.skip(3);
+        assert_eq!(buf.len(), 1);
+        buf.skip(1);
+        assert_eq!(buf.len(), 0);
+    }
+
+    #[test]
+    fn buf_outlives_cb() {
+        let mut buf = [0; 5];
+        for _ in 0..2 {
+            let mut buf = CircularBuffer::new(&mut buf);
+            buf.push(13);
+            buf.push(14);
+            assert_eq!(buf.len(), 2);
+        }
+    }
+
+    #[test]
+    fn cb_clear_works() {
+        let mut buf = [0; 5];
+        let mut buf = CircularBuffer::new(&mut buf);
+        buf.push(13);
+        buf.push(14);
+        assert_eq!(buf.len(), 2);
+        buf.clear();
+        assert_eq!(buf.len(), 0);
+    }
+
+    #[test]
+    fn cb_extend_works() {
+        let mut buf = [0; 5];
+        let mut buf = CircularBuffer::new(&mut buf);
+        let slice = [13, 14, 15, 16, 17];
+        let expected = [13, 14, 15, 16];
+        assert_eq!(buf.extend_from_slice(&slice), 4);
+        for (a, b) in buf.iter().zip(expected.iter()) {
+            assert_eq!(a, *b);
+        }
     }
 
     #[test]

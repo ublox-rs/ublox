@@ -77,6 +77,24 @@ impl MemWriter for Vec<u8> {
     }
 }
 
+impl MemWriter for &mut [u8] {
+    type Error = ();
+
+    fn reserve_allocate(&mut self, _len: usize) -> Result<(), MemWriterError<Self::Error>> {
+        Ok(())
+    }
+
+    fn write(&mut self, buf: &[u8]) -> Result<(), MemWriterError<Self::Error>> {
+        if buf.len() > self.len() {
+            return Err(MemWriterError::NotEnoughMem);
+        }
+        for i in 0..buf.len() {
+            self[i] = buf[i];
+        }
+        Ok(())
+    }
+}
+
 pub trait UbxPacketCreator {
     /// Create packet and store bytes sequence to somewhere using `out`
     fn create_packet<T: MemWriter>(self, out: &mut T) -> Result<(), MemWriterError<T::Error>>;

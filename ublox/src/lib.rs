@@ -66,7 +66,7 @@ extern crate alloc;
 
 pub use crate::{
     error::{DateTimeError, MemWriterError, ParserError},
-    parser::{Parser, ParserIter},
+    parser::{BufParser, BufParserIter, Parser, ParserIter},
     ubx_packets::*,
 };
 
