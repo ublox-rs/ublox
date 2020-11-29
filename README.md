@@ -2,9 +2,15 @@ ublox for Rust
 ==============
 
 [![ublox on Travis CI][travis-image]][travis]
+[![ublox on docs.rs][docs-badge]][docs-url]
+[![MIT licensed][mit-badge]][mit-url]
 
 [travis-image]: https://api.travis-ci.com/lkolbly/ublox.svg?branch=master
 [travis]: https://travis-ci.com/lkolbly/ublox
+[docs-badge]: https://docs.rs/ublox/badge.svg
+[docs-url]: https://docs.rs/ublox
+[mit-badge]: https://img.shields.io/badge/license-MIT-blue.svg
+[mit-url]: https://github.com/lkolbly/ublox/blob/master/LICENSE
 
 This project aims to build a pure-rust I/O library for ublox GPS devices, specifically using the UBX protocol.
 
