@@ -3,16 +3,25 @@ use crate::error::DateTimeError;
 use chrono::prelude::*;
 use core::convert::TryFrom;
 
+/// Represents a world position, can be constructed from NavPosLlh and NavPosVelTime packets.
 #[derive(Debug, Clone, Copy)]
 pub struct Position {
+    /// Logitude in degrees
     pub lon: f64,
+
+    /// Latitude in degrees
     pub lat: f64,
+
+    /// Altitude in meters
     pub alt: f64,
 }
 
 #[derive(Debug, Clone, Copy)]
 pub struct Velocity {
-    pub speed: f64,   // m/s over ground
+    /// m/s over the ground
+    pub speed: f64,
+
+    /// Heading in degrees
     pub heading: f64, // degrees
 }
 
