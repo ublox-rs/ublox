@@ -3,58 +3,12 @@ use alloc::vec::Vec;
 use crate::{
     circular_buffer::CircularBuffer,
     error::{MemWriterError, ParserError},
+    linear_buffer::LinearBuffer,
     ubx_packets::{
-        match_packet, ubx_checksum, MemWriter, PacketRef, UbxChecksumCalc, MAX_PAYLOAD_LEN,
-        SYNC_CHAR_1, SYNC_CHAR_2,
+        match_packet, ubx_checksum, PacketRef, UbxChecksumCalc, MAX_PAYLOAD_LEN, SYNC_CHAR_1,
+        SYNC_CHAR_2,
     },
 };
-
-pub struct ArrayBuffer<'a> {
-    buf: &'a mut [u8],
-}
-
-pub trait ViewableBuffer {
-    fn clear(&mut self);
-    fn get_ref(&self, size: usize) -> &[u8];
-}
-
-impl<'a> ViewableBuffer for ArrayBuffer<'a> {
-    fn clear(&mut self) {
-        // No-op
-    }
-
-    fn get_ref(&self, size: usize) -> &[u8] {
-        &self.buf[0..size]
-    }
-}
-
-impl<'a> MemWriter for ArrayBuffer<'a> {
-    type Error = ();
-
-    fn reserve_allocate(&mut self, _len: usize) -> Result<(), MemWriterError<Self::Error>> {
-        Ok(())
-    }
-
-    fn write(&mut self, buf: &[u8]) -> Result<(), MemWriterError<Self::Error>> {
-        if buf.len() > self.buf.len() {
-            return Err(MemWriterError::NotEnoughMem);
-        }
-        for i in 0..buf.len() {
-            self.buf[i] = buf[i];
-        }
-        Ok(())
-    }
-}
-
-impl ViewableBuffer for Vec<u8> {
-    fn clear(&mut self) {
-        self.drain(..);
-    }
-
-    fn get_ref(&self, _size: usize) -> &[u8] {
-        self
-    }
-}
 
 pub struct BufParser<'a> {
     buf: CircularBuffer<'a>,
@@ -67,7 +21,7 @@ impl<'a> BufParser<'a> {
         }
     }
 
-    pub fn consume_from_slice<T: MemWriter + ViewableBuffer>(
+    pub fn consume_from_slice<T: LinearBuffer>(
         &'a mut self,
         new_data: &'a [u8],
         packet_store: &'a mut T,
@@ -75,7 +29,7 @@ impl<'a> BufParser<'a> {
         self.consume(new_data.iter(), packet_store)
     }
 
-    pub fn consume<T: MemWriter + ViewableBuffer, ITER: core::iter::Iterator<Item = &'a u8>>(
+    pub fn consume<T: LinearBuffer, ITER: core::iter::Iterator<Item = &'a u8>>(
         &'a mut self,
         new_data: ITER,
         packet_store: &'a mut T,
@@ -92,15 +46,15 @@ impl<'a> BufParser<'a> {
     }
 }
 
-pub struct BufParserIter<'a, T: MemWriter + ViewableBuffer> {
+pub struct BufParserIter<'a, T: LinearBuffer> {
     buf: &'a mut CircularBuffer<'a>,
     temp_storage: &'a mut T,
 }
 
-impl<'a, T: MemWriter + ViewableBuffer> BufParserIter<'a, T> {
+impl<'a, T: LinearBuffer> BufParserIter<'a, T> {
     /// Analog of `core::iter::Iterator::next`, should be switched to
     /// trait implementation after merge of https://github.com/rust-lang/rust/issues/44265
-    pub fn next(&mut self) -> Option<Result<PacketRef, ParserError>> {
+    pub fn next(&mut self) -> Option<Result<PacketRef, MemWriterError<ParserError>>> {
         while self.buf.len() > 0 {
             if self.buf.len() <= 5 {
                 return None;
@@ -131,25 +85,41 @@ impl<'a, T: MemWriter + ViewableBuffer> BufParserIter<'a, T> {
                 (self.buf.at(6 + pack_len), self.buf.at(6 + pack_len + 1));
             if (ck_a, ck_b) != (expect_ck_a, expect_ck_b) {
                 self.buf.skip(2);
-                return Some(Err(ParserError::InvalidChecksum {
+                return Some(Err(MemWriterError::Custom(ParserError::InvalidChecksum {
                     expect: u16::from_le_bytes([expect_ck_a, expect_ck_b]),
                     got: u16::from_le_bytes([ck_a, ck_b]),
-                }));
+                })));
             }
 
             // Fill the underlying storage with the packet
-            // TODO: If these encounter an error, we need to return that to the user,
-            // and possibly clear the underlying buffer (so we don't get stuck in this state)
-            self.temp_storage.reserve_allocate(6 + pack_len);
-            for _ in 0..6 + pack_len + 2 {
-                self.temp_storage.write(&[self.buf.pop().unwrap()]);
-            }
+            // If we run out of memory in the scratch buffer, skip the packet and tell the user
+            match self
+                .temp_storage
+                .set::<(), _>(self.buf.iter().take(6 + pack_len + 2))
+            {
+                Ok(_) => {}
+                Err(MemWriterError::NotEnoughMem) => {
+                    self.buf.skip(2);
+                    return Some(Err(MemWriterError::NotEnoughMem));
+                }
+                Err(MemWriterError::Custom(_)) => {
+                    panic!("LinearBuffer::set() should never return a Custom error");
+                }
+            };
+            self.buf.skip(6 + pack_len + 2);
 
             let packet = self.temp_storage.get_ref(6 + pack_len + 2);
             let msg_data = &packet[6..(6 + pack_len)];
             let class_id = packet[2];
             let msg_id = packet[3];
-            return Some(match_packet(class_id, msg_id, msg_data));
+            match match_packet(class_id, msg_id, msg_data) {
+                Ok(x) => {
+                    return Some(Ok(x));
+                }
+                Err(e) => {
+                    return Some(Err(MemWriterError::Custom(e)));
+                }
+            }
         }
         None
     }
@@ -158,6 +128,7 @@ impl<'a, T: MemWriter + ViewableBuffer> BufParserIter<'a, T> {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::linear_buffer::ArrayBuffer;
     use crate::ubx_packets::*;
 
     #[test]
@@ -186,12 +157,10 @@ mod test {
         let mut buf = [0; 1024];
         let mut parser = BufParser::new(&mut buf);
         let mut underlying = [0; 128];
-        let mut buf = ArrayBuffer {
-            buf: &mut underlying[..],
-        };
-        let mut it = parser.consume_from_slice(&bytes, &mut buf);
+        let mut underlying = ArrayBuffer::new(&mut underlying);
+        let mut it = parser.consume_from_slice(&bytes, &mut underlying);
         match it.next() {
-            Some(Ok(_packet)) => {
+            Some(Ok(PacketRef::CfgNav5(_packet))) => {
                 // We're good
             }
             _ => {
@@ -230,7 +199,7 @@ mod test {
         let mut underlying = Vec::new();
         let mut it = parser.consume_from_slice(&bytes, &mut underlying);
         match it.next() {
-            Some(Ok(_packet)) => {
+            Some(Ok(PacketRef::CfgNav5(_packet))) => {
                 // We're good
             }
             _ => {
