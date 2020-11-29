@@ -12,11 +12,13 @@ matrix:
 before_script:
   - rustup component add rustfmt-preview
   - which rustfmt
+env:
+  - FEATURES="--no-default-features --features std"
+  - FEATURES="--no-default-features"
 script:
+  - cd ublox_derive
   - cargo test --verbose --workspace
-  - cargo test --release --verbose --workspace
-  - cd ublox
-  - cargo build --examples
-  - cargo doc
-  - cargo build --features "serial" --examples
-  - cargo doc --features "serial"
+  - cd ../ublox
+  - cargo test $FEATURES
+  - cargo build $FEATURES --examples
+  - cargo doc $FEATURES
