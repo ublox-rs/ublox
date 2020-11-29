@@ -9,10 +9,6 @@ use crate::{
     },
 };
 
-/*pub trait Buffer {
-    //
-}*/
-
 pub struct ArrayBuffer<'a> {
     buf: &'a mut [u8],
 }
@@ -60,16 +56,6 @@ impl ViewableBuffer for Vec<u8> {
     }
 }
 
-/*impl ViewableBuffer for &mut [u8] {
-    fn clear(&mut self) {
-        // This is a no-op
-    }
-
-    fn get_ref(&self, size: usize) -> &[u8] {
-        &self[0..size]
-    }
-}*/
-
 pub struct BufParser<'a> {
     buf: CircularBuffer<'a>,
 }
@@ -81,15 +67,15 @@ impl<'a> BufParser<'a> {
         }
     }
 
-    pub fn extend_from_slice<T: MemWriter + ViewableBuffer>(
+    pub fn consume_from_slice<T: MemWriter + ViewableBuffer>(
         &'a mut self,
         new_data: &'a [u8],
         packet_store: &'a mut T,
     ) -> BufParserIter<'a, T> {
-        self.extend(new_data.iter(), packet_store)
+        self.consume(new_data.iter(), packet_store)
     }
 
-    pub fn extend<T: MemWriter + ViewableBuffer, ITER: core::iter::Iterator<Item = &'a u8>>(
+    pub fn consume<T: MemWriter + ViewableBuffer, ITER: core::iter::Iterator<Item = &'a u8>>(
         &'a mut self,
         new_data: ITER,
         packet_store: &'a mut T,
@@ -101,53 +87,14 @@ impl<'a> BufParser<'a> {
         packet_store.clear();
         BufParserIter {
             buf: &mut self.buf,
-            writer: packet_store,
-            //off,
+            temp_storage: packet_store,
         }
-
-        /*match self
-            .buf
-            .iter()
-            //.chain(new_data.iter().map(|x| *x))
-            .position(|x| x == SYNC_CHAR_1)
-        {
-            Some(mut off) => {
-                if off >= self.buf.len() {
-                    off -= self.buf.len();
-                    self.buf.clear();
-                    self.buf.extend_from_slice(&new_data[off..]);
-                    off = 0;
-                } else {
-                    self.buf.extend_from_slice(new_data);
-                }
-
-                // Eliminate `off` elements
-                for _ in 0..off {
-                    self.buf.pop();
-                }
-
-                packet_store.clear();
-                BufParserIter {
-                    buf: &mut self.buf,
-                    writer: packet_store,
-                    //off,
-                }
-            }
-            None => {
-                self.buf.clear();
-                BufParserIter {
-                    buf: &mut self.buf,
-                    writer: packet_store,
-                    //off: 0,
-                }
-            }
-        }*/
     }
 }
 
 pub struct BufParserIter<'a, T: MemWriter + ViewableBuffer> {
     buf: &'a mut CircularBuffer<'a>,
-    writer: &'a mut T,
+    temp_storage: &'a mut T,
 }
 
 impl<'a, T: MemWriter + ViewableBuffer> BufParserIter<'a, T> {
@@ -193,12 +140,12 @@ impl<'a, T: MemWriter + ViewableBuffer> BufParserIter<'a, T> {
             // Fill the underlying storage with the packet
             // TODO: If these encounter an error, we need to return that to the user,
             // and possibly clear the underlying buffer (so we don't get stuck in this state)
-            self.writer.reserve_allocate(6 + pack_len);
+            self.temp_storage.reserve_allocate(6 + pack_len);
             for _ in 0..6 + pack_len + 2 {
-                self.writer.write(&[self.buf.pop().unwrap()]);
+                self.temp_storage.write(&[self.buf.pop().unwrap()]);
             }
 
-            let packet = self.writer.get_ref(6 + pack_len + 2);
+            let packet = self.temp_storage.get_ref(6 + pack_len + 2);
             let msg_data = &packet[6..(6 + pack_len)];
             let class_id = packet[2];
             let msg_id = packet[3];
@@ -242,8 +189,7 @@ mod test {
         let mut buf = ArrayBuffer {
             buf: &mut underlying[..],
         };
-        let mut it = parser.consume(&bytes, &mut buf);
-        //assert_eq!(it.next(), Some(Ok()));
+        let mut it = parser.consume_from_slice(&bytes, &mut buf);
         match it.next() {
             Some(Ok(_packet)) => {
                 // We're good
@@ -282,8 +228,7 @@ mod test {
         let mut buf = [0; 1024];
         let mut parser = BufParser::new(&mut buf);
         let mut underlying = Vec::new();
-        let mut it = parser.consume(&bytes, &mut underlying);
-        //assert_eq!(it.next(), Some(Ok()));
+        let mut it = parser.consume_from_slice(&bytes, &mut underlying);
         match it.next() {
             Some(Ok(_packet)) => {
                 // We're good
