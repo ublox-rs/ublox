@@ -1,7 +1,7 @@
 [package]
 name = "ublox_derive"
 description = "Utility macros for the ublox crate"
-version = "0.0.1"
+version = "0.0.2"
 authors = ["Lane Kolbly <lane@rscheme.org>"]
 license = "MIT"
 edition = "2018"
