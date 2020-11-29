@@ -144,7 +144,7 @@ pub fn generate_recv_code_for_packet(pack_descr: &PackDesc) -> TokenStream {
 
     quote! {
         #[doc = #struct_comment]
-        #[doc = "It is just reference to internal parser's buffer"]
+        #[doc = "Contains a reference to an underlying buffer, contains accessor methods to retrieve data."]
         pub struct #ref_name<'a>(&'a [u8]);
         impl<'a> #ref_name<'a> {
             #(#getters)*
@@ -241,7 +241,7 @@ pub fn generate_send_code_for_packet(pack_descr: &PackDesc) -> TokenStream {
     let struct_comment = &pack_descr.comment;
     let mut ret = quote! {
         #[doc = #struct_comment]
-        #[doc = "Struct that is used as \"builder\" for packet"]
+        #[doc = "Struct that is used to construct packets, see the crate-level documentation for more information"]
         #builder_attr
         pub struct #payload_struct {
             #(#fields),*

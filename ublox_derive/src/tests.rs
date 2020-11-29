@@ -48,7 +48,7 @@ fn test_ubx_packet_recv_simple() {
             }
 
             #[doc = "Some comment"]
-            #[doc = "It is just reference to internal parser's buffer"]
+            #[doc = "Contains a reference to an underlying buffer, contains accessor methods to retrieve data."]
             pub struct TestRef<'a>(&'a [u8]);
             impl<'a> TestRef<'a> {
                 #[doc = ""]
@@ -154,7 +154,7 @@ fn test_ubx_packet_recv_dyn_len() {
             }
 
             #[doc = ""]
-            #[doc = "It is just reference to internal parser's buffer"]
+            #[doc = "Contains a reference to an underlying buffer, contains accessor methods to retrieve data."]
             pub struct TestRef<'a>(&'a [u8]);
             impl<'a> TestRef<'a> {
                 #[doc = ""]
@@ -220,7 +220,7 @@ fn test_ubx_packet_send() {
             }
 
             #[doc = "Some comment"]
-            #[doc = "Struct that is used as \"builder\" for packet"]
+            #[doc = "Struct that is used to construct packets, see the crate-level documentation for more information"]
             #[derive(Default)]
             pub struct TestBuilder {
                 #[doc = ""]

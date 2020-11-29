@@ -438,7 +438,7 @@ impl AidIniBuilder {
         self.week_or_ym = (match tm.year_ce() {
             (true, yr) => yr - 2000,
             (false, _) => {
-                panic!("Jesus must have been born for this method to work");
+                panic!("AID-INI packet only supports years after 2000");
             }
         } * 100
             + tm.month0()) as u16;
