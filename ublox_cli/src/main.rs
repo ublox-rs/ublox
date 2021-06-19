@@ -1,6 +1,7 @@
 use chrono::prelude::*;
 use clap::{App, Arg};
 use std::convert::TryInto;
+use std::io::Write;
 use std::time::Duration;
 use ublox::*;
 
@@ -25,6 +26,15 @@ impl Device {
             let nbytes = self.read_port(&mut local_buf)?;
             if nbytes == 0 {
                 break;
+            }
+
+            {
+                let mut f = std::fs::OpenOptions::new()
+                    .append(true)
+                    .create(true)
+                    .open("output.ubx")
+                    .unwrap();
+                f.write_all(&local_buf[..nbytes]).unwrap();
             }
 
             // parser.consume adds the buffer to its internal buffer, and
