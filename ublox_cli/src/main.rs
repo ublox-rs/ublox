@@ -1,7 +1,7 @@
+use chrono::prelude::*;
 use clap::{App, Arg};
 use std::convert::TryInto;
 use std::time::Duration;
-use chrono::prelude::*;
 use ublox::*;
 
 struct Device {
@@ -143,6 +143,14 @@ fn main() {
         .unwrap();
     device.wait_for_ack::<CfgMsgAllPorts>().unwrap();
 
+    // Enable the NavSat packet
+    device
+        .write_all(
+            &CfgMsgAllPortsBuilder::set_rate_for::<NavSat>([0, 1, 0, 0, 0, 0]).into_packet_bytes(),
+        )
+        .unwrap();
+    device.wait_for_ack::<CfgMsgAllPorts>().unwrap();
+
     // Send a packet request for the MonVer packet
     device
         .write_all(&UbxPacketRequest::request_for::<MonVer>().into_packet_bytes())
@@ -151,8 +159,8 @@ fn main() {
     // Start reading data
     println!("Opened u-blox device, waiting for solutions...");
     loop {
-        device.update(|packet| {
-            match packet {
+        device
+            .update(|packet| match packet {
                 PacketRef::MonVer(packet) => {
                     println!(
                         "SW version: {} HW version: {}",
@@ -170,8 +178,14 @@ fn main() {
                     if has_posvel {
                         let pos: Position = (&sol).into();
                         let vel: Velocity = (&sol).into();
-                        println!("Latitude: {:.5} Longitude: {:.5} Altitude: {:.2}m", pos.lat, pos.lon, pos.alt);
-                        println!("Speed: {:.2} m/s Heading: {:.2} degrees", vel.speed, vel.heading);
+                        println!(
+                            "Latitude: {:.5} Longitude: {:.5} Altitude: {:.2}m",
+                            pos.lat, pos.lon, pos.alt
+                        );
+                        println!(
+                            "Speed: {:.2} m/s Heading: {:.2} degrees",
+                            vel.speed, vel.heading
+                        );
                     }
 
                     if has_time {
@@ -179,8 +193,14 @@ fn main() {
                         println!("Time: {:?}", time);
                     }
                 }
+                PacketRef::NavSat(sol) => {
+                    for sat in sol.svs() {
+                        println!("{:?}", sat);
+                    }
+                    println!("Found {} satellites", sol.num_svs());
+                }
                 _ => {}
-            }
-        }).unwrap();
+            })
+            .unwrap();
     }
 }
