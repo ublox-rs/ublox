@@ -118,6 +118,91 @@ impl<'a> ParserIter<'a> {
     }
 }
 
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::ubx_packets::*;
+
+    #[test]
+    #[cfg(feature = "std")]
+    fn parser_accepts_packet_vec_underlying() {
+        let bytes = CfgNav5Builder {
+            mask: CfgNav5Params::DYN,
+            dyn_model: CfgNav5DynModel::AirborneWithLess1gAcceleration,
+            fix_mode: CfgNav5FixMode::Only3D,
+            fixed_alt: 100.17,
+            fixed_alt_var: 0.0017,
+            min_elev_degrees: 17,
+            pdop: 1.7,
+            tdop: 1.7,
+            pacc: 17,
+            tacc: 17,
+            static_hold_thresh: 2.17,
+            dgps_time_out: 17,
+            cno_thresh_num_svs: 17,
+            cno_thresh: 17,
+            static_hold_max_dist: 0x1717,
+            utc_standard: CfgNav5UtcStandard::UtcChina,
+            ..CfgNav5Builder::default()
+        }
+        .into_packet_bytes();
+
+        let mut parser = Parser::default();
+        let mut it = parser.consume(&bytes);
+        match it.next() {
+            Some(Ok(PacketRef::CfgNav5(_packet))) => {
+                // We're good
+            }
+            _ => {
+                assert!(false);
+            }
+        }
+        assert!(it.next().is_none());
+    }
+
+    #[test]
+    #[cfg(feature = "std")]
+    fn parser_accepts_multiple_packets() {
+        let mut data = vec![];
+        data.extend_from_slice(
+            &CfgNav5Builder {
+                pacc: 21,
+                ..CfgNav5Builder::default()
+            }
+            .into_packet_bytes(),
+        );
+        data.extend_from_slice(
+            &CfgNav5Builder {
+                pacc: 18,
+                ..CfgNav5Builder::default()
+            }
+            .into_packet_bytes(),
+        );
+
+        let mut parser = Parser::default();
+        let mut it = parser.consume(&data);
+        match it.next() {
+            Some(Ok(PacketRef::CfgNav5(packet))) => {
+                // We're good
+                assert_eq!(packet.pacc(), 21);
+            }
+            _ => {
+                assert!(false);
+            }
+        }
+        match it.next() {
+            Some(Ok(PacketRef::CfgNav5(packet))) => {
+                // We're good
+                assert_eq!(packet.pacc(), 18);
+            }
+            _ => {
+                assert!(false);
+            }
+        }
+        assert!(it.next().is_none());
+    }
+}
+
 #[test]
 fn test_max_payload_len() {
     assert!(MAX_PAYLOAD_LEN >= 1240);
