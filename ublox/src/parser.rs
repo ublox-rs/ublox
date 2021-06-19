@@ -208,6 +208,53 @@ mod test {
         }
         assert!(it.next().is_none());
     }
+
+    #[test]
+    #[cfg(feature = "std")]
+    fn parser_accepts_multiple_packets() {
+        let mut data = vec![];
+        data.extend_from_slice(
+            &CfgNav5Builder {
+                pacc: 21,
+                ..CfgNav5Builder::default()
+            }
+            .into_packet_bytes(),
+        );
+        data.extend_from_slice(
+            &CfgNav5Builder {
+                pacc: 18,
+                ..CfgNav5Builder::default()
+            }
+            .into_packet_bytes(),
+        );
+
+        let mut buf = [0; 1024];
+        let mut parser = BufParser::new(&mut buf);
+        let mut underlying = Vec::new();
+        let mut it = parser.consume_from_slice(&data, &mut underlying);
+        //let mut packets = vec![];
+        match it.next() {
+            Some(Ok(PacketRef::CfgNav5(packet))) => {
+                // We're good
+                //packets.push(_packet);
+                assert_eq!(packet.pacc(), 21);
+            }
+            _ => {
+                assert!(false);
+            }
+        }
+        match it.next() {
+            Some(Ok(PacketRef::CfgNav5(packet))) => {
+                // We're good
+                //packets.push(_packet);
+                assert_eq!(packet.pacc(), 18);
+            }
+            _ => {
+                assert!(false);
+            }
+        }
+        assert!(it.next().is_none());
+    }
 }
 
 /// Streaming parser for UBX protocol with buffer
