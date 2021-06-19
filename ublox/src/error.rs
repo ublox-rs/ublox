@@ -34,6 +34,10 @@ pub enum ParserError {
         expect: usize,
         got: usize,
     },
+    /// Returned when the parser buffer is not big enough to store the packet
+    OutOfMemory {
+        required_size: usize,
+    },
 }
 
 impl fmt::Display for ParserError {
@@ -55,6 +59,11 @@ impl fmt::Display for ParserError {
                 f,
                 "Invalid packet({}) length, expect {}, got {}",
                 packet, expect, got
+            ),
+            ParserError::OutOfMemory { required_size } => write!(
+                f,
+                "Insufficient parser buffer size, required {} bytes",
+                required_size
             ),
         }
     }
