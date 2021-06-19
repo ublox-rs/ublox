@@ -70,7 +70,7 @@ impl<'a> Drop for ParserIter<'a> {
 
 impl<'a> ParserIter<'a> {
     /// Analog of `core::iter::Iterator::next`, should be switched to
-    /// trait implmentation after merge of https://github.com/rust-lang/rust/issues/44265
+    /// trait implementation after merge of https://github.com/rust-lang/rust/issues/44265
     pub fn next(&mut self) -> Option<Result<PacketRef, ParserError>> {
         while self.off < self.buf.len() {
             let data = &self.buf[self.off..];
