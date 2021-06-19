@@ -10,7 +10,9 @@ macro_rules! my_vec {
         }}
     }
 
-fn extract_only_ack_ack(mut it: ParserIter) -> Vec<Result<(u8, u8), ParserError>> {
+fn extract_only_ack_ack<T: ublox::UnderlyingBuffer>(
+    mut it: ParserIter<T>,
+) -> Vec<Result<(u8, u8), ParserError>> {
     let mut ret = vec![];
     while let Some(pack) = it.next() {
         match pack {

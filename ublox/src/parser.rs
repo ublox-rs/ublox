@@ -7,13 +7,55 @@ use crate::{
     },
 };
 
-/// Streaming parser for UBX protocol with buffer
-#[derive(Default)]
-pub struct Parser {
-    buf: Vec<u8>,
+pub trait UnderlyingBuffer: core::ops::Index<core::ops::RangeFrom<usize>, Output = [u8]> {
+    fn clear(&mut self);
+    fn len(&self) -> usize;
+    fn extend_from_slice(&mut self, other: &[u8]);
+    fn drain(&mut self, count: usize);
+    fn find(&self, value: u8) -> Option<usize>;
+
+    fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
 }
 
-impl Parser {
+impl UnderlyingBuffer for Vec<u8> {
+    fn clear(&mut self) {
+        self.clear();
+    }
+
+    fn len(&self) -> usize {
+        self.len()
+    }
+
+    fn extend_from_slice(&mut self, other: &[u8]) {
+        self.extend_from_slice(other);
+    }
+
+    fn drain(&mut self, count: usize) {
+        self.drain(0..count);
+    }
+
+    fn find(&self, value: u8) -> Option<usize> {
+        self.iter().position(|elem| *elem == value)
+    }
+}
+
+/// Streaming parser for UBX protocol with buffer
+pub struct Parser<T = Vec<u8>>
+where
+    T: UnderlyingBuffer,
+{
+    buf: T,
+}
+
+impl std::default::Default for Parser<Vec<u8>> {
+    fn default() -> Self {
+        Self { buf: vec![] }
+    }
+}
+
+impl<T: UnderlyingBuffer> Parser<T> {
     pub fn is_buffer_empty(&self) -> bool {
         self.buf.is_empty()
     }
@@ -22,13 +64,16 @@ impl Parser {
         self.buf.len()
     }
 
-    pub fn consume(&mut self, new_data: &[u8]) -> ParserIter {
-        match self
-            .buf
-            .iter()
-            .chain(new_data.iter())
-            .position(|x| *x == SYNC_CHAR_1)
-        {
+    pub fn consume(&mut self, new_data: &[u8]) -> ParserIter<T> {
+        let start_idx = match self.buf.find(SYNC_CHAR_1) {
+            Some(idx) => Some(idx),
+            None => new_data
+                .iter()
+                .position(|elem| *elem == SYNC_CHAR_1)
+                .map(|x| x + self.buf.len()),
+        };
+
+        match start_idx {
             Some(mut off) => {
                 if off >= self.buf.len() {
                     off -= self.buf.len();
@@ -55,20 +100,20 @@ impl Parser {
 }
 
 /// Iterator over data stored in `Parser` buffer
-pub struct ParserIter<'a> {
-    buf: &'a mut Vec<u8>,
+pub struct ParserIter<'a, T: UnderlyingBuffer> {
+    buf: &'a mut T,
     off: usize,
 }
 
-impl<'a> Drop for ParserIter<'a> {
+impl<'a, T: UnderlyingBuffer> Drop for ParserIter<'a, T> {
     fn drop(&mut self) {
         if self.off <= self.buf.len() {
-            self.buf.drain(0..self.off);
+            self.buf.drain(self.off);
         }
     }
 }
 
-impl<'a> ParserIter<'a> {
+impl<'a, T: UnderlyingBuffer> ParserIter<'a, T> {
     /// Analog of `core::iter::Iterator::next`, should be switched to
     /// trait implementation after merge of https://github.com/rust-lang/rust/issues/44265
     pub fn next(&mut self) -> Option<Result<PacketRef, ParserError>> {
