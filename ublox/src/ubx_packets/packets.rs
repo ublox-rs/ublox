@@ -1020,6 +1020,53 @@ impl<T: FloatCore + FromPrimitive + ToPrimitive> ScaleBack<T> {
     }
 }
 
+/// Satellite info
+#[derive(Debug)]
+pub struct SatInfo<'a> {
+    pub gnss_id: u8,
+    pub sv_id: u8,
+    pub carrier_to_noise: u8,
+    pub elevation: i8,
+    pub azimuth: i16,
+    pub pr_res: i16,
+    pub flags: u32,
+    _lifetime: &'a core::marker::PhantomData<u8>,
+}
+
+#[ubx_packet_recv]
+#[ubx(class = 1, id = 0x35, max_payload_len = 65535)]
+struct NavSat {
+    itow: u32,
+    message_version: u8,
+    num_svs: u8,
+    reserved1: u16,
+
+    #[ubx(map_type = impl Iterator<Item=SatInfo>, from = sat_info::convert_to_svinfo)]
+    svs: [u8; 0],
+}
+
+mod sat_info {
+    use super::SatInfo;
+    use std::convert::TryInto;
+
+    fn convert_to_svinfo_unchecked(payload: &[u8]) -> SatInfo {
+        SatInfo {
+            gnss_id: payload[0],
+            sv_id: payload[1],
+            carrier_to_noise: payload[2],
+            elevation: payload[3] as i8,
+            azimuth: i16::from_le_bytes(payload[4..6].try_into().unwrap()),
+            pr_res: i16::from_le_bytes(payload[6..8].try_into().unwrap()),
+            flags: u32::from_le_bytes(payload[8..12].try_into().unwrap()),
+            _lifetime: &core::marker::PhantomData,
+        }
+    }
+
+    pub(crate) fn convert_to_svinfo(payload: &[u8]) -> impl Iterator<Item = SatInfo> {
+        payload.chunks(12).map(|x| convert_to_svinfo_unchecked(x))
+    }
+}
+
 /// Receiver/Software Version
 #[ubx_packet_recv]
 #[ubx(class = 0x0a, id = 0x04, max_payload_len = 1240)]
@@ -1086,6 +1133,7 @@ define_recv_packets!(
         NavSolution,
         NavVelNed,
         NavTimeUTC,
+        NavSat,
         AlpSrv,
         AckAck,
         AckNak,
