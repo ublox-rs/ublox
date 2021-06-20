@@ -7,7 +7,9 @@ use crate::{
     },
 };
 
-pub trait UnderlyingBuffer: core::ops::Index<core::ops::Range<usize>, Output = [u8]> {
+pub trait UnderlyingBuffer:
+    core::ops::Index<core::ops::Range<usize>, Output = [u8]> + core::ops::Index<usize, Output = u8>
+{
     fn clear(&mut self);
     fn len(&self) -> usize;
     fn max_capacity(&self) -> usize;
@@ -75,6 +77,14 @@ impl<'a> core::ops::Index<core::ops::Range<usize>> for FixedLinearBuffer<'a> {
     }
 }
 
+impl<'a> core::ops::Index<usize> for FixedLinearBuffer<'a> {
+    type Output = u8;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        &self.buffer[index]
+    }
+}
+
 impl<'a> UnderlyingBuffer for FixedLinearBuffer<'a> {
     fn clear(&mut self) {
         self.len = 0;
@@ -91,9 +101,7 @@ impl<'a> UnderlyingBuffer for FixedLinearBuffer<'a> {
     fn extend_from_slice(&mut self, other: &[u8]) -> usize {
         let to_copy = core::cmp::min(other.len(), self.buffer.len() - self.len);
         let uncopyable = other.len() - to_copy;
-        for idx in 0..to_copy {
-            self.buffer[idx + self.len] = other[idx];
-        }
+        self.buffer[self.len..self.len + to_copy].copy_from_slice(&other[..to_copy]);
         self.len += to_copy;
         uncopyable
     }
@@ -105,8 +113,11 @@ impl<'a> UnderlyingBuffer for FixedLinearBuffer<'a> {
         }
 
         let new_size = self.len - count;
-        for idx in 0..new_size {
-            self.buffer[idx] = self.buffer[idx + count];
+        {
+            let mut bufptr = self.buffer.as_mut_ptr();
+            unsafe {
+                core::ptr::copy(bufptr.offset(count as isize), bufptr, new_size);
+            }
         }
         self.len = new_size;
     }
@@ -184,19 +195,9 @@ impl<'a, T: UnderlyingBuffer> core::ops::Index<usize> for DualBuffer<'a, T> {
 
     fn index(&self, index: usize) -> &u8 {
         if self.off + index < self.buf.len() {
-            // TODO: Implement non-range index on UnderlyingBuffer
-            &self.buf[index + self.off..index + self.off + 1][0]
-        } else if self.new_buf_offset + index - (self.buf.len() - self.off) < self.new_buf.len() {
-            &self.new_buf[self.new_buf_offset + index - (self.buf.len() - self.off)]
+            &self.buf[index + self.off]
         } else {
-            panic!(
-                "Index {} is out of range for {}/{}/{}/{}!",
-                index,
-                self.buf.len(),
-                self.off,
-                self.new_buf.len(),
-                self.new_buf_offset
-            );
+            &self.new_buf[self.new_buf_offset + index - (self.buf.len() - self.off)]
         }
     }
 }
@@ -292,6 +293,22 @@ impl<'a, T: UnderlyingBuffer> DualBuffer<'a, T> {
         return true;
     }
 
+    fn peek_raw(&self, range: core::ops::Range<usize>) -> (&[u8], &[u8]) {
+        let split = self.buf.len() - self.off;
+        let a = if range.start >= split {
+            &[]
+        } else {
+            &self.buf[range.start + self.off..core::cmp::min(self.buf.len(), range.end + self.off)]
+        };
+        let b = if range.end <= split {
+            &[]
+        } else {
+            &self.new_buf[self.new_buf_offset + range.start.saturating_sub(split)
+                ..range.end - split + self.new_buf_offset]
+        };
+        (a, b)
+    }
+
     /// Provide a view of the next count elements, moving data if necessary.
     /// If the underlying store cannot store enough elements, no data is moved and an
     /// error is returned.
@@ -372,9 +389,15 @@ impl UbxChecksumCalc {
         Self { ck_a: 0, ck_b: 0 }
     }
 
-    fn update(&mut self, byte: u8) {
-        self.ck_a = self.ck_a.overflowing_add(byte).0;
-        self.ck_b = self.ck_b.overflowing_add(self.ck_a).0;
+    fn update(&mut self, bytes: &[u8]) {
+        let mut a = self.ck_a;
+        let mut b = self.ck_b;
+        for byte in bytes.iter() {
+            a = a.overflowing_add(*byte).0;
+            b = b.overflowing_add(a).0;
+        }
+        self.ck_a = a;
+        self.ck_b = b;
     }
 
     fn result(self) -> (u8, u8) {
@@ -397,6 +420,47 @@ impl<'a, T: UnderlyingBuffer> ParserIter<'a, T> {
         None
     }
 
+    fn extract_packet(&mut self, pack_len: usize) -> Option<Result<PacketRef, ParserError>> {
+        if !self.buf.can_drain_and_take(6, pack_len + 2) {
+            if self.buf.potential_lost_bytes() > 0 {
+                // We ran out of space, drop this packet and move on
+                self.buf.drain(2);
+                return Some(Err(ParserError::OutOfMemory {
+                    required_size: pack_len + 2,
+                }));
+            }
+            return None;
+        }
+        let mut checksummer = UbxChecksumCalc::new();
+        let (a, b) = self.buf.peek_raw(2..(4 + pack_len + 2));
+        checksummer.update(a);
+        checksummer.update(b);
+        let (ck_a, ck_b) = checksummer.result();
+
+        let (expect_ck_a, expect_ck_b) = (self.buf[6 + pack_len], self.buf[6 + pack_len + 1]);
+        if (ck_a, ck_b) != (expect_ck_a, expect_ck_b) {
+            self.buf.drain(2);
+            return Some(Err(ParserError::InvalidChecksum {
+                expect: u16::from_le_bytes([expect_ck_a, expect_ck_b]),
+                got: u16::from_le_bytes([ck_a, ck_b]),
+            }));
+        }
+        let class_id = self.buf[2];
+        let msg_id = self.buf[3];
+        self.buf.drain(6);
+        let msg_data = match self.buf.take(pack_len + 2) {
+            Ok(x) => x,
+            Err(e) => {
+                return Some(Err(e));
+            }
+        };
+        return Some(match_packet(
+            class_id,
+            msg_id,
+            &msg_data[..msg_data.len() - 2], // Exclude the checksum
+        ));
+    }
+
     /// Analog of `core::iter::Iterator::next`, should be switched to
     /// trait implementation after merge of https://github.com/rust-lang/rust/issues/44265
     pub fn next(&mut self) -> Option<Result<PacketRef, ParserError>> {
@@ -410,7 +474,7 @@ impl<'a, T: UnderlyingBuffer> ParserIter<'a, T> {
             };
             self.buf.drain(pos);
 
-            if self.buf.len() <= 1 {
+            if self.buf.len() < 2 {
                 return None;
             }
             if self.buf[1] != SYNC_CHAR_2 {
@@ -418,7 +482,7 @@ impl<'a, T: UnderlyingBuffer> ParserIter<'a, T> {
                 continue;
             }
 
-            if self.buf.len() <= 5 {
+            if self.buf.len() < 6 {
                 return None;
             }
 
@@ -427,44 +491,7 @@ impl<'a, T: UnderlyingBuffer> ParserIter<'a, T> {
                 self.buf.drain(2);
                 continue;
             }
-            if !self.buf.can_drain_and_take(6, pack_len + 2) {
-                if self.buf.potential_lost_bytes() > 0 {
-                    // We ran out of space, drop this packet and move on
-                    self.buf.drain(2);
-                    return Some(Err(ParserError::OutOfMemory {
-                        required_size: pack_len + 2,
-                    }));
-                }
-                return None;
-            }
-            let mut checksummer = UbxChecksumCalc::new();
-            for i in 2..(4 + pack_len + 2) {
-                checksummer.update(self.buf[i]);
-            }
-            let (ck_a, ck_b) = checksummer.result();
-
-            let (expect_ck_a, expect_ck_b) = (self.buf[6 + pack_len], self.buf[6 + pack_len + 1]);
-            if (ck_a, ck_b) != (expect_ck_a, expect_ck_b) {
-                self.buf.drain(2);
-                return Some(Err(ParserError::InvalidChecksum {
-                    expect: u16::from_le_bytes([expect_ck_a, expect_ck_b]),
-                    got: u16::from_le_bytes([ck_a, ck_b]),
-                }));
-            }
-            let class_id = self.buf[2];
-            let msg_id = self.buf[3];
-            self.buf.drain(6);
-            let msg_data = match self.buf.take(pack_len + 2) {
-                Ok(x) => x,
-                Err(e) => {
-                    return Some(Err(e));
-                }
-            };
-            return Some(match_packet(
-                class_id,
-                msg_id,
-                &msg_data[..msg_data.len() - 2], // Exclude the checksum
-            ));
+            return self.extract_packet(pack_len);
         }
         None
     }
@@ -642,6 +669,19 @@ mod test {
         assert!(dual.could_take(3));
         assert!(dual.could_take(4));
         assert!(!dual.could_take(5));
+    }
+
+    #[test]
+    fn dl_peek_raw() {
+        let mut buf = [0; 4];
+        let mut buf = FixedLinearBuffer::new(&mut buf);
+        buf.extend_from_slice(&[1, 2, 3]);
+        let mut new = [4, 5, 6, 7, 8, 9];
+        let mut dual = DualBuffer::new(&mut buf, &new[..]);
+
+        let (a, b) = dual.peek_raw(2..6);
+        assert_eq!(a, &[3]);
+        assert_eq!(b, &[4, 5, 6]);
     }
 
     #[test]
