@@ -146,9 +146,9 @@ where
     buf: T,
 }
 
-impl std::default::Default for Parser<Vec<u8>> {
+impl core::default::Default for Parser<Vec<u8>> {
     fn default() -> Self {
-        Self { buf: vec![] }
+        Self { buf: Vec::new() }
     }
 }
 
