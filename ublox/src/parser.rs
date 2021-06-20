@@ -2,9 +2,7 @@ use alloc::vec::Vec;
 
 use crate::{
     error::ParserError,
-    ubx_packets::{
-        match_packet, ubx_checksum, PacketRef, MAX_PAYLOAD_LEN, SYNC_CHAR_1, SYNC_CHAR_2,
-    },
+    ubx_packets::{match_packet, PacketRef, MAX_PAYLOAD_LEN, SYNC_CHAR_1, SYNC_CHAR_2},
 };
 
 pub trait UnderlyingBuffer:
@@ -114,7 +112,7 @@ impl<'a> UnderlyingBuffer for FixedLinearBuffer<'a> {
 
         let new_size = self.len - count;
         {
-            let mut bufptr = self.buffer.as_mut_ptr();
+            let bufptr = self.buffer.as_mut_ptr();
             unsafe {
                 core::ptr::copy(bufptr.offset(count as isize), bufptr, new_size);
             }
@@ -170,7 +168,7 @@ impl<T: UnderlyingBuffer> Parser<T> {
 
         for i in 0..buf.len() {
             if buf[i] == SYNC_CHAR_1 {
-                buf.take(i);
+                buf.drain(i);
                 break;
             }
         }
@@ -231,23 +229,6 @@ impl<'a, T: UnderlyingBuffer> DualBuffer<'a, T> {
     /// is more than the underlying store can fit.
     fn len(&self) -> usize {
         self.buf.len() - self.off + self.new_buf.len() - self.new_buf_offset
-    }
-
-    /// Returns whether we would be able to take count bytes assuming the new buffer had
-    /// enough bytes.
-    fn could_take(&self, count: usize) -> bool {
-        let underlying_bytes = core::cmp::min(self.buf.len() - self.off, count);
-        let new_bytes = count.saturating_sub(underlying_bytes);
-
-        if underlying_bytes == 0 {
-            return true;
-        }
-
-        if self.buf.max_capacity() < count {
-            return false;
-        }
-
-        return true;
     }
 
     // Returns the number of bytes which would be lost (because they can't be copied into
@@ -505,7 +486,7 @@ mod test {
     #[test]
     fn dl_split_indexing() {
         let mut buf = vec![1, 2, 3, 4];
-        let mut new = [5, 6, 7, 8];
+        let new = [5, 6, 7, 8];
         let dual = DualBuffer::new(&mut buf, &new[..]);
         for i in 0..8 {
             assert_eq!(dual[i], i as u8 + 1);
@@ -516,7 +497,7 @@ mod test {
     #[should_panic]
     fn dl_take_too_many() {
         let mut buf = vec![1, 2, 3, 4];
-        let mut new = [];
+        let new = [];
         {
             let mut dual = DualBuffer::new(&mut buf, &new[..]);
 
@@ -528,7 +509,7 @@ mod test {
     #[test]
     fn dl_take_range_underlying() {
         let mut buf = vec![1, 2, 3, 4];
-        let mut new = [];
+        let new = [];
         {
             let mut dual = DualBuffer::new(&mut buf, &new[..]);
             let x = dual.take(3).unwrap();
@@ -540,7 +521,7 @@ mod test {
     #[test]
     fn dl_take_range_new() {
         let mut buf = vec![];
-        let mut new = [1, 2, 3, 4];
+        let new = [1, 2, 3, 4];
         {
             let mut dual = DualBuffer::new(&mut buf, &new[..]);
             let x = dual.take(3).unwrap();
@@ -552,7 +533,7 @@ mod test {
     #[test]
     fn dl_take_range_overlapping() {
         let mut buf = vec![1, 2, 3, 4];
-        let mut new = [5, 6, 7, 8];
+        let new = [5, 6, 7, 8];
         {
             let mut dual = DualBuffer::new(&mut buf, &new[..]);
             let x = dual.take(6).unwrap();
@@ -564,7 +545,7 @@ mod test {
     #[test]
     fn dl_take_multi_ranges() {
         let mut buf = vec![1, 2, 3, 4, 5, 6, 7];
-        let mut new = [8, 9, 10, 11, 12];
+        let new = [8, 9, 10, 11, 12];
         {
             let mut dual = DualBuffer::new(&mut buf, &new[..]);
             assert_eq!(dual.take(3).unwrap(), &[1, 2, 3]);
@@ -578,7 +559,7 @@ mod test {
     #[test]
     fn dl_take_multi_ranges2() {
         let mut buf = vec![1, 2, 3, 4, 5, 6, 7];
-        let mut new = [8, 9, 10, 11, 12];
+        let new = [8, 9, 10, 11, 12];
         {
             let mut dual = DualBuffer::new(&mut buf, &new[..]);
             assert_eq!(dual.take(3).unwrap(), &[1, 2, 3]);
@@ -592,7 +573,7 @@ mod test {
         let mut buf = [0; 7];
         let mut buf = FixedLinearBuffer::new(&mut buf);
         buf.extend_from_slice(&[1, 2, 3, 4, 5, 6, 7]);
-        let mut new = [8, 9, 10, 11, 12];
+        let new = [8, 9, 10, 11, 12];
         {
             let mut dual = DualBuffer::new(&mut buf, &new[..]);
             assert_eq!(dual.take(3).unwrap(), &[1, 2, 3]);
@@ -606,7 +587,7 @@ mod test {
     fn dl_take_range_oom() {
         let mut buf = [0; 4];
         let mut buf = FixedLinearBuffer::new(&mut buf);
-        let mut new = [1, 2, 3, 4, 5, 6];
+        let new = [1, 2, 3, 4, 5, 6];
 
         let mut dual = DualBuffer::new(&mut buf, &new[..]);
         // This should throw
@@ -623,7 +604,7 @@ mod test {
         let mut buf = [0; 4];
         let mut buf = FixedLinearBuffer::new(&mut buf);
         buf.extend_from_slice(&[1, 2, 3]);
-        let mut new = [4, 5, 6, 7, 8, 9];
+        let new = [4, 5, 6, 7, 8, 9];
         let mut dual = DualBuffer::new(&mut buf, &new[..]);
 
         dual.drain(2);
@@ -637,7 +618,7 @@ mod test {
         let mut buf = [0; 4];
         let mut buf = FixedLinearBuffer::new(&mut buf);
         buf.extend_from_slice(&[1, 2, 3]);
-        let mut new = [4, 5, 6, 7, 8, 9];
+        let new = [4, 5, 6, 7, 8, 9];
         let mut dual = DualBuffer::new(&mut buf, &new[..]);
 
         dual.drain(5);
@@ -650,7 +631,7 @@ mod test {
         let mut buf = [0; 4];
         let mut buf = FixedLinearBuffer::new(&mut buf);
         buf.extend_from_slice(&[1, 2, 3]);
-        let mut new = [4, 5, 6, 7, 8, 9];
+        let new = [4, 5, 6, 7, 8, 9];
         let mut dual = DualBuffer::new(&mut buf, &new[..]);
 
         assert_eq!(dual.len(), 9);
@@ -659,25 +640,12 @@ mod test {
     }
 
     #[test]
-    fn dl_could_take() {
-        let mut buf = [0; 4];
-        let mut buf = FixedLinearBuffer::new(&mut buf);
-        buf.extend_from_slice(&[1, 2, 3]);
-        let mut new = [4, 5, 6, 7, 8, 9];
-        let mut dual = DualBuffer::new(&mut buf, &new[..]);
-
-        assert!(dual.could_take(3));
-        assert!(dual.could_take(4));
-        assert!(!dual.could_take(5));
-    }
-
-    #[test]
     fn dl_peek_raw() {
         let mut buf = [0; 4];
         let mut buf = FixedLinearBuffer::new(&mut buf);
         buf.extend_from_slice(&[1, 2, 3]);
-        let mut new = [4, 5, 6, 7, 8, 9];
-        let mut dual = DualBuffer::new(&mut buf, &new[..]);
+        let new = [4, 5, 6, 7, 8, 9];
+        let dual = DualBuffer::new(&mut buf, &new[..]);
 
         let (a, b) = dual.peek_raw(2..6);
         assert_eq!(a, &[3]);
@@ -761,7 +729,7 @@ mod test {
         bytes.extend_from_slice(&packet);
 
         let mut buffer = [0; 10];
-        let mut buffer = FixedLinearBuffer::new(&mut buffer);
+        let buffer = FixedLinearBuffer::new(&mut buffer);
         let mut parser = Parser::new(buffer);
 
         let mut it = parser.consume(&bytes);
@@ -780,7 +748,7 @@ mod test {
     #[test]
     fn parser_handle_garbage_first_byte() {
         let mut buffer = [0; 12];
-        let mut buffer = FixedLinearBuffer::new(&mut buffer);
+        let buffer = FixedLinearBuffer::new(&mut buffer);
         let mut parser = Parser::new(buffer);
 
         let bytes = [0xb5, 0xb5, 0x62, 0x5, 0x1, 0x2, 0x0, 0x4, 0x5, 0x11, 0x38];
@@ -826,7 +794,7 @@ mod test {
         .into_packet_bytes();
 
         let mut buffer = [0; 12];
-        let mut buffer = FixedLinearBuffer::new(&mut buffer);
+        let buffer = FixedLinearBuffer::new(&mut buffer);
         let mut parser = Parser::new(buffer);
 
         {
@@ -891,7 +859,7 @@ mod test {
         .into_packet_bytes();
 
         let mut buffer = [0; 1024];
-        let mut buffer = FixedLinearBuffer::new(&mut buffer);
+        let buffer = FixedLinearBuffer::new(&mut buffer);
         let mut parser = Parser::new(buffer);
         let mut it = parser.consume(&bytes);
         match it.next() {
