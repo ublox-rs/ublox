@@ -154,7 +154,7 @@ impl<T: UnderlyingBuffer> Parser<T> {
         self.buf.len()
     }
 
-    pub fn consume(&mut self, new_data: &[u8]) -> ParserIter<T> {
+    pub fn consume<'a>(&'a mut self, new_data: &'a [u8]) -> ParserIter<'a, T> {
         let start_idx = match self.buf.find(SYNC_CHAR_1) {
             Some(idx) => Some(idx),
             None => new_data
@@ -186,6 +186,127 @@ impl<T: UnderlyingBuffer> Parser<T> {
                 }
             }
         }
+    }
+}
+
+/// Stores two buffers: A "base" and a "new" buffer. Exposes these as the same buffer,
+/// copying data from the "new" buffer to the base buffer as required to maintain that
+/// illusion.
+struct DualBuffer<'a, T: UnderlyingBuffer> {
+    buf: &'a mut T,
+    off: usize,
+
+    new_buf: &'a [u8],
+    new_buf_offset: usize,
+}
+
+impl<'a, T: UnderlyingBuffer> core::ops::Index<usize> for DualBuffer<'a, T> {
+    type Output = u8;
+
+    fn index(&self, index: usize) -> &u8 {
+        if self.off + index < self.buf.len() {
+            // TODO: Implement non-range index on UnderlyingBuffer
+            &self.buf[index + self.off..index + self.off + 1][0]
+        } else if self.new_buf_offset + index - (self.buf.len() - self.off) < self.new_buf.len() {
+            &self.new_buf[self.new_buf_offset + index - (self.buf.len() - self.off)]
+        } else {
+            panic!(
+                "Index {} is out of range for {}/{}/{}/{}!",
+                index,
+                self.buf.len(),
+                self.off,
+                self.new_buf.len(),
+                self.new_buf_offset
+            );
+        }
+    }
+}
+
+impl<'a, T: UnderlyingBuffer> DualBuffer<'a, T> {
+    fn new(buf: &'a mut T, new_buf: &'a [u8]) -> Self {
+        Self {
+            buf,
+            off: 0,
+            new_buf,
+            new_buf_offset: 0,
+        }
+    }
+
+    /// Provide a view of the next count elements, moving data if necessary.
+    /// If the underlying store cannot store enough elements, no data is moved and an
+    /// error is returned.
+    fn take(&mut self, count: usize) -> Result<&[u8], ParserError> {
+        let underlying_bytes = core::cmp::min(self.buf.len() - self.off, count);
+        let new_bytes = count.saturating_sub(underlying_bytes);
+
+        dbg!(count);
+        dbg!(underlying_bytes);
+        dbg!(new_bytes);
+        dbg!(self.off);
+        dbg!(self.new_buf_offset);
+        dbg!(self.buf.len());
+        dbg!(self.new_buf.len());
+
+        if new_bytes > self.new_buf.len() - self.new_buf_offset {
+            // We need to pull more bytes from new than it has
+            panic!(
+                "Cannot pull {} bytes from a buffer with {}-{}",
+                new_bytes,
+                self.new_buf.len(),
+                self.new_buf_offset
+            );
+        }
+
+        if underlying_bytes == 0 {
+            // We can directly return a slice from new
+            let offset = self.new_buf_offset;
+            self.new_buf_offset += count;
+            return Ok(&self.new_buf[offset..offset + count]);
+        }
+
+        if new_bytes == 0 {
+            // We can directly return from underlying
+            let offset = self.off;
+            self.off += count;
+            return Ok(&self.buf[offset..offset + count]);
+        }
+
+        if self.buf.max_capacity() < count {
+            // Insufficient space
+            return Err(ParserError::OutOfMemory {
+                required_size: count,
+            });
+        }
+
+        if new_bytes < self.buf.max_capacity() - self.buf.len() {
+            // Underlying has enough space to extend from new
+            let bytes_not_moved = self
+                .buf
+                .extend_from_slice(&self.new_buf[self.new_buf_offset..]);
+            self.new_buf_offset += self.new_buf.len() - self.new_buf_offset - bytes_not_moved;
+            let off = self.off;
+            self.off += count;
+            return Ok(&self.buf[off..off + count]);
+        }
+
+        // Last case: We have to move the data in underlying, then extend it
+        self.buf.drain(self.off);
+        self.off = 0;
+        self.buf
+            .extend_from_slice(&self.new_buf[self.new_buf_offset..self.new_buf_offset + new_bytes]);
+        self.new_buf_offset += new_bytes;
+        self.off += count;
+        return Ok(&self.buf[0..count]);
+    }
+}
+
+impl<'a, T: UnderlyingBuffer> Drop for DualBuffer<'a, T> {
+    fn drop(&mut self) {
+        dbg!(self.off);
+        dbg!(self.new_buf_offset);
+        self.buf.drain(self.off);
+        self.buf
+            .extend_from_slice(&self.new_buf[self.new_buf_offset..]);
     }
 }
 
@@ -263,6 +384,122 @@ impl<'a, T: UnderlyingBuffer> ParserIter<'a, T> {
 mod test {
     use super::*;
     use crate::ubx_packets::*;
+
+    #[test]
+    fn dl_split_indexing() {
+        let mut buf = vec![1, 2, 3, 4];
+        let mut new = [5, 6, 7, 8];
+        let dual = DualBuffer::new(&mut buf, &new[..]);
+        for i in 0..8 {
+            assert_eq!(dual[i], i as u8 + 1);
+        }
+    }
+
+    #[test]
+    #[should_panic]
+    fn dl_take_too_many() {
+        let mut buf = vec![1, 2, 3, 4];
+        let mut new = [];
+        {
+            let mut dual = DualBuffer::new(&mut buf, &new[..]);
+
+            // This should panic
+            let _ = dual.take(6);
+        }
+    }
+
+    #[test]
+    fn dl_take_range_underlying() {
+        let mut buf = vec![1, 2, 3, 4];
+        let mut new = [];
+        {
+            let mut dual = DualBuffer::new(&mut buf, &new[..]);
+            let x = dual.take(3).unwrap();
+            assert_eq!(x, &[1, 2, 3]);
+        }
+        assert_eq!(buf, &[4]);
+    }
+
+    #[test]
+    fn dl_take_range_new() {
+        let mut buf = vec![];
+        let mut new = [1, 2, 3, 4];
+        {
+            let mut dual = DualBuffer::new(&mut buf, &new[..]);
+            let x = dual.take(3).unwrap();
+            assert_eq!(x, &[1, 2, 3]);
+        }
+        assert_eq!(buf, &[4]);
+    }
+
+    #[test]
+    fn dl_take_range_overlapping() {
+        let mut buf = vec![1, 2, 3, 4];
+        let mut new = [5, 6, 7, 8];
+        {
+            let mut dual = DualBuffer::new(&mut buf, &new[..]);
+            let x = dual.take(6).unwrap();
+            assert_eq!(x, &[1, 2, 3, 4, 5, 6]);
+        }
+        assert_eq!(buf, &[7, 8]);
+    }
+
+    #[test]
+    fn dl_take_multi_ranges() {
+        let mut buf = vec![1, 2, 3, 4, 5, 6, 7];
+        let mut new = [8, 9, 10, 11, 12];
+        {
+            let mut dual = DualBuffer::new(&mut buf, &new[..]);
+            assert_eq!(dual.take(3).unwrap(), &[1, 2, 3]);
+            assert_eq!(dual.take(3).unwrap(), &[4, 5, 6]);
+            assert_eq!(dual.take(3).unwrap(), &[7, 8, 9]);
+            assert_eq!(dual.take(3).unwrap(), &[10, 11, 12]);
+        }
+        assert_eq!(buf, &[]);
+    }
+
+    #[test]
+    fn dl_take_multi_ranges2() {
+        let mut buf = vec![1, 2, 3, 4, 5, 6, 7];
+        let mut new = [8, 9, 10, 11, 12];
+        {
+            let mut dual = DualBuffer::new(&mut buf, &new[..]);
+            assert_eq!(dual.take(3).unwrap(), &[1, 2, 3]);
+            assert_eq!(dual.take(6).unwrap(), &[4, 5, 6, 7, 8, 9]);
+        }
+        assert_eq!(buf, &[10, 11, 12]);
+    }
+
+    #[test]
+    fn dl_move_then_copy() {
+        let mut buf = [0; 7];
+        let mut buf = FixedLinearBuffer::new(&mut buf);
+        buf.extend_from_slice(&[1, 2, 3, 4, 5, 6, 7]);
+        let mut new = [8, 9, 10, 11, 12];
+        {
+            let mut dual = DualBuffer::new(&mut buf, &new[..]);
+            assert_eq!(dual.take(3).unwrap(), &[1, 2, 3]);
+            assert_eq!(dual.take(6).unwrap(), &[4, 5, 6, 7, 8, 9]);
+        }
+        assert_eq!(buf.len(), 3);
+    }
+
+    #[test]
+    #[should_panic]
+    fn dl_take_range_oom() {
+        let mut buf = [0; 4];
+        let mut buf = FixedLinearBuffer::new(&mut buf);
+        let mut new = [1, 2, 3, 4, 5, 6];
+
+        let mut dual = DualBuffer::new(&mut buf, &new[..]);
+        // This should throw
+        match dual.take(6) {
+            Err(ParserError::OutOfMemory { required_size }) => {
+                assert_eq!(required_size, 6);
+            }
+            _ => assert!(false),
+        }
+    }
 
     #[test]
     fn flb_clear() {
