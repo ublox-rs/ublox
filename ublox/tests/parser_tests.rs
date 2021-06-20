@@ -73,7 +73,7 @@ fn test_parse_ack_ack_bad_checksum() {
         })],
         extract_only_ack_ack(parser.consume(&bad_pack)),
     );
-    assert_eq!(bad_pack.len() - 2, parser.buffer_len());
+    assert_eq!(0, parser.buffer_len());
 
     let mut two_packs = FULL_ACK_ACK_PACK.to_vec();
     two_packs.extend_from_slice(&FULL_ACK_ACK_PACK);

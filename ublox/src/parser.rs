@@ -155,37 +155,16 @@ impl<T: UnderlyingBuffer> Parser<T> {
     }
 
     pub fn consume<'a>(&'a mut self, new_data: &'a [u8]) -> ParserIter<'a, T> {
-        let start_idx = match self.buf.find(SYNC_CHAR_1) {
-            Some(idx) => Some(idx),
-            None => new_data
-                .iter()
-                .position(|elem| *elem == SYNC_CHAR_1)
-                .map(|x| x + self.buf.len()),
-        };
+        let mut buf = DualBuffer::new(&mut self.buf, new_data);
 
-        match start_idx {
-            Some(mut off) => {
-                if off >= self.buf.len() {
-                    off -= self.buf.len();
-                    self.buf.clear();
-                    self.buf.extend_from_slice(&new_data[off..]);
-                    off = 0;
-                } else {
-                    self.buf.extend_from_slice(new_data);
-                }
-                ParserIter {
-                    buf: &mut self.buf,
-                    off,
-                }
-            }
-            None => {
-                self.buf.clear();
-                ParserIter {
-                    buf: &mut self.buf,
-                    off: 0,
-                }
+        for i in 0..buf.len() {
+            if buf[i] == SYNC_CHAR_1 {
+                buf.take(i);
+                break;
             }
         }
+
+        ParserIter { buf: buf }
     }
 }
 
@@ -232,20 +211,93 @@ impl<'a, T: UnderlyingBuffer> DualBuffer<'a, T> {
         }
     }
 
+    /// Clears all elements - equivalent to buf.drain(buf.len())
+    fn clear(&mut self) {
+        self.drain(self.len());
+    }
+
+    /// Remove count elements without providing a view into them.
+    fn drain(&mut self, count: usize) {
+        let underlying_bytes = core::cmp::min(self.buf.len() - self.off, count);
+        let new_bytes = count.saturating_sub(underlying_bytes);
+
+        self.off += underlying_bytes;
+        self.new_buf_offset += new_bytes;
+    }
+
+    /// Return the total number of accessible bytes in this view. Note that you may
+    /// not be able to take() this many bytes at once, if the total number of bytes
+    /// is more than the underlying store can fit.
+    fn len(&self) -> usize {
+        self.buf.len() - self.off + self.new_buf.len() - self.new_buf_offset
+    }
+
+    /// Returns whether we would be able to take count bytes assuming the new buffer had
+    /// enough bytes.
+    fn could_take(&self, count: usize) -> bool {
+        let underlying_bytes = core::cmp::min(self.buf.len() - self.off, count);
+        let new_bytes = count.saturating_sub(underlying_bytes);
+
+        if underlying_bytes == 0 {
+            return true;
+        }
+
+        if self.buf.max_capacity() < count {
+            return false;
+        }
+
+        return true;
+    }
+
+    // Returns the number of bytes which would be lost (because they can't be copied into
+    // the underlying storage) if this DualBuffer were dropped.
+    fn potential_lost_bytes(&self) -> usize {
+        if self.len() <= self.buf.max_capacity() {
+            0
+        } else {
+            self.len() - self.buf.max_capacity()
+        }
+    }
+
+    fn can_drain_and_take(&self, drain: usize, take: usize) -> bool {
+        let underlying_bytes = core::cmp::min(self.buf.len() - self.off, drain);
+        let new_bytes = drain.saturating_sub(underlying_bytes);
+
+        let drained_off = self.off + underlying_bytes;
+        let drained_new_off = self.new_buf_offset + new_bytes;
+
+        if take > self.buf.len() - drained_off + self.new_buf.len() - drained_new_off {
+            // Draining removed too many bytes, we don't have enough to take
+            return false;
+        }
+
+        let underlying_bytes = core::cmp::min(self.buf.len() - drained_off, take);
+        let new_bytes = take.saturating_sub(underlying_bytes);
+
+        if underlying_bytes == 0 {
+            // We would take entirely from the new buffer
+            return true;
+        }
+
+        if new_bytes == 0 {
+            // We would take entirely from the underlying
+            return true;
+        }
+
+        if new_bytes > self.buf.max_capacity() - (self.buf.len() - drained_off) {
+            // We wouldn't be able to fit all the new bytes into underlying
+            return false;
+        }
+
+        return true;
+    }
+
     /// Provide a view of the next count elements, moving data if necessary.
     /// If the underlying store cannot store enough elements, no data is moved and an
     /// error is returned.
     fn take(&mut self, count: usize) -> Result<&[u8], ParserError> {
         let underlying_bytes = core::cmp::min(self.buf.len() - self.off, count);
         let new_bytes = count.saturating_sub(underlying_bytes);
-
-        dbg!(count);
-        dbg!(underlying_bytes);
-        dbg!(new_bytes);
-        dbg!(self.off);
-        dbg!(self.new_buf_offset);
-        dbg!(self.buf.len());
-        dbg!(self.new_buf.len());
 
         if new_bytes > self.new_buf.len() - self.new_buf_offset {
             // We need to pull more bytes from new than it has
@@ -302,79 +354,117 @@ impl<'a, T: UnderlyingBuffer> DualBuffer<'a, T> {
 
 impl<'a, T: UnderlyingBuffer> Drop for DualBuffer<'a, T> {
     fn drop(&mut self) {
-        dbg!(self.off);
-        dbg!(self.new_buf_offset);
         self.buf.drain(self.off);
         self.buf
             .extend_from_slice(&self.new_buf[self.new_buf_offset..]);
     }
 }
 
-/// Iterator over data stored in `Parser` buffer
-pub struct ParserIter<'a, T: UnderlyingBuffer> {
-    buf: &'a mut T,
-    off: usize,
+/// For ubx checksum on the fly
+#[derive(Default)]
+struct UbxChecksumCalc {
+    ck_a: u8,
+    ck_b: u8,
 }
 
-impl<'a, T: UnderlyingBuffer> Drop for ParserIter<'a, T> {
-    fn drop(&mut self) {
-        if self.off <= self.buf.len() {
-            self.buf.drain(self.off);
-        }
+impl UbxChecksumCalc {
+    fn new() -> Self {
+        Self { ck_a: 0, ck_b: 0 }
+    }
+
+    fn update(&mut self, byte: u8) {
+        self.ck_a = self.ck_a.overflowing_add(byte).0;
+        self.ck_b = self.ck_b.overflowing_add(self.ck_a).0;
+    }
+
+    fn result(self) -> (u8, u8) {
+        (self.ck_a, self.ck_b)
     }
 }
 
+/// Iterator over data stored in `Parser` buffer
+pub struct ParserIter<'a, T: UnderlyingBuffer> {
+    buf: DualBuffer<'a, T>,
+}
+
 impl<'a, T: UnderlyingBuffer> ParserIter<'a, T> {
+    fn find_sync(&self) -> Option<usize> {
+        for i in 0..self.buf.len() {
+            if self.buf[i] == SYNC_CHAR_1 {
+                return Some(i);
+            }
+        }
+        None
+    }
+
     /// Analog of `core::iter::Iterator::next`, should be switched to
     /// trait implementation after merge of https://github.com/rust-lang/rust/issues/44265
     pub fn next(&mut self) -> Option<Result<PacketRef, ParserError>> {
-        while self.off < self.buf.len() {
-            let data = &self.buf[self.off..self.buf.len()];
-            let pos = data.iter().position(|x| *x == SYNC_CHAR_1)?;
-            let maybe_pack = &data[pos..];
+        while self.buf.len() > 0 {
+            let pos = match self.find_sync() {
+                Some(x) => x,
+                None => {
+                    self.buf.clear();
+                    return None;
+                }
+            };
+            self.buf.drain(pos);
 
-            if maybe_pack.len() <= 1 {
+            if self.buf.len() <= 1 {
                 return None;
             }
-            if maybe_pack[1] != SYNC_CHAR_2 {
-                self.off += pos + 2;
+            if self.buf[1] != SYNC_CHAR_2 {
+                self.buf.drain(1);
                 continue;
             }
 
-            if maybe_pack.len() <= 5 {
+            if self.buf.len() <= 5 {
                 return None;
             }
 
-            let pack_len: usize = u16::from_le_bytes([maybe_pack[4], maybe_pack[5]]).into();
-            if (pack_len + 6 + 2) > self.buf.max_capacity() {
-                self.off += pos + 2;
-                return Some(Err(ParserError::OutOfMemory {
-                    required_size: pack_len + 6 + 2,
-                }));
-            }
+            let pack_len: usize = u16::from_le_bytes([self.buf[4], self.buf[5]]).into();
             if pack_len > usize::from(MAX_PAYLOAD_LEN) {
-                self.off += pos + 2;
+                self.buf.drain(2);
                 continue;
             }
-            if (pack_len + 6 + 2) > maybe_pack.len() {
+            if !self.buf.can_drain_and_take(6, pack_len + 2) {
+                if self.buf.potential_lost_bytes() > 0 {
+                    // We ran out of space, drop this packet and move on
+                    self.buf.drain(2);
+                    return Some(Err(ParserError::OutOfMemory {
+                        required_size: pack_len + 2,
+                    }));
+                }
                 return None;
             }
-            let (ck_a, ck_b) = ubx_checksum(&maybe_pack[2..(4 + pack_len + 2)]);
+            let mut checksummer = UbxChecksumCalc::new();
+            for i in 2..(4 + pack_len + 2) {
+                checksummer.update(self.buf[i]);
+            }
+            let (ck_a, ck_b) = checksummer.result();
 
-            let (expect_ck_a, expect_ck_b) =
-                (maybe_pack[6 + pack_len], maybe_pack[6 + pack_len + 1]);
+            let (expect_ck_a, expect_ck_b) = (self.buf[6 + pack_len], self.buf[6 + pack_len + 1]);
             if (ck_a, ck_b) != (expect_ck_a, expect_ck_b) {
-                self.off += pos + 2;
+                self.buf.drain(2);
                 return Some(Err(ParserError::InvalidChecksum {
                     expect: u16::from_le_bytes([expect_ck_a, expect_ck_b]),
                     got: u16::from_le_bytes([ck_a, ck_b]),
                 }));
             }
-            let msg_data = &maybe_pack[6..(6 + pack_len)];
-            let class_id = maybe_pack[2];
-            let msg_id = maybe_pack[3];
-            self.off += pos + 6 + pack_len + 2;
-            return Some(match_packet(class_id, msg_id, msg_data));
+            let class_id = self.buf[2];
+            let msg_id = self.buf[3];
+            self.buf.drain(6);
+            let msg_data = match self.buf.take(pack_len + 2) {
+                Ok(x) => x,
+                Err(e) => {
+                    return Some(Err(e));
+                }
+            };
+            return Some(match_packet(
+                class_id,
+                msg_id,
+                &msg_data[..msg_data.len() - 2], // Exclude the checksum
+            ));
         }
         None
     }
@@ -502,6 +592,59 @@ mod test {
     }
 
     #[test]
+    fn dl_drain_partial_underlying() {
+        let mut buf = [0; 4];
+        let mut buf = FixedLinearBuffer::new(&mut buf);
+        buf.extend_from_slice(&[1, 2, 3]);
+        let mut new = [4, 5, 6, 7, 8, 9];
+        let mut dual = DualBuffer::new(&mut buf, &new[..]);
+
+        dual.drain(2);
+        assert_eq!(dual.len(), 7);
+        assert_eq!(dual.take(4).unwrap(), &[3, 4, 5, 6]);
+        assert_eq!(dual.len(), 3);
+    }
+
+    #[test]
+    fn dl_drain() {
+        let mut buf = [0; 4];
+        let mut buf = FixedLinearBuffer::new(&mut buf);
+        buf.extend_from_slice(&[1, 2, 3]);
+        let mut new = [4, 5, 6, 7, 8, 9];
+        let mut dual = DualBuffer::new(&mut buf, &new[..]);
+
+        dual.drain(5);
+        assert_eq!(dual.take(3).unwrap(), &[6, 7, 8]);
+        assert_eq!(dual.len(), 1);
+    }
+
+    #[test]
+    fn dl_clear() {
+        let mut buf = [0; 4];
+        let mut buf = FixedLinearBuffer::new(&mut buf);
+        buf.extend_from_slice(&[1, 2, 3]);
+        let mut new = [4, 5, 6, 7, 8, 9];
+        let mut dual = DualBuffer::new(&mut buf, &new[..]);
+
+        assert_eq!(dual.len(), 9);
+        dual.clear();
+        assert_eq!(dual.len(), 0);
+    }
+
+    #[test]
+    fn dl_could_take() {
+        let mut buf = [0; 4];
+        let mut buf = FixedLinearBuffer::new(&mut buf);
+        buf.extend_from_slice(&[1, 2, 3]);
+        let mut new = [4, 5, 6, 7, 8, 9];
+        let mut dual = DualBuffer::new(&mut buf, &new[..]);
+
+        assert!(dual.could_take(3));
+        assert!(dual.could_take(4));
+        assert!(!dual.could_take(5));
+    }
+
+    #[test]
     fn flb_clear() {
         let mut buf = [0; 16];
         let mut buf = FixedLinearBuffer::new(&mut buf);
@@ -595,6 +738,31 @@ mod test {
     }
 
     #[test]
+    fn parser_handle_garbage_first_byte() {
+        let mut buffer = [0; 12];
+        let mut buffer = FixedLinearBuffer::new(&mut buffer);
+        let mut parser = Parser::new(buffer);
+
+        let bytes = [0xb5, 0xb5, 0x62, 0x5, 0x1, 0x2, 0x0, 0x4, 0x5, 0x11, 0x38];
+
+        {
+            let mut it = parser.consume(&bytes);
+            match it.next() {
+                Some(Ok(PacketRef::AckAck(_packet))) => {
+                    // We're good
+                }
+                Some(Err(e)) => {
+                    println!("{:#?}", e);
+                    println!("{}", bytes.len());
+                    assert!(false);
+                }
+                _ => assert!(false),
+            }
+            assert!(it.next().is_none());
+        }
+    }
+
+    #[test]
     fn parser_oom_clears_buffer() {
         let bytes = CfgNav5Builder {
             mask: CfgNav5Params::DYN,
@@ -622,10 +790,15 @@ mod test {
         let mut parser = Parser::new(buffer);
 
         {
-            let mut it = parser.consume(&bytes[0..12]);
+            let mut it = parser.consume(&bytes[0..8]);
+            assert!(it.next().is_none());
+        }
+
+        {
+            let mut it = parser.consume(&bytes[8..]);
             match it.next() {
                 Some(Err(ParserError::OutOfMemory { required_size })) => {
-                    assert_eq!(required_size, bytes.len());
+                    assert_eq!(required_size, bytes.len() - 6);
                 }
                 _ => {
                     assert!(false);
