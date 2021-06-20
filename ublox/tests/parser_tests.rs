@@ -173,6 +173,7 @@ fn test_parse_cfg_nav5() {
                 );
                 assert_eq!(CfgNav5FixMode::Only3D, pack.fix_mode());
                 assert!((pack.fixed_alt() - 100.17).abs() < 0.01);
+                assert_eq!(pack.fixed_alt_raw(), 10017);
                 assert!((pack.fixed_alt_var() - 0.0017).abs() < 0.000_1);
                 assert_eq!(17, pack.min_elev_degrees());
                 assert!((pack.pdop() - 1.7).abs() < 0.1);

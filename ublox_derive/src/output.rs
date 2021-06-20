@@ -28,6 +28,21 @@ pub fn generate_recv_code_for_packet(pack_descr: &PackDesc) -> TokenStream {
             }
 
             if let Some(ref out_ty) = f.map.map_type {
+                let get_raw_name = format_ident!("{}_raw", get_name);
+                let slicetype = syn::parse_str("&[u8]").unwrap();
+                let raw_ty = if f.is_field_raw_ty_byte_array() {
+                    &slicetype
+                } else {
+                    &f.ty
+                };
+                getters.push(quote! {
+                    #[doc = #field_comment]
+                    #[inline]
+                    pub fn #get_raw_name(&self) -> #raw_ty {
+                        #(#get_value_lines)*
+                    }
+                });
+
                 let get_raw = &get_value_lines[0];
                 let new_line = quote! { let val = #get_raw ;  };
                 get_value_lines[0] = new_line;

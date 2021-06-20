@@ -63,6 +63,16 @@ fn test_ubx_packet_recv_simple() {
                 }
                 #[doc = "this is lat"]
                 #[inline]
+                pub fn lat_degrees_raw(&self) -> i32 {
+                    <i32>::from_le_bytes([
+                        self.0[4usize],
+                        self.0[5usize],
+                        self.0[6usize],
+                        self.0[7usize]]
+                    )
+                }
+                #[doc = "this is lat"]
+                #[inline]
                 pub fn lat_degrees(&self) -> f64 {
                     let val = <i32>::from_le_bytes([
                         self.0[4usize],
@@ -88,6 +98,11 @@ fn test_ubx_packet_recv_simple() {
                         self.0[12usize],
                         self.0[13usize],
                     ]
+                }
+                #[doc = ""]
+                #[inline]
+                pub fn flags_raw(&self) -> u8 {
+                    self.0[14usize]
                 }
                 #[doc = ""]
                 #[inline]
@@ -157,6 +172,12 @@ fn test_ubx_packet_recv_dyn_len() {
             #[doc = "Contains a reference to an underlying buffer, contains accessor methods to retrieve data."]
             pub struct TestRef<'a>(&'a [u8]);
             impl<'a> TestRef<'a> {
+                #[doc = ""]
+                #[inline]
+                pub fn f1_raw(&self) -> &[u8] {
+                    &self.0[0usize..(0usize + 8usize)]
+                }
+
                 #[doc = ""]
                 #[inline]
                 pub fn f1(&self) -> &str {
