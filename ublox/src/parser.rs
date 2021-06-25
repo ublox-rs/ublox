@@ -1,3 +1,4 @@
+#[cfg(feature = "alloc")]
 use alloc::vec::Vec;
 
 use crate::{
@@ -23,6 +24,7 @@ pub trait UnderlyingBuffer:
     }
 }
 
+#[cfg(any(feature = "std", feature = "alloc"))]
 impl UnderlyingBuffer for Vec<u8> {
     fn clear(&mut self) {
         self.clear();
@@ -137,13 +139,14 @@ impl<'a> UnderlyingBuffer for FixedLinearBuffer<'a> {
 /// If you pass your own buffer, it should be able to store at _least_ 4 bytes. In practice,
 /// you won't be able to do anything useful unless it's at least 36 bytes long (the size
 /// of a NavPosLlh packet).
-pub struct Parser<T = Vec<u8>>
+pub struct Parser<T>
 where
     T: UnderlyingBuffer,
 {
     buf: T,
 }
 
+#[cfg(any(feature = "std", feature = "alloc"))]
 impl core::default::Default for Parser<Vec<u8>> {
     fn default() -> Self {
         Self { buf: Vec::new() }
