@@ -11,6 +11,7 @@ readme = "../README.md"
 [features]
 default = ["std"]
 std = []
+alloc = []
 
 [dependencies]
 chrono = { version = "0.4.19", default-features = false, features = [] }
