@@ -6,7 +6,7 @@ use ublox::*;
 
 struct Device {
     port: Box<dyn serialport::SerialPort>,
-    parser: Parser,
+    parser: Parser<Vec<u8>>,
 }
 
 impl Device {

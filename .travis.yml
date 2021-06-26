@@ -14,6 +14,7 @@ before_script:
   - which rustfmt
 env:
   - FEATURES="--no-default-features --features std"
+  - FEATURES="--no-default-features --features alloc"
   - FEATURES="--no-default-features"
 script:
   - cd ublox_derive

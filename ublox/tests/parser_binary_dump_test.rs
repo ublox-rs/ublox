@@ -1,3 +1,5 @@
+#![cfg(feature = "alloc")]
+
 use cpu_time::ProcessTime;
 use rand::{thread_rng, Rng};
 use std::{env, ffi::OsString, fs, path::Path};

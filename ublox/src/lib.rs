@@ -30,6 +30,7 @@
 //!
 //! Parsing packets happens by instantiating a `Parser` object and then adding data into it using its `consume()` method. The parser contains an internal buffer of data, and when `consume()` is called that data is copied into the internal buffer and an iterator-like object is returned to access the packets. For example:
 //! ```
+//! # #[cfg(any(feature = "alloc", feature = "std"))] {
 //! use ublox::Parser;
 //!
 //! let mut parser = Parser::default();
@@ -49,6 +50,7 @@
 //!         }
 //!     }
 //! }
+//! # }
 //! ```
 //!
 //! no_std Support

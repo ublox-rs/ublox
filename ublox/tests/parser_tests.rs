@@ -1,3 +1,5 @@
+#![cfg(feature = "alloc")]
+
 use ublox::{
     CfgNav5Builder, CfgNav5DynModel, CfgNav5FixMode, CfgNav5Params, CfgNav5UtcStandard, PacketRef,
     Parser, ParserError, ParserIter,

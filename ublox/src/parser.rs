@@ -517,8 +517,11 @@ impl<'a, T: UnderlyingBuffer> ParserIter<'a, T> {
 mod test {
     use super::*;
     use crate::ubx_packets::*;
+
+    #[cfg(feature = "alloc")]
     use alloc::vec;
 
+    #[cfg(feature = "alloc")]
     #[test]
     fn dl_split_indexing() {
         let mut buf = vec![1, 2, 3, 4];
@@ -529,6 +532,7 @@ mod test {
         }
     }
 
+    #[cfg(feature = "alloc")]
     #[test]
     #[should_panic]
     fn dl_take_too_many() {
@@ -542,6 +546,7 @@ mod test {
         }
     }
 
+    #[cfg(feature = "alloc")]
     #[test]
     fn dl_take_range_underlying() {
         let mut buf = vec![1, 2, 3, 4];
@@ -554,6 +559,7 @@ mod test {
         assert_eq!(buf, &[4]);
     }
 
+    #[cfg(feature = "alloc")]
     #[test]
     fn dl_take_range_new() {
         let mut buf = vec![];
@@ -566,6 +572,7 @@ mod test {
         assert_eq!(buf, &[4]);
     }
 
+    #[cfg(feature = "alloc")]
     #[test]
     fn dl_take_range_overlapping() {
         let mut buf = vec![1, 2, 3, 4];
@@ -578,6 +585,7 @@ mod test {
         assert_eq!(buf, &[7, 8]);
     }
 
+    #[cfg(feature = "alloc")]
     #[test]
     fn dl_take_multi_ranges() {
         let mut buf = vec![1, 2, 3, 4, 5, 6, 7];
@@ -592,6 +600,7 @@ mod test {
         assert_eq!(buf, &[]);
     }
 
+    #[cfg(feature = "alloc")]
     #[test]
     fn dl_take_multi_ranges2() {
         let mut buf = vec![1, 2, 3, 4, 5, 6, 7];
@@ -753,6 +762,7 @@ mod test {
         assert_eq!(buf.find(5), Some(4));
     }
 
+    #[cfg(feature = "alloc")]
     #[test]
     fn parser_oom_processes_multiple_small_packets() {
         let packet = [0xb5, 0x62, 0x5, 0x1, 0x2, 0x0, 0x4, 0x5, 0x11, 0x38];
