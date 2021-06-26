@@ -192,3 +192,69 @@ fn test_parse_cfg_nav5() {
     }
     assert!(found);
 }
+
+#[test]
+fn test_zero_sized_ackack() {
+    let ack_ack = [0xb5, 0x62, 0x05, 0x01, 0x00, 0x00, 0x06, 0x17];
+    let mut parser = Parser::default();
+    let mut it = parser.consume(&ack_ack);
+    match it.next() {
+        Some(Ok(PacketRef::Unknown(_))) => {
+            // This is expected
+        }
+        _ => panic!(),
+    }
+    assert!(it.next().is_none());
+}
+
+#[test]
+fn test_double_start_at_end() {
+    #[rustfmt::skip]
+    let bytes = [
+        0xb5, 0x62, // Extraneous start header
+        0xb5, 0x62, 0x05, 0x01, 0x00, 0x00, 0x06, 0x17, // Zero-sized packet
+    ];
+
+    let mut buf = vec![0; 10];
+    let buf = ublox::FixedLinearBuffer::new(&mut buf[..]);
+    let mut parser = ublox::Parser::new(buf);
+
+    for byte in bytes.iter() {
+        parser.consume(&[*byte]);
+    }
+
+    let ack_ack = [0xb5, 0x62, 0x5, 0x1, 0x2, 0x0, 0x4, 0x5, 0x11, 0x38];
+    {
+        let mut it = parser.consume(&ack_ack);
+        match it.next() {
+            Some(Err(_)) => {
+                // First, a buffer-too-small error
+            }
+            _ => panic!(),
+        }
+        match it.next() {
+            Some(Ok(PacketRef::Unknown(_))) => {
+                // Then an unknown packet
+            }
+            _ => panic!(),
+        }
+        match it.next() {
+            Some(Ok(PacketRef::AckAck(_))) => {
+                // Then the ackack we passed
+            }
+            _ => panic!(),
+        }
+        assert!(it.next().is_none());
+    }
+    let mut it = parser.consume(&ack_ack);
+    match it.next() {
+        Some(Ok(ublox::PacketRef::AckAck { .. })) => {
+            // This is what we expect
+        }
+        _ => {
+            // Parsing other packets or ending the iteration is a failure
+            panic!();
+        }
+    }
+    assert!(it.next().is_none());
+}
