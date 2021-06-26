@@ -1,5 +1,8 @@
 use alloc::vec::Vec;
 
+#[cfg(test)]
+use mutagen::mutate;
+
 use crate::{
     error::ParserError,
     ubx_packets::{match_packet, PacketRef, MAX_PAYLOAD_LEN, SYNC_CHAR_1, SYNC_CHAR_2},
@@ -96,6 +99,7 @@ impl<'a> UnderlyingBuffer for FixedLinearBuffer<'a> {
         self.buffer.len()
     }
 
+    #[cfg_attr(test, mutate)]
     fn extend_from_slice(&mut self, other: &[u8]) -> usize {
         let to_copy = core::cmp::min(other.len(), self.buffer.len() - self.len);
         let uncopyable = other.len() - to_copy;
@@ -104,6 +108,7 @@ impl<'a> UnderlyingBuffer for FixedLinearBuffer<'a> {
         uncopyable
     }
 
+    #[cfg_attr(test, mutate)]
     fn drain(&mut self, count: usize) {
         if count >= self.len {
             self.len = 0;
@@ -120,6 +125,7 @@ impl<'a> UnderlyingBuffer for FixedLinearBuffer<'a> {
         self.len = new_size;
     }
 
+    #[cfg_attr(test, mutate)]
     fn find(&self, value: u8) -> Option<usize> {
         for i in 0..self.len {
             if self.buffer[i] == value {
@@ -163,6 +169,7 @@ impl<T: UnderlyingBuffer> Parser<T> {
         self.buf.len()
     }
 
+    #[cfg_attr(test, mutate)]
     pub fn consume<'a>(&'a mut self, new_data: &'a [u8]) -> ParserIter<'a, T> {
         let mut buf = DualBuffer::new(&mut self.buf, new_data);
 
@@ -191,6 +198,7 @@ struct DualBuffer<'a, T: UnderlyingBuffer> {
 impl<'a, T: UnderlyingBuffer> core::ops::Index<usize> for DualBuffer<'a, T> {
     type Output = u8;
 
+    #[cfg_attr(test, mutate)]
     fn index(&self, index: usize) -> &u8 {
         if self.off + index < self.buf.len() {
             &self.buf[index + self.off]
@@ -216,6 +224,7 @@ impl<'a, T: UnderlyingBuffer> DualBuffer<'a, T> {
     }
 
     /// Remove count elements without providing a view into them.
+    #[cfg_attr(test, mutate)]
     fn drain(&mut self, count: usize) {
         let underlying_bytes = core::cmp::min(self.buf.len() - self.off, count);
         let new_bytes = count.saturating_sub(underlying_bytes);
@@ -227,12 +236,14 @@ impl<'a, T: UnderlyingBuffer> DualBuffer<'a, T> {
     /// Return the total number of accessible bytes in this view. Note that you may
     /// not be able to take() this many bytes at once, if the total number of bytes
     /// is more than the underlying store can fit.
+    #[cfg_attr(test, mutate)]
     fn len(&self) -> usize {
         self.buf.len() - self.off + self.new_buf.len() - self.new_buf_offset
     }
 
     // Returns the number of bytes which would be lost (because they can't be copied into
     // the underlying storage) if this DualBuffer were dropped.
+    #[cfg_attr(test, mutate)]
     fn potential_lost_bytes(&self) -> usize {
         if self.len() <= self.buf.max_capacity() {
             0
@@ -241,6 +252,7 @@ impl<'a, T: UnderlyingBuffer> DualBuffer<'a, T> {
         }
     }
 
+    #[cfg_attr(test, mutate)]
     fn can_drain_and_take(&self, drain: usize, take: usize) -> bool {
         let underlying_bytes = core::cmp::min(self.buf.len() - self.off, drain);
         let new_bytes = drain.saturating_sub(underlying_bytes);
@@ -274,6 +286,7 @@ impl<'a, T: UnderlyingBuffer> DualBuffer<'a, T> {
         return true;
     }
 
+    #[cfg_attr(test, mutate)]
     fn peek_raw(&self, range: core::ops::Range<usize>) -> (&[u8], &[u8]) {
         let split = self.buf.len() - self.off;
         let a = if range.start >= split {
@@ -293,6 +306,7 @@ impl<'a, T: UnderlyingBuffer> DualBuffer<'a, T> {
     /// Provide a view of the next count elements, moving data if necessary.
     /// If the underlying store cannot store enough elements, no data is moved and an
     /// error is returned.
+    #[cfg_attr(test, mutate)]
     fn take(&mut self, count: usize) -> Result<&[u8], ParserError> {
         let underlying_bytes = core::cmp::min(self.buf.len() - self.off, count);
         let new_bytes = count.saturating_sub(underlying_bytes);
@@ -392,6 +406,7 @@ pub struct ParserIter<'a, T: UnderlyingBuffer> {
 }
 
 impl<'a, T: UnderlyingBuffer> ParserIter<'a, T> {
+    #[cfg_attr(test, mutate)]
     fn find_sync(&self) -> Option<usize> {
         for i in 0..self.buf.len() {
             if self.buf[i] == SYNC_CHAR_1 {
@@ -401,6 +416,7 @@ impl<'a, T: UnderlyingBuffer> ParserIter<'a, T> {
         None
     }
 
+    #[cfg_attr(test, mutate)]
     fn extract_packet(&mut self, pack_len: usize) -> Option<Result<PacketRef, ParserError>> {
         if !self.buf.can_drain_and_take(6, pack_len + 2) {
             if self.buf.potential_lost_bytes() > 0 {
@@ -444,6 +460,7 @@ impl<'a, T: UnderlyingBuffer> ParserIter<'a, T> {
 
     /// Analog of `core::iter::Iterator::next`, should be switched to
     /// trait implementation after merge of https://github.com/rust-lang/rust/issues/44265
+    #[cfg_attr(test, mutate)]
     pub fn next(&mut self) -> Option<Result<PacketRef, ParserError>> {
         while self.buf.len() > 0 {
             let pos = match self.find_sync() {
@@ -544,7 +561,7 @@ mod test {
 
     #[test]
     fn dl_take_multi_ranges() {
-        let mut buf = vec![1, 2, 3, 4, 5, 6, 7];
+        let mut buf: Vec<u8> = vec![1, 2, 3, 4, 5, 6, 7];
         let new = [8, 9, 10, 11, 12];
         {
             let mut dual = DualBuffer::new(&mut buf, &new[..]);
@@ -553,7 +570,8 @@ mod test {
             assert_eq!(dual.take(3).unwrap(), &[7, 8, 9]);
             assert_eq!(dual.take(3).unwrap(), &[10, 11, 12]);
         }
-        assert_eq!(buf, &[]);
+        let empty: &[u8] = &[];
+        assert_eq!(buf, empty);
     }
 
     #[test]
