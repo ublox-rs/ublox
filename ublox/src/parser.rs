@@ -33,7 +33,7 @@ impl UnderlyingBuffer for Vec<u8> {
     }
 
     fn max_capacity(&self) -> usize {
-        usize::MAX
+        core::usize::MAX
     }
 
     fn extend_from_slice(&mut self, other: &[u8]) -> usize {
@@ -482,6 +482,7 @@ impl<'a, T: UnderlyingBuffer> ParserIter<'a, T> {
 mod test {
     use super::*;
     use crate::ubx_packets::*;
+    use alloc::vec;
 
     #[test]
     fn dl_split_indexing() {
@@ -733,11 +734,10 @@ mod test {
         let mut parser = Parser::new(buffer);
 
         let mut it = parser.consume(&bytes);
-        for i in 0..5 {
+        for _ in 0..5 {
             match it.next() {
                 Some(Ok(PacketRef::AckAck(_packet))) => {
                     // We're good
-                    println!("Got packet {}...", i);
                 }
                 _ => assert!(false),
             }
@@ -758,11 +758,6 @@ mod test {
             match it.next() {
                 Some(Ok(PacketRef::AckAck(_packet))) => {
                     // We're good
-                }
-                Some(Err(e)) => {
-                    println!("{:#?}", e);
-                    println!("{}", bytes.len());
-                    assert!(false);
                 }
                 _ => assert!(false),
             }
@@ -823,11 +818,6 @@ mod test {
             match it.next() {
                 Some(Ok(PacketRef::AckAck(_packet))) => {
                     // We're good
-                }
-                Some(Err(e)) => {
-                    println!("{:#?}", e);
-                    println!("{}", bytes.len());
-                    assert!(false);
                 }
                 _ => assert!(false),
             }
