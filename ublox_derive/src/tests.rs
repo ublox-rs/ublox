@@ -54,22 +54,24 @@ fn test_ubx_packet_recv_simple() {
                 #[doc = ""]
                 #[inline]
                 pub fn itow(&self) -> u32 {
-                    <u32>::from_le_bytes([
+                    let val = <u32>::from_le_bytes([
                         self.0[0usize],
                         self.0[1usize],
                         self.0[2usize],
                         self.0[3usize]]
-                    )
+                    );
+                    val
                 }
                 #[doc = "this is lat"]
                 #[inline]
                 pub fn lat_degrees_raw(&self) -> i32 {
-                    <i32>::from_le_bytes([
+                    let val = <i32>::from_le_bytes([
                         self.0[4usize],
                         self.0[5usize],
                         self.0[6usize],
                         self.0[7usize]]
-                    )
+                    );
+                    val
                 }
                 #[doc = "this is lat"]
                 #[inline]
@@ -81,39 +83,45 @@ fn test_ubx_packet_recv_simple() {
                         self.0[7usize]]
                     );
                     let val = <f64>::from(val);
-                    val * 1e-7
+                    let val = val * 1e-7;
+                    val
                 }
                 #[doc = "this is a"]
                 #[inline]
                 pub fn a(&self) -> u8 {
-                    self.0[8usize]
+                    let val = self.0[8usize];
+                    val
                 }
                 #[doc = ""]
                 #[inline]
                 pub fn reserved1(&self) -> [u8; 5] {
-                    [
+                    let val = [
                         self.0[9usize],
                         self.0[10usize],
                         self.0[11usize],
                         self.0[12usize],
                         self.0[13usize],
-                    ]
+                    ];
+                    val
                 }
                 #[doc = ""]
                 #[inline]
                 pub fn flags_raw(&self) -> u8 {
-                    self.0[14usize]
+                    let val = self.0[14usize];
+                    val
                 }
                 #[doc = ""]
                 #[inline]
                 pub fn flags(&self) -> Flags {
                     let val = self.0[14usize];
-                    <Flags>::from_unchecked(val)
+                    let val = <Flags>::from_unchecked(val);
+                    val
                 }
                 #[doc = ""]
                 #[inline]
                 pub fn b(&self) -> i8 {
-                    <i8>::from_le_bytes([self.0[15usize]])
+                    let val = <i8>::from_le_bytes([self.0[15usize]]);
+                    val
                 }
 
                 fn validate(payload: &[u8]) -> Result<(), ParserError> {
@@ -175,14 +183,16 @@ fn test_ubx_packet_recv_dyn_len() {
                 #[doc = ""]
                 #[inline]
                 pub fn f1_raw(&self) -> &[u8] {
-                    &self.0[0usize..(0usize + 8usize)]
+                    let val = &self.0[0usize..(0usize + 8usize)];
+                    val
                 }
 
                 #[doc = ""]
                 #[inline]
                 pub fn f1(&self) -> &str {
                     let val = &self.0[0usize..(0usize + 8usize)];
-                    unpack_str(val)
+                    let val = unpack_str(val);
+                    val
                 }
 
                 #[doc = ""]

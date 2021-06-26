@@ -22,10 +22,9 @@ pub fn generate_recv_code_for_packet(pack_descr: &PackDesc) -> TokenStream {
         let field_comment = &f.comment;
 
         if let Some(size_bytes) = f.size_bytes.map(|x| x.get()) {
-            let mut get_value_lines = vec![get_raw_field_code(f, off, quote! { self.0 })];
-            if f.map.get_as_ref {
-                get_value_lines[0] = quote! { &self.0[#off .. (#off + #size_bytes)] };
-            }
+            let get_raw = get_raw_field_code(f, off, quote! {self.0});
+            let new_line = quote! { let val = #get_raw;  };
+            let mut get_value_lines = vec![new_line];
 
             if let Some(ref out_ty) = f.map.map_type {
                 let get_raw_name = format_ident!("{}_raw", get_name);
@@ -40,18 +39,12 @@ pub fn generate_recv_code_for_packet(pack_descr: &PackDesc) -> TokenStream {
                     #[inline]
                     pub fn #get_raw_name(&self) -> #raw_ty {
                         #(#get_value_lines)*
+                        val
                     }
                 });
 
-                let get_raw = &get_value_lines[0];
-                let new_line = quote! { let val = #get_raw ;  };
-                get_value_lines[0] = new_line;
                 if f.map.convert_may_fail {
-                    let get_val = if !f.map.get_as_ref {
-                        get_raw_field_code(f, off, quote! { payload })
-                    } else {
-                        quote! { &payload[#off .. (#off + #size_bytes)] }
-                    };
+                    let get_val = get_raw_field_code(f, off, quote! { payload });
                     let is_valid_fn = &out_ty.is_valid_fn;
                     field_validators.push(quote! {
                         let val = #get_val;
@@ -65,22 +58,19 @@ pub fn generate_recv_code_for_packet(pack_descr: &PackDesc) -> TokenStream {
                 }
                 let from_fn = &out_ty.from_fn;
                 get_value_lines.push(quote! {
-                    #from_fn(val)
+                    let val = #from_fn(val);
                 });
             }
 
             if let Some(ref scale) = f.map.scale {
-                let last_i = get_value_lines.len() - 1;
-                let last_line = &get_value_lines[last_i];
-                let new_last_line = quote! { let val = #last_line ; };
-                get_value_lines[last_i] = new_last_line;
-                get_value_lines.push(quote! {val * #scale });
+                get_value_lines.push(quote! { let val = val * #scale; });
             }
             getters.push(quote! {
                 #[doc = #field_comment]
                 #[inline]
                 pub fn #get_name(&self) -> #ty {
                     #(#get_value_lines)*
+                    val
                 }
             });
             off += size_bytes;
@@ -591,7 +581,10 @@ fn get_raw_field_code(field: &PackField, cur_off: usize, data: TokenStream) -> T
 
     let signed_byte: Type = parse_quote! { i8 };
 
-    if field.is_field_raw_ty_byte_array() {
+    if field.map.get_as_ref {
+        let size_bytes: usize = size_bytes.into();
+        quote! { &#data[#cur_off .. (#cur_off + #size_bytes)] }
+    } else if field.is_field_raw_ty_byte_array() {
         quote! { [#(#bytes),*] }
     } else if size_bytes.get() != 1 || *raw_ty == signed_byte {
         quote! { <#raw_ty>::from_le_bytes([#(#bytes),*]) }
