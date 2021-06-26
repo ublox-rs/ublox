@@ -54,11 +54,13 @@
 //! no_std Support
 //! ==============
 //!
-//! This library supports no_std environments, with two caveats about the `Parser` traits:
-//! - You must have a global allocator configured, and
-//! - If your device is "poorly behaved" (i.e. is not a real u-blox GPS device but a maliciously designed device), then the amount of memory allocated can grow up to 64K.
-//!
-//! A deterministic-memory `Parser` implementation is on the roadmap.
+//! This library additionally supports no_std environments with a deterministic-size parser. To use this parser, simply create a FixedLinearBuffer and use it to construct a `Parser` object:
+//! ```
+//! let mut buf = vec![0; 256];
+//! let buf = ublox::FixedLinearBuffer::new(&mut buf[..]);
+//! let mut parser = ublox::Parser::new(buf);
+//! ```
+//! The resulting parser can be used like normal. The absolute smallest recommended buffer size is 36 bytes, large enough to contain a NavPosLlh packet.
 
 #![cfg_attr(not(feature = "std"), no_std)]
 

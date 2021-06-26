@@ -14,7 +14,7 @@ ublox for Rust
 
 This project aims to build a pure-rust I/O library for ublox GPS devices, specifically using the UBX protocol.
 
-An example of using this library to talk to a device can be seen in the ublox_cli subfolder of this project.
+An example of using this library to talk to a device can be seen in the `ublox_cli` subfolder of this project.
 
 Constructing Packets
 ====================
@@ -54,7 +54,7 @@ loop {
             // Received a malformed packet
         }
         None => {
-	    // The internal buffer is now empty
+            // The internal buffer is now empty
             break;
         }
     }
@@ -64,8 +64,4 @@ loop {
 no_std Support
 ==============
 
-This library supports no_std environments, with two caveats about the `Parser` traits:
-- You must have a global allocator configured, and
-- If your device is "poorly behaved" (i.e. is not a real u-blox GPS device but a maliciously designed device), then the amount of memory allocated can grow up to 64K.
-
-A deterministic-memory `Parser` implementation is on the roadmap.
+This library supports no_std environments with a deterministic-size `Parser`. See the documentation for more information.

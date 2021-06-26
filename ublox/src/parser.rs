@@ -5,19 +5,51 @@ use crate::{
     ubx_packets::{match_packet, PacketRef, MAX_PAYLOAD_LEN, SYNC_CHAR_1, SYNC_CHAR_2},
 };
 
+/// This trait represents an underlying buffer used for the Parser. We provide
+/// implementations for `Vec<u8>` and for `FixedLinearBuffer`, if you want to
+/// use your own struct as an underlying buffer you can implement this trait.
+///
+/// Look at the `flb_*` unit tests for ideas of unit tests you can run against
+/// your own implementations.
 pub trait UnderlyingBuffer:
     core::ops::Index<core::ops::Range<usize>, Output = [u8]> + core::ops::Index<usize, Output = u8>
 {
+    /// Removes all elements from the buffer.
     fn clear(&mut self);
+
+    /// Returns the number of elements currently stored in the buffer.
     fn len(&self) -> usize;
+
+    /// Returns the maximum capacity of this buffer. This value should be a minimum max
+    /// capacity - that is, `extend_from_slice` should succeed if max_capacity bytes are
+    /// passed to it.
+    ///
+    /// Note that, for example, the Vec implementation of this trait returns `usize::MAX`,
+    /// which cannot be actually allocated by a Vec. This is okay, because Vec will panic
+    /// if an allocation is requested that it can't handle.
     fn max_capacity(&self) -> usize;
 
-    /// Returns the number of bytes not copied over due to buffer size constraints
+    /// Returns the number of bytes not copied over due to buffer size constraints.
+    ///
+    /// As noted for `max_capacity`, if this function is passed `max_capacity() - len()`
+    /// bytes it should either panic or return zero bytes, any other behaviour may cause
+    /// unexpected behaviour in the parser.
     fn extend_from_slice(&mut self, other: &[u8]) -> usize;
 
+    /// Removes the first `count` elements from the buffer. Cannot fail.
     fn drain(&mut self, count: usize);
-    fn find(&self, value: u8) -> Option<usize>;
 
+    /// Locates the given u8 value within the buffer, returning the index (if it is found).
+    fn find(&self, value: u8) -> Option<usize> {
+        for i in 0..self.len() {
+            if self[i] == value {
+                return Some(i);
+            }
+        }
+        None
+    }
+
+    /// Returns whether the buffer is empty.
     fn is_empty(&self) -> bool {
         self.len() == 0
     }
