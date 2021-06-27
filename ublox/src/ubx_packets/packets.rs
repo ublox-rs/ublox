@@ -464,6 +464,30 @@ struct AlpSrv {
     pub id3: u32,
 }
 
+#[ubx_packet_send]
+#[ubx(class = 0x13, id = 0x80, fixed_payload_len = 0)]
+struct MgaDbdPoll {
+    // No fields
+}
+
+#[ubx_packet_recv]
+#[ubx(class = 0x13, id = 0x80, max_payload_len = 172)]
+struct MgaDbd {
+    reserved: [u8; 12],
+    #[ubx(map_type = &[u8], may_fail, from=mga_dbd::data, is_valid=mga_dbd::is_valid)]
+    data: [u8; 0],
+}
+
+mod mga_dbd {
+    pub(crate) fn is_valid(payload: &[u8]) -> bool {
+        true
+    }
+
+    pub(crate) fn data(payload: &[u8]) -> &[u8] {
+        payload
+    }
+}
+
 /// Messages in this class are sent as a result of a CFG message being
 /// received, decoded and processed by thereceiver.
 #[ubx_packet_recv]
@@ -1140,6 +1164,7 @@ define_recv_packets!(
         CfgPrtSpi,
         CfgPrtUart,
         CfgNav5,
-        MonVer
+        MonVer,
+        MgaDbd,
     }
 );

@@ -87,6 +87,31 @@ impl Device {
     }
 }
 
+struct AssistNowMixin {
+    last_dump_time: std::time::Instant,
+}
+
+impl AssistNowMixin {
+    fn new() -> Self {
+        Self {
+            last_dump_time: std::time::Instant::now(),
+        }
+    }
+
+    fn update(&mut self, device: &mut Device) {
+        if self.last_dump_time.elapsed() > std::time::Duration::new(10, 0) {
+            self.last_dump_time = std::time::Instant::now();
+            device
+                .write_all(&MgaDbdPollBuilder {}.into_packet_bytes())
+                .unwrap();
+        }
+    }
+
+    fn recv_packet(&mut self, packet: MgaDbdRef) {
+        //
+    }
+}
+
 fn main() {
     let matches = App::new("ublox CLI example program")
         .about("Demonstrates usage of the Rust ublox API")
@@ -165,10 +190,24 @@ fn main() {
     device
         .write_all(&UbxPacketRequest::request_for::<MonVer>().into_packet_bytes())
         .unwrap();
+    /*device
+    .write_all(&MgaDbdPollBuilder {}.into_packet_bytes())
+    .unwrap();*/
+
+    let mut assistnow = AssistNowMixin::new();
 
     // Start reading data
     println!("Opened u-blox device, waiting for solutions...");
+    let mut last_db_dump_tm = std::time::Instant::now();
     loop {
+        /*if last_db_dump_tm.elapsed() > std::time::Duration::new(1, 0) {
+            device
+                .write_all(&MgaDbdPollBuilder {}.into_packet_bytes())
+                .unwrap();
+            last_db_dump_tm = std::time::Instant::now();
+        }*/
+        assistnow.update(&mut device);
+
         device
             .update(|packet| match packet {
                 PacketRef::MonVer(packet) => {
@@ -178,7 +217,13 @@ fn main() {
                         packet.hardware_version()
                     );
                 }
+                PacketRef::MgaDbd(packet) => {
+                    assistnow.recv_packet(packet);
+                    //println!("Received {} bytes in MGA-DBD", database.data().len());
+                }
                 PacketRef::NavPosVelTime(sol) => {
+                    println!("{} {}", sol.lat_degrees(), sol.lat_degrees_raw());
+                    println!("{} {}", sol.lon_degrees(), sol.lon_degrees_raw());
                     let has_time = sol.fix_type() == GpsFix::Fix3D
                         || sol.fix_type() == GpsFix::GPSPlusDeadReckoning
                         || sol.fix_type() == GpsFix::TimeOnlyFix;
