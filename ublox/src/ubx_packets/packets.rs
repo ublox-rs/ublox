@@ -1020,6 +1020,29 @@ impl<T: FloatCore + FromPrimitive + ToPrimitive> ScaleBack<T> {
     }
 }
 
+/// Hardware status
+#[ubx_packet_recv]
+#[ubx(class = 0x0a, id = 0x09, fixed_payload_len = 60)]
+struct MonHw{
+    pin_sel: u32,
+    pin_bank: u32,
+    pin_dir: u32,
+    pin_val: u32,
+    noise_per_ms: u16,
+    agc_cnt: u16,
+    a_status: u8,
+    a_power: u8,
+    flags: u8,
+    reserved1: u8,
+    used_mask: u32,
+    vp: [u8; 17],
+    jam_ind: u8,
+    reserved2: [u8; 2],
+    pin_irq: u32,
+    pull_h: u32,
+    pull_l: u32,
+}
+
 /// Receiver/Software Version
 #[ubx_packet_recv]
 #[ubx(class = 0x0a, id = 0x04, max_payload_len = 1240)]
@@ -1092,6 +1115,7 @@ define_recv_packets!(
         CfgPrtSpi,
         CfgPrtUart,
         CfgNav5,
-        MonVer
+        MonVer,
+        MonHw
     }
 );
