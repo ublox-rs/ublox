@@ -513,6 +513,14 @@ struct CfgRst {
     reserved1: u8,
 }
 
+/// Reset Receiver / Clear Backup Data Structures
+#[ubx_packet_recv_send]
+#[ubx(class = 6, id = 0x13, fixed_payload_len = 4)]
+struct CfgAnt {
+    flags: u16,
+    pins: u16,
+}
+
 #[ubx_extend_bitflags]
 #[ubx(into_raw, rest_reserved)]
 bitflags! {
@@ -1115,6 +1123,7 @@ define_recv_packets!(
         CfgPrtSpi,
         CfgPrtUart,
         CfgNav5,
+        CfgAnt,
         MonVer,
         MonHw
     }
