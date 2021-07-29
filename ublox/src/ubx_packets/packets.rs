@@ -1038,7 +1038,9 @@ struct MonHw{
     pin_val: u32,
     noise_per_ms: u16,
     agc_cnt: u16,
+    #[ubx(map_type = AntennaStatus)]
     a_status: u8,
+    #[ubx(map_type = AntennaPower)]
     a_power: u8,
     flags: u8,
     reserved1: u8,
@@ -1050,6 +1052,29 @@ struct MonHw{
     pull_h: u32,
     pull_l: u32,
 }
+
+#[ubx_extend]
+#[ubx(from, rest_reserved)]
+#[repr(u8)]
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub enum AntennaStatus {
+    Init = 0,
+    DontKnow = 1,
+    Ok = 2,
+    Short = 3,
+    Open = 4,
+}
+
+#[ubx_extend]
+#[ubx(from, rest_reserved)]
+#[repr(u8)]
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub enum AntennaPower {
+    Off = 0,
+    On = 1,
+    DontKnow = 2,
+}
+
 
 /// Receiver/Software Version
 #[ubx_packet_recv]
