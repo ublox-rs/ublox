@@ -1164,11 +1164,11 @@ impl<T: FloatCore + FromPrimitive + ToPrimitive> ScaleBack<T> {
 #[ubx(
     class = 0x06,
     id = 0x23,
-    fixed_payload_len = 44,
+    fixed_payload_len = 40,
     flags = "default_for_builder"
 )]
 struct CfgNavX5 {
-    /// Only version 3 supported
+    /// Only version 2 supported
     version: u16,
 
     /// Only the masked parameters will be applied
@@ -1231,10 +1231,6 @@ struct CfgNavX5 {
 
     /// Enable/disable ADR/UDR sensor fusion 
     use_adr: u8,
-
-    /// Reserved
-    reserved10: [u8; 2],
-    reserved11: [u8; 2],
 }
 
 #[ubx_extend_bitflags]
