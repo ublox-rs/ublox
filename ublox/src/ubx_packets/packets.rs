@@ -1269,6 +1269,32 @@ bitflags! {
     }
 }
 
+/// GNSS Assistance ACK UBX-MGA-ACK
+#[ubx_packet_recv]
+#[ubx(class = 0x13, id = 0x60, fixed_payload_len = 8)]
+struct MgaAck {
+    ack_type: u8,
+    version: u8,
+    #[ubx(map_type = MsgAckInfoCode)]
+    info_code: u8,
+    msg_id: u8,
+    msg_payload_start: [u8; 4]
+}
+
+#[ubx_extend]
+#[ubx(from, rest_reserved)]
+#[repr(u8)]
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub enum MsgAckInfoCode{
+    Accepted = 0,
+    RejectedNoTime = 1,
+    RejectedBadVersion = 2,
+    RejectedBadSize = 3,
+    RejectedDBStoreFailed= 4,
+    RejectedNotReady = 5,
+    RejectedUnknownType = 6,
+}
+
 /// Hardware status
 #[ubx_packet_recv]
 #[ubx(class = 0x0a, id = 0x09, fixed_payload_len = 60)]
@@ -1382,6 +1408,7 @@ define_recv_packets!(
         NavSolution,
         NavVelNed,
         NavTimeUTC,
+        MgaAck,
         AlpSrv,
         AckAck,
         AckNak,
