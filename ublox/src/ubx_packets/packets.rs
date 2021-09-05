@@ -433,11 +433,11 @@ bitflags! {
     /// `CfgInfMask` parameters bitmask
     #[derive(Default)]
     pub struct CfgInfMask: u8 {
-        const ERROR= 0x1;
+        const ERROR = 0x1;
         const WARNING = 0x2;
-        const NOTICE  = 0x4;
-        const TEST  = 0x8;
-        const DEBUG  = 0x10;
+        const NOTICE = 0x4;
+        const DEBUG = 0x08;
+        const TEST  = 0x10;
     }
 }
 
