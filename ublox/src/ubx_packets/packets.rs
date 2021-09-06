@@ -525,10 +525,14 @@ struct InfDebug{
 
 mod inf {
     pub(crate) fn convert_to_str(bytes: &[u8]) -> &str {
-        core::str::from_utf8(bytes).unwrap()
+        match core::str::from_utf8(bytes) {
+            Ok(msg) => msg,
+            Err(_) => "** Invalid UTF8 string in UBX-INF packet **",
+        }
     }
 
-    pub(crate) fn is_valid(bytes: &[u8]) -> bool {
+    pub(crate) fn is_valid(_bytes: &[u8]) -> bool {
+        // Validity is checked in convert_to_str
         true
     }
 }
