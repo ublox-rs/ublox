@@ -505,7 +505,6 @@ struct InfWarning{
     message: [u8; 0]
 }
 
-
 #[ubx_packet_recv]
 #[ubx(
     class = 0x4,
@@ -652,8 +651,29 @@ struct CfgRst {
 #[ubx_packet_recv_send]
 #[ubx(class = 6, id = 0x13, fixed_payload_len = 4)]
 struct CfgAnt {
+    /// Antenna flag mask. See [AntFlags] for details.
+    #[ubx(map_type = AntFlags)]
     flags: u16,
+    /// Antenna pin configuration. See 32.10.1.1 in receiver spec for details.
     pins: u16,
+}
+
+#[ubx_extend_bitflags]
+#[ubx(from, into_raw, rest_reserved)]
+bitflags! {
+    #[derive(Default)]
+    pub struct AntFlags: u16 {
+        /// Enable supply voltage control signal
+        const SVCS = 0x01;
+        /// Enable short circuit detection
+        const SCD = 0x02;
+        /// Enable open circuit detection
+        const OCD = 0x04;
+        /// Power down on short circuit detection
+        const PDWN_ON_SCD = 0x08;
+        /// Enable automatic recovery from short circuit state
+        const RECOVERY = 0x10;
+    }
 }
 
 #[ubx_extend_bitflags]
@@ -1277,11 +1297,21 @@ bitflags! {
 #[ubx_packet_recv]
 #[ubx(class = 0x13, id = 0x60, fixed_payload_len = 8)]
 struct MgaAck {
+    /// Type of acknowledgment: 0 -> not used, 1 -> accepted
     ack_type: u8,
+
+    /// Version 0
     version: u8,
+
+    /// Provides greater information on what the receiver chose to do with the message contents.
+    /// See [MsgAckInfoCode].
     #[ubx(map_type = MsgAckInfoCode)]
     info_code: u8,
+
+    /// UBX message ID of the acknowledged message
     msg_id: u8,
+
+    /// The first 4 bytes of the acknowledged message's payload
     msg_payload_start: [u8; 4]
 }
 
@@ -1289,7 +1319,7 @@ struct MgaAck {
 #[ubx(from, rest_reserved)]
 #[repr(u8)]
 #[derive(Debug, Copy, Clone, PartialEq)]
-pub enum MsgAckInfoCode{
+pub enum MsgAckInfoCode {
     Accepted = 0,
     RejectedNoTime = 1,
     RejectedBadVersion = 2,
@@ -1302,7 +1332,7 @@ pub enum MsgAckInfoCode{
 /// Hardware status
 #[ubx_packet_recv]
 #[ubx(class = 0x0a, id = 0x09, fixed_payload_len = 60)]
-struct MonHw{
+struct MonHw {
     pin_sel: u32,
     pin_bank: u32,
     pin_dir: u32,
