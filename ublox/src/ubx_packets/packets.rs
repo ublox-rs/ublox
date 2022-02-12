@@ -449,7 +449,7 @@ bitflags! {
     flags = "default_for_builder"
 )]
 struct InfError{
-    #[ubx(map_type = &str, 
+    #[ubx(map_type = Option<&str>, 
         may_fail, 
         is_valid = inf::is_valid,
         from = inf::convert_to_str,
@@ -465,7 +465,7 @@ struct InfError{
     flags = "default_for_builder"
 )]
 struct InfNotice{
-    #[ubx(map_type = &str, 
+    #[ubx(map_type = Option<&str>, 
         may_fail, 
         is_valid = inf::is_valid,
         from = inf::convert_to_str,
@@ -481,7 +481,7 @@ struct InfNotice{
     flags = "default_for_builder"
 )]
 struct InfTest{
-    #[ubx(map_type = &str, 
+    #[ubx(map_type = Option<&str>, 
         may_fail, 
         is_valid = inf::is_valid,
         from = inf::convert_to_str,
@@ -497,7 +497,7 @@ struct InfTest{
     flags = "default_for_builder"
 )]
 struct InfWarning{
-    #[ubx(map_type = &str, 
+    #[ubx(map_type = Option<&str>, 
         may_fail, 
         is_valid = inf::is_valid,
         from = inf::convert_to_str,
@@ -513,7 +513,7 @@ struct InfWarning{
     flags = "default_for_builder"
 )]
 struct InfDebug{
-    #[ubx(map_type = &str, 
+    #[ubx(map_type = Option<&str>, 
         may_fail, 
         is_valid = inf::is_valid,
         from = inf::convert_to_str,
@@ -523,10 +523,10 @@ struct InfDebug{
 
 
 mod inf {
-    pub(crate) fn convert_to_str(bytes: &[u8]) -> &str {
+	pub(crate) fn convert_to_str(bytes: &[u8]) -> Option<&str> {
         match core::str::from_utf8(bytes) {
-            Ok(msg) => msg,
-            Err(_) => "** Invalid UTF8 string in UBX-INF packet **",
+            Ok(msg) => Some(msg),
+            Err(_) => None,
         }
     }
 
