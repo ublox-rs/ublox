@@ -65,3 +65,8 @@ no_std Support
 ==============
 
 This library supports no_std environments with a deterministic-size `Parser`. See the documentation for more information.
+
+Minimum Supported Rust Version
+==============================
+
+This crate will always support at least the previous year's worth of Rust compilers. Currently, that means that the MSRV is `1.49.0`. Note that, as we are pre-1.0, breaking the MSRV will not force a minor update - the MSRV can change in a patch update.

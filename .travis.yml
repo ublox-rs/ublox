@@ -2,6 +2,8 @@ before_install:
   - sudo apt-get install -y libudev-dev
 language: rust
 rust:
+  # If the MSRV is updated, update the readme
+  - 1.49.0
   - stable
   - beta
   - nightly
