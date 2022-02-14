@@ -997,6 +997,65 @@ bitflags! {
     }
 }
 
+/// Time Pulse configuration
+#[ubx_packet_recv_send]
+#[ubx(class = 0x06, id = 0x31, fixed_payload_len = 32)]
+#[derive(Debug)]
+struct CfgTp5 {
+    /// Time pulse selection (0 = TIMEPULSE, 1 = TIMEPULSE2)
+    tp_index: u8,
+    /// Message version (0x00 for this version)
+    version: u8,
+    reserved: [u8; 2],
+    /// Antenna cable delay
+    ant_cable_delay: i16,
+    /// RF group delay
+    rf_group_delay : i16,
+    /// Frequency or period time, depending on setting of bit 'isFreq'
+    freq_period: u32,
+    /// Frequency or period time when locked to GPS time, only used if 'lockedOtherSet' is set
+    freq_period_lock: u32,
+    /// Pulse length or duty cycle, depending on 'isLength'
+    pulse_len_ratio: u32,
+    /// Pulse length or duty cycle when locked to GPS time, only used if 'lockedOtherSet' is set
+    pulse_len_ratio_lock: u32,
+    /// User-configurable time pulse delay in nanoseconds
+    user_config_delay_ns: i32,
+    #[ubx(map_type = CfgTp5Flags)]
+    /// Configuration flags
+    flags: u32,
+}
+
+#[ubx_extend_bitflags]
+#[ubx(from, into_raw, rest_reserved)]
+bitflags! {
+    #[derive(Default)]
+    pub struct CfgTp5Flags: u32 {
+        /// If set enable time pulse
+        const ACTIVE = 0x01;
+        /// If set synchronize time pulse to GPS as soon as GPS time is valid,
+        /// otherwise use local clock
+        const LOCK_GPS_FREQ = 0x02;
+        /// If set use 'freqPeriodLock' and 'pulseLenRatioLock' as soon as GPS
+        /// time is valid and 'freqPeriod' and 'pulseLenRatio' if GPS time is
+        /// invalid
+        const LOCKED_OTHER_SET = 0x04;
+        /// If set 'freqPeriodLock' and 'freqPeriod' interpreted as frequency,
+        /// otherwise interpreted as period 
+        const IS_FREQ = 0x08;
+        /// If set 'pulseLenRatioLock' and 'pulseLenRatio' interpreted as pulse
+        /// length, otherwise interpreted as duty cycle
+        const IS_LENGTH = 0x10;
+        /// Align pulse to top of second (period time must be integer fraction
+        /// of 1s)
+        const ALIGN_TO_TOW = 0x20;
+        /// Leading edge polarity
+        const RISING_EDGE = 0x40;
+        /// timegrid to use 0 - UTC / 1 - GPS
+        const TIMEGRID_USE_GPS = 0x80;
+    }
+}
+
 #[ubx_extend_bitflags]
 #[ubx(into_raw, rest_reserved)]
 bitflags! {
@@ -1915,6 +1974,41 @@ struct MonVer {
     extension: [u8; 0],
 }
 
+/// Time pulse data
+#[ubx_packet_recv]
+#[ubx(class = 0x0d, id = 0x01, fixed_payload_len = 16)]
+struct TimTp {
+    /// Time pulse time of week according to time base
+    tow_ms: u32,
+    /// Submillisecond part of towMS
+    tow_sub_ms: u32,
+    /// Quantization error of time pulse
+    q_err: i32,
+    /// Time pulse week number according to time base
+    week: u16,
+    /// Flags
+    #[ubx(map_type = TimePulseFlags)]
+    flags: u8,
+    /// Time reference information
+    ref_info: u8,
+}
+
+#[ubx_extend_bitflags]
+#[ubx(from, rest_reserved)]
+bitflags! {
+    /// Time Pulse Flags
+    pub struct TimePulseFlags: u8 {
+        /// Time base is 0 - GNSS / 1 - UTC
+        const TIME_BASE_UTC = 1;
+        /// UTC is 0 - not available / 1 - available
+        const UTC_AVAIL = 2;
+        /// RAIM information
+        const RAIM = 8;
+        /// Quantization error is 0 - valid / 1 - not valid
+        const QUANT_ERROR_INVALID = 16;
+    }
+}
+
 mod mon_ver {
     use super::MonVerExtensionIter;
 
@@ -1968,17 +2062,87 @@ struct RxmRtcm {
     msg_type: u16,
 }
 
+/// Time mode config
+#[ubx_packet_recv_send]
+#[ubx(class = 0x06, id = 0x3d, fixed_payload_len = 28)]
+struct CfgTmode2 {
+    /// Time Transfer Mode: 
+    ///   0 Disabled 
+    ///   1 Survey In 
+    ///   2 Fixed Mode (true position information required) 
+    ///   3-255 Reserved
+    time_mode: u8,
+    reserved_1: u8,
+    /// Time mode flags
+    #[ubx(map_type = CfgTmode2Flags)]
+    flags: u16,
+    /// WGS84 ECEF X coordinate or latitude, depending on flags above
+    /// Units: cm or_deg * 1e-7
+    ecef_x_or_lat: i32,
+    /// WGS84 ECEF Y coordinate or longitude, depending on flags above
+    /// Units: cm or_deg * 1e-7
+    ecef_y_or_lon: i32,
+    /// WGS84 ECEF Z coordinate or altitude, depending on flags above
+    /// Units: cm
+    ecef_z_or_alt: i32,
+    /// Fixed position 3D accuracy
+    /// Units: mm
+    fixed_pos_acc: u32,
+    /// Survey-in minimum duration
+    /// Units: s
+    svin_min_dur: u32,
+    /// Survey-in position accuracy limit
+    /// Units: mm
+    svin_min_acc_limit: u32,
+}
+
+#[ubx_extend_bitflags]
+#[ubx(from, into_raw, rest_reserved)]
+bitflags! {
+    /// Time mode flags for `CfgTmode2`
+    pub struct CfgTmode2Flags: u16 {
+        /// Position is given in LAT/LON/ALT (default is ECEF)
+        const LLA = 1;
+        /// Altitude is not valid, in case lla was set
+        const ALT_INV = 2;
+    }
+}
+
+/// Time mode survey-in status
+#[ubx_packet_recv]
+#[ubx(class = 0x0d, id = 0x04, fixed_payload_len = 28)]
+struct TimSvin{
+    /// Passed survey-in minimum duration
+    /// Units: s
+    dur: u32,
+    /// Current survey-in mean position ECEF X coordinate
+    mean_x: i32,
+    /// Current survey-in mean position ECEF Y coordinate
+    mean_y: i32,
+    /// Current survey-in mean position ECEF Z coordinate
+    mean_z: i32,
+    /// Current survey-in mean position 3D variance
+    mean_v: i32,
+    /// Number of position observations used during survey-in
+    obs: u32,
+    /// Survey-in position validity flag, 1 = valid, otherwise 0
+    valid: u8,
+    /// Survey-in in progress flag, 1 = in-progress, otherwise 0
+    active: u8,
+    reserved: [u8; 2]
+}
+    
 define_recv_packets!(
     enum PacketRef {
         _ = UbxUnknownPacketRef,
         NavPosLlh,
         NavStatus,
         NavDop,
+        NavSat,
         NavPosVelTime,
         NavSolution,
         NavVelNed,
         NavTimeUTC,
-        NavSat,
         NavOdo,
         CfgOdo,
         MgaAck,
@@ -1990,6 +2154,8 @@ define_recv_packets!(
         CfgPrtUart,
         CfgNav5,
         CfgAnt,
+        CfgTp5,
+        CfgTmode2,
         InfError,
         InfWarning,
         InfNotice,
@@ -1997,6 +2163,8 @@ define_recv_packets!(
         InfDebug,
         MonVer,
         MonHw,
-        RxmRtcm
+        RxmRtcm,
+        TimSvin,
+        TimTp,
     }
 );
