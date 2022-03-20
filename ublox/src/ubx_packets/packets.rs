@@ -408,7 +408,7 @@ pub struct NavSatSvFlags(u32);
 
 impl NavSatSvFlags {
     pub fn quality_ind(self) -> NavSatQualityIndicator {
-        let bits = (self.0 >> 0) & 0x7;
+        let bits = self.0 & 0x7;
         match bits {
             0 => NavSatQualityIndicator::NoSignal,
             1 => NavSatQualityIndicator::Searching,

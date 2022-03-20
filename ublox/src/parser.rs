@@ -148,7 +148,7 @@ impl<'a> UnderlyingBuffer for FixedLinearBuffer<'a> {
         {
             let bufptr = self.buffer.as_mut_ptr();
             unsafe {
-                core::ptr::copy(bufptr.offset(count as isize), bufptr, new_size);
+                core::ptr::copy(bufptr.add(count), bufptr, new_size);
             }
         }
         self.len = new_size;
@@ -208,7 +208,7 @@ impl<T: UnderlyingBuffer> Parser<T> {
             }
         }
 
-        ParserIter { buf: buf }
+        ParserIter { buf }
     }
 }
 
@@ -306,7 +306,7 @@ impl<'a, T: UnderlyingBuffer> DualBuffer<'a, T> {
             return false;
         }
 
-        return true;
+        true
     }
 
     fn peek_raw(&self, range: core::ops::Range<usize>) -> (&[u8], &[u8]) {
@@ -381,7 +381,7 @@ impl<'a, T: UnderlyingBuffer> DualBuffer<'a, T> {
             .extend_from_slice(&self.new_buf[self.new_buf_offset..self.new_buf_offset + new_bytes]);
         self.new_buf_offset += new_bytes;
         self.off += count;
-        return Ok(&self.buf[0..count]);
+        Ok(&self.buf[0..count])
     }
 }
 
@@ -477,6 +477,7 @@ impl<'a, T: UnderlyingBuffer> ParserIter<'a, T> {
         ));
     }
 
+    #[allow(clippy::should_implement_trait)]
     /// Analog of `core::iter::Iterator::next`, should be switched to
     /// trait implementation after merge of https://github.com/rust-lang/rust/issues/44265
     pub fn next(&mut self) -> Option<Result<PacketRef, ParserError>> {

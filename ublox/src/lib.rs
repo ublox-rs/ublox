@@ -45,7 +45,7 @@
 //!             // Received a malformed packet
 //!         }
 //!         None => {
-//! 	    // The internal buffer is now empty
+//!             // The internal buffer is now empty
 //!             break;
 //!         }
 //!     }

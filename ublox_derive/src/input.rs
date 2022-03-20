@@ -612,16 +612,24 @@ struct BitFlagsAstConst {
 
 impl Parse for BitFlagsAst {
     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
+        let attrs = input.call(Attribute::parse_outer)?;
+        let vis = input.parse()?;
+        let struct_token = input.parse()?;
+        let ident = input.parse()?;
+        let colon_token = input.parse()?;
+        let repr_ty = input.parse()?;
         let content;
+        let brace_token = braced!(content in input);
+        let items = content.parse_terminated(BitFlagsAstConst::parse)?;
         Ok(Self {
-            attrs: input.call(Attribute::parse_outer)?,
-            vis: input.parse()?,
-            _struct_token: input.parse()?,
-            ident: input.parse()?,
-            _colon_token: input.parse()?,
-            repr_ty: input.parse()?,
-            _brace_token: braced!(content in input),
-            items: content.parse_terminated(BitFlagsAstConst::parse)?,
+            attrs,
+            vis,
+            _struct_token: struct_token,
+            ident,
+            _colon_token: colon_token,
+            repr_ty,
+            _brace_token: brace_token,
+            items,
         })
     }
 }
