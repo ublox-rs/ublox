@@ -438,6 +438,7 @@ fn test_define_recv_packets() {
         output,
         quote! {
             #[doc = "All possible packets enum"]
+            #[derive(Debug)]
             pub enum PacketRef<'a> {
                 Pack1(Pack1Ref<'a>),
                 Pack2(Pack2Ref<'a>),

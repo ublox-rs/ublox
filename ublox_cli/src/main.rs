@@ -187,7 +187,9 @@ fn main() {
                         println!("Time: {:?}", time);
                     }
                 }
-                _ => {}
+                _ => {
+                    println!("{:?}", packet);
+                }
             })
             .unwrap();
     }
