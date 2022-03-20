@@ -569,7 +569,7 @@ struct NavSatSvInfo {
     flags: u32,
 }
 
-impl fmt::Debug for NavSatSvInfoRef<'_> {
+/*impl fmt::Debug for NavSatSvInfoRef<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("NavSatSvInfo")
             .field("gnss_id", &self.gnss_id())
@@ -581,7 +581,7 @@ impl fmt::Debug for NavSatSvInfoRef<'_> {
             .field("flags", &self.flags())
             .finish()
     }
-}
+}*/
 
 pub struct NavSatIter<'a> {
     data: &'a [u8],
@@ -599,6 +599,13 @@ impl<'a> core::iter::Iterator for NavSatIter<'a> {
         } else {
             None
         }
+    }
+}
+
+impl fmt::Debug for NavSatIter<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("NavSatIter")
+            .finish()
     }
 }
 
@@ -1684,6 +1691,32 @@ pub enum AntennaPower {
     DontKnow = 2,
 }
 
+pub struct MonVerExtensionIter<'a> {
+    data: &'a [u8],
+    offset: usize,
+}
+
+impl<'a> core::iter::Iterator for MonVerExtensionIter<'a> {
+    type Item = &'a str;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.offset < self.data.len() {
+            let data = &self.data[self.offset..self.offset+30];
+            self.offset += 30;
+            Some(mon_ver::convert_to_str_unchecked(data))
+        } else {
+            None
+        }
+    }
+}
+
+impl fmt::Debug for MonVerExtensionIter<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("MonVerExtensionIter")
+            .finish()
+    }
+}
+
 /// Receiver/Software Version
 #[ubx_packet_recv]
 #[ubx(class = 0x0a, id = 0x04, max_payload_len = 1240)]
@@ -1696,13 +1729,15 @@ struct MonVer {
     hardware_version: [u8; 10],
 
     /// Extended software information strings
-    #[ubx(map_type = impl Iterator<Item=&str>, may_fail,
+    #[ubx(map_type = MonVerExtensionIter, may_fail,
           from = mon_ver::extension_to_iter,
           is_valid = mon_ver::is_extension_valid)]
     extension: [u8; 0],
 }
 
 mod mon_ver {
+    use super::MonVerExtensionIter;
+
     pub(crate) fn convert_to_str_unchecked(bytes: &[u8]) -> &str {
         let null_pos = bytes
             .iter()
@@ -1735,8 +1770,11 @@ mod mon_ver {
         }
     }
 
-    pub(crate) fn extension_to_iter(payload: &[u8]) -> impl Iterator<Item = &str> {
-        payload.chunks(30).map(|x| convert_to_str_unchecked(x))
+    pub(crate) fn extension_to_iter(payload: &[u8]) -> MonVerExtensionIter {
+        MonVerExtensionIter {
+            data: payload,
+            offset: 0,
+        }
     }
 }
 

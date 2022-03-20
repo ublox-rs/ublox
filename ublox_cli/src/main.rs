@@ -159,6 +159,7 @@ fn main() {
                         packet.software_version(),
                         packet.hardware_version()
                     );
+                    println!("{:?}", packet);
                 }
                 PacketRef::NavPosVelTime(sol) => {
                     let has_time = sol.fix_type() == GpsFix::Fix3D
@@ -178,6 +179,7 @@ fn main() {
                             "Speed: {:.2} m/s Heading: {:.2} degrees",
                             vel.speed, vel.heading
                         );
+                        println!("Sol: {:?}", sol);
                     }
 
                     if has_time {

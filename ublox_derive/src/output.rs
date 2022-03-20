@@ -8,6 +8,27 @@ use quote::{format_ident, quote};
 use std::{collections::HashSet, convert::TryFrom};
 use syn::{parse_quote, Ident, Type};
 
+fn generate_debug_impl(pack_name: &str, ref_name: &Ident, pack_descr: &PackDesc) -> TokenStream {
+    let mut fields = vec![];
+    for field in pack_descr.fields.iter() {
+        let field_name = &field.name;
+        let field_accessor = field.intermediate_field_name();
+        fields.push(quote! {
+            .field(stringify!(#field_name), &self.#field_accessor())
+        });
+    }
+
+    quote! {
+        impl core::fmt::Debug for #ref_name<'_> {
+            fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+                f.debug_struct(#pack_name)
+                    #(#fields)*
+                    .finish()
+            }
+        }
+    }
+}
+
 pub fn generate_recv_code_for_packet(pack_descr: &PackDesc) -> TokenStream {
     let pack_name = &pack_descr.name;
     let ref_name = format_ident!("{}Ref", pack_descr.name);
@@ -147,6 +168,8 @@ pub fn generate_recv_code_for_packet(pack_descr: &PackDesc) -> TokenStream {
         }
     };
 
+    let debug_impl = generate_debug_impl(pack_name, &ref_name, pack_descr);
+
     quote! {
         #[doc = #struct_comment]
         #[doc = "Contains a reference to an underlying buffer, contains accessor methods to retrieve data."]
@@ -156,6 +179,8 @@ pub fn generate_recv_code_for_packet(pack_descr: &PackDesc) -> TokenStream {
 
             #validator
         }
+
+        #debug_impl
     }
 }
 

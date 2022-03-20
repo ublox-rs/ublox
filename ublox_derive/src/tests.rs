@@ -138,6 +138,18 @@ fn test_ubx_packet_recv_simple() {
                     }
                 }
             }
+            impl core::fmt::Debug for TestRef<'_> {
+                fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+                    f.debug_struct("Test")
+                        .field(stringify!(itow), &self.itow())
+                        .field(stringify!(lat), &self.lat_degrees())
+                        .field(stringify!(a), &self.a())
+                        .field(stringify!(reserved1), &self.reserved1())
+                        .field(stringify!(flags), &self.flags())
+                        .field(stringify!(b), &self.b())
+                        .finish()
+                }
+            }
         },
     );
 }
@@ -209,6 +221,14 @@ fn test_ubx_packet_recv_dyn_len() {
                     } else {
                         Err(ParserError::InvalidPacketLen{packet: "Test", expect: min, got})
                     }
+                }
+            }
+            impl core::fmt::Debug for TestRef<'_> {
+                fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+                    f.debug_struct("Test")
+                        .field(stringify!(f1), &self.f1())
+                        .field(stringify!(rest), &self.rest())
+                        .finish()
                 }
             }
         },
@@ -543,11 +563,12 @@ fn rustfmt_cnt(source: Vec<u8>) -> io::Result<Vec<u8>> {
 
     cmd.stdin(Stdio::piped())
         .stdout(Stdio::piped())
-        .stderr(Stdio::null());
+        .stderr(Stdio::piped());
 
     let mut child = cmd.spawn()?;
     let mut child_stdin = child.stdin.take().unwrap();
     let mut child_stdout = child.stdout.take().unwrap();
+    let mut child_stderr = child.stderr.take().unwrap();
     let src_len = source.len();
     let src = Arc::new(source);
     // Write to stdin in a new thread, so that we can read from stdout on this
@@ -558,6 +579,13 @@ fn rustfmt_cnt(source: Vec<u8>) -> io::Result<Vec<u8>> {
         src
     });
 
+    // Read from stderr in a new thread also
+    let stderr_handle = ::std::thread::spawn(move || {
+        let mut stderr = vec![];
+        io::copy(&mut child_stderr, &mut stderr).unwrap();
+        stderr
+    });
+
     let mut output = Vec::with_capacity(src_len);
     io::copy(&mut child_stdout, &mut output)?;
     let status = child.wait()?;
@@ -565,6 +593,7 @@ fn rustfmt_cnt(source: Vec<u8>) -> io::Result<Vec<u8>> {
         "The thread writing to rustfmt's stdin doesn't do \
          anything that could panic",
     );
+    let stderr = stderr_handle.join().unwrap();
     let src =
         Arc::try_unwrap(src).expect("Internal error: rusftfmt_cnt should only one Arc refernce");
     match status.code() {
@@ -575,10 +604,12 @@ fn rustfmt_cnt(source: Vec<u8>) -> io::Result<Vec<u8>> {
         )),
         Some(3) => {
             println!("warning=Rustfmt could not format some lines.");
+            println!("{}", std::str::from_utf8(&stderr).unwrap());
             Ok(src)
         }
         _ => {
             println!("warning=Internal rustfmt error");
+            println!("{}", std::str::from_utf8(&stderr).unwrap());
             Ok(src)
         }
     }
