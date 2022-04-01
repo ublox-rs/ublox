@@ -1049,6 +1049,46 @@ impl ResetMode {
     }
 }
 
+/// Port Configuration for I2C
+#[ubx_packet_recv_send]
+#[ubx(
+    class = 0x06,
+    id = 0x00,
+    fixed_payload_len = 20,
+    flags = "default_for_builder"
+)]
+struct CfgPrtI2c {
+    #[ubx(map_type = I2cPortId, may_fail)]
+    portid: u8,
+    reserved1: u8,
+    /// TX ready PIN configuration
+    tx_ready: u16,
+    /// I2C Mode Flags
+    mode: u32,
+    reserved2: u32,
+    #[ubx(map_type = InProtoMask)]
+    in_proto_mask: u16,
+    #[ubx(map_type = OutProtoMask)]
+    out_proto_mask: u16,
+    flags: u16,
+    reserved3: u16,
+}
+
+/// Port Identifier Number (= 0 for I2C ports)
+#[ubx_extend]
+#[ubx(from_unchecked, into_raw, rest_error)]
+#[repr(u8)]
+#[derive(Debug, Copy, Clone)]
+pub enum I2cPortId {
+    I2c = 0,
+}
+
+impl Default for I2cPortId {
+    fn default() -> Self {
+        Self::I2c
+    }
+}
+
 /// Port Configuration for UART
 #[ubx_packet_recv_send]
 #[ubx(class = 0x06, id = 0x00, fixed_payload_len = 20)]
@@ -1103,10 +1143,10 @@ struct CfgPrtSpi {
 #[ubx_extend_bitflags]
 #[ubx(from, into_raw, rest_reserved)]
 bitflags! {
-    /// A mask describing which input protocolsare active
-    /// Each bit of this mask is used for aprotocol.
+    /// A mask describing which input protocols are active
+    /// Each bit of this mask is used for a protocol.
     /// Through that, multiple protocols can be defined on a single port
-    /// Used in `CfgPrtSpi`
+    /// Used in `CfgPrtSpi` and `CfgPrtI2c`
     #[derive(Default)]
     pub struct InProtoMask: u16 {
         const UBOX = 1;
@@ -1122,9 +1162,9 @@ bitflags! {
 #[ubx(from, into_raw, rest_reserved)]
 bitflags! {
     /// A mask describing which output protocols are active.
-    /// Each bit of this mask is used for aprotocol.
+    /// Each bit of this mask is used for a protocol.
     /// Through that, multiple protocols can be defined on a single port
-    /// Used in `CfgPrtSpi`
+    /// Used in `CfgPrtSpi` and `CfgPrtI2c`
     #[derive(Default)]
     pub struct OutProtoMask: u16 {
         const UBOX = 1;
@@ -1795,6 +1835,7 @@ define_recv_packets!(
         AlpSrv,
         AckAck,
         AckNak,
+        CfgPrtI2c,
         CfgPrtSpi,
         CfgPrtUart,
         CfgNav5,
