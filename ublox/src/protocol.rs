@@ -16,9 +16,11 @@ pub enum BufferHeadContents<'a> {
     InvalidChecksum(usize),
 
     /// The first N bytes are a packet, parse it and advance the buffer
-    Packet(PacketRef<'a>),
+    Packet(usize, PacketRef<'a>),
 
-    InvalidPacket(ParserError),
+    /// There was a packet, with a valid checksum, but did not pass the packet validation.
+    /// It takes up the first N bytes.
+    InvalidPacket(usize, ParserError),
 }
 
 pub fn parse_buffer(buf: &[u8]) -> BufferHeadContents {
@@ -61,9 +63,9 @@ pub fn parse_buffer(buf: &[u8]) -> BufferHeadContents {
     if expected_checksum != actual_checksum {
         return BufferHeadContents::InvalidChecksum(6 + length + 2);
     }
-    match match_packet(class, id, &buf[6..6 + length + 2]) {
-        Ok(p) => BufferHeadContents::Packet(p),
-        Err(e) => BufferHeadContents::InvalidPacket(e),
+    match match_packet(class, id, &buf[6..6 + length]) {
+        Ok(p) => BufferHeadContents::Packet(6 + length + 2, p),
+        Err(e) => BufferHeadContents::InvalidPacket(6 + length + 2, e),
     }
 }
 
@@ -76,7 +78,7 @@ mod test {
             (BufferHeadContents::Garbage(n), BufferHeadContents::Garbage(n2)) => n == n2,
             (BufferHeadContents::IncompleteHeader, BufferHeadContents::IncompleteHeader) => true,
             (BufferHeadContents::Incomplete(n), BufferHeadContents::Incomplete(n2)) => n == n2,
-            (BufferHeadContents::Packet(_), BufferHeadContents::Packet(_)) => true,
+            (BufferHeadContents::Packet(n, _), BufferHeadContents::Packet(n2, _)) => n == n2,
             (BufferHeadContents::InvalidChecksum(n), BufferHeadContents::InvalidChecksum(n2)) => {
                 n == n2
             }
