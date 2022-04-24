@@ -12,6 +12,7 @@ use ublox_derive::{
     define_recv_packets, ubx_extend, ubx_extend_bitflags, ubx_packet_recv, ubx_packet_recv_send,
     ubx_packet_send,
 };
+use modular_bitfield::prelude::*;
 
 /// Geodetic Position Solution
 #[ubx_packet_recv]
@@ -402,7 +403,69 @@ enum NavStatusFlags2 {
     Inactive = 3,
 }
 
-#[repr(transparent)]
+#[derive(BitfieldSpecifier, Debug)]
+#[bits = 3]
+pub enum NavSatQualityIndicator {
+    NoSignal,
+    Searching,
+    SignalAcquired,
+    SignalDetected,
+    CodeLock,
+    CarrierLock,
+    CarrierLock6,
+    CarrierLock7,
+    // TODO: Modify modular_bitfield to handle this case
+    //CarrierLock(u8),
+}
+
+#[derive(BitfieldSpecifier, Debug)]
+#[bits = 2]
+pub enum NavSatSvHealth {
+    Healthy,
+    Unhealthy,
+    Unknown2,
+    Unknown3,
+    //Unknown(u8)
+}
+
+#[derive(BitfieldSpecifier, Debug)]
+#[bits = 3]
+pub enum NavSatOrbitSource {
+    NoInfoAvailable,
+    Ephemeris,
+    Almanac,
+    AssistNowOffline,
+    AssistNowAutonomous,
+    Other5,
+    Other6,
+    Other7,
+}
+
+#[bitfield]
+#[derive(Debug)]
+pub struct NavSatSvFlags {
+    pub quality: NavSatQualityIndicator,
+    pub sv_used: bool,
+    pub health: NavSatSvHealth,
+    pub diff_corr: bool,
+    pub smoothed: bool,
+    pub orbit_source: NavSatOrbitSource,
+    pub ephemeris_available: bool,
+    pub almanac_available: bool,
+    pub an_offline_available: bool,
+    pub an_auto_available: bool,
+    pub reserved: bool,
+    pub sbas_corr: bool,
+    pub rtcm_corr: bool,
+    pub slas_corr: bool,
+    pub spartn_corr: bool,
+    pub pr_corr: bool,
+    pub cr_corr: bool,
+    pub do_corr: bool,
+    pub reserved2: B9,
+}
+
+/*#[repr(transparent)]
 #[derive(Copy, Clone)]
 pub struct NavSatSvFlags(u32);
 
@@ -526,34 +589,7 @@ impl fmt::Debug for NavSatSvFlags {
             .field("do_corr", &self.do_corr())
             .finish()
     }
-}
-
-#[derive(Copy, Clone, Debug)]
-pub enum NavSatQualityIndicator {
-    NoSignal,
-    Searching,
-    SignalAcquired,
-    SignalDetected,
-    CodeLock,
-    CarrierLock,
-}
-
-#[derive(Copy, Clone, Debug)]
-pub enum NavSatSvHealth {
-    Healthy,
-    Unhealthy,
-    Unknown(u8),
-}
-
-#[derive(Copy, Clone, Debug)]
-pub enum NavSatOrbitSource {
-    NoInfoAvailable,
-    Ephemeris,
-    Almanac,
-    AssistNowOffline,
-    AssistNowAutonomous,
-    Other(u8),
-}
+}*/
 
 #[ubx_packet_recv]
 #[ubx(class = 0x01, id = 0x35, fixed_payload_len = 12)]
@@ -565,7 +601,7 @@ struct NavSatSvInfo {
     azim: i16,
     pr_res: i16,
 
-    #[ubx(map_type = NavSatSvFlags)]
+    #[ubx(map_type = NavSatSvFlags, from = navsat::parse_flags)]
     flags: u32,
 }
 
@@ -631,7 +667,7 @@ struct NavSat {
 }
 
 mod navsat {
-    use super::NavSatIter;
+    use super::{NavSatIter, NavSatSvFlags};
 
     pub(crate) fn convert_to_iter(bytes: &[u8]) -> NavSatIter {
         NavSatIter {
@@ -642,6 +678,11 @@ mod navsat {
 
     pub(crate) fn is_valid(bytes: &[u8]) -> bool {
         bytes.len() % 12 == 0
+    }
+
+    pub(crate) fn parse_flags(raw: u32) -> NavSatSvFlags {
+        let bytes = raw.to_le_bytes();
+        NavSatSvFlags::from_bytes(bytes)
     }
 }
 
