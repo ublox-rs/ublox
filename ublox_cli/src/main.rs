@@ -143,6 +143,14 @@ fn main() {
         .unwrap();
     device.wait_for_ack::<CfgMsgAllPorts>().unwrap();
 
+    // Request the SvInfo packet
+    device
+        .write_all(
+            &CfgMsgAllPortsBuilder::set_rate_for::<NavSat>([0, 5, 0, 0, 0, 0]).into_packet_bytes(),
+        )
+        .unwrap();
+    device.wait_for_ack::<CfgMsgAllPorts>().unwrap();
+
     // Send a packet request for the MonVer packet
     device
         .write_all(&UbxPacketRequest::request_for::<MonVer>().into_packet_bytes())
@@ -185,6 +193,13 @@ fn main() {
                     if has_time {
                         let time: DateTime<Utc> = (&sol).try_into().unwrap();
                         println!("Time: {:?}", time);
+                    }
+                }
+                PacketRef::NavSat(sats) => {
+                    println!("Got SV info for {} sats:", sats.num_svs());
+                    for sv in sats.svs() {
+                        //println!("- {:?}", sv);
+                        println!(" - {}: {:?}", sv.sv_id(), sv.flags().quality_ind());
                     }
                 }
                 _ => {
