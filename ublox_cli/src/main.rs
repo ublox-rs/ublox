@@ -7,12 +7,17 @@ use ublox::*;
 struct Device {
     port: Box<dyn serialport::SerialPort>,
     parser: Parser<Vec<u8>>,
+    buf: Vec<u8>,
 }
 
 impl Device {
     pub fn new(port: Box<dyn serialport::SerialPort>) -> Device {
         let parser = Parser::default();
-        Device { port, parser }
+        Device {
+            port,
+            parser,
+            buf: vec![],
+        }
     }
 
     pub fn write_all(&mut self, data: &[u8]) -> std::io::Result<()> {
@@ -26,10 +31,38 @@ impl Device {
             if nbytes == 0 {
                 break;
             }
+            self.buf.extend_from_slice(&local_buf[..nbytes]);
+
+            match ublox::protocol::parse_buffer(&self.buf) {
+                ublox::protocol::BufferHeadContents::Garbage(n) => {
+                    self.buf.drain(..n);
+                }
+                ublox::protocol::BufferHeadContents::Incomplete(n) => {
+                    // Just gotta wait for more bytes to show up
+                    // But don't accept any packets >1000 bytes 'cuz that'll take forever
+                    if n > 1000 {
+                        self.buf.drain(..2);
+                    }
+                }
+                ublox::protocol::BufferHeadContents::IncompleteHeader => {
+                    // Just gotta wait for more bytes
+                }
+                ublox::protocol::BufferHeadContents::InvalidChecksum(n) => {
+                    self.buf.drain(..n);
+                }
+                ublox::protocol::BufferHeadContents::InvalidPacket(n, e) => {
+                    println!("Parse error on packet: {:?}", e);
+                    self.buf.drain(..n);
+                }
+                ublox::protocol::BufferHeadContents::Packet(n, p) => {
+                    cb(p);
+                    self.buf.drain(..n);
+                }
+            }
 
             // parser.consume adds the buffer to its internal buffer, and
             // returns an iterator-like object we can use to process the packets
-            let mut it = self.parser.consume(&local_buf[..nbytes]);
+            /*let mut it = self.parser.consume(&local_buf[..nbytes]);
             loop {
                 match it.next() {
                     Some(Ok(packet)) => {
@@ -43,7 +76,7 @@ impl Device {
                         break;
                     }
                 }
-            }
+            }*/
         }
         Ok(())
     }
