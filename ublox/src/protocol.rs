@@ -1,6 +1,11 @@
 use crate::match_packet;
 use crate::{PacketRef, ParserError};
 
+/// Describes what the first part of a buffer is.
+///
+/// This struct, in combination with `parse_buffer`, can be used to implement a
+/// state machine to packetize the UBX protocol from e.g. a serial port. See
+/// `ublox_cli` for an example.
 #[derive(Debug)]
 pub enum BufferHeadContents<'a> {
     /// The first N bytes are garbage
