@@ -1113,6 +1113,7 @@ struct CfgPrtUart {
 pub enum UartPortId {
     Uart1 = 1,
     Uart2 = 2,
+    Usb = 3,
 }
 
 /// Port Configuration for SPI Port
