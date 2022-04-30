@@ -1819,6 +1819,28 @@ mod mon_ver {
     }
 }
 
+#[ubx_packet_recv]
+#[ubx(class = 0x02, id = 0x32, fixed_payload_len = 8)]
+struct RxmRTCM {
+    version: u8,
+    flags: u8,
+    sub_type: u16,
+    ref_station: u16,
+    msg_type: u16,
+}
+
+#[ubx_packet_recv]
+#[ubx(class = 0x0a, id = 0x06, fixed_payload_len = 120)]
+struct MonMsgpp {
+    msg1: [u8; 16],
+    msg2: [u8; 16],
+    msg3: [u8; 16],
+    msg4: [u8; 16],
+    msg5: [u8; 16],
+    msg6: [u8; 16],
+    skipped: [u8; 24],
+}
+
 define_recv_packets!(
     enum PacketRef {
         _ = UbxUnknownPacketRef,
@@ -1847,6 +1869,8 @@ define_recv_packets!(
         InfTest,
         InfDebug,
         MonVer,
-        MonHw
+        MonHw,
+        RxmRTCM,
+        MonMsgpp,
     }
 );
