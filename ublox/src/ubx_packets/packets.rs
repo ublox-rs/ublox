@@ -1858,6 +1858,6 @@ define_recv_packets!(
         InfDebug,
         MonVer,
         MonHw,
-        RxmRTCM
+        RxmRtcm
     }
 );
