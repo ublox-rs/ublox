@@ -1781,7 +1781,7 @@ mod mon_ver {
 
 #[ubx_packet_recv]
 #[ubx(class = 0x02, id = 0x32, fixed_payload_len = 8)]
-struct RxmRTCM {
+struct RxmRtcm {
     version: u8,
     flags: u8,
     sub_type: u16,
