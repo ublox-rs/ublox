@@ -1784,7 +1784,7 @@ mod mon_ver {
             .iter()
             .position(|x| *x == 0)
             .expect("is_cstr_valid bug?");
-        core::str::from_utf8(&bytes[0..=null_pos])
+        core::str::from_utf8(&bytes[0..null_pos])
             .expect("is_cstr_valid should have prevented this code from running")
     }
 
@@ -1795,7 +1795,7 @@ mod mon_ver {
                 return false;
             }
         };
-        core::str::from_utf8(&bytes[0..=null_pos]).is_ok()
+        core::str::from_utf8(&bytes[0..null_pos]).is_ok()
     }
 
     pub(crate) fn is_extension_valid(payload: &[u8]) -> bool {
