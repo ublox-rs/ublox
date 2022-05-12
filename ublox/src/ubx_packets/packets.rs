@@ -764,8 +764,8 @@ bitflags! {
     flags = "default_for_builder"
 )]
 struct InfError{
-    #[ubx(map_type = Option<&str>, 
-        may_fail, 
+    #[ubx(map_type = Option<&str>,
+        may_fail,
         is_valid = inf::is_valid,
         from = inf::convert_to_str,
         get_as_ref)]
@@ -780,8 +780,8 @@ struct InfError{
     flags = "default_for_builder"
 )]
 struct InfNotice{
-    #[ubx(map_type = Option<&str>, 
-        may_fail, 
+    #[ubx(map_type = Option<&str>,
+        may_fail,
         is_valid = inf::is_valid,
         from = inf::convert_to_str,
         get_as_ref)]
@@ -796,8 +796,8 @@ struct InfNotice{
     flags = "default_for_builder"
 )]
 struct InfTest{
-    #[ubx(map_type = Option<&str>, 
-        may_fail, 
+    #[ubx(map_type = Option<&str>,
+        may_fail,
         is_valid = inf::is_valid,
         from = inf::convert_to_str,
         get_as_ref)]
@@ -812,8 +812,8 @@ struct InfTest{
     flags = "default_for_builder"
 )]
 struct InfWarning{
-    #[ubx(map_type = Option<&str>, 
-        may_fail, 
+    #[ubx(map_type = Option<&str>,
+        may_fail,
         is_valid = inf::is_valid,
         from = inf::convert_to_str,
         get_as_ref)]
@@ -828,8 +828,8 @@ struct InfWarning{
     flags = "default_for_builder"
 )]
 struct InfDebug{
-    #[ubx(map_type = Option<&str>, 
-        may_fail, 
+    #[ubx(map_type = Option<&str>,
+        may_fail,
         is_valid = inf::is_valid,
         from = inf::convert_to_str,
         get_as_ref)]
@@ -1608,7 +1608,7 @@ struct CfgNavX5 {
     reserved8: [u8; 4],
     reserved9: [u8; 3],
 
-    /// Enable/disable ADR/UDR sensor fusion 
+    /// Enable/disable ADR/UDR sensor fusion
     use_adr: u8,
 }
 
