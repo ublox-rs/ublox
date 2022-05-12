@@ -1097,9 +1097,12 @@ struct CfgPrtUart {
     portid: u8,
     reserved0: u8,
     tx_ready: u16,
+    #[ubx(map_type = UartMode)]
     mode: u32,
     baud_rate: u32,
+    #[ubx(map_type = InProtoMask)]
     in_proto_mask: u16,
+    #[ubx(map_type = OutProtoMask)]
     out_proto_mask: u16,
     flags: u16,
     reserved5: u16,
@@ -1113,6 +1116,137 @@ struct CfgPrtUart {
 pub enum UartPortId {
     Uart1 = 1,
     Uart2 = 2,
+}
+
+#[derive(Debug, Copy, Clone)]
+pub struct UartMode {
+    data_bits: DataBits,
+    parity: Parity,
+    stop_bits: StopBits,
+}
+
+impl UartMode {
+    pub const fn new(data_bits: DataBits, parity: Parity, stop_bits: StopBits) -> Self {
+        Self {
+            data_bits,
+            parity,
+            stop_bits,
+        }
+    }
+
+    const fn into_raw(self) -> u32 {
+        self.data_bits.into_raw() | self.parity.into_raw() | self.stop_bits.into_raw()
+    }
+}
+
+impl From<u32> for UartMode {
+    fn from(mode: u32) -> Self {
+        let data_bits = DataBits::from(mode);
+        let parity = Parity::from(mode);
+        let stop_bits = StopBits::from(mode);
+
+        Self {
+            data_bits,
+            parity,
+            stop_bits,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum DataBits {
+    Seven,
+    Eight,
+}
+
+impl DataBits {
+    const POSITION: u32 = 6;
+    const MASK: u32 = 0b11;
+
+    const fn into_raw(self) -> u32 {
+        (match self {
+            Self::Seven => 0b10,
+            Self::Eight => 0b11,
+        }) << Self::POSITION
+    }
+}
+
+impl From<u32> for DataBits {
+    fn from(mode: u32) -> Self {
+        match (mode >> Self::POSITION) & Self::MASK {
+            0b00 => unimplemented!("five data bits"),
+            0b01 => unimplemented!("six data bits"),
+            0b10 => Self::Seven,
+            0b11 => Self::Eight,
+            _ => unreachable!(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum Parity {
+    Even,
+    Odd,
+    None,
+}
+
+impl Parity {
+    const POSITION: u32 = 9;
+    const MASK: u32 = 0b111;
+
+    const fn into_raw(self) -> u32 {
+        (match self {
+            Self::Even => 0b000,
+            Self::Odd => 0b001,
+            Self::None => 0b100,
+        }) << Self::POSITION
+    }
+}
+
+impl From<u32> for Parity {
+    fn from(mode: u32) -> Self {
+        match (mode >> Self::POSITION) & Self::MASK {
+            0b000 => Self::Even,
+            0b001 => Self::Odd,
+            0b100 | 0b101 => Self::None,
+            0b010 | 0b011 | 0b110 | 0b111 => unimplemented!("reserved"),
+            _ => unreachable!(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum StopBits {
+    One,
+    OneHalf,
+    Two,
+    Half,
+}
+
+impl StopBits {
+    const POSITION: u32 = 12;
+    const MASK: u32 = 0b11;
+
+    const fn into_raw(self) -> u32 {
+        (match self {
+            Self::One => 0b00,
+            Self::OneHalf => 0b01,
+            Self::Two => 0b10,
+            Self::Half => 0b11,
+        }) << Self::POSITION
+    }
+}
+
+impl From<u32> for StopBits {
+    fn from(mode: u32) -> Self {
+        match (mode >> Self::POSITION) & Self::MASK {
+            0b00 => Self::One,
+            0b01 => Self::OneHalf,
+            0b10 => Self::Two,
+            0b11 => Self::Half,
+            _ => unreachable!(),
+        }
+    }
 }
 
 /// Port Configuration for SPI Port
