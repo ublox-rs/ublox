@@ -2,6 +2,7 @@ use super::{
     ubx_checksum, MemWriter, Position, UbxChecksumCalc, UbxPacketCreator, UbxPacketMeta,
     UbxUnknownPacketRef, SYNC_CHAR_1, SYNC_CHAR_2,
 };
+use crate::cfg_val::CfgVal;
 use crate::error::{MemWriterError, ParserError};
 use bitflags::bitflags;
 use chrono::prelude::*;
@@ -758,8 +759,8 @@ bitflags! {
         const ERROR = 0x1;
         const WARNING = 0x2;
         const NOTICE = 0x4;
-        const DEBUG = 0x08;
-        const TEST  = 0x10;
+        const TEST  = 0x08;
+        const DEBUG = 0x10;
     }
 }
 
@@ -1052,6 +1053,77 @@ pub enum ResetMode {
 impl ResetMode {
     const fn into_raw(self) -> u8 {
         self as u8
+    }
+}
+
+#[ubx_packet_send]
+#[ubx(
+  class = 0x06,
+  id = 0x8a,
+  max_payload_len = 772, // 4 + (4 + 8) * 64
+)]
+struct CfgValSet {
+    /// Message version
+    version: u8,
+    /// The layers from which the configuration items should be retrieved
+    #[ubx(map_type = CfgLayer)]
+    layers: u8,
+    reserved1: [u8; 2],
+    #[ubx(map_type = CfgValIter<'a>)]
+    cfg_data: [u8; 0],
+}
+
+#[derive(Debug, Clone)]
+pub struct CfgValIter<'a> {
+    pub(crate) data: &'a [u8],
+    pub(crate) offset: usize,
+}
+
+impl<'a> CfgValIter<'a> {
+    pub fn new(data: &'a mut [u8], values: &[CfgVal]) -> Self {
+        let mut offset = 0;
+
+        for value in values {
+            offset += value.write_to(&mut data[offset..]);
+        }
+
+        Self {
+            data: &data[..offset],
+            offset: 0,
+        }
+    }
+}
+
+impl<'a> core::iter::Iterator for CfgValIter<'a> {
+    type Item = CfgVal;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.offset < self.data.len() {
+            let cfg_val = CfgVal::parse(&self.data[self.offset..]);
+
+            self.offset += cfg_val.len();
+
+            Some(cfg_val)
+        } else {
+            None
+        }
+    }
+}
+
+#[ubx_extend_bitflags]
+#[ubx(from, into_raw, rest_reserved)]
+bitflags! {
+    /// A mask describing where configuration is applied.
+    pub struct CfgLayer: u8 {
+        const RAM = 0b001;
+        const BBR = 0b010;
+        const FLASH = 0b100;
+    }
+}
+
+impl Default for CfgLayer {
+    fn default() -> Self {
+        Self::RAM | Self::BBR | Self::FLASH
     }
 }
 
