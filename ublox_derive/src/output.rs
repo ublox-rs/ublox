@@ -236,11 +236,14 @@ pub fn generate_send_code_for_packet(pack_descr: &PackDesc) -> TokenStream {
 
         if size_bytes == 0 {
             // Iterator with `data` field.
-            pack_fields.push(quote! {
-                let bytes: &[u8] = self.#name.data;
+            extend_fields.push(quote! {
+                for f in self.#name {
+                  len_bytes += f.extend_to(out);
+                }
             });
 
             builder_needs_lifetime = true;
+            continue;
         } else {
             if let Some(into_fn) = f.map.map_type.as_ref().map(|x| &x.into_fn) {
                 pack_fields.push(quote! {

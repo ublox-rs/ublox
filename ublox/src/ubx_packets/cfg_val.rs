@@ -1,4 +1,4 @@
-use super::{CfgInfMask, DataBits, Parity, StopBits};
+use super::{AlignmentToReferenceTime, CfgInfMask, DataBits, Parity, StopBits};
 
 pub struct KeyId(u32);
 
@@ -52,6 +52,12 @@ macro_rules! from_cfg_v_bytes {
             _ => unreachable!(),
         }
     };
+    ($buf:expr, u8) => {
+        $buf[0]
+    };
+    ($buf:expr, u16) => {
+        u16::from_le_bytes([$buf[0], $buf[1]])
+    };
     ($buf:expr, u32) => {
         u32::from_le_bytes([$buf[0], $buf[1], $buf[2], $buf[3]])
     };
@@ -82,6 +88,16 @@ macro_rules! from_cfg_v_bytes {
             _ => unreachable!(),
         }
     };
+    ($buf:expr, AlignmentToReferenceTime) => {
+        match $buf[0] {
+            0 => AlignmentToReferenceTime::Utc,
+            1 => AlignmentToReferenceTime::Gps,
+            2 => AlignmentToReferenceTime::Glo,
+            3 => AlignmentToReferenceTime::Bds,
+            4 => AlignmentToReferenceTime::Gal,
+            _ => unreachable!(),
+        }
+    };
 }
 
 macro_rules! into_cfg_kv_bytes {
@@ -98,6 +114,13 @@ macro_rules! into_cfg_kv_bytes {
     ($this:expr, bool) => {
       into_cfg_kv_bytes!(@inner [$this.0 as u8])
     };
+    ($this:expr, u8) => {{
+      into_cfg_kv_bytes!(@inner [$this.0])
+    }};
+    ($this:expr, u16) => {{
+      let bytes = $this.0.to_le_bytes();
+      into_cfg_kv_bytes!(@inner [bytes[0], bytes[1]])
+    }};
     ($this:expr, u32) => {{
       let bytes = $this.0.to_le_bytes();
       into_cfg_kv_bytes!(@inner [bytes[0], bytes[1], bytes[2], bytes[3]])
@@ -134,6 +157,11 @@ macro_rules! into_cfg_kv_bytes {
         }
       ])
     };
+    ($this:expr, AlignmentToReferenceTime) => {
+      into_cfg_kv_bytes!(@inner [
+        $this.0 as u8
+      ])
+    }
 }
 
 macro_rules! cfg_val {
@@ -215,31 +243,60 @@ macro_rules! cfg_val {
 
 cfg_val! {
   // CFG-UART1
-  Uart1Baudrate,     0x40520001, u32,
-  Uart1StopBits,     0x20520002, StopBits,
-  Uart1DataBits,     0x20520003, DataBits,
-  Uart1Parity,       0x20520004, Parity,
-  Uart1Enabled,      0x10520005, bool,
+  Uart1Baudrate,        0x40520001, u32,
+  Uart1StopBits,        0x20520002, StopBits,
+  Uart1DataBits,        0x20520003, DataBits,
+  Uart1Parity,          0x20520004, Parity,
+  Uart1Enabled,         0x10520005, bool,
 
   // CFG-UART1INPROT
-  Uart1InProtUbx,    0x10730001, bool,
-  Uart1InProtNmea,   0x10730002, bool,
-  Uart1InProtRtcm3x, 0x10730004, bool,
+  Uart1InProtUbx,       0x10730001, bool,
+  Uart1InProtNmea,      0x10730002, bool,
+  Uart1InProtRtcm3x,    0x10730004, bool,
 
   // CFG-UART1OUTPROT
-  Uart1OutProtUbx,    0x10740001, bool,
-  Uart1OutProtNmea,   0x10740002, bool,
-  Uart1OutProtRtcm3x, 0x10740004, bool,
+  Uart1OutProtUbx,       0x10740001, bool,
+  Uart1OutProtNmea,      0x10740002, bool,
+  Uart1OutProtRtcm3x,    0x10740004, bool,
 
   // CFG-INFMSG
-  InfmsgUbxI2c,    0x20920001, CfgInfMask,
-  InfmsgUbxUart1,  0x20920002, CfgInfMask,
-  InfmsgUbxUart2,  0x20920003, CfgInfMask,
-  InfmsgUbxUsb,    0x20920004, CfgInfMask,
-  InfmsgUbxSpi,    0x20920005, CfgInfMask,
-  InfmsgNmeaI2c,   0x20920006, CfgInfMask,
-  InfmsgNmeaUart1, 0x20920007, CfgInfMask,
-  InfmsgNmeaUart2, 0x20920008, CfgInfMask,
-  InfmsgNmeaUsb,   0x20920009, CfgInfMask,
-  InfmsgNmeaSpi,   0x2092000a, CfgInfMask,
+  InfmsgUbxI2c,          0x20920001, CfgInfMask,
+  InfmsgUbxUart1,        0x20920002, CfgInfMask,
+  InfmsgUbxUart2,        0x20920003, CfgInfMask,
+  InfmsgUbxUsb,          0x20920004, CfgInfMask,
+  InfmsgUbxSpi,          0x20920005, CfgInfMask,
+  InfmsgNmeaI2c,         0x20920006, CfgInfMask,
+  InfmsgNmeaUart1,       0x20920007, CfgInfMask,
+  InfmsgNmeaUart2,       0x20920008, CfgInfMask,
+  InfmsgNmeaUsb,         0x20920009, CfgInfMask,
+  InfmsgNmeaSpi,         0x2092000a, CfgInfMask,
+
+  // CFG-RATE-*
+  RateMeas,              0x30210001, u16,
+  RateNav,               0x30210002, u16,
+  RateTimeref,           0x20210003, AlignmentToReferenceTime,
+
+  // CFG-MSGOUT-*
+  MsgoutUbxRxmRawxI2x,   0x209102a4, u8,
+  MsgoutUbxRxmRawxSpi,   0x209102a8, u8,
+  MsgoutUbxRxmRawxUart1, 0x209102a5, u8,
+  MsgoutUbxRxmRawxUart2, 0x209102a6, u8,
+  MsgoutUbxRxmRawxUsb,   0x209102a7, u8,
+
+  // CFG-SIGNAL-*
+  SignalGpsEna,          0x1031001f, bool,
+  SignalGpsL1caEna,      0x10310001, bool,
+  SignalGpsL2cEna,       0x10310003, bool,
+  SignalGalEna,          0x10310021, bool,
+  SignalGalE1Ena,        0x10310007, bool,
+  SignalGalE5bEna,       0x1031000a, bool,
+  SignalBdsEna,          0x10310022, bool,
+  SignalBdsB1Ena,        0x1031000d, bool,
+  SignalBdsB2Ena,        0x1031000e, bool,
+  SignalQzssEna,         0x10310024, bool,
+  SignalQzssL1caEna,     0x10310012, bool,
+  SignalQzssL2cEna,      0x10310015, bool,
+  SignalGloEna,          0x10310025, bool,
+  SignalGloL1Ena,        0x10310018, bool,
+  SignalGLoL2Ena,        0x1031001a, bool,
 }

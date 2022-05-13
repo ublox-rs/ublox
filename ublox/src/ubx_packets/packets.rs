@@ -1062,15 +1062,14 @@ impl ResetMode {
   id = 0x8a,
   max_payload_len = 772, // 4 + (4 + 8) * 64
 )]
-struct CfgValSet {
+struct CfgValSet<'a> {
     /// Message version
     version: u8,
     /// The layers from which the configuration items should be retrieved
     #[ubx(map_type = CfgLayer)]
     layers: u8,
     reserved1: [u8; 2],
-    #[ubx(map_type = CfgValIter<'a>)]
-    cfg_data: [u8; 0],
+    cfg_data: &'a [CfgVal],
 }
 
 #[derive(Debug, Clone)]
@@ -1474,6 +1473,9 @@ struct CfgRate {
 pub enum AlignmentToReferenceTime {
     Utc = 0,
     Gps = 1,
+    Glo = 2,
+    Bds = 3,
+    Gal = 4,
 }
 
 impl AlignmentToReferenceTime {
