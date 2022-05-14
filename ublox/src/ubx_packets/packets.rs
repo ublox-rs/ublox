@@ -1899,6 +1899,114 @@ pub enum MsgAckInfoCode {
     RejectedUnknownType = 6,
 }
 
+#[ubx_packet_recv]
+#[ubx(class = 0x02, id = 0x15, max_payload_len = 8176)] // 16 + 255 * 32
+struct RxmRawx {
+    /// Measurement time of week in receiver local time approximately aligned to the GPS time system.
+    rcv_tow: f64,
+    /// GPS week number in receiver local time.
+    week: u16,
+    /// GPS leap seconds (GPS-UTC)
+    leap_s: i8,
+    /// Number of measurements to follow
+    num_meas: u8,
+    /// Receiver tracking status bitfield
+    #[ubx(map_type = RecStat)]
+    rec_stat: u8,
+    /// Message version
+    version: u8,
+    reserved1: [u8; 2],
+    /// Extended software information strings
+    #[ubx(map_type = MeasurementIter, may_fail,
+          from = Measurement::to_iter,
+          is_valid = Measurement::is_valid)]
+    measurements: [u8; 0],
+}
+
+#[ubx_extend_bitflags]
+#[ubx(from, into_raw, rest_reserved)]
+bitflags! {
+    /// `CfgNavX5Params2` parameters bitmask
+    #[derive(Default)]
+    pub struct RecStat: u8 {
+        /// Leap seconds have been determined
+        const LEAP_SEC = 0x1;
+        /// Clock reset applied.
+        const CLK_RESET = 0x2;
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct MeasurementIter<'a> {
+    data: &'a [u8],
+    offset: usize,
+}
+
+#[derive(Debug, Clone)]
+pub struct Measurement {
+    pr_mes: f64,
+    cp_mes: f64,
+    do_mes: f32,
+    gnss_id: u8,
+    sv_id: u8,
+    sig_id: u8,
+    freq_id: u8,
+    lock_time: u16,
+    cno: u8,
+    pr_stdev: u8,
+    cp_stdev: u8,
+    do_stdev: u8,
+    trk_stat: u8,
+    reserved2: u8,
+}
+
+impl Measurement {
+    pub(crate) fn is_valid(payload: &[u8]) -> bool {
+        payload.len() % 32 == 0
+    }
+
+    pub(crate) fn to_iter(payload: &[u8]) -> MeasurementIter {
+        MeasurementIter {
+            data: payload,
+            offset: 0,
+        }
+    }
+}
+
+impl<'a> core::iter::Iterator for MeasurementIter<'a> {
+    type Item = Measurement;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.offset < self.data.len() {
+            let data = &self.data[self.offset..(self.offset + 32)];
+            self.offset += 32;
+
+            Some(Measurement {
+                pr_mes: f64::from_le_bytes([
+                    data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7],
+                ]),
+                cp_mes: f64::from_le_bytes([
+                    data[8], data[9], data[10], data[11], data[12], data[13], data[14], data[15],
+                ]),
+                do_mes: f32::from_le_bytes([data[16], data[17], data[18], data[19]]),
+                gnss_id: data[20],
+                sv_id: data[21],
+                sig_id: data[22],
+                freq_id: data[23],
+                lock_time: u16::from_le_bytes([data[24], data[25]]),
+                cno: data[26],
+                pr_stdev: data[27],
+                cp_stdev: data[28],
+                do_stdev: data[29],
+                trk_stat: data[30],
+                reserved2: data[31],
+            })
+        } else {
+            None
+        }
+    }
+}
+
 /// Hardware status
 #[ubx_packet_recv]
 #[ubx(class = 0x0a, id = 0x09, fixed_payload_len = 60)]
@@ -2069,6 +2177,7 @@ define_recv_packets!(
         InfNotice,
         InfTest,
         InfDebug,
+        RxmRawx,
         MonVer,
         MonHw,
         RxmRtcm
