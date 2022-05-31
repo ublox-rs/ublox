@@ -58,6 +58,9 @@ macro_rules! from_cfg_v_bytes {
     ($buf:expr, u16) => {
         u16::from_le_bytes([$buf[0], $buf[1]])
     };
+    ($buf:expr, i16) => {
+      i16::from_le_bytes([$buf[0], $buf[1]])
+    };
     ($buf:expr, u32) => {
         u32::from_le_bytes([$buf[0], $buf[1], $buf[2], $buf[3]])
     };
@@ -98,6 +101,20 @@ macro_rules! from_cfg_v_bytes {
             _ => unreachable!(),
         }
     };
+    ($buf:expr, TpPulse) => {
+      match $buf[0] {
+          0 => TpPulse::Period,
+          1 => TpPulse::Freq,
+          _ => unreachable!(),
+      }
+    };
+    ($buf:expr, TpPulseLength) => {
+      match $buf[0] {
+          0 => TpPulseLength::Ratio,
+          1 => TpPulseLength::Length,
+          _ => unreachable!(),
+    }
+};
 }
 
 macro_rules! into_cfg_kv_bytes {
@@ -118,6 +135,10 @@ macro_rules! into_cfg_kv_bytes {
       into_cfg_kv_bytes!(@inner [$this.0])
     }};
     ($this:expr, u16) => {{
+      let bytes = $this.0.to_le_bytes();
+      into_cfg_kv_bytes!(@inner [bytes[0], bytes[1]])
+    }};
+    ($this:expr, i16) => {{
       let bytes = $this.0.to_le_bytes();
       into_cfg_kv_bytes!(@inner [bytes[0], bytes[1]])
     }};
@@ -159,9 +180,19 @@ macro_rules! into_cfg_kv_bytes {
     };
     ($this:expr, AlignmentToReferenceTime) => {
       into_cfg_kv_bytes!(@inner [
-        $this.0 as u8
+          $this.0 as u8
       ])
-    }
+    };
+    ($this:expr, TpPulse) => {
+      into_cfg_kv_bytes!(@inner [
+          $this.0 as u8
+      ])
+    };
+    ($this:expr, TpPulseLength) => {
+      into_cfg_kv_bytes!(@inner [
+          $this.0 as u8
+      ])
+    };
 }
 
 macro_rules! cfg_val {
@@ -277,11 +308,83 @@ cfg_val! {
   RateTimeref,           0x20210003, AlignmentToReferenceTime,
 
   // CFG-MSGOUT-*
+  MsgoutNmeaIdGgaI2c,    0x209100ba, u8,
+  MsgoutNmeaIdGgaSpi,    0x209100be, u8,
+  MsgoutNmeaIdGgaUart1,  0x209100bb, u8,
+  MsgoutNmeaIdGgaUart2,  0x209100bc, u8,
+  MsgoutNmeaIdGgaUsb,    0x209100bd, u8,
+
+  MsgoutNmeaIdGllI2c,    0x209100c9, u8,
+  MsgoutNmeaIdGllSpi,    0x209100cd, u8,
+  MsgoutNmeaIdGllUart1,  0x209100ca, u8,
+  MsgoutNmeaIdGllUart2,  0x209100cb, u8,
+  MsgoutNmeaIdGllUsb,    0x209100cc, u8,
+
+  MsgoutNmeaIdGnsI2c,    0x209100b5, u8,
+  MsgoutNmeaIdGnsSpi,    0x209100b9, u8,
+  MsgoutNmeaIdGnsUart1,  0x209100b6, u8,
+  MsgoutNmeaIdGnsUart2,  0x209100b7, u8,
+  MsgoutNmeaIdGnsUsb,    0x209100b8, u8,
+
+  MsgoutNmeaIdGrsI2c,    0x209100ce, u8,
+  MsgoutNmeaIdGrsSpi,    0x209100d2, u8,
+  MsgoutNmeaIdGrsUart1,  0x209100cf, u8,
+  MsgoutNmeaIdGrsUart2,  0x209100d0, u8,
+  MsgoutNmeaIdGrsUsb,    0x209100d1, u8,
+
+  MsgoutNmeaIdGsaI2c,    0x209100bf, u8,
+  MsgoutNmeaIdGsaSpi,    0x209100c3, u8,
+  MsgoutNmeaIdGsaUart1,  0x209100c0, u8,
+  MsgoutNmeaIdGsaUart2,  0x209100c1, u8,
+  MsgoutNmeaIdGsaUsb,    0x209100c2, u8,
+
+  MsgoutNmeaIdGstI2c,    0x209100d3, u8,
+  MsgoutNmeaIdGstSpi,    0x209100d7, u8,
+  MsgoutNmeaIdGstUart1,  0x209100d4, u8,
+  MsgoutNmeaIdGstUart2,  0x209100d5, u8,
+  MsgoutNmeaIdGstUsb,    0x209100d6, u8,
+
+  MsgoutNmeaIdGsvI2c,    0x209100c4, u8,
+  MsgoutNmeaIdGsvSpi,    0x209100c8, u8,
+  MsgoutNmeaIdGsvUart1,  0x209100c5, u8,
+  MsgoutNmeaIdGsvUart2,  0x209100c6, u8,
+  MsgoutNmeaIdGsvUsb,    0x209100c7, u8,
+
+  MsgoutNmeaIdRmcI2c,    0x209100ab, u8,
+  MsgoutNmeaIdRmcSpi,    0x209100af, u8,
+  MsgoutNmeaIdRmcUart1,  0x209100ac, u8,
+  MsgoutNmeaIdRmcUart2,  0x209100ad, u8,
+  MsgoutNmeaIdRmcUsb,    0x209100ae, u8,
+
+  MsgoutNmeaIdVlwI2c,    0x209100e7, u8,
+  MsgoutNmeaIdVlwSpi,    0x209100eb, u8,
+  MsgoutNmeaIdVlwUart1,  0x209100e8, u8,
+  MsgoutNmeaIdVlwUart2,  0x209100e9, u8,
+  MsgoutNmeaIdVlwUsb,    0x209100ea, u8,
+
+  MsgoutNmeaIdVtgI2c,    0x209100b0, u8,
+  MsgoutNmeaIdVtgSpi,    0x209100b4, u8,
+  MsgoutNmeaIdVtgUart1,  0x209100b1, u8,
+  MsgoutNmeaIdVtgUart2,  0x209100b2, u8,
+  MsgoutNmeaIdVtgUsb,    0x209100b3, u8,
+
+  MsgoutNmeaIdZdaI2c,    0x209100d8, u8,
+  MsgoutNmeaIdZdaSpi,    0x209100dc, u8,
+  MsgoutNmeaIdZdaUart1,  0x209100d9, u8,
+  MsgoutNmeaIdZdaUart2,  0x209100da, u8,
+  MsgoutNmeaIdZdaUsb,    0x209100db, u8,
+
   MsgoutUbxRxmRawxI2x,   0x209102a4, u8,
   MsgoutUbxRxmRawxSpi,   0x209102a8, u8,
   MsgoutUbxRxmRawxUart1, 0x209102a5, u8,
   MsgoutUbxRxmRawxUart2, 0x209102a6, u8,
   MsgoutUbxRxmRawxUsb,   0x209102a7, u8,
+
+  MsgoutUbxTimTpI2c,     0x2091017d, u8,
+  MsgoutUbxTimTpSpi,     0x20910181, u8,
+  MsgoutUbxTimTpUart1,   0x2091017e, u8,
+  MsgoutUbxTimTpUart2,   0x2091017f, u8,
+  MsgoutUbxTimTpUsb,     0x20910180, u8,
 
   // CFG-SIGNAL-*
   SignalGpsEna,          0x1031001f, bool,
@@ -299,4 +402,37 @@ cfg_val! {
   SignalGloEna,          0x10310025, bool,
   SignalGloL1Ena,        0x10310018, bool,
   SignalGLoL2Ena,        0x1031001a, bool,
+
+  // CFG-TP-*
+  TpPulseDef,            0x20050023, TpPulse,
+  TpPulseLengthDef,      0x20050030, TpPulseLength,
+  TpAntCableDelay,       0x30050001, i16,
+  TpPeriodTp1,           0x40050002, u32,
+  TpPeriodLockTp1,       0x40050003, u32,
+  TpFreqTp1,             0x40050024, u32,
+  TpFreqLockTp1,         0x40050025, u32,
+  TpLenTp1,              0x40050004, u32,
+  TpLenLockTp1,          0x40050005, u32,
+  TpTp1Ena,              0x10050007, bool,
+  TpSyncGnssTp1,         0x10050008, bool,
+  TpUseLockedTp1,        0x10050009, bool,
+  TpAlignToTowTp1,       0x1005000a, bool,
+  TpPolTp1,              0x1005000b, bool,
+  TpTimegridTp1,         0x2005000c, AlignmentToReferenceTime,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum TpPulse {
+  /// Time pulse period
+  Period = 0,
+  /// Time pulse frequency
+  Freq = 1,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum TpPulseLength {
+  /// Time pulse ratio
+  Ratio = 0,
+  /// Time pulse length
+  Length = 1,
 }
