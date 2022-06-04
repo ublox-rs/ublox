@@ -431,7 +431,7 @@ impl NavSatSvFlags {
         match bits {
             1 => NavSatSvHealth::Healthy,
             2 => NavSatSvHealth::Unhealthy,
-            x => NavSatSvHealth::Unknown(x as u8)
+            x => NavSatSvHealth::Unknown(x as u8),
         }
     }
 
@@ -510,7 +510,10 @@ impl fmt::Debug for NavSatSvFlags {
             .field("quality_ind", &self.quality_ind())
             .field("sv_used", &self.sv_used())
             .field("health", &self.health())
-            .field("differential_correction_available", &self.differential_correction_available())
+            .field(
+                "differential_correction_available",
+                &self.differential_correction_available(),
+            )
             .field("smoothed", &self.smoothed())
             .field("orbit_source", &self.orbit_source())
             .field("ephemeris_available", &self.ephemeris_available())
@@ -593,7 +596,7 @@ impl<'a> core::iter::Iterator for NavSatIter<'a> {
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.offset < self.data.len() {
-            let data = &self.data[self.offset..self.offset+12];
+            let data = &self.data[self.offset..self.offset + 12];
             self.offset += 12;
             Some(NavSatSvInfoRef(data))
         } else {
@@ -604,8 +607,7 @@ impl<'a> core::iter::Iterator for NavSatIter<'a> {
 
 impl fmt::Debug for NavSatIter<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("NavSatIter")
-            .finish()
+        f.debug_struct("NavSatIter").finish()
     }
 }
 
@@ -627,7 +629,7 @@ struct NavSat {
         is_valid = navsat::is_valid,
         from = navsat::convert_to_iter,
         get_as_ref)]
-    svs: [u8; 0]
+    svs: [u8; 0],
 }
 
 mod navsat {
@@ -660,11 +662,16 @@ struct NavOdo {
 /// Reset odometer
 #[ubx_packet_send]
 #[ubx(class = 0x01, id = 0x10, fixed_payload_len = 0)]
-struct NavResetOdo { }
+struct NavResetOdo {}
 
 /// Configure odometer
 #[ubx_packet_recv_send]
-#[ubx(class = 0x06, id = 0x1E, fixed_payload_len = 20, flags = "default_for_builder")]
+#[ubx(
+    class = 0x06,
+    id = 0x1E,
+    fixed_payload_len = 20,
+    flags = "default_for_builder"
+)]
 struct CfgOdo {
     version: u8,
     reserved: [u8; 3],
@@ -763,13 +770,13 @@ bitflags! {
     max_payload_len = 1240,
     flags = "default_for_builder"
 )]
-struct InfError{
+struct InfError {
     #[ubx(map_type = Option<&str>,
         may_fail,
         is_valid = inf::is_valid,
         from = inf::convert_to_str,
         get_as_ref)]
-    message: [u8; 0]
+    message: [u8; 0],
 }
 
 #[ubx_packet_recv]
@@ -779,13 +786,13 @@ struct InfError{
     max_payload_len = 1240,
     flags = "default_for_builder"
 )]
-struct InfNotice{
+struct InfNotice {
     #[ubx(map_type = Option<&str>,
         may_fail,
         is_valid = inf::is_valid,
         from = inf::convert_to_str,
         get_as_ref)]
-    message: [u8; 0]
+    message: [u8; 0],
 }
 
 #[ubx_packet_recv]
@@ -795,13 +802,13 @@ struct InfNotice{
     max_payload_len = 1240,
     flags = "default_for_builder"
 )]
-struct InfTest{
+struct InfTest {
     #[ubx(map_type = Option<&str>,
         may_fail,
         is_valid = inf::is_valid,
         from = inf::convert_to_str,
         get_as_ref)]
-    message: [u8; 0]
+    message: [u8; 0],
 }
 
 #[ubx_packet_recv]
@@ -811,13 +818,13 @@ struct InfTest{
     max_payload_len = 1240,
     flags = "default_for_builder"
 )]
-struct InfWarning{
+struct InfWarning {
     #[ubx(map_type = Option<&str>,
         may_fail,
         is_valid = inf::is_valid,
         from = inf::convert_to_str,
         get_as_ref)]
-    message: [u8; 0]
+    message: [u8; 0],
 }
 
 #[ubx_packet_recv]
@@ -827,18 +834,17 @@ struct InfWarning{
     max_payload_len = 1240,
     flags = "default_for_builder"
 )]
-struct InfDebug{
+struct InfDebug {
     #[ubx(map_type = Option<&str>,
         may_fail,
         is_valid = inf::is_valid,
         from = inf::convert_to_str,
         get_as_ref)]
-    message: [u8; 0]
+    message: [u8; 0],
 }
 
-
 mod inf {
-	pub(crate) fn convert_to_str(bytes: &[u8]) -> Option<&str> {
+    pub(crate) fn convert_to_str(bytes: &[u8]) -> Option<&str> {
         match core::str::from_utf8(bytes) {
             Ok(msg) => Some(msg),
             Err(_) => None,
@@ -1802,7 +1808,7 @@ struct MgaAck {
     msg_id: u8,
 
     /// The first 4 bytes of the acknowledged message's payload
-    msg_payload_start: [u8; 4]
+    msg_payload_start: [u8; 4],
 }
 
 #[ubx_extend]
@@ -1814,7 +1820,7 @@ pub enum MsgAckInfoCode {
     RejectedNoTime = 1,
     RejectedBadVersion = 2,
     RejectedBadSize = 3,
-    RejectedDBStoreFailed= 4,
+    RejectedDBStoreFailed = 4,
     RejectedNotReady = 5,
     RejectedUnknownType = 6,
 }
@@ -1876,7 +1882,7 @@ impl<'a> core::iter::Iterator for MonVerExtensionIter<'a> {
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.offset < self.data.len() {
-            let data = &self.data[self.offset..self.offset+30];
+            let data = &self.data[self.offset..self.offset + 30];
             self.offset += 30;
             Some(mon_ver::convert_to_str_unchecked(data))
         } else {
@@ -1887,8 +1893,7 @@ impl<'a> core::iter::Iterator for MonVerExtensionIter<'a> {
 
 impl fmt::Debug for MonVerExtensionIter<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("MonVerExtensionIter")
-            .finish()
+        f.debug_struct("MonVerExtensionIter").finish()
     }
 }
 
