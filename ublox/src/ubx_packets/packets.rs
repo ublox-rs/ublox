@@ -1302,7 +1302,7 @@ bitflags! {
     /// Used in `CfgPrtSpi` and `CfgPrtI2c`
     #[derive(Default)]
     pub struct OutProtoMask: u16 {
-        const UBOX = 1;
+        const UBLOX = 1;
         const NMEA = 2;
         /// The bitfield outRtcm3 is not supported in protocol
         /// versions less than 20
