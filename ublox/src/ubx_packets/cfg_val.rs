@@ -209,7 +209,7 @@ macro_rules! cfg_val {
       pub const fn len(&self) -> usize {
         match self {
           $(
-            Self::$cfg_item(value) => {
+            Self::$cfg_item(_) => {
               $cfg_item::SIZE
             }
           )*
