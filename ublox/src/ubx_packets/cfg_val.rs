@@ -198,6 +198,7 @@ macro_rules! into_cfg_kv_bytes {
 macro_rules! cfg_val {
   ($($cfg_item:ident, $cfg_key_id:expr, $cfg_value_type:ident,)*) => {
     #[derive(Debug, Clone, Copy)]
+    #[non_exhaustive]
     pub enum CfgVal {
       $(
         $cfg_item($cfg_value_type),
