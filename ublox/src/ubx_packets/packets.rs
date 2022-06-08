@@ -1944,20 +1944,20 @@ pub struct MeasurementIter<'a> {
 
 #[derive(Debug, Clone)]
 pub struct Measurement {
-    pr_mes: f64,
-    cp_mes: f64,
-    do_mes: f32,
-    gnss_id: u8,
-    sv_id: u8,
-    sig_id: u8,
-    freq_id: u8,
-    lock_time: u16,
-    cno: u8,
-    pr_stdev: u8,
-    cp_stdev: u8,
-    do_stdev: u8,
-    trk_stat: u8,
-    reserved2: u8,
+    pub pr_mes: f64,
+    pub cp_mes: f64,
+    pub do_mes: f32,
+    pub gnss_id: u8,
+    pub sv_id: u8,
+    pub sig_id: u8,
+    pub freq_id: u8,
+    pub lock_time: u16,
+    pub cno: u8,
+    pub pr_stdev: u8,
+    pub cp_stdev: u8,
+    pub do_stdev: u8,
+    pub trk_stat: u8,
+    pub reserved2: u8,
 }
 
 impl Measurement {
