@@ -175,6 +175,7 @@ pub fn generate_recv_code_for_packet(pack_descr: &PackDesc) -> TokenStream {
         #[doc = "Contains a reference to an underlying buffer, contains accessor methods to retrieve data."]
         pub struct #ref_name<'a>(&'a [u8]);
         impl<'a> #ref_name<'a> {
+            #[inline]
             pub fn as_bytes(&self) -> &[u8] {
                 self.0
             }
@@ -361,7 +362,7 @@ pub fn generate_send_code_for_packet(pack_descr: &PackDesc) -> TokenStream {
     } else {
         ret.extend(quote! {
           impl #payload_struct_lifetime #payload_struct #payload_struct_lifetime {
-            #[inline]
+              #[inline]
               pub fn extend_to<T>(self, out: &mut T)
               where
                  T: core::iter::Extend<u8> +
