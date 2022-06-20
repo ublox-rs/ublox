@@ -997,6 +997,222 @@ bitflags! {
     }
 }
 
+/// Time MODE2 Config Frame (32.10.36.1)
+/// only available on `timing` receivers
+#[ubx_packet_send]
+#[ubx(class = 6, id = 0x3D, fixed_payload_len = 28)]
+struct CfgTMode2 {
+    /// Time transfer modes, see [TimeModes] for details
+    #[ubx(map_type = TimeTransferModes)]
+    time_transfer_mode: u8,
+    reserved1: u8,
+    #[ubx(map_type = TimeMode2Flags)] 
+    flags: u16,
+    /// WGS84 ECEF.x coordinate or latitude,
+    /// depending on `flags` field 
+    #[ubx(map_type = f64, scale = 1e-2)]
+    ecef_x_or_lat: i32,
+    /// WGS84 ECEF.y coordinate or longitude,
+    /// depending on `flags` field 
+    #[ubx(map_type = f64, scale = 1e-2)]
+    ecef_y_or_lon: i32,
+    /// WGS84 ECEF.z coordinate or altitude,
+    /// depending on `flags` field 
+    #[ubx(map_type = f64, scale = 1e-2)]
+    ecef_z_or_alt: i32,
+    /// Fixed position 3D accuracy [mm]
+    #[ubx(map_type = f64, scale = 1e-3)]
+    fixed_pos_acc: u32,
+    /// Survey in minimum duration [s]
+    survey_in_min_duration: u32,
+    /// Survey in position accuracy limit [mm]
+    #[ubx(map_type = f64, scale = 1e-3)]
+    survery_in_accur_limit: u32,
+}
+
+#[ubx_extend]
+#[ubx(from, into_raw, rest_reserved)]
+#[repr(u8)]
+#[derive(Debug, Copy, Clone, PartialEq)]
+/// Time transfer modes (32.10.36)
+pub enum TimeTransferModes {
+    Disabled = 0,
+    SurveyIn = 1,
+    /// True position information required
+    /// when using `fixed mode`
+    FixedMode = 2,
+}
+
+#[ubx_extend_bitflags]
+#[ubx(into_raw, rest_reserved)]
+bitflags! {
+    #[derive(Default)]
+    pub struct TimeMode2Flags :u16 {
+        /// Position given in LAT/LON/ALT
+        /// default being WGS84 ECEF
+        const LLA = 0x01;
+        /// In case LLA was set, Altitude value is not valid
+        const ALT_INVALID = 0x02;
+    }
+}
+
+/// Time MODE3 Config Frame (32.10.37.1)
+/// only available on `timing` receivers
+#[ubx_packet_send]
+#[ubx(class = 6, id = 0x71, fixed_payload_len = 40)] 
+struct CfgTMode3 {
+    version: u8,
+    reserved1: u8,
+    #[ubx(map_type = TimeMode3Flags)] 
+    flags: u16,
+    /// WGS84 ECEF.x coordinate or latitude,
+    /// depending on `flags` field 
+    #[ubx(map_type = f64, scale = 1e-2)]
+    ecef_x_or_lat: i32,
+    /// WGS84 ECEF.y coordinate or longitude,
+    /// depending on `flags` field 
+    #[ubx(map_type = f64, scale = 1e-2)]
+    ecef_y_or_lon: i32,
+    /// WGS84 ECEF.z coordinate or altitude,
+    /// depending on `flags` field 
+    #[ubx(map_type = f64, scale = 1e-2)]
+    ecef_z_or_alt: i32,
+    /// High precision WGS84 ECEF.x coordinate or latitude,
+    /// depending on `flags` field.
+    /// Must be in range [-99, +99]
+    #[ubx(map_type = f32, scale = 1e-4)]
+    ecef_x_or_lat_hp: i8,
+    /// High precision WGS84 ECEF.y coordinate or longitude,
+    /// depending on `flags` field.
+    /// Must be in range [-99, +99]
+    #[ubx(map_type = f32, scale = 1e-4)]
+    ecef_y_or_lon_hp: i8,
+    /// High precision WGS84 ECEF.z coordinate or altitude,
+    /// depending on `flags` field.
+    /// Must be in range [-99, +99]
+    #[ubx(map_type = f32, scale = 1e-4)]
+    ecef_z_or_alt_hp: i8,
+    reserved2: u8,
+    /// Fixed position 3D accuracy [0.1 mm]
+    #[ubx(map_type = f64, scale = 1e-4)]
+    fixed_pos_acc: u32,
+    /// Survey in minimum duration [s]
+    sv_in_min_duration: u32,
+    /// Survey in position accuracy limit [0.1 mm]
+    #[ubx(map_type = f64, scale = 1e-4)]
+    sv_in_accur_limit: u32,
+    reserved3: [u8; 8],
+}
+
+#[ubx_extend_bitflags]
+#[ubx(into_raw, rest_reserved)]
+bitflags! {
+    #[derive(Default)]
+    pub struct TimeMode3Flags : u16 {
+        const DISABLED = 0x01;
+        const SURVEY_IN = 0x02;
+        const FIXED_MODE = 0x04;
+    }
+}
+
+/// TP5: "Time Pulse" Config frame (32.10.38.4)
+#[ubx_packet_send]
+#[ubx(class = 6, id = 0x31, fixed_payload_len = 32)]
+pub struct CfgTp5 {
+    #[ubx(map_type = TimePulseMode)]
+    tp_idx: u8,
+    version: u8,
+    reserved1: [u8; 2],
+    /// Antenna cable delay [ns]
+    #[ubx(map_type = f32, scale = 1e-9)]
+    ant_cable_delay: i16,
+    /// RF group delay [ns]
+    #[ubx(map_type = f32, scale = 1e-9)]
+    rf_group_delay: i16,
+    /// Frequency or Period time depending
+    /// on `isFreq` bit
+    #[ubx(map_type = f64, scale = 1e-6)]
+    freq_period: u32, 
+    /// Frequency or Period time when locked [Hz] or [us]
+    /// to GNSS time, only used if `LockedOtherSet` bit is set
+    #[ubx(map_type = f64, scale = 1e-6)]
+    freq_period_lock: u32, 
+    /// Pulse length or duty cycle, [us] or [*2^-32]
+    /// depending on `isLength` bit
+    #[ubx(map_type = f64, scale = 1e-6)]
+    pulse_len_ratio: u32,
+    /// Pulse Length or duty cycle [us] or [*2^-32], 
+    /// when locked to GNSS time,
+    /// only used if `LockedOtherSet` bit is set
+    #[ubx(map_type = f64, scale = 1e-6)]
+    pulse_len_ratio_locked: u32,
+    /// User configurable time pulse delay in [ns]
+    #[ubx(map_type = f64, scale = 1e-9)]
+    user_delay: i32,
+    /// Configuration flags, see [Tp5Flags]
+    flags: u32,
+}
+
+/// TimePulseMode used in CfgTp5 frame
+#[ubx_extend]
+#[ubx(into_raw)]
+#[repr(u8)]
+#[derive(Clone, Copy, Debug)]
+pub enum TimePulseMode {
+    TimePulse = 0,
+    TimePulse2 = 1,
+}
+
+#[ubx_extend_bitflags]
+#[ubx(into_raw, rest_reserved)]
+bitflags! {
+    pub struct Tp5Flags: u32 {
+        // Must be set for FTS variant,
+        // enables time pulse
+        const ACTIVE = 0x01;
+        /// Synchronize time pulse to GNSS as
+        /// soon as GNSS time is valid.
+        /// Use local lock otherwise
+        /// This bit is ignored by FTS product variants.
+        /// This flag can only be unset in Timing variants.
+        const LOCK_GNSS_FREQ = 0x02;
+        /// TODO
+        const LOCKED_OTHER_SET = 0x04;
+        /// Interprate frequency values instead of period values 
+        const IS_FREQ = 0x08;
+        /// Interprate pulse lengths instead of duty cycle
+        const IS_LENGTH = 0x10;
+        /// Align pulse to top of second
+        /// Period time must be integer fraction of `1sec`
+        /// `LOCK_GNSS_FREQ` is expected, to unlock this feature
+        const ALIGN_TO_TOW = 0x20;
+        /// Pulse polarity, 
+        /// 0: falling edge @ top of second,
+        /// 1: rising edge @ top of second,
+        const POLARITY = 0x40;
+        /// UTC time grid
+        const UTC_TIME_GRID = 0x80;
+        /// GPS time grid
+        const GPS_TIME_GRID = 0x100;
+        /// GLO time grid
+        const GLO_TIME_GRID = 0x200;
+        /// BDS time grid
+        const BDS_TIME_GRID = 0x400;
+        /// GAL time grid
+        /// not supported in protocol < 18
+        const GAL_TIME_GRID = 0x800;
+        /// Switches to FreqPeriodLock and PulseLenRatio
+        /// as soon as Sync Manager has an accurate time,
+        /// never switches back
+        const SYNC_MODE_0 = 0x1000;
+        /// Switches to FreqPeriodLock and PulseLenRatioLock
+        /// as soon as Sync Manager has an accurante time,
+        /// and switch back to FreqPeriodLock and PulseLenRatio
+        /// when time gets inaccurate
+        const SYNC_MODE_1 = 0x2000;
+    }
+}
+
 #[ubx_extend_bitflags]
 #[ubx(into_raw, rest_reserved)]
 bitflags! {
@@ -1628,6 +1844,27 @@ impl Default for CfgNav5UtcStandard {
 struct ScaleBack<T: FloatCore + FromPrimitive + ToPrimitive>(T);
 
 impl<T: FloatCore + FromPrimitive + ToPrimitive> ScaleBack<T> {
+    fn as_i8(self, x: T) -> i8 {
+        let x = (x * self.0).round();
+        if x < T::from_i8(i8::min_value()).unwrap() {
+            i8::min_value()
+        } else if x > T::from_i8(i8::max_value()).unwrap() {
+            i8::max_value()
+        } else {
+            x.to_i8().unwrap()
+        }
+    }
+    fn as_i16(self, x: T) -> i16 {
+        let x = (x * self.0).round();
+        if x < T::from_i16(i16::min_value()).unwrap() {
+            i16::min_value()
+        } else if x > T::from_i16(i16::max_value()).unwrap() {
+            i16::max_value()
+        } else {
+            x.to_i16().unwrap()
+        }
+    }
+
     fn as_i32(self, x: T) -> i32 {
         let x = (x * self.0).round();
         if x < T::from_i32(i32::min_value()).unwrap() {
