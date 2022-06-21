@@ -1079,8 +1079,11 @@ bitflags! {
 struct CfgTmode3 {
     version: u8,
     reserved1: u8,
+    /// Receiver mode, see [CfgTmode3RcvrMode] enum
+    #[ubx(map_type = CfgTmode3RcvrMode)]
+    rcvr_mode: u8,
     #[ubx(map_type = CfgTmode3Flags)] 
-    flags: u16,
+    flags: u8,
     /// WGS84 ECEF.x coordinate in [m] or latitude in [deg° *1E-5],
     /// depending on `flags` field 
     #[ubx(map_type = f64, scale = 1e-2)]
@@ -1124,10 +1127,22 @@ struct CfgTmode3 {
 #[ubx(from, into_raw, rest_reserved)]
 bitflags! {
     #[derive(Default)]
-    pub struct CfgTmode3Flags: u16 {
+    pub struct CfgTmode3RcvrMode: u8 {
         const DISABLED = 0x01;
         const SURVEY_IN = 0x02;
+        /// True ARP position is required in `FixedMode`
         const FIXED_MODE = 0x04;
+    }
+}
+
+#[ubx_extend_bitflags]
+#[ubx(from, into_raw, rest_reserved)]
+bitflags! {
+    #[derive(Default)]
+    pub struct CfgTmode3Flags: u8 {
+        /// Set if position is given in Lat/Lon/Alt,
+        /// ECEF coordinates being used otherwise
+        const LLA = 0x01;
     }
 }
 
