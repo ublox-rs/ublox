@@ -1139,7 +1139,7 @@ bitflags! {
     fixed_payload_len = 32,
     flags = "default_for_builder"
 )]
-pub struct CfgTp5 {
+struct CfgTp5 {
     #[ubx(map_type = CfgTp5TimePulseMode, may_fail)]
     tp_idx: u8,
     version: u8,
