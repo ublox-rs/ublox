@@ -1007,7 +1007,7 @@ bitflags! {
     flags = "default_for_builder"
 )]
 struct CfgTmode2 {
-    /// Time transfer modes, see [TimeModes] for details
+    /// Time transfer modes, see [CfgTmode2TimeXferModes] for details
     #[ubx(map_type = CfgTmode2TimeXferModes, may_fail)]
     time_transfer_mode: u8,
     reserved1: u8,
@@ -1194,18 +1194,18 @@ impl Default for CfgTp5TimePulseMode {
 #[ubx(into_raw, rest_reserved)]
 bitflags! {
     pub struct Tp5Flags: u32 {
-        // Must be set for FTS variant,
-        // enables time pulse
+        // Enables time pulse
         const ACTIVE = 0x01;
         /// Synchronize time pulse to GNSS as
         /// soon as GNSS time is valid.
-        /// Use local lock otherwise
-        /// This bit is ignored by FTS product variants.
-        /// This flag can only be unset in Timing variants.
+        /// Uses local lock otherwise.
         const LOCK_GNSS_FREQ = 0x02;
-        /// TODO
+        /// use `freq_period_lock` and `pulse_len_ratio_lock`
+        /// fields as soon as GPS time is valid. Uses 
+        /// `freq_period` and `pulse_len_ratio` when GPS time is invalid.
         const LOCKED_OTHER_SET = 0x04;
-        /// Interprate frequency values instead of period values 
+        /// `freq_period` and `pulse_len_ratio` fields
+        /// are interprated as frequency when this bit is set
         const IS_FREQ = 0x08;
         /// Interprate pulse lengths instead of duty cycle
         const IS_LENGTH = 0x10;
