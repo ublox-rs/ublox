@@ -1171,7 +1171,8 @@ struct CfgTp5 {
     /// User configurable time pulse delay in [ns]
     #[ubx(map_type = f64, scale = 1.0)]
     user_delay: i32,
-    /// Configuration flags, see [Tp5Flags]
+    /// Configuration flags, see [CfgTp5Flags]
+    #[ubx(map_type = CfgTp5Flags)]
     flags: u32,
 }
 
@@ -1192,9 +1193,10 @@ impl Default for CfgTp5TimePulseMode {
 }
 
 #[ubx_extend_bitflags]
-#[ubx(into_raw, rest_reserved)]
+#[ubx(from, into_raw, rest_reserved)]
 bitflags! {
-    pub struct Tp5Flags: u32 {
+    #[derive(Default)]
+    pub struct CfgTp5Flags: u32 {
         // Enables time pulse
         const ACTIVE = 0x01;
         /// Synchronize time pulse to GNSS as
