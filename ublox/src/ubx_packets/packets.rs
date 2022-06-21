@@ -1013,24 +1013,24 @@ struct CfgTmode2 {
     reserved1: u8,
     #[ubx(map_type = CfgTmode2Flags)] 
     flags: u16,
-    /// WGS84 ECEF.x coordinate or latitude,
+    /// WGS84 ECEF.x coordinate in [m] or latitude in [deg° *1E-5],
     /// depending on `flags` field 
     #[ubx(map_type = f64, scale = 1e-2)]
     ecef_x_or_lat: i32,
-    /// WGS84 ECEF.y coordinate or longitude,
+    /// WGS84 ECEF.y coordinate in [m] or longitude in [deg° *1E-5],
     /// depending on `flags` field 
     #[ubx(map_type = f64, scale = 1e-2)]
     ecef_y_or_lon: i32,
-    /// WGS84 ECEF.z coordinate or altitude,
+    /// WGS84 ECEF.z coordinate or altitude, both in [m],
     /// depending on `flags` field 
     #[ubx(map_type = f64, scale = 1e-2)]
     ecef_z_or_alt: i32,
-    /// Fixed position 3D accuracy [mm]
+    /// Fixed position 3D accuracy in [m]
     #[ubx(map_type = f64, scale = 1e-3)]
     fixed_pos_acc: u32,
-    /// Survey in minimum duration [s]
+    /// Survey in minimum duration in [s]
     survey_in_min_duration: u32,
-    /// Survey in position accuracy limit [mm]
+    /// Survey in position accuracy limit in [m]
     #[ubx(map_type = f64, scale = 1e-3)]
     survery_in_accur_limit: u32,
 }
@@ -1081,32 +1081,32 @@ struct CfgTmode3 {
     reserved1: u8,
     #[ubx(map_type = CfgTmode3Flags)] 
     flags: u16,
-    /// WGS84 ECEF.x coordinate or latitude,
+    /// WGS84 ECEF.x coordinate in [m] or latitude in [deg° *1E-5],
     /// depending on `flags` field 
     #[ubx(map_type = f64, scale = 1e-2)]
     ecef_x_or_lat: i32,
-    /// WGS84 ECEF.y coordinate or longitude,
+    /// WGS84 ECEF.y coordinate in [m] or longitude in [deg° *1E-5],
     /// depending on `flags` field 
     #[ubx(map_type = f64, scale = 1e-2)]
     ecef_y_or_lon: i32,
-    /// WGS84 ECEF.z coordinate or altitude,
+    /// WGS84 ECEF.z coordinate or altitude, both in [m], 
     /// depending on `flags` field 
     #[ubx(map_type = f64, scale = 1e-2)]
     ecef_z_or_alt: i32,
-    /// High precision WGS84 ECEF.x coordinate or latitude,
+    /// High precision WGS84 ECEF.x coordinate in [tenths of mm],
+    /// or high precision latitude, in nano degrees,
     /// depending on `flags` field.
-    /// Must be in range [-99, +99]
-    #[ubx(map_type = f32, scale = 1e-4)]
+    #[ubx(map_type = f32, scale = 1.0)]
     ecef_x_or_lat_hp: i8,
-    /// High precision WGS84 ECEF.y coordinate or longitude,
+    /// High precision WGS84 ECEF.y coordinate in [tenths of mm]
+    /// or high precision longitude, in nano degrees,
     /// depending on `flags` field.
-    /// Must be in range [-99, +99]
-    #[ubx(map_type = f32, scale = 1e-4)]
+    #[ubx(map_type = f32, scale = 1.0)]
     ecef_y_or_lon_hp: i8,
     /// High precision WGS84 ECEF.z coordinate or altitude,
+    /// both if tenths of [mm],
     /// depending on `flags` field.
-    /// Must be in range [-99, +99]
-    #[ubx(map_type = f32, scale = 1e-4)]
+    #[ubx(map_type = f32, scale = 1.0)]
     ecef_z_or_alt_hp: i8,
     reserved2: u8,
     /// Fixed position 3D accuracy [0.1 mm]
@@ -1145,30 +1145,31 @@ struct CfgTp5 {
     version: u8,
     reserved1: [u8; 2],
     /// Antenna cable delay [ns]
-    #[ubx(map_type = f32, scale = 1e-9)]
+    #[ubx(map_type = f32, scale = 1.0)]
     ant_cable_delay: i16,
     /// RF group delay [ns]
-    #[ubx(map_type = f32, scale = 1e-9)]
+    #[ubx(map_type = f32, scale = 1.0)]
     rf_group_delay: i16,
-    /// Frequency or Period time depending
-    /// on `isFreq` bit
-    #[ubx(map_type = f64, scale = 1e-6)]
+    /// Frequency in Hz or Period in us,
+    /// depending on `flags::IS_FREQ` bit
+    #[ubx(map_type = f64, scale = 1.0)]
     freq_period: u32, 
-    /// Frequency or Period time when locked [Hz] or [us]
-    /// to GNSS time, only used if `LockedOtherSet` bit is set
-    #[ubx(map_type = f64, scale = 1e-6)]
+    /// Frequency in Hz or Period in us,
+    /// when locked to GPS time.
+    /// Only used when `flags::LOCKED_OTHER_SET` is set
+    #[ubx(map_type = f64, scale = 1.0)]
     freq_period_lock: u32, 
-    /// Pulse length or duty cycle, [us] or [*2^-32]
-    /// depending on `isLength` bit
-    #[ubx(map_type = f64, scale = 1e-6)]
+    /// Pulse length or duty cycle, [us] or [*2^-32],
+    /// depending on `flags::LS_LENGTH` bit
+    #[ubx(map_type = f64, scale = 1.0)]
     pulse_len_ratio: u32,
-    /// Pulse Length or duty cycle [us] or [*2^-32], 
-    /// when locked to GNSS time,
-    /// only used if `LockedOtherSet` bit is set
-    #[ubx(map_type = f64, scale = 1e-6)]
-    pulse_len_ratio_locked: u32,
+    /// Pulse Length in us or duty cycle (*2^-32), 
+    /// when locked to GPS time.
+    /// Only used when `flags::LOCKED_OTHER_SET` is set
+    #[ubx(map_type = f64, scale = 1.0)]
+    pulse_len_ratio_lock: u32,
     /// User configurable time pulse delay in [ns]
-    #[ubx(map_type = f64, scale = 1e-9)]
+    #[ubx(map_type = f64, scale = 1.0)]
     user_delay: i32,
     /// Configuration flags, see [Tp5Flags]
     flags: u32,
