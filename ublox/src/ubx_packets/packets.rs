@@ -1174,7 +1174,7 @@ struct CfgTp5 {
     flags: u32,
 }
 
-/// TimePulseMode used in CfgTp5 frame
+/// Time pulse selection, used in CfgTp5 frame
 #[ubx_extend]
 #[ubx(from_unchecked, into_raw, rest_error)]
 #[repr(u8)]
