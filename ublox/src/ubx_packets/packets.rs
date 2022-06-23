@@ -997,6 +997,155 @@ bitflags! {
     }
 }
 
+/// Time MODE2 Config Frame (32.10.36.1)
+/// only available on `timing` receivers
+#[ubx_packet_recv_send]
+#[ubx(
+    class = 0x06, 
+    id = 0x3d, 
+    fixed_payload_len = 28, 
+    flags = "default_for_builder"
+)]
+struct CfgTmode2 {
+    /// Time transfer modes, see [CfgTmode2TimeXferModes] for details
+    #[ubx(map_type = CfgTmode2TimeXferModes, may_fail)]
+    time_transfer_mode: u8,
+    reserved1: u8,
+    #[ubx(map_type = CfgTmode2Flags)] 
+    flags: u16,
+    /// WGS84 ECEF.x coordinate in [m] or latitude in [deg° *1E-5],
+    /// depending on `flags` field 
+    #[ubx(map_type = f64, scale = 1e-2)]
+    ecef_x_or_lat: i32,
+    /// WGS84 ECEF.y coordinate in [m] or longitude in [deg° *1E-5],
+    /// depending on `flags` field 
+    #[ubx(map_type = f64, scale = 1e-2)]
+    ecef_y_or_lon: i32,
+    /// WGS84 ECEF.z coordinate or altitude, both in [m],
+    /// depending on `flags` field 
+    #[ubx(map_type = f64, scale = 1e-2)]
+    ecef_z_or_alt: i32,
+    /// Fixed position 3D accuracy in [m]
+    #[ubx(map_type = f64, scale = 1e-3)]
+    fixed_pos_acc: u32,
+    /// Survey in minimum duration in [s]
+    survey_in_min_duration: u32,
+    /// Survey in position accuracy limit in [m]
+    #[ubx(map_type = f64, scale = 1e-3)]
+    survery_in_accur_limit: u32,
+}
+
+/// Time transfer modes (32.10.36)
+#[ubx_extend]
+#[ubx(from_unchecked, into_raw, rest_error)]
+#[repr(u8)]
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub enum CfgTmode2TimeXferModes {
+    Disabled = 0,
+    SurveyIn = 1,
+    /// True position information required
+    /// when using `fixed mode`
+    FixedMode = 2,
+}
+
+impl Default for CfgTmode2TimeXferModes {
+    fn default() -> Self {
+        Self::Disabled
+    }
+}
+
+#[ubx_extend_bitflags]
+#[ubx(from, into_raw, rest_reserved)]
+bitflags! {
+    #[derive(Default)]
+    pub struct CfgTmode2Flags :u16 {
+        /// Position given in LAT/LON/ALT
+        /// default being WGS84 ECEF
+        const LLA = 0x01;
+        /// In case LLA was set, Altitude value is not valid
+        const ALT_INVALID = 0x02;
+    }
+}
+
+/// Time MODE3 Config Frame (32.10.37.1)
+/// only available on `timing` receivers
+#[ubx_packet_recv_send]
+#[ubx(
+    class = 0x06, 
+    id = 0x71, 
+    fixed_payload_len = 40,
+    flags = "default_for_builder"
+)] 
+struct CfgTmode3 {
+    version: u8,
+    reserved1: u8,
+    /// Receiver mode, see [CfgTmode3RcvrMode] enum
+    #[ubx(map_type = CfgTmode3RcvrMode)]
+    rcvr_mode: u8,
+    #[ubx(map_type = CfgTmode3Flags)] 
+    flags: u8,
+    /// WGS84 ECEF.x coordinate in [m] or latitude in [deg° *1E-5],
+    /// depending on `flags` field 
+    #[ubx(map_type = f64, scale = 1e-2)]
+    ecef_x_or_lat: i32,
+    /// WGS84 ECEF.y coordinate in [m] or longitude in [deg° *1E-5],
+    /// depending on `flags` field 
+    #[ubx(map_type = f64, scale = 1e-2)]
+    ecef_y_or_lon: i32,
+    /// WGS84 ECEF.z coordinate or altitude, both in [m], 
+    /// depending on `flags` field 
+    #[ubx(map_type = f64, scale = 1e-2)]
+    ecef_z_or_alt: i32,
+    /// High precision WGS84 ECEF.x coordinate in [tenths of mm],
+    /// or high precision latitude, in nano degrees,
+    /// depending on `flags` field.
+    #[ubx(map_type = f32, scale = 1.0)]
+    ecef_x_or_lat_hp: i8,
+    /// High precision WGS84 ECEF.y coordinate in [tenths of mm]
+    /// or high precision longitude, in nano degrees,
+    /// depending on `flags` field.
+    #[ubx(map_type = f32, scale = 1.0)]
+    ecef_y_or_lon_hp: i8,
+    /// High precision WGS84 ECEF.z coordinate or altitude,
+    /// both if tenths of [mm],
+    /// depending on `flags` field.
+    #[ubx(map_type = f32, scale = 1.0)]
+    ecef_z_or_alt_hp: i8,
+    reserved2: u8,
+    /// Fixed position 3D accuracy [0.1 mm]
+    #[ubx(map_type = f64, scale = 1e-4)]
+    fixed_pos_acc: u32,
+    /// Survey in minimum duration [s]
+    sv_in_min_duration: u32,
+    /// Survey in position accuracy limit [0.1 mm]
+    #[ubx(map_type = f64, scale = 1e-4)]
+    sv_in_accur_limit: u32,
+    reserved3: [u8; 8],
+}
+
+#[ubx_extend_bitflags]
+#[ubx(from, into_raw, rest_reserved)]
+bitflags! {
+    #[derive(Default)]
+    pub struct CfgTmode3RcvrMode: u8 {
+        const DISABLED = 0x01;
+        const SURVEY_IN = 0x02;
+        /// True ARP position is required in `FixedMode`
+        const FIXED_MODE = 0x04;
+    }
+}
+
+#[ubx_extend_bitflags]
+#[ubx(from, into_raw, rest_reserved)]
+bitflags! {
+    #[derive(Default)]
+    pub struct CfgTmode3Flags: u8 {
+        /// Set if position is given in Lat/Lon/Alt,
+        /// ECEF coordinates being used otherwise
+        const LLA = 0x01;
+    }
+}
+
 #[ubx_extend_bitflags]
 #[ubx(into_raw, rest_reserved)]
 bitflags! {
@@ -1628,6 +1777,17 @@ impl Default for CfgNav5UtcStandard {
 struct ScaleBack<T: FloatCore + FromPrimitive + ToPrimitive>(T);
 
 impl<T: FloatCore + FromPrimitive + ToPrimitive> ScaleBack<T> {
+    fn as_i8(self, x: T) -> i8 {
+        let x = (x * self.0).round();
+        if x < T::from_i8(i8::min_value()).unwrap() {
+            i8::min_value()
+        } else if x > T::from_i8(i8::max_value()).unwrap() {
+            i8::max_value()
+        } else {
+            x.to_i8().unwrap()
+        }
+    }
+
     fn as_i32(self, x: T) -> i32 {
         let x = (x * self.0).round();
         if x < T::from_i32(i32::min_value()).unwrap() {
@@ -1990,6 +2150,8 @@ define_recv_packets!(
         CfgPrtUart,
         CfgNav5,
         CfgAnt,
+        CfgTmode2,
+        CfgTmode3,
         InfError,
         InfWarning,
         InfNotice,
