@@ -1884,7 +1884,7 @@ struct MonGnss {
 #[ubx_extend_bitflags]
 #[ubx(from, into_raw, rest_reserved)]
 bitflags! {
-    /// Synchronization Manager config flags
+    /// Selected / available Constellation Mask 
     #[derive(Default)]
     pub struct MonGnssConstellMask: u8 {
         /// GPS constellation
