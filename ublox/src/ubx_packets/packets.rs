@@ -1865,14 +1865,17 @@ pub enum AntennaStatus {
 /// GNSS status monitoring,
 /// gives currently selected constellations
 #[ubx_packet_recv]
-#[ubx(class = 0x0a, id = 0x28, fixed_payload_len = 7)]
+#[ubx(class = 0x0a, id = 0x28, fixed_payload_len = 8)]
 struct MonGnss {
-    /// Message version: 0x00 for this version
+    /// Message version: 0x00
     version: u8,
-    /// List of supported Major constellations
+    /// Supported major constellations bit mask
     #[ubx(map_type = MonGnssConstellMask)]
     supported: u8,
-    /// List of currently enabled Major constellations
+    /// Default major GNSS constellations bit mask
+    #[ubx(map_type = MonGnssConstellMask)]
+    default: u8,
+    /// Currently enabled major constellations bit mask
     #[ubx(map_type = MonGnssConstellMask)]
     enabled: u8,
     /// Maximum number of concurent Major GNSS
