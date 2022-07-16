@@ -1290,7 +1290,7 @@ bitflags! {
     /// Used in `CfgPrtSpi` and `CfgPrtI2c`
     #[derive(Default)]
     pub struct InProtoMask: u16 {
-        const UBOX = 1;
+        const UBLOX = 1;
         const NMEA = 2;
         const RTCM = 4;
         /// The bitfield inRtcm3 is not supported in protocol
