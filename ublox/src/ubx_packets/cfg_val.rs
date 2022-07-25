@@ -387,6 +387,12 @@ cfg_val! {
   MsgoutUbxTimTpUart2,   0x2091017f, u8,
   MsgoutUbxTimTpUsb,     0x20910180, u8,
 
+  MsgoutUbxTimTm2I2c,     0x20910178, u8,
+  MsgoutUbxTimTm2Spi,     0x2091017c, u8,
+  MsgoutUbxTimTm2Uart1,   0x20910179, u8,
+  MsgoutUbxTimTm2Uart2,   0x2091017a, u8,
+  MsgoutUbxTimTm2Usb,     0x2091017b, u8,
+
   // CFG-SIGNAL-*
   SignalGpsEna,          0x1031001f, bool,
   SignalGpsL1caEna,      0x10310001, bool,
