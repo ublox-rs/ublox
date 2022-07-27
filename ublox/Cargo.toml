@@ -12,7 +12,6 @@ readme = "../README.md"
 default = ["std"]
 std = []
 alloc = []
-use-serde = ["serde"]
 
 [dependencies]
 chrono = { version = "0.4.19", default-features = false, features = [] }
