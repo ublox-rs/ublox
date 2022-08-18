@@ -1968,6 +1968,24 @@ struct RxmRtcm {
     msg_type: u16,
 }
 
+#[ubx_packet_recv]
+#[ubx(class = 0x10, id = 0x02, fixed_payload_len = 16)]
+struct EsfMeas {
+    time_tag: u32,
+    flags: u16,
+    id: u16,
+    /// flags >> 11 & 0x1F
+    data: u32,
+    /// flags & 0x8
+    calib_tag: u32,
+}
+
+#[ubx_packet_recv]
+#[ubx(class = 0x10, id = 0x03, fixed_payload_len = 16)]
+struct EsfRaw {
+    msss: u32,
+}
+
 define_recv_packets!(
     enum PacketRef {
         _ = UbxUnknownPacketRef,
@@ -1997,6 +2015,7 @@ define_recv_packets!(
         InfDebug,
         MonVer,
         MonHw,
-        RxmRtcm
+        RxmRtcm,
+        EsfMeas,
     }
 );
