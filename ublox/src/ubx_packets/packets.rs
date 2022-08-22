@@ -2000,6 +2000,7 @@ struct HnrPvt {
     #[ubx(map_type = HnrPvtValidFlags)]
     valid: u8,
     nano: i32,
+    #[ubx(map_type = GpsFix)]
     gps_fix: u8,
 
     #[ubx(map_type = HnrPvtFlags)]
