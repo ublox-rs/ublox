@@ -2123,6 +2123,6 @@ define_recv_packets!(
         NavAtt,
         NavClock,
         NavVelECEF,
-        MgaGpsEph,
+        MgaGpsEPH,
     }
 );
