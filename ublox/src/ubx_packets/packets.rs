@@ -1986,6 +1986,72 @@ struct EsfRaw {
     msss: u32,
 }
 
+#[ubx_packet_recv]
+#[ubx(class = 0x28, id = 0x00, fixed_payload_len = 72)]
+struct HnrPvt {
+    i_tow: u32,
+    year: u16,
+    month: u8,
+    day: u8,
+    hour: u8,
+    min: u8,
+    sec: u8,
+    valid: u8,
+    nano: i32,
+    gps_fix: u8,
+
+    #[ubx(map_type = HnrPvtFlags)]
+    flags: u8,
+
+    reserved1: [u8; 2],
+
+    #[ubx(map_type = f64, scale = 1e-7, alias = longitude)]
+    lon: i32,
+    #[ubx(map_type = f64, scale = 1e-7, alias = latitude)]
+    lat: i32,
+
+    height: i32,
+    height_msl: i32,
+    g_speed: i32,
+    speed: i32,
+
+    #[ubx(map_type = f64, scale = 1e-5, alias = heading_motion)]
+    head_mot: i32,
+    #[ubx(map_type = f64, scale = 1e-5, alias = heading_vehicle)]
+    head_veh: i32,
+
+    h_acc: u32,
+    v_acc: u32,
+    s_acc: u32,
+
+    #[ubx(map_type = f64, scale = 1e-5, alias = heading_accurracy)]
+    head_acc: u32,
+
+    reserved2: [u8; 4],
+}
+
+#[ubx_extend_bitflags]
+#[ubx(from, rest_reserved)]
+bitflags! {
+    /// Fix status flags for `HnrPvt`
+    pub struct HnrPvtFlags: u8 {
+        /// position and velocity valid and within DOP and ACC Masks
+        const GPS_FIX_OK = 0x01;
+        /// DGPS used
+        const DIFF_SOLN = 0x02;
+        /// 1 = heading of vehicle is valid
+        const WKN_SET = 0x04;
+        const TOW_SET = 0x08;
+        const HEAD_VEH_VALID = 0x10;
+    }
+}
+
+// #[ubx_packet_recv]
+// #[ubx(class = 0x10, id = 0x03, fixed_payload_len = 16)]
+// struct EsfRaw {
+//     msss: u32,
+// }
+
 define_recv_packets!(
     enum PacketRef {
         _ = UbxUnknownPacketRef,
@@ -2017,5 +2083,6 @@ define_recv_packets!(
         MonHw,
         RxmRtcm,
         EsfMeas,
+        HnrPvt,
     }
 );
