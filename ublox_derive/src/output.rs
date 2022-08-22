@@ -269,6 +269,7 @@ pub fn generate_send_code_for_packet(pack_descr: &PackDesc) -> TokenStream {
         quote! {}
     };
     let struct_comment = &pack_descr.comment;
+    println!("{struct_comment}");
     let mut ret = quote! {
         #[doc = #struct_comment]
         #[doc = "Struct that is used to construct packets, see the crate-level documentation for more information"]

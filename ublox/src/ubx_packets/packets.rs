@@ -90,7 +90,7 @@ struct NavVelNed {
 #[ubx(class = 1, id = 0x07, fixed_payload_len = 92)]
 struct NavPosVelTime {
     /// GPS Millisecond Time of Week
-    itow: u32,
+    i_tow: u32,
     year: u16,
     month: u8,
     day: u8,
@@ -154,7 +154,9 @@ struct NavPosVelTime {
 
     /// Position DOP
     pdop: u16,
-    reserved1: [u8; 6],
+    // #[ubx(map_type = NavPosVelTimeFlags3)]
+    flags3: u16,
+    reserved1: [u8; 4],
     #[ubx(map_type = f64, scale = 1e-5, alias = heading_of_vehicle_degrees)]
     heading_of_vehicle: i32,
     #[ubx(map_type = f64, scale = 1e-2, alias = magnetic_declination_degrees)]
@@ -169,9 +171,9 @@ bitflags! {
     /// Fix status flags for `NavPosVelTime`
     pub struct NavPosVelTimeFlags: u8 {
         /// position and velocity valid and within DOP and ACC Masks
-        const GPS_FIX_OK = 1;
+        const GPS_FIX_OK = 0x01;
         /// DGPS used
-        const DIFF_SOLN = 2;
+        const DIFF_SOLN = 0x02;
         /// 1 = heading of vehicle is valid
         const HEAD_VEH_VALID = 0x20;
         const CARR_SOLN_FLOAT = 0x40;
@@ -196,6 +198,31 @@ bitflags! {
         const CONFIRMED_TIME = 0x80;
     }
 }
+
+// #[ubx_extend_bitflags]
+// #[ubx(from, rest_reserved)]
+// bitflags! {
+//     /// Additional flags for `NavPosVelTime`
+//     pub struct NavPosVelTimeFlags3: u16 {
+//         /// 1 = Invalid lon, lat, height and hMSL
+//         const INVALID_LLH = 0x01;
+//         /// Age of the most recently received differential correction:
+//         /// 0: Not available
+//         /// 1: Age between 0 and 1 second
+//         /// 2: Age between 1 (inclusive) and 2 seconds
+//         /// 3: Age between 2 (inclusive) and 5 seconds
+//         /// 4: Age between 5 (inclusive) and 10 seconds
+//         /// 5: Age between 10 (inclusive) and 15 seconds
+//         /// 6: Age between 15 (inclusive) and 20 seconds
+//         /// 7: Age between 20 (inclusive) and 30 seconds
+//         /// 8: Age between 30 (inclusive) and 45 seconds
+//         /// 9: Age between 45 (inclusive) and 60 seconds
+//         /// 10: Age between 60 (inclusive) and 90 seconds
+//         /// 11: Age between 90 (inclusive) and 120 seconds
+//         /// >=12: Age greater or equal than 120 seconds
+//         const LAST_CORRECTION_AGE = 0x02;
+//     }
+// }
 
 ///  Receiver Navigation Status
 #[ubx_packet_recv]
@@ -625,10 +652,10 @@ struct NavSat {
     reserved: u16,
 
     #[ubx(map_type = NavSatIter,
-        may_fail,
-        is_valid = navsat::is_valid,
-        from = navsat::convert_to_iter,
-        get_as_ref)]
+    may_fail,
+    is_valid = navsat::is_valid,
+    from = navsat::convert_to_iter,
+    get_as_ref)]
     svs: [u8; 0],
 }
 
@@ -771,11 +798,11 @@ bitflags! {
     flags = "default_for_builder"
 )]
 struct InfError {
-    #[ubx(map_type = Option<&str>,
-        may_fail,
-        is_valid = inf::is_valid,
-        from = inf::convert_to_str,
-        get_as_ref)]
+    #[ubx(map_type = Option < & str >,
+    may_fail,
+    is_valid = inf::is_valid,
+    from = inf::convert_to_str,
+    get_as_ref)]
     message: [u8; 0],
 }
 
@@ -787,11 +814,11 @@ struct InfError {
     flags = "default_for_builder"
 )]
 struct InfNotice {
-    #[ubx(map_type = Option<&str>,
-        may_fail,
-        is_valid = inf::is_valid,
-        from = inf::convert_to_str,
-        get_as_ref)]
+    #[ubx(map_type = Option < & str >,
+    may_fail,
+    is_valid = inf::is_valid,
+    from = inf::convert_to_str,
+    get_as_ref)]
     message: [u8; 0],
 }
 
@@ -803,11 +830,11 @@ struct InfNotice {
     flags = "default_for_builder"
 )]
 struct InfTest {
-    #[ubx(map_type = Option<&str>,
-        may_fail,
-        is_valid = inf::is_valid,
-        from = inf::convert_to_str,
-        get_as_ref)]
+    #[ubx(map_type = Option < & str >,
+    may_fail,
+    is_valid = inf::is_valid,
+    from = inf::convert_to_str,
+    get_as_ref)]
     message: [u8; 0],
 }
 
@@ -819,11 +846,11 @@ struct InfTest {
     flags = "default_for_builder"
 )]
 struct InfWarning {
-    #[ubx(map_type = Option<&str>,
-        may_fail,
-        is_valid = inf::is_valid,
-        from = inf::convert_to_str,
-        get_as_ref)]
+    #[ubx(map_type = Option < & str >,
+    may_fail,
+    is_valid = inf::is_valid,
+    from = inf::convert_to_str,
+    get_as_ref)]
     message: [u8; 0],
 }
 
@@ -835,11 +862,11 @@ struct InfWarning {
     flags = "default_for_builder"
 )]
 struct InfDebug {
-    #[ubx(map_type = Option<&str>,
-        may_fail,
-        is_valid = inf::is_valid,
-        from = inf::convert_to_str,
-        get_as_ref)]
+    #[ubx(map_type = Option < & str >,
+    may_fail,
+    is_valid = inf::is_valid,
+    from = inf::convert_to_str,
+    get_as_ref)]
     message: [u8; 0],
 }
 
@@ -1901,17 +1928,17 @@ impl fmt::Debug for MonVerExtensionIter<'_> {
 #[ubx_packet_recv]
 #[ubx(class = 0x0a, id = 0x04, max_payload_len = 1240)]
 struct MonVer {
-    #[ubx(map_type = &str, may_fail, from = mon_ver::convert_to_str_unchecked,
-          is_valid = mon_ver::is_cstr_valid, get_as_ref)]
+    #[ubx(map_type = & str, may_fail, from = mon_ver::convert_to_str_unchecked,
+    is_valid = mon_ver::is_cstr_valid, get_as_ref)]
     software_version: [u8; 30],
-    #[ubx(map_type = &str, may_fail, from = mon_ver::convert_to_str_unchecked,
-          is_valid = mon_ver::is_cstr_valid, get_as_ref)]
+    #[ubx(map_type = & str, may_fail, from = mon_ver::convert_to_str_unchecked,
+    is_valid = mon_ver::is_cstr_valid, get_as_ref)]
     hardware_version: [u8; 10],
 
     /// Extended software information strings
     #[ubx(map_type = MonVerExtensionIter, may_fail,
-          from = mon_ver::extension_to_iter,
-          is_valid = mon_ver::is_extension_valid)]
+    from = mon_ver::extension_to_iter,
+    is_valid = mon_ver::is_extension_valid)]
     extension: [u8; 0],
 }
 
@@ -1968,6 +1995,20 @@ struct RxmRtcm {
     msg_type: u16,
 }
 
+// #[ubx_packet_recv]
+// #[ubx(class = 0x10, id = 0x15, fixed_payload_len = 16)]
+// struct EsfIns {
+//     bit_field: u16,
+//     reserved: [u8; 4],
+//     i_tow: u16,
+//     x_ang_rate: u16,
+//     y_ang_rate: u16,
+//     z_ang_rate: u16,
+//     x_accel: u16,
+//     y_accel: u16,
+//     z_accel: u16,
+// }
+
 #[ubx_packet_recv]
 #[ubx(class = 0x10, id = 0x02, fixed_payload_len = 16)]
 struct EsfMeas {
@@ -1980,11 +2021,11 @@ struct EsfMeas {
     calib_tag: u32,
 }
 
-#[ubx_packet_recv]
-#[ubx(class = 0x10, id = 0x03, fixed_payload_len = 16)]
-struct EsfRaw {
-    msss: u32,
-}
+// #[ubx_packet_recv]
+// #[ubx(class = 0x10, id = 0x03, fixed_payload_len = 16)]
+// struct EsfRaw {
+//     msss: u32,
+// }
 
 define_recv_packets!(
     enum PacketRef {
