@@ -1996,6 +1996,16 @@ struct NavClock {
     f_acc: u32,
 }
 
+#[ubx_packet_recv]
+#[ubx(class = 0x01, id = 0x11, fixed_payload_len = 20)]
+struct NavVelECEF {
+    itow: u32,
+    ecef_vx: i32,
+    ecef_vy: i32,
+    ecef_vz: u32,
+    s_acc: u32,
+}
+
 define_recv_packets!(
     enum PacketRef {
         _ = UbxUnknownPacketRef,
@@ -2028,5 +2038,6 @@ define_recv_packets!(
         RxmRtcm,
         EsfMeas,
         NavClock,
+        NavVelECEF,
     }
 );
