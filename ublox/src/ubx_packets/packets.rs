@@ -1981,10 +1981,30 @@ struct EsfMeas {
 }
 
 #[ubx_packet_recv]
-#[ubx(class = 0x10, id = 0x03, fixed_payload_len = 16)]
-struct EsfRaw {
-    msss: u32,
+#[ubx(class = 0x01, id = 0x05, fixed_payload_len = 32)]
+struct NavAtt {
+    itow: u32,
+    version: u8,
+    reserved1: [u8; 3],
+    #[ubx(map_type = f64, scale = 1e-5, alias = vehicle_roll)]
+    roll: i32,
+    #[ubx(map_type = f64, scale = 1e-5, alias = vehicle_pitch)]
+    pitch: i32,
+    #[ubx(map_type = f64, scale = 1e-5, alias = vehicle_heading)]
+    heading: i32,
+    #[ubx(map_type = f64, scale = 1e-5, alias = vehicle_roll_accuracy)]
+    acc_roll: u32,
+    #[ubx(map_type = f64, scale = 1e-5, alias = vehicle_pitch_accuracy)]
+    acc_pitch: u32,
+    #[ubx(map_type = f64, scale = 1e-5, alias = vehicle_heading_accuracy)]
+    acc_heading: u32,
 }
+
+// #[ubx_packet_recv]
+// #[ubx(class = 0x10, id = 0x03, fixed_payload_len = 16)]
+// struct EsfRaw {
+//     msss: u32,
+// }
 
 define_recv_packets!(
     enum PacketRef {
@@ -2017,5 +2037,6 @@ define_recv_packets!(
         MonHw,
         RxmRtcm,
         EsfMeas,
+        NavAtt,
     }
 );
