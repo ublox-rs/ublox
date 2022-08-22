@@ -1996,6 +1996,8 @@ struct HnrPvt {
     hour: u8,
     min: u8,
     sec: u8,
+
+    #[ubx(map_type = HnrPvtValidFlags)]
     valid: u8,
     nano: i32,
     gps_fix: u8,
@@ -2053,6 +2055,16 @@ bitflags! {
         const WKN_SET = 0x04;
         const TOW_SET = 0x08;
         const HEAD_VEH_VALID = 0x10;
+    }
+}
+
+#[ubx_extend_bitflags]
+#[ubx(from, rest_reserved)]
+bitflags! {
+    pub struct HnrPvtValidFlags: u8 {
+        const VALID_DATE = 0x01;
+        const VALID_TIME = 0x02;
+        const FULLY_RESOLVED = 0x04;
     }
 }
 
