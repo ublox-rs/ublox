@@ -1980,11 +1980,11 @@ struct EsfMeas {
     calib_tag: u32,
 }
 
-#[ubx_packet_recv]
-#[ubx(class = 0x10, id = 0x03, fixed_payload_len = 16)]
-struct EsfRaw {
-    msss: u32,
-}
+// #[ubx_packet_recv]
+// #[ubx(class = 0x10, id = 0x03, fixed_payload_len = 16)]
+// struct EsfRaw {
+//     msss: u32,
+// }
 
 #[ubx_packet_recv]
 #[ubx(class = 0x28, id = 0x00, fixed_payload_len = 72)]
