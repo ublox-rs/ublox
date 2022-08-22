@@ -8,6 +8,7 @@ use chrono::prelude::*;
 use core::fmt;
 use num_traits::cast::{FromPrimitive, ToPrimitive};
 use num_traits::float::FloatCore;
+use num_traits::real::Real;
 use ublox_derive::{
     define_recv_packets, ubx_extend, ubx_extend_bitflags, ubx_packet_recv, ubx_packet_recv_send,
     ubx_packet_send,
@@ -1981,10 +1982,24 @@ struct EsfMeas {
 }
 
 #[ubx_packet_recv]
-#[ubx(class = 0x10, id = 0x03, fixed_payload_len = 16)]
-struct EsfRaw {
-    msss: u32,
+#[ubx(class = 0x10, id = 0x15, fixed_payload_len = 36)]
+struct EsfIns {
+    bit_field: u32,
+    reserved: [u8; 4],
+    i_tow: u32,
+    x_ang_rate: i32,
+    y_ang_rate: i32,
+    z_ang_rate: i32,
+    x_accel: i32,
+    y_accel: i32,
+    z_accel: i32,
 }
+
+// #[ubx_packet_recv]
+// #[ubx(class = 0x10, id = 0x03, fixed_payload_len = 16)]
+// struct EsfRaw {
+//     msss: u32,
+// }
 
 define_recv_packets!(
     enum PacketRef {
@@ -2017,5 +2032,6 @@ define_recv_packets!(
         MonHw,
         RxmRtcm,
         EsfMeas,
+        EsfIns,
     }
 );
