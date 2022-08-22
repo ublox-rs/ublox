@@ -1987,11 +1987,23 @@ struct EsfIns {
     bit_field: u32,
     reserved: [u8; 4],
     i_tow: u32,
+
+    #[ubx(map_type = f64, scale = 1e-3, alias = x_angular_rate)]
     x_ang_rate: i32,
+
+    #[ubx(map_type = f64, scale = 1e-3, alias = y_angular_rate)]
     y_ang_rate: i32,
+
+    #[ubx(map_type = f64, scale = 1e-3, alias = z_angular_rate)]
     z_ang_rate: i32,
+
+    #[ubx(map_type = f64, scale = 1e-2, alias = x_acceleration)]
     x_accel: i32,
+
+    #[ubx(map_type = f64, scale = 1e-2, alias = y_acceleration)]
     y_accel: i32,
+
+    #[ubx(map_type = f64, scale = 1e-2, alias = z_acceleration)]
     z_accel: i32,
 }
 
