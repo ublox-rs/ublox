@@ -1980,6 +1980,12 @@ struct EsfMeas {
     calib_tag: u32,
 }
 
+// #[ubx_packet_recv]
+// #[ubx(class = 0x10, id = 0x03, fixed_payload_len = 16)]
+// struct EsfRaw {
+//     msss: u32,
+// }
+
 #[ubx_packet_recv]
 #[ubx(class = 0x01, id = 0x05, fixed_payload_len = 32)]
 struct NavAtt {
@@ -1998,6 +2004,16 @@ struct NavAtt {
     acc_pitch: u32,
     #[ubx(map_type = f64, scale = 1e-5, alias = vehicle_heading_accuracy)]
     acc_heading: u32,
+}
+
+#[ubx_packet_recv]
+#[ubx(class = 0x01, id = 0x22, fixed_payload_len = 20)]
+struct NavClock {
+    itow: u32,
+    clk_b: i32,
+    clk_d: i32,
+    t_acc: u32,
+    f_acc: u32,
 }
 
 // #[ubx_packet_recv]
@@ -2038,5 +2054,6 @@ define_recv_packets!(
         RxmRtcm,
         EsfMeas,
         NavAtt,
+        NavClock,
     }
 );
