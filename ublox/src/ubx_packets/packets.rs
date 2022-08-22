@@ -2033,6 +2033,25 @@ struct HnrPvt {
     reserved2: [u8; 4],
 }
 
+#[ubx(class = 0x01, id = 0x05, fixed_payload_len = 32)]
+struct NavAtt {
+    itow: u32,
+    version: u8,
+    reserved1: [u8; 3],
+    #[ubx(map_type = f64, scale = 1e-5, alias = vehicle_roll)]
+    roll: i32,
+    #[ubx(map_type = f64, scale = 1e-5, alias = vehicle_pitch)]
+    pitch: i32,
+    #[ubx(map_type = f64, scale = 1e-5, alias = vehicle_heading)]
+    heading: i32,
+    #[ubx(map_type = f64, scale = 1e-5, alias = vehicle_roll_accuracy)]
+    acc_roll: u32,
+    #[ubx(map_type = f64, scale = 1e-5, alias = vehicle_pitch_accuracy)]
+    acc_pitch: u32,
+    #[ubx(map_type = f64, scale = 1e-5, alias = vehicle_heading_accuracy)]
+    acc_heading: u32,
+}
+
 #[ubx_packet_recv]
 #[ubx(class = 0x01, id = 0x22, fixed_payload_len = 20)]
 struct NavClock {
@@ -2075,6 +2094,74 @@ bitflags! {
 //     msss: u32,
 // }
 
+
+#[ubx_packet_recv]
+#[ubx(class = 0x01, id = 0x11, fixed_payload_len = 20)]
+struct NavVelECEF {
+    itow: u32,
+    ecef_vx: i32,
+    ecef_vy: i32,
+    ecef_vz: u32,
+    s_acc: u32,
+}
+
+#[ubx_packet_recv]
+#[ubx(class = 0x13, id = 0x00, fixed_payload_len = 68)]
+struct MgaGpsEPH {
+    msg_type: u8,
+    version: u8,
+    sv_id: u8,
+    reserved1: u8,
+    fit_interval: u8,
+    ura_index: u8,
+    sv_health: u8,
+    #[ubx(map_type = f64, scale = 2e-31)]
+    tgd: i8,
+    iodc: u16,
+    #[ubx(map_type = f64, scale = 2e+4)]
+    toc: u16,
+    reserved2: u8,
+    #[ubx(map_type = f64, scale = 2e-55)]
+    af2: i8,
+    #[ubx(map_type = f64, scale = 2e-43)]
+    afl: i16,
+    #[ubx(map_type = f64, scale = 2e-31)]
+    af0: i32,
+    #[ubx(map_type = f64, scale = 2e-5)]
+    crs: i16,
+    #[ubx(map_type = f64, scale = 2e-43)]
+    delta_n: i16,
+    #[ubx(map_type = f64, scale = 2e-31)]
+    m0: i32,
+    #[ubx(map_type = f64, scale = 2e-29)]
+    cuc: i16,
+    #[ubx(map_type = f64, scale = 2e-29)]
+    cus: i16,
+    #[ubx(map_type = f64, scale = 2e-33)]
+    e: u32,
+    #[ubx(map_type = f64, scale = 2e-19)]
+    sqrt_a: u32,
+    #[ubx(map_type = f64, scale = 2e+4)]
+    toe: u16,
+    #[ubx(map_type = f64, scale = 2e-29)]
+    cic: i16,
+    #[ubx(map_type = f64, scale = 2e-31)]
+    omega0: i32,
+    #[ubx(map_type = f64, scale = 2e-29)]
+    cis: i16,
+    #[ubx(map_type = f64, scale = 2e-5)]
+    crc: i16,
+    #[ubx(map_type = f64, scale = 2e-31)]
+    i0: i32,
+    #[ubx(map_type = f64, scale = 2e-31)]
+    omega: i32,
+    #[ubx(map_type = f64, scale = 2e-43)]
+    omega_dot: i32,
+    #[ubx(map_type = f64, scale = 2e-43)]
+    idot: i16,
+    reserved3: [u8; 2],
+}
+
 define_recv_packets!(
     enum PacketRef {
         _ = UbxUnknownPacketRef,
@@ -2107,6 +2194,9 @@ define_recv_packets!(
         RxmRtcm,
         EsfMeas,
         HnrPvt,
+        NavAtt,
         NavClock,
+        NavVelECEF,
+        MgaGpsEph,
     }
 );
