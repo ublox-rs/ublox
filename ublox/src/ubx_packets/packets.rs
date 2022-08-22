@@ -1990,6 +1990,7 @@ struct EsfMeas {
 #[ubx_packet_recv]
 #[ubx(class = 0x10, id = 0x15, fixed_payload_len = 36)]
 struct EsfIns {
+    #[ubx(map_type = EsfInsBitFlags)]
     bit_field: u32,
     reserved: [u8; 4],
     i_tow: u32,
@@ -2013,6 +2014,21 @@ struct EsfIns {
     z_accel: i32,
 }
 
+#[ubx_extend_bitflags]
+#[ubx(from, rest_reserved)]
+bitflags! {
+    pub struct EsfInsBitFlags: u32 {
+        const VERSION = 1;
+        const X_ANG_RATE_VALID = 0x100;
+        const Y_ANG_RATE_VALID = 0x200;
+        const Z_ANG_RATE_VALID = 0x400;
+        const X_ACCEL_VALID = 0x800;
+        const Y_ACCEL_VALID = 0x1000;
+        const Z_ACCEL_VALID = 0x2000;
+
+    }
+}
+
 #[ubx_packet_recv]
 #[ubx(class = 0x01, id = 0x22, fixed_payload_len = 20)]
 struct NavClock {
@@ -2022,12 +2038,6 @@ struct NavClock {
     t_acc: u32,
     f_acc: u32,
 }
-
-// #[ubx_packet_recv]
-// #[ubx(class = 0x10, id = 0x03, fixed_payload_len = 16)]
-// struct EsfRaw {
-//     msss: u32,
-// }
 
 define_recv_packets!(
     enum PacketRef {
