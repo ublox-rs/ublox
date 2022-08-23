@@ -1990,7 +1990,7 @@ struct EsfMeas {
 #[ubx_packet_recv]
 #[ubx(class = 0x10, id = 0x15, fixed_payload_len = 36)]
 struct EsfIns {
-    #[ubx(map_type = EsfInsBitFlags)]
+    // #[ubx(map_type = EsfInsBitFlags)]
     bit_field: u32,
     reserved: [u8; 4],
     i_tow: u32,
@@ -2025,7 +2025,6 @@ bitflags! {
         const X_ACCEL_VALID = 0x800;
         const Y_ACCEL_VALID = 0x1000;
         const Z_ACCEL_VALID = 0x2000;
-
     }
 }
 
