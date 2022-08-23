@@ -26,18 +26,10 @@ fn parse_all<T: UnderlyingBuffer>(mut parser: Parser<T>, data: &[u8], chunk_size
     let mut count = 0;
     for chunk in data.chunks(chunk_size) {
         let mut it = parser.consume(&chunk[..]);
-        loop {
-            match it.next() {
-                Some(Ok(packet)) => {
-                    count += 1;
-                }
-                Some(Err(e)) => {
-                    panic!("No errors allowed! got: {:?}", e);
-                }
-                None => {
-                    // We've eaten all the packets we have
-                    break;
-                }
+        while let Some(next) = it.next() {
+            match next {
+                Ok(packet) => count += 1,
+                Err(err) => panic!("No errors allowed! got: {:?}", err),
             }
         }
     }

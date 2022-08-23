@@ -8,6 +8,7 @@ use chrono::prelude::*;
 use core::fmt;
 use num_traits::cast::{FromPrimitive, ToPrimitive};
 use num_traits::float::FloatCore;
+use std::convert::TryInto;
 use ublox_derive::{
     define_recv_packets, ubx_extend, ubx_extend_bitflags, ubx_packet_recv, ubx_packet_recv_send,
     ubx_packet_send,
@@ -622,7 +623,7 @@ struct NavSat {
 
     num_svs: u8,
 
-    reserved: u16,
+    reserved: [u8; 2],
 
     #[ubx(map_type = NavSatIter,
         may_fail,
@@ -2033,6 +2034,7 @@ struct HnrPvt {
     reserved2: [u8; 4],
 }
 
+#[ubx_packet_recv]
 #[ubx(class = 0x01, id = 0x05, fixed_payload_len = 32)]
 struct NavAtt {
     itow: u32,
@@ -2094,6 +2096,68 @@ bitflags! {
 //     msss: u32,
 // }
 
+#[ubx_packet_recv]
+#[ubx(class = 0x02, id = 0x13, max_payload_len = 72)]
+struct RxmSfrbx {
+    gnss_id: u8,
+    sv_id: u8,
+    reserved1: u8,
+    freq_id: u8,
+    num_words: u8,
+    reserved2: u8,
+    version: u8,
+    reserved3: u8,
+
+    #[ubx(map_type = RxmSfrbxIter,
+    may_fail,
+    is_valid = rxmsfrbx::is_valid,
+    from = rxmsfrbx::convert_to_iter,
+    get_as_ref)]
+    dwrd: [u8; 0],
+}
+
+pub struct RxmSfrbxIter<'a> {
+    data: &'a [u8],
+    offset: usize,
+}
+
+impl<'a> core::iter::Iterator for RxmSfrbxIter<'a> {
+    type Item = u32;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.offset < self.data.len() {
+            println!("hello!!!\n");
+            let data: [u8; 4] = (&self.data[self.offset..self.offset + 4])
+                .try_into()
+                .expect("data incorrect length slice, this should not occur");
+            self.offset += 4;
+            Some(u32::from_ne_bytes(data))
+        } else {
+            None
+        }
+    }
+}
+
+impl fmt::Debug for RxmSfrbxIter<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("RxmSfrbxIter").finish()
+    }
+}
+
+mod rxmsfrbx {
+    use super::RxmSfrbxIter;
+
+    pub(crate) fn convert_to_iter(bytes: &[u8]) -> RxmSfrbxIter {
+        RxmSfrbxIter {
+            data: bytes,
+            offset: 0,
+        }
+    }
+
+    pub(crate) fn is_valid(bytes: &[u8]) -> bool {
+        bytes.len() % 4 == 0
+    }
+}
 
 #[ubx_packet_recv]
 #[ubx(class = 0x01, id = 0x11, fixed_payload_len = 20)]
@@ -2198,5 +2262,6 @@ define_recv_packets!(
         NavClock,
         NavVelECEF,
         MgaGpsEPH,
+        RxmSfrbx,
     }
 );
