@@ -6,6 +6,7 @@ use crate::error::{MemWriterError, ParserError};
 use bitflags::bitflags;
 use chrono::prelude::*;
 use core::fmt;
+use core::fmt::Pointer;
 use num_traits::cast::{FromPrimitive, ToPrimitive};
 use num_traits::float::FloatCore;
 use std::convert::TryInto;
@@ -2096,6 +2097,36 @@ bitflags! {
 //     msss: u32,
 // }
 
+#[derive(Clone)]
+pub struct RxmSfrbxIter<'a> {
+    data: &'a [u8],
+    offset: usize,
+}
+
+impl<'a> core::iter::Iterator for RxmSfrbxIter<'a> {
+    type Item = u32;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.offset < self.data.len() {
+            let data: [u8; 4] = (&self.data[self.offset..self.offset + 4])
+                .try_into()
+                .expect("data incorrect length slice, this should not occur");
+            self.offset += 4;
+            Some(u32::from_ne_bytes(data))
+        } else {
+            None
+        }
+    }
+}
+
+impl fmt::Debug for RxmSfrbxIter<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut clone = self.clone();
+        let dwrd: Vec<u32> = clone.collect();
+        dwrd.fmt(f)
+    }
+}
+
 #[ubx_packet_recv]
 #[ubx(class = 0x02, id = 0x13, max_payload_len = 72)]
 struct RxmSfrbx {
@@ -2111,37 +2142,8 @@ struct RxmSfrbx {
     #[ubx(map_type = RxmSfrbxIter,
     may_fail,
     is_valid = rxmsfrbx::is_valid,
-    from = rxmsfrbx::convert_to_iter,
-    get_as_ref)]
+    from = rxmsfrbx::convert_to_iter)]
     dwrd: [u8; 0],
-}
-
-pub struct RxmSfrbxIter<'a> {
-    data: &'a [u8],
-    offset: usize,
-}
-
-impl<'a> core::iter::Iterator for RxmSfrbxIter<'a> {
-    type Item = u32;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.offset < self.data.len() {
-            println!("hello!!!\n");
-            let data: [u8; 4] = (&self.data[self.offset..self.offset + 4])
-                .try_into()
-                .expect("data incorrect length slice, this should not occur");
-            self.offset += 4;
-            Some(u32::from_ne_bytes(data))
-        } else {
-            None
-        }
-    }
-}
-
-impl fmt::Debug for RxmSfrbxIter<'_> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("RxmSfrbxIter").finish()
-    }
 }
 
 mod rxmsfrbx {
