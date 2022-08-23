@@ -2028,6 +2028,71 @@ bitflags! {
     }
 }
 
+#[ubx(class = 0x28, id = 0x00, fixed_payload_len = 72)]
+struct HnrPvt {
+    i_tow: u32,
+    year: u16,
+    month: u8,
+    day: u8,
+    hour: u8,
+    min: u8,
+    sec: u8,
+
+    #[ubx(map_type = HnrPvtValidFlags)]
+    valid: u8,
+    nano: i32,
+    #[ubx(map_type = GpsFix)]
+    gps_fix: u8,
+
+    #[ubx(map_type = HnrPvtFlags)]
+    flags: u8,
+
+    reserved1: [u8; 2],
+
+    #[ubx(map_type = f64, scale = 1e-7, alias = longitude)]
+    lon: i32,
+    #[ubx(map_type = f64, scale = 1e-7, alias = latitude)]
+    lat: i32,
+
+    height: i32,
+    height_msl: i32,
+    g_speed: i32,
+    speed: i32,
+
+    #[ubx(map_type = f64, scale = 1e-5, alias = heading_motion)]
+    head_mot: i32,
+    #[ubx(map_type = f64, scale = 1e-5, alias = heading_vehicle)]
+    head_veh: i32,
+
+    h_acc: u32,
+    v_acc: u32,
+    s_acc: u32,
+
+    #[ubx(map_type = f64, scale = 1e-5, alias = heading_accurracy)]
+    head_acc: u32,
+
+    reserved2: [u8; 4],
+}
+
+#[ubx(class = 0x01, id = 0x05, fixed_payload_len = 32)]
+struct NavAtt {
+    itow: u32,
+    version: u8,
+    reserved1: [u8; 3],
+    #[ubx(map_type = f64, scale = 1e-5, alias = vehicle_roll)]
+    roll: i32,
+    #[ubx(map_type = f64, scale = 1e-5, alias = vehicle_pitch)]
+    pitch: i32,
+    #[ubx(map_type = f64, scale = 1e-5, alias = vehicle_heading)]
+    heading: i32,
+    #[ubx(map_type = f64, scale = 1e-5, alias = vehicle_roll_accuracy)]
+    acc_roll: u32,
+    #[ubx(map_type = f64, scale = 1e-5, alias = vehicle_pitch_accuracy)]
+    acc_pitch: u32,
+    #[ubx(map_type = f64, scale = 1e-5, alias = vehicle_heading_accuracy)]
+    acc_heading: u32,
+}
+
 #[ubx_packet_recv]
 #[ubx(class = 0x01, id = 0x22, fixed_payload_len = 20)]
 struct NavClock {
@@ -2036,6 +2101,106 @@ struct NavClock {
     clk_d: i32,
     t_acc: u32,
     f_acc: u32,
+}
+
+#[ubx_extend_bitflags]
+#[ubx(from, rest_reserved)]
+bitflags! {
+    /// Fix status flags for `HnrPvt`
+    pub struct HnrPvtFlags: u8 {
+        /// position and velocity valid and within DOP and ACC Masks
+        const GPS_FIX_OK = 0x01;
+        /// DGPS used
+        const DIFF_SOLN = 0x02;
+        /// 1 = heading of vehicle is valid
+        const WKN_SET = 0x04;
+        const TOW_SET = 0x08;
+        const HEAD_VEH_VALID = 0x10;
+    }
+}
+
+#[ubx_extend_bitflags]
+#[ubx(from, rest_reserved)]
+bitflags! {
+    pub struct HnrPvtValidFlags: u8 {
+        const VALID_DATE = 0x01;
+        const VALID_TIME = 0x02;
+        const FULLY_RESOLVED = 0x04;
+    }
+}
+
+// #[ubx_packet_recv]
+// #[ubx(class = 0x10, id = 0x03, fixed_payload_len = 16)]
+// struct EsfRaw {
+//     msss: u32,
+// }
+
+
+#[ubx_packet_recv]
+#[ubx(class = 0x01, id = 0x11, fixed_payload_len = 20)]
+struct NavVelECEF {
+    itow: u32,
+    ecef_vx: i32,
+    ecef_vy: i32,
+    ecef_vz: u32,
+    s_acc: u32,
+}
+
+#[ubx_packet_recv]
+#[ubx(class = 0x13, id = 0x00, fixed_payload_len = 68)]
+struct MgaGpsEPH {
+    msg_type: u8,
+    version: u8,
+    sv_id: u8,
+    reserved1: u8,
+    fit_interval: u8,
+    ura_index: u8,
+    sv_health: u8,
+    #[ubx(map_type = f64, scale = 2e-31)]
+    tgd: i8,
+    iodc: u16,
+    #[ubx(map_type = f64, scale = 2e+4)]
+    toc: u16,
+    reserved2: u8,
+    #[ubx(map_type = f64, scale = 2e-55)]
+    af2: i8,
+    #[ubx(map_type = f64, scale = 2e-43)]
+    afl: i16,
+    #[ubx(map_type = f64, scale = 2e-31)]
+    af0: i32,
+    #[ubx(map_type = f64, scale = 2e-5)]
+    crs: i16,
+    #[ubx(map_type = f64, scale = 2e-43)]
+    delta_n: i16,
+    #[ubx(map_type = f64, scale = 2e-31)]
+    m0: i32,
+    #[ubx(map_type = f64, scale = 2e-29)]
+    cuc: i16,
+    #[ubx(map_type = f64, scale = 2e-29)]
+    cus: i16,
+    #[ubx(map_type = f64, scale = 2e-33)]
+    e: u32,
+    #[ubx(map_type = f64, scale = 2e-19)]
+    sqrt_a: u32,
+    #[ubx(map_type = f64, scale = 2e+4)]
+    toe: u16,
+    #[ubx(map_type = f64, scale = 2e-29)]
+    cic: i16,
+    #[ubx(map_type = f64, scale = 2e-31)]
+    omega0: i32,
+    #[ubx(map_type = f64, scale = 2e-29)]
+    cis: i16,
+    #[ubx(map_type = f64, scale = 2e-5)]
+    crc: i16,
+    #[ubx(map_type = f64, scale = 2e-31)]
+    i0: i32,
+    #[ubx(map_type = f64, scale = 2e-31)]
+    omega: i32,
+    #[ubx(map_type = f64, scale = 2e-43)]
+    omega_dot: i32,
+    #[ubx(map_type = f64, scale = 2e-43)]
+    idot: i16,
+    reserved3: [u8; 2],
 }
 
 define_recv_packets!(
@@ -2070,6 +2235,10 @@ define_recv_packets!(
         RxmRtcm,
         EsfMeas,
         EsfIns,
+        HnrPvt,
+        NavAtt,
         NavClock,
+        NavVelECEF,
+        MgaGpsEPH,
     }
 );
