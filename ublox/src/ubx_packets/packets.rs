@@ -2152,30 +2152,24 @@ struct RxmSfrbx {
     version: u8,
     reserved3: u8,
 
-    #[ubx(map_type = VecU32)]
+    #[ubx(map_type = Vec<u32>, from = vec_conversion::convert_to_u32_vec)]
     dwrd: [u8; 0],
 }
 
-pub struct VecU32(Vec<u32>);
+mod vec_conversion {
+    use std::convert::TryInto;
 
-impl From<&[u8]> for VecU32 {
-    fn from(bytes: &[u8]) -> Self {
-        let mut dwrd = vec![];
+    pub(crate) fn convert_to_u32_vec(bytes: &[u8]) -> Vec<u32> {
+        let mut vec = vec![];
         let mut offset = 0;
         while offset < bytes.len() {
             let slice: [u8; 4] = (&bytes[offset..offset + 4])
                 .try_into()
                 .expect("dwrds data length err");
-            dwrd.push(u32::from_ne_bytes(slice));
+            vec.push(u32::from_ne_bytes(slice));
             offset += 4;
         }
-        VecU32(dwrd)
-    }
-}
-
-impl core::fmt::Debug for VecU32 {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        f.debug_list().entries(&self.0).finish()
+        vec
     }
 }
 
