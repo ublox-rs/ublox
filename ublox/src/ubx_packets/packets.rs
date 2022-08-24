@@ -2028,6 +2028,7 @@ bitflags! {
     }
 }
 
+#[ubx_packet_recv]
 #[ubx(class = 0x28, id = 0x00, fixed_payload_len = 72)]
 struct HnrPvt {
     i_tow: u32,
@@ -2074,6 +2075,7 @@ struct HnrPvt {
     reserved2: [u8; 4],
 }
 
+#[ubx_packet_recv]
 #[ubx(class = 0x01, id = 0x05, fixed_payload_len = 32)]
 struct NavAtt {
     itow: u32,
@@ -2134,7 +2136,6 @@ bitflags! {
 // struct EsfRaw {
 //     msss: u32,
 // }
-
 
 #[ubx_packet_recv]
 #[ubx(class = 0x01, id = 0x11, fixed_payload_len = 20)]
