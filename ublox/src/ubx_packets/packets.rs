@@ -5,12 +5,13 @@ use super::{
 use crate::error::{MemWriterError, ParserError};
 use bitflags::bitflags;
 use chrono::prelude::*;
+use core::borrow::BorrowMut;
 use core::fmt;
-use core::fmt::Pointer;
+use core::fmt::{Formatter, Pointer};
 use num_traits::cast::{FromPrimitive, ToPrimitive};
 use num_traits::float::FloatCore;
-use std::convert::TryInto;
 use num_traits::real::Real;
+use std::convert::TryInto;
 use ublox_derive::{
     define_recv_packets, ubx_extend, ubx_extend_bitflags, ubx_packet_recv, ubx_packet_recv_send,
     ubx_packet_send,
@@ -2030,6 +2031,7 @@ bitflags! {
     }
 }
 
+#[ubx_packet_recv]
 #[ubx(class = 0x28, id = 0x00, fixed_payload_len = 72)]
 struct HnrPvt {
     i_tow: u32,
@@ -2138,36 +2140,6 @@ bitflags! {
 //     msss: u32,
 // }
 
-#[derive(Clone)]
-pub struct RxmSfrbxIter<'a> {
-    data: &'a [u8],
-    offset: usize,
-}
-
-impl<'a> core::iter::Iterator for RxmSfrbxIter<'a> {
-    type Item = u32;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.offset < self.data.len() {
-            let data: [u8; 4] = (&self.data[self.offset..self.offset + 4])
-                .try_into()
-                .expect("data incorrect length slice, this should not occur");
-            self.offset += 4;
-            Some(u32::from_ne_bytes(data))
-        } else {
-            None
-        }
-    }
-}
-
-impl fmt::Debug for RxmSfrbxIter<'_> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let mut clone = self.clone();
-        let dwrd: Vec<u32> = clone.collect();
-        dwrd.fmt(f)
-    }
-}
-
 #[ubx_packet_recv]
 #[ubx(class = 0x02, id = 0x13, max_payload_len = 72)]
 struct RxmSfrbx {
@@ -2180,25 +2152,30 @@ struct RxmSfrbx {
     version: u8,
     reserved3: u8,
 
-    #[ubx(map_type = RxmSfrbxIter,
-    may_fail,
-    is_valid = rxmsfrbx::is_valid,
-    from = rxmsfrbx::convert_to_iter)]
+    #[ubx(map_type = VecU32)]
     dwrd: [u8; 0],
 }
 
-mod rxmsfrbx {
-    use super::RxmSfrbxIter;
+pub struct VecU32(Vec<u32>);
 
-    pub(crate) fn convert_to_iter(bytes: &[u8]) -> RxmSfrbxIter {
-        RxmSfrbxIter {
-            data: bytes,
-            offset: 0,
+impl From<&[u8]> for VecU32 {
+    fn from(bytes: &[u8]) -> Self {
+        let mut dwrd = vec![];
+        let mut offset = 0;
+        while offset < bytes.len() {
+            let slice: [u8; 4] = (&bytes[offset..offset + 4])
+                .try_into()
+                .expect("dwrds data length err");
+            dwrd.push(u32::from_ne_bytes(slice));
+            offset += 4;
         }
+        VecU32(dwrd)
     }
+}
 
-    pub(crate) fn is_valid(bytes: &[u8]) -> bool {
-        bytes.len() % 4 == 0
+impl core::fmt::Debug for VecU32 {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        f.debug_list().entries(&self.0).finish()
     }
 }
 
