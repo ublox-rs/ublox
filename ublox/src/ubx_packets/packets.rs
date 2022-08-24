@@ -6,9 +6,11 @@ use crate::error::{MemWriterError, ParserError};
 use bitflags::bitflags;
 use chrono::prelude::*;
 use core::fmt;
+use core::fmt::Formatter;
 use num_traits::cast::{FromPrimitive, ToPrimitive};
 use num_traits::float::FloatCore;
 use num_traits::real::Real;
+use std::convert::TryInto;
 use ublox_derive::{
     define_recv_packets, ubx_extend, ubx_extend_bitflags, ubx_packet_recv, ubx_packet_recv_send,
     ubx_packet_send,
@@ -1981,11 +1983,68 @@ struct EsfMeas {
     calib_tag: u32,
 }
 
-// #[ubx_packet_recv]
-// #[ubx(class = 0x10, id = 0x03, fixed_payload_len = 16)]
-// struct EsfRaw {
-//     msss: u32,
-// }
+#[ubx_packet_recv]
+#[ubx(class = 0x10, id = 0x03, max_payload_len = 1240)]
+struct EsfRaw {
+    msss: u32,
+    #[ubx(map_type = EsfRawIter,
+    from = esf_raw::convert_to_iter,
+    is_valid = esf_raw::is_valid)]
+    iter: [u8; 0],
+}
+
+pub struct EsfRawIter<'a> {
+    bytes: &'a [u8],
+    offset: usize,
+}
+
+pub struct EsfRawInfo {
+    data: u32,
+    sensor_time_tag: u32,
+}
+
+impl<'a> core::iter::Iterator for EsfRawIter<'a> {
+    type Item = EsfRawInfo;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.offset < self.bytes.len() {
+            let data_slice: [u8; 4] = (&self.bytes[self.offset..self.offset + 4])
+                .try_into()
+                .expect("data length err");
+            let data = u32::from_ne_bytes(data_slice);
+            let ss_slice: [u8; 4] = (&self.bytes[self.offset + 4..self.offset + 8])
+                .try_into()
+                .expect("data length err");
+            let sensor_time_tag = u32::from_ne_bytes(ss_slice);
+            let info = EsfRawInfo {
+                data,
+                sensor_time_tag,
+            };
+            self.offset += 8;
+            Some(info)
+        } else {
+            None
+        }
+    }
+}
+
+impl<'a> core::fmt::Debug for EsfRawIter<'a> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        f.debug_struct("EsfRawIter").finish()
+    }
+}
+
+mod esf_raw {
+    use crate::EsfRawIter;
+
+    pub(crate) fn convert_to_iter(bytes: &[u8]) -> EsfRawIter {
+        EsfRawIter { bytes, offset: 0 }
+    }
+
+    pub(crate) fn is_valid(bytes: &[u8]) -> bool {
+        bytes.len() % 8 == 0
+    }
+}
 
 #[ubx_packet_recv]
 #[ubx(class = 0x10, id = 0x15, fixed_payload_len = 36)]
@@ -2131,12 +2190,6 @@ bitflags! {
     }
 }
 
-// #[ubx_packet_recv]
-// #[ubx(class = 0x10, id = 0x03, fixed_payload_len = 16)]
-// struct EsfRaw {
-//     msss: u32,
-// }
-
 #[ubx_packet_recv]
 #[ubx(class = 0x01, id = 0x11, fixed_payload_len = 20)]
 struct NavVelECEF {
@@ -2241,5 +2294,6 @@ define_recv_packets!(
         NavClock,
         NavVelECEF,
         MgaGpsEPH,
+        EsfRaw
     }
 );
