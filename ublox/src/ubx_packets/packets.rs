@@ -2165,7 +2165,7 @@ mod vec_conversion {
         while offset < bytes.len() {
             let slice: [u8; 4] = (&bytes[offset..offset + 4])
                 .try_into()
-                .expect("dwrds data length err");
+                .expect("u32 data length err");
             vec.push(u32::from_ne_bytes(slice));
             offset += 4;
         }
