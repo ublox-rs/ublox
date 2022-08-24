@@ -1970,15 +1970,65 @@ struct RxmRtcm {
 }
 
 #[ubx_packet_recv]
-#[ubx(class = 0x10, id = 0x02, fixed_payload_len = 16)]
+#[ubx(class = 0x10, id = 0x02, max_payload_len = 1240)]
 struct EsfMeas {
     time_tag: u32,
+    #[ubx(map_type = EsfMeasInfo, from = esf_meas::convert_to_esf_meas_info)]
+    info: [u8; 0],
+}
+
+#[derive(Debug)]
+pub struct EsfMeasInfo {
     flags: u16,
     id: u16,
-    /// flags >> 11 & 0x1F
-    data: u32,
-    /// flags & 0x8
-    calib_tag: u32,
+    data: Vec<u32>,
+    calib_tag: Option<u32>,
+}
+
+mod esf_meas {
+    use crate::ubx_packets::packets::{vec_conversion, EsfMeasInfo};
+    use crate::{FixedLinearBuffer, Parser};
+    use std::convert::TryInto;
+    use std::ptr::slice_from_raw_parts;
+
+    pub(crate) fn convert_to_esf_meas_info(bytes: &[u8]) -> EsfMeasInfo {
+        let buf: [u8; 2] = (&bytes[0..2]).try_into().expect("");
+        let flags = u16::from_ne_bytes(buf);
+        let buf: [u8; 2] = (&bytes[2..4]).try_into().expect("");
+        let id = u16::from_ne_bytes(buf);
+        let calib_tag_exists = flags & 0x8 != 0;
+        let (data_slice, calib_tag) = if calib_tag_exists {
+            let ct_slice: [u8; 4] = (&bytes[bytes.len() - 4..]).try_into().expect("");
+            let calib_tag = u32::from_ne_bytes(ct_slice);
+            (&bytes[4..bytes.len() - 4], Some(calib_tag))
+        } else {
+            (&bytes[4..], None)
+        };
+        let data = vec_conversion::convert_to_u32_vec(data_slice);
+        EsfMeasInfo {
+            flags,
+            id,
+            data,
+            calib_tag,
+        }
+    }
+}
+
+mod vec_conversion {
+    use std::convert::TryInto;
+
+    pub(crate) fn convert_to_u32_vec(bytes: &[u8]) -> Vec<u32> {
+        let mut vec = vec![];
+        let mut offset = 0;
+        while offset < bytes.len() {
+            let slice: [u8; 4] = (&bytes[offset..offset + 4])
+                .try_into()
+                .expect("u32 data length err");
+            vec.push(u32::from_ne_bytes(slice));
+            offset += 4;
+        }
+        vec
+    }
 }
 
 // #[ubx_packet_recv]
@@ -2028,6 +2078,7 @@ bitflags! {
     }
 }
 
+#[ubx_packet_recv]
 #[ubx(class = 0x28, id = 0x00, fixed_payload_len = 72)]
 struct HnrPvt {
     i_tow: u32,
@@ -2074,6 +2125,7 @@ struct HnrPvt {
     reserved2: [u8; 4],
 }
 
+#[ubx_packet_recv]
 #[ubx(class = 0x01, id = 0x05, fixed_payload_len = 32)]
 struct NavAtt {
     itow: u32,
@@ -2134,7 +2186,6 @@ bitflags! {
 // struct EsfRaw {
 //     msss: u32,
 // }
-
 
 #[ubx_packet_recv]
 #[ubx(class = 0x01, id = 0x11, fixed_payload_len = 20)]
