@@ -9,6 +9,7 @@ use core::fmt;
 use num_traits::cast::{FromPrimitive, ToPrimitive};
 use num_traits::float::FloatCore;
 use num_traits::real::Real;
+use std::convert::TryInto;
 use ublox_derive::{
     define_recv_packets, ubx_extend, ubx_extend_bitflags, ubx_packet_recv, ubx_packet_recv_send,
     ubx_packet_send,
@@ -2202,6 +2203,78 @@ struct MgaGpsEPH {
     #[ubx(map_type = f64, scale = 2e-43)]
     idot: i16,
     reserved3: [u8; 2],
+}
+
+#[ubx_packet_recv]
+#[ubx(class = 0x02, id = 0x15, max_payload_len = 1240)]
+struct RxmRawx {
+    rcv_tow: [u8; 8],
+    week: u16,
+    leap_s: i8,
+    num_meas: u8,
+    rec_stat: u8,
+    reserved1: [u8; 3],
+    #[ubx(map_type = RxmRawxInfoIter,
+    from = rxm_rawx::convert_to_iter,
+    is_valid = rxm_rawx::is_valid)]
+    iter: [u8; 0],
+}
+
+pub struct RxmRawxInfo {
+    pr_mes: f64,
+    cp_mes: f64,
+    do_mes: u32,
+    gnss_id: u8,
+    sv_id: u8,
+    reserved2: u8,
+    freq_id: u8,
+    lock_time: u16,
+    cno: u8,
+    pr_stdev: u8,
+    cp_stdev: u8,
+    do_stdev: u8,
+    trk_stat: u8,
+    reserved3: u8,
+}
+
+#[derive(Debug)]
+pub struct RxmRawxInfoIter<'a> {
+    data: &'a [u8],
+    offset: usize,
+}
+
+impl<'a> core::iter::Iterator for RxmRawxInfoIter<'a> {
+    type Item = RxmRawxInfo;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.offset < self.data.len() {
+            let data: &[u8; 32] = (&self.data[self.offset..self.offset + 32])
+                .try_into()
+                .expect("data length err");
+            self.offset += 32;
+            Some(rxm_rawx::convert_to_info(data))
+        } else {
+            None
+        }
+    }
+}
+
+mod rxm_rawx {
+    use crate::{RxmRawxInfo, RxmRawxInfoIter};
+
+    pub(crate) fn convert_to_info(bytes: &[u8; 32]) -> RxmRawxInfo {
+        todo!()
+    }
+
+    pub(crate) fn convert_to_iter(bytes: &[u8]) -> RxmRawxInfoIter {
+        RxmRawxInfoIter {
+            data: bytes,
+            offset: 0,
+        }
+    }
+    pub(crate) fn is_valid(bytes: &[u8]) -> bool {
+        bytes.len() % 32 == 0
+    }
 }
 
 define_recv_packets!(
