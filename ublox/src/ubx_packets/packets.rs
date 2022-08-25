@@ -2179,7 +2179,7 @@ impl<'a> Iterator for DwrdIter<'a> {
     type Item = u32;
 
     fn next(&mut self) -> Option<Self::Item> {
-        Some(u32::from_ne_bytes(self.0.next()?.try_into().unwrap()))
+        Some(u32::from_le_bytes(self.0.next()?.try_into().unwrap()))
     }
 }
 
