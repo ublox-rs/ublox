@@ -2240,15 +2240,11 @@ pub struct RxmRawxInfo {
     reserved3: u8,
 }
 
-#[derive(Clone)]
-pub struct RxmRawxInfoIter<'a> {
-    data: &'a [u8],
-    offset: usize,
-}
+pub struct RxmRawxInfoIter<'a>(core::slice::ChunksExact<'a, u8>);
 
 impl<'a> RxmRawxInfoIter<'a> {
     fn new(data: &'a [u8]) -> Self {
-        Self { data, offset: 0 }
+        Self(data.chunks_exact(8))
     }
 
     fn is_valid(bytes: &'a [u8]) -> bool {
@@ -2260,21 +2256,15 @@ impl<'a> core::iter::Iterator for RxmRawxInfoIter<'a> {
     type Item = RxmRawxInfoRef<'a>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.offset < self.data.len() {
-            let data: &[u8; 32] = self.data[self.offset..self.offset + 32].try_into().unwrap();
-            self.offset += 32;
-            Some(RxmRawxInfoRef(data))
-        } else {
-            None
+        match self.0.next() {
+            Some(byte) => Some(RxmRawxInfoRef(byte)),
+            None => None,
         }
     }
 }
 
 impl<'a> core::fmt::Debug for RxmRawxInfoIter<'a> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        let mut a = self.clone();
-        let v = a.collect::<Vec<RxmRawxInfoRef>>();
-        println!("{v:?}");
         f.debug_struct("RxmRawxInfoIter").finish()
     }
 }
