@@ -2224,6 +2224,7 @@ struct RxmRawx {
 #[ubx_packet_recv]
 #[ubx(class = 0x02, id = 0x15, fixed_payload_len = 32)]
 pub struct RxmRawxInfo {
+    // #[ubx(map_type = f64)]
     pr_mes: [u8; 8],
     cp_mes: [u8; 8],
     do_mes: u32,
@@ -2240,11 +2241,12 @@ pub struct RxmRawxInfo {
     reserved3: u8,
 }
 
+#[derive(Clone)]
 pub struct RxmRawxInfoIter<'a>(core::slice::ChunksExact<'a, u8>);
 
 impl<'a> RxmRawxInfoIter<'a> {
     fn new(data: &'a [u8]) -> Self {
-        Self(data.chunks_exact(8))
+        Self(data.chunks_exact(32))
     }
 
     fn is_valid(bytes: &'a [u8]) -> bool {
@@ -2256,15 +2258,15 @@ impl<'a> core::iter::Iterator for RxmRawxInfoIter<'a> {
     type Item = RxmRawxInfoRef<'a>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        match self.0.next() {
-            Some(byte) => Some(RxmRawxInfoRef(byte)),
-            None => None,
-        }
+        self.0.next().map(RxmRawxInfoRef)
     }
 }
 
 impl<'a> core::fmt::Debug for RxmRawxInfoIter<'a> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        let mut a = self.clone();
+        let b: Vec<RxmRawxInfoRef> = a.collect();
+        // println!("{b:?}");
         f.debug_struct("RxmRawxInfoIter").finish()
     }
 }
