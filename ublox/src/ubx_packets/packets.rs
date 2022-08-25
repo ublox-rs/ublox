@@ -6,6 +6,7 @@ use crate::error::{MemWriterError, ParserError};
 use bitflags::bitflags;
 use chrono::prelude::*;
 use core::fmt;
+use core::fmt::Formatter;
 use itertools::Itertools;
 use num_traits::cast::{FromPrimitive, ToPrimitive};
 use num_traits::float::FloatCore;
@@ -1979,32 +1980,47 @@ struct EsfMeas {
     info: [u8; 0],
 }
 
-#[derive(Debug)]
-pub struct EsfMeasInfo {
+pub struct EsfMeasInfo<'a> {
     flags: u16,
     id: u16,
-    data: Vec<u32>,
+    data: Box<dyn Iterator<Item = &'a u32>>,
     calib_tag: Option<u32>,
 }
 
-impl<'a> EsfMeasInfo {
+impl<'a> EsfMeasInfo<'a> {
     fn new(bytes: &'a [u8]) -> Self {
         let mut chunks = bytes.chunks_exact(2);
         let flags = u16::from_le_bytes(chunks.next().unwrap().try_into().unwrap());
         let id = u16::from_le_bytes(chunks.next().unwrap().try_into().unwrap());
 
-        let mut data = chunks
-            .tuples::<(&[u8], &[u8])>()
-            .map(|(a, b)| u32::from_le_bytes([a, b].concat().try_into().unwrap()))
-            .collect_vec();
+        let calib_tag = if flags & 0x8 != 0 {
+            let first_last: [u8; 2] = chunks.next_back().unwrap().try_into().unwrap();
+            let second_last: [u8; 2] = chunks.next_back().unwrap().try_into().unwrap();
+            Some(u32::from_le_bytes(
+                [first_last, second_last].concat().try_into().unwrap(),
+            ))
+        } else {
+            None
+        };
 
-        let mut calib_tag = if flags & 0x8 != 0 { data.pop() } else { None };
+        let data = Box::new(
+            chunks
+                .tuples::<(&[u8], &[u8])>()
+                .map(|(a, b)| u32::from_le_bytes([a, b].concat().try_into().unwrap())),
+        ) as Box<dyn Iterator<Item = &'a u32>>;
+
         Self {
             flags,
             id,
             data,
             calib_tag,
         }
+    }
+}
+
+impl<'a> core::fmt::Debug for EsfMeasInfo<'a> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        f.debug_struct("EsfMeasInfo").finish()
     }
 }
 
