@@ -6,6 +6,7 @@ use crate::error::{MemWriterError, ParserError};
 use bitflags::bitflags;
 use chrono::prelude::*;
 use core::fmt;
+use core::fmt::Formatter;
 use num_traits::cast::{FromPrimitive, ToPrimitive};
 use num_traits::float::FloatCore;
 use num_traits::real::Real;
@@ -2215,14 +2216,16 @@ struct RxmRawx {
     rec_stat: u8,
     reserved1: [u8; 3],
     #[ubx(map_type = RxmRawxInfoIter,
-    from = rxm_rawx::convert_to_iter,
-    is_valid = rxm_rawx::is_valid)]
+    from = RxmRawxInfoIter::new,
+    is_valid = RxmRawxInfoIter::is_valid)]
     iter: [u8; 0],
 }
 
+#[ubx_packet_recv]
+#[ubx(class = 0x02, id = 0x15, fixed_payload_len = 32)]
 pub struct RxmRawxInfo {
-    pr_mes: f64,
-    cp_mes: f64,
+    pr_mes: [u8; 8],
+    cp_mes: [u8; 8],
     do_mes: u32,
     gnss_id: u8,
     sv_id: u8,
@@ -2237,43 +2240,42 @@ pub struct RxmRawxInfo {
     reserved3: u8,
 }
 
-#[derive(Debug)]
+#[derive(Clone)]
 pub struct RxmRawxInfoIter<'a> {
     data: &'a [u8],
     offset: usize,
 }
 
+impl<'a> RxmRawxInfoIter<'a> {
+    fn new(data: &'a [u8]) -> Self {
+        Self { data, offset: 0 }
+    }
+
+    fn is_valid(bytes: &'a [u8]) -> bool {
+        bytes.len() % 32 == 0
+    }
+}
+
 impl<'a> core::iter::Iterator for RxmRawxInfoIter<'a> {
-    type Item = RxmRawxInfo;
+    type Item = RxmRawxInfoRef<'a>;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.offset < self.data.len() {
-            let data: &[u8; 32] = (&self.data[self.offset..self.offset + 32])
-                .try_into()
-                .expect("data length err");
+            let data: &[u8; 32] = self.data[self.offset..self.offset + 32].try_into().unwrap();
             self.offset += 32;
-            Some(rxm_rawx::convert_to_info(data))
+            Some(RxmRawxInfoRef(data))
         } else {
             None
         }
     }
 }
 
-mod rxm_rawx {
-    use crate::{RxmRawxInfo, RxmRawxInfoIter};
-
-    pub(crate) fn convert_to_info(bytes: &[u8; 32]) -> RxmRawxInfo {
-        todo!()
-    }
-
-    pub(crate) fn convert_to_iter(bytes: &[u8]) -> RxmRawxInfoIter {
-        RxmRawxInfoIter {
-            data: bytes,
-            offset: 0,
-        }
-    }
-    pub(crate) fn is_valid(bytes: &[u8]) -> bool {
-        bytes.len() % 32 == 0
+impl<'a> core::fmt::Debug for RxmRawxInfoIter<'a> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        let mut a = self.clone();
+        let v = a.collect::<Vec<RxmRawxInfoRef>>();
+        println!("{v:?}");
+        f.debug_struct("RxmRawxInfoIter").finish()
     }
 }
 
@@ -2314,5 +2316,6 @@ define_recv_packets!(
         NavClock,
         NavVelECEF,
         MgaGpsEPH,
+        RxmRawx,
     }
 );
