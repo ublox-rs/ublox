@@ -1993,14 +1993,12 @@ struct EsfRaw {
     iter: [u8; 0],
 }
 
-pub struct EsfRawIter<'a> {
-    bytes: &'a [u8],
-    offset: usize,
-}
+#[derive(Clone)]
+pub struct EsfRawIter<'a>(core::slice::ChunksExact<'a, u8>);
 
 impl<'a> EsfRawIter<'a> {
     fn new(bytes: &'a [u8]) -> Self {
-        EsfRawIter { bytes, offset: 0 }
+        Self(bytes.chunks_exact(4))
     }
 
     fn is_valid(bytes: &'a [u8]) -> bool {
@@ -2008,6 +2006,7 @@ impl<'a> EsfRawIter<'a> {
     }
 }
 
+#[derive(Debug)]
 pub struct EsfRawInfo {
     data: u32,
     sensor_time_tag: u32,
@@ -2017,17 +2016,9 @@ impl<'a> core::iter::Iterator for EsfRawIter<'a> {
     type Item = EsfRawInfo;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.offset + 8 > self.bytes.len() {
-            return None;
-        }
-        let data_slice: [u8; 4] = self.bytes[self.offset..self.offset + 4].try_into().unwrap();
-        let ss_slice: [u8; 4] = self.bytes[self.offset + 4..self.offset + 8]
-            .try_into()
-            .unwrap();
-        self.offset += 8;
         Some(EsfRawInfo {
-            data: u32::from_le_bytes(data_slice),
-            sensor_time_tag: u32::from_le_bytes(ss_slice),
+            data: u32::from_le_bytes(self.0.next()?.try_into().unwrap()),
+            sensor_time_tag: u32::from_le_bytes(self.0.next()?.try_into().unwrap()),
         })
     }
 }
