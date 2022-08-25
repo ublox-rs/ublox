@@ -2152,24 +2152,34 @@ struct RxmSfrbx {
     version: u8,
     reserved3: u8,
 
-    #[ubx(map_type = Vec<u32>, from = vec_conversion::convert_to_u32_vec)]
+    #[ubx(map_type = DwrdIter, from = DwrdIter::new, is_valid = )]
     dwrd: [u8; 0],
 }
 
-mod vec_conversion {
-    use std::convert::TryInto;
+#[derive(Clone)]
+pub struct DwrdIter<'a>(core::slice::ChunksExact<'a, u8>);
 
-    pub(crate) fn convert_to_u32_vec(bytes: &[u8]) -> Vec<u32> {
-        let mut vec = vec![];
-        let mut offset = 0;
-        while offset < bytes.len() {
-            let slice: [u8; 4] = (&bytes[offset..offset + 4])
-                .try_into()
-                .expect("u32 data length err");
-            vec.push(u32::from_ne_bytes(slice));
-            offset += 4;
-        }
-        vec
+impl<'a> DwrdIter<'a> {
+    fn new(bytes: &'a [u8]) -> Self {
+        Self(bytes.chunks_exact(4))
+    }
+
+    fn is_valid(bytes: &'a [u8]) -> bool {
+        bytes.len() % 4 == 0
+    }
+}
+
+impl<'a> core::fmt::Debug for DwrdIter<'a> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        f.debug_struct("DwrdIter").finish()
+    }
+}
+
+impl<'a> Iterator for DwrdIter<'a> {
+    type Item = u32;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        Some(u32::from_ne_bytes(self.0.next()?.try_into().unwrap()))
     }
 }
 
