@@ -5,6 +5,7 @@ use super::{
 use crate::error::{MemWriterError, ParserError};
 use bitflags::bitflags;
 use chrono::prelude::*;
+use core::borrow::BorrowMut;
 use core::fmt;
 use core::fmt::Formatter;
 use num_traits::cast::{FromPrimitive, ToPrimitive};
@@ -625,7 +626,7 @@ struct NavSat {
 
     num_svs: u8,
 
-    reserved: u16,
+    reserved: [u8; 2],
 
     #[ubx(map_type = NavSatIter,
         may_fail,
@@ -2174,6 +2175,49 @@ bitflags! {
 }
 
 #[ubx_packet_recv]
+#[ubx(class = 0x02, id = 0x13, max_payload_len = 72)]
+struct RxmSfrbx {
+    gnss_id: u8,
+    sv_id: u8,
+    reserved1: u8,
+    freq_id: u8,
+    num_words: u8,
+    reserved2: u8,
+    version: u8,
+    reserved3: u8,
+
+    #[ubx(map_type = DwrdIter, from = DwrdIter::new, is_valid = DwrdIter::is_valid)]
+    dwrd: [u8; 0],
+}
+
+#[derive(Clone)]
+pub struct DwrdIter<'a>(core::slice::ChunksExact<'a, u8>);
+
+impl<'a> DwrdIter<'a> {
+    fn new(bytes: &'a [u8]) -> Self {
+        Self(bytes.chunks_exact(4))
+    }
+
+    fn is_valid(bytes: &'a [u8]) -> bool {
+        bytes.len() % 4 == 0
+    }
+}
+
+impl<'a> core::fmt::Debug for DwrdIter<'a> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        f.debug_struct("DwrdIter").finish()
+    }
+}
+
+impl<'a> Iterator for DwrdIter<'a> {
+    type Item = u32;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        Some(u32::from_le_bytes(self.0.next()?.try_into().unwrap()))
+    }
+}
+
+#[ubx_packet_recv]
 #[ubx(class = 0x01, id = 0x11, fixed_payload_len = 20)]
 struct NavVelECEF {
     itow: u32,
@@ -2277,6 +2321,7 @@ define_recv_packets!(
         NavClock,
         NavVelECEF,
         MgaGpsEPH,
+        RxmSfrbx,
         EsfRaw
     }
 );
