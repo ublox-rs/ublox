@@ -1988,14 +1988,24 @@ struct EsfMeas {
 struct EsfRaw {
     msss: u32,
     #[ubx(map_type = EsfRawIter,
-    from = esf_raw::convert_to_iter,
-    is_valid = esf_raw::is_valid)]
+    from = EsfRawIter::new,
+    is_valid = EsfRawIter::is_valid)]
     iter: [u8; 0],
 }
 
 pub struct EsfRawIter<'a> {
     bytes: &'a [u8],
     offset: usize,
+}
+
+impl<'a> EsfRawIter<'a> {
+    fn new(bytes: &'a [u8]) -> Self {
+        EsfRawIter { bytes, offset: 0 }
+    }
+
+    fn is_valid(bytes: &'a [u8]) -> bool {
+        bytes.len() % 8 == 0
+    }
 }
 
 pub struct EsfRawInfo {
@@ -2007,42 +2017,24 @@ impl<'a> core::iter::Iterator for EsfRawIter<'a> {
     type Item = EsfRawInfo;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.offset < self.bytes.len() {
-            let data_slice: [u8; 4] = (&self.bytes[self.offset..self.offset + 4])
-                .try_into()
-                .expect("data length err");
-            let data = u32::from_ne_bytes(data_slice);
-            let ss_slice: [u8; 4] = (&self.bytes[self.offset + 4..self.offset + 8])
-                .try_into()
-                .expect("data length err");
-            let sensor_time_tag = u32::from_ne_bytes(ss_slice);
-            let info = EsfRawInfo {
-                data,
-                sensor_time_tag,
-            };
-            self.offset += 8;
-            Some(info)
-        } else {
-            None
+        if self.offset + 8 > self.bytes.len() {
+            return None;
         }
+        let data_slice: [u8; 4] = self.bytes[self.offset..self.offset + 4].try_into().unwrap();
+        let ss_slice: [u8; 4] = self.bytes[self.offset + 4..self.offset + 8]
+            .try_into()
+            .unwrap();
+        self.offset += 8;
+        Some(EsfRawInfo {
+            data: u32::from_le_bytes(data_slice),
+            sensor_time_tag: u32::from_le_bytes(ss_slice),
+        })
     }
 }
 
 impl<'a> core::fmt::Debug for EsfRawIter<'a> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         f.debug_struct("EsfRawIter").finish()
-    }
-}
-
-mod esf_raw {
-    use crate::EsfRawIter;
-
-    pub(crate) fn convert_to_iter(bytes: &[u8]) -> EsfRawIter {
-        EsfRawIter { bytes, offset: 0 }
-    }
-
-    pub(crate) fn is_valid(bytes: &[u8]) -> bool {
-        bytes.len() % 8 == 0
     }
 }
 
