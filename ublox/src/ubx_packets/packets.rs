@@ -6,9 +6,11 @@ use crate::error::{MemWriterError, ParserError};
 use bitflags::bitflags;
 use chrono::prelude::*;
 use core::fmt;
+use core::fmt::Formatter;
 use num_traits::cast::{FromPrimitive, ToPrimitive};
 use num_traits::float::FloatCore;
 use num_traits::real::Real;
+use std::convert::TryInto;
 use ublox_derive::{
     define_recv_packets, ubx_extend, ubx_extend_bitflags, ubx_packet_recv, ubx_packet_recv_send,
     ubx_packet_send,
@@ -1981,11 +1983,51 @@ struct EsfMeas {
     calib_tag: u32,
 }
 
-// #[ubx_packet_recv]
-// #[ubx(class = 0x10, id = 0x03, fixed_payload_len = 16)]
-// struct EsfRaw {
-//     msss: u32,
-// }
+#[ubx_packet_recv]
+#[ubx(class = 0x10, id = 0x03, max_payload_len = 1240)]
+struct EsfRaw {
+    msss: u32,
+    #[ubx(map_type = EsfRawIter,
+    from = EsfRawIter::new,
+    is_valid = EsfRawIter::is_valid)]
+    iter: [u8; 0],
+}
+
+#[derive(Clone)]
+pub struct EsfRawIter<'a>(core::slice::ChunksExact<'a, u8>);
+
+impl<'a> EsfRawIter<'a> {
+    fn new(bytes: &'a [u8]) -> Self {
+        Self(bytes.chunks_exact(4))
+    }
+
+    fn is_valid(bytes: &'a [u8]) -> bool {
+        bytes.len() % 8 == 0
+    }
+}
+
+#[derive(Debug)]
+pub struct EsfRawInfo {
+    data: u32,
+    sensor_time_tag: u32,
+}
+
+impl<'a> core::iter::Iterator for EsfRawIter<'a> {
+    type Item = EsfRawInfo;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        Some(EsfRawInfo {
+            data: u32::from_le_bytes(self.0.next()?.try_into().unwrap()),
+            sensor_time_tag: u32::from_le_bytes(self.0.next()?.try_into().unwrap()),
+        })
+    }
+}
+
+impl<'a> core::fmt::Debug for EsfRawIter<'a> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        f.debug_struct("EsfRawIter").finish()
+    }
+}
 
 #[ubx_packet_recv]
 #[ubx(class = 0x10, id = 0x15, fixed_payload_len = 36)]
@@ -2131,12 +2173,6 @@ bitflags! {
     }
 }
 
-// #[ubx_packet_recv]
-// #[ubx(class = 0x10, id = 0x03, fixed_payload_len = 16)]
-// struct EsfRaw {
-//     msss: u32,
-// }
-
 #[ubx_packet_recv]
 #[ubx(class = 0x01, id = 0x11, fixed_payload_len = 20)]
 struct NavVelECEF {
@@ -2241,5 +2277,6 @@ define_recv_packets!(
         NavClock,
         NavVelECEF,
         MgaGpsEPH,
+        EsfRaw
     }
 );
