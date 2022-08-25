@@ -7,7 +7,7 @@ use bitflags::bitflags;
 use chrono::prelude::*;
 use core::borrow::BorrowMut;
 use core::fmt;
-use core::fmt::{Formatter, Pointer};
+use core::fmt::Formatter;
 use num_traits::cast::{FromPrimitive, ToPrimitive};
 use num_traits::float::FloatCore;
 use num_traits::real::Real;
@@ -2152,7 +2152,7 @@ struct RxmSfrbx {
     version: u8,
     reserved3: u8,
 
-    #[ubx(map_type = DwrdIter, from = DwrdIter::new, is_valid = )]
+    #[ubx(map_type = DwrdIter, from = DwrdIter::new, is_valid = DwrdIter::is_valid)]
     dwrd: [u8; 0],
 }
 
