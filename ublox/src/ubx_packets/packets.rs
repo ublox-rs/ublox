@@ -6,9 +6,11 @@ use crate::error::{MemWriterError, ParserError};
 use bitflags::bitflags;
 use chrono::prelude::*;
 use core::fmt;
+use itertools::Itertools;
 use num_traits::cast::{FromPrimitive, ToPrimitive};
 use num_traits::float::FloatCore;
 use num_traits::real::Real;
+use std::convert::TryInto;
 use ublox_derive::{
     define_recv_packets, ubx_extend, ubx_extend_bitflags, ubx_packet_recv, ubx_packet_recv_send,
     ubx_packet_send,
@@ -1973,7 +1975,7 @@ struct RxmRtcm {
 #[ubx(class = 0x10, id = 0x02, max_payload_len = 1240)]
 struct EsfMeas {
     time_tag: u32,
-    #[ubx(map_type = EsfMeasInfo, from = esf_meas::convert_to_esf_meas_info)]
+    #[ubx(map_type = EsfMeasInfo, from = EsfMeasInfo::new)]
     info: [u8; 0],
 }
 
@@ -1985,49 +1987,24 @@ pub struct EsfMeasInfo {
     calib_tag: Option<u32>,
 }
 
-mod esf_meas {
-    use crate::ubx_packets::packets::{vec_conversion, EsfMeasInfo};
-    use crate::{FixedLinearBuffer, Parser};
-    use std::convert::TryInto;
-    use std::ptr::slice_from_raw_parts;
+impl<'a> EsfMeasInfo {
+    fn new(bytes: &'a [u8]) -> Self {
+        let mut chunks = bytes.chunks_exact(2);
+        let flags = u16::from_le_bytes(chunks.next().unwrap().try_into().unwrap());
+        let id = u16::from_le_bytes(chunks.next().unwrap().try_into().unwrap());
 
-    pub(crate) fn convert_to_esf_meas_info(bytes: &[u8]) -> EsfMeasInfo {
-        let buf: [u8; 2] = (&bytes[0..2]).try_into().expect("");
-        let flags = u16::from_ne_bytes(buf);
-        let buf: [u8; 2] = (&bytes[2..4]).try_into().expect("");
-        let id = u16::from_ne_bytes(buf);
-        let calib_tag_exists = flags & 0x8 != 0;
-        let (data_slice, calib_tag) = if calib_tag_exists {
-            let ct_slice: [u8; 4] = (&bytes[bytes.len() - 4..]).try_into().expect("");
-            let calib_tag = u32::from_ne_bytes(ct_slice);
-            (&bytes[4..bytes.len() - 4], Some(calib_tag))
-        } else {
-            (&bytes[4..], None)
-        };
-        let data = vec_conversion::convert_to_u32_vec(data_slice);
-        EsfMeasInfo {
+        let mut data = chunks
+            .tuples::<(&[u8], &[u8])>()
+            .map(|(a, b)| u32::from_le_bytes([a, b].concat().try_into().unwrap()))
+            .collect_vec();
+
+        let mut calib_tag = if flags & 0x8 != 0 { data.pop() } else { None };
+        Self {
             flags,
             id,
             data,
             calib_tag,
         }
-    }
-}
-
-mod vec_conversion {
-    use std::convert::TryInto;
-
-    pub(crate) fn convert_to_u32_vec(bytes: &[u8]) -> Vec<u32> {
-        let mut vec = vec![];
-        let mut offset = 0;
-        while offset < bytes.len() {
-            let slice: [u8; 4] = (&bytes[offset..offset + 4])
-                .try_into()
-                .expect("u32 data length err");
-            vec.push(u32::from_ne_bytes(slice));
-            offset += 4;
-        }
-        vec
     }
 }
 
