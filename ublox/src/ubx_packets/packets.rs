@@ -2284,6 +2284,67 @@ struct MgaGpsEPH {
     reserved3: [u8; 2],
 }
 
+#[ubx_packet_recv]
+#[ubx(class = 0x02, id = 0x15, max_payload_len = 1240)]
+struct RxmRawx {
+    rcv_tow: f64,
+    week: u16,
+    leap_s: i8,
+    num_meas: u8,
+    rec_stat: u8,
+    reserved1: [u8; 3],
+    #[ubx(map_type = RxmRawxInfoIter,
+    from = RxmRawxInfoIter::new,
+    is_valid = RxmRawxInfoIter::is_valid)]
+    iter: [u8; 0],
+}
+
+#[ubx_packet_recv]
+#[ubx(class = 0x02, id = 0x15, fixed_payload_len = 32)]
+pub struct RxmRawxInfo {
+    pr_mes: f64,
+    cp_mes: f64,
+    do_mes: u32,
+    gnss_id: u8,
+    sv_id: u8,
+    reserved2: u8,
+    freq_id: u8,
+    lock_time: u16,
+    cno: u8,
+    pr_stdev: u8,
+    cp_stdev: u8,
+    do_stdev: u8,
+    trk_stat: u8,
+    reserved3: u8,
+}
+
+#[derive(Clone)]
+pub struct RxmRawxInfoIter<'a>(core::slice::ChunksExact<'a, u8>);
+
+impl<'a> RxmRawxInfoIter<'a> {
+    fn new(data: &'a [u8]) -> Self {
+        Self(data.chunks_exact(32))
+    }
+
+    fn is_valid(bytes: &'a [u8]) -> bool {
+        bytes.len() % 32 == 0
+    }
+}
+
+impl<'a> core::iter::Iterator for RxmRawxInfoIter<'a> {
+    type Item = RxmRawxInfoRef<'a>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.0.next().map(RxmRawxInfoRef)
+    }
+}
+
+impl<'a> core::fmt::Debug for RxmRawxInfoIter<'a> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        f.debug_struct("RxmRawxInfoIter").finish()
+    }
+}
+
 define_recv_packets!(
     enum PacketRef {
         _ = UbxUnknownPacketRef,
@@ -2321,6 +2382,7 @@ define_recv_packets!(
         NavClock,
         NavVelECEF,
         MgaGpsEPH,
+        RxmRawx,
         RxmSfrbx,
         EsfRaw
     }
