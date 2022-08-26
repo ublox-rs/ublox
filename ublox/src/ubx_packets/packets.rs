@@ -2287,7 +2287,7 @@ struct MgaGpsEPH {
 #[ubx_packet_recv]
 #[ubx(class = 0x02, id = 0x15, max_payload_len = 1240)]
 struct RxmRawx {
-    rcv_tow: [u8; 8],
+    rcv_tow: f64,
     week: u16,
     leap_s: i8,
     num_meas: u8,
@@ -2302,9 +2302,8 @@ struct RxmRawx {
 #[ubx_packet_recv]
 #[ubx(class = 0x02, id = 0x15, fixed_payload_len = 32)]
 pub struct RxmRawxInfo {
-    // #[ubx(map_type = f64)]
-    pr_mes: [u8; 8],
-    cp_mes: [u8; 8],
+    pr_mes: f64,
+    cp_mes: f64,
     do_mes: u32,
     gnss_id: u8,
     sv_id: u8,
@@ -2342,9 +2341,6 @@ impl<'a> core::iter::Iterator for RxmRawxInfoIter<'a> {
 
 impl<'a> core::fmt::Debug for RxmRawxInfoIter<'a> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        let mut a = self.clone();
-        let b: Vec<RxmRawxInfoRef> = a.collect();
-        // println!("{b:?}");
         f.debug_struct("RxmRawxInfoIter").finish()
     }
 }

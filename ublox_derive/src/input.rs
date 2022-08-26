@@ -547,15 +547,15 @@ impl Parse for Comment {
 }
 
 fn field_size_bytes(ty: &Type) -> syn::Result<Option<NonZeroUsize>> {
-    //TODO: make this array static
-    //TODO: support f32, f64
-    let valid_types: [(Type, NonZeroUsize); 6] = [
+    let valid_types: [(Type, NonZeroUsize); 8] = [
         (syn::parse_quote!(u8), NonZeroUsize::new(1).unwrap()),
         (syn::parse_quote!(i8), NonZeroUsize::new(1).unwrap()),
         (syn::parse_quote!(u16), NonZeroUsize::new(2).unwrap()),
         (syn::parse_quote!(i16), NonZeroUsize::new(2).unwrap()),
         (syn::parse_quote!(u32), NonZeroUsize::new(4).unwrap()),
         (syn::parse_quote!(i32), NonZeroUsize::new(4).unwrap()),
+        (syn::parse_quote!(f32), NonZeroUsize::new(4).unwrap()),
+        (syn::parse_quote!(f64), NonZeroUsize::new(8).unwrap()),
     ];
     if let Some((_ty, size)) = valid_types.iter().find(|x| x.0 == *ty) {
         Ok(Some(*size))
