@@ -1983,31 +1983,48 @@ struct EsfMeas {
 pub struct EsfMeasInfo<'a> {
     flags: u16,
     id: u16,
-    data: Box<dyn Iterator<Item = &'a u32>>,
+    data: U32Iter<'a>,
     calib_tag: Option<u32>,
+}
+
+pub struct U32Iter<'a>(core::slice::ChunksExact<'a, u8>);
+
+impl<'a> U32Iter<'a> {
+    fn new(bytes: &'a [u8]) -> Self {
+        U32Iter(bytes.chunks_exact(4))
+    }
+}
+
+impl<'a> core::iter::Iterator for U32Iter<'a> {
+    type Item = u32;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.0
+            .next()
+            .map(|bytes| u32::from_le_bytes(bytes.try_into().unwrap()))
+    }
+}
+
+impl<'a> core::fmt::Debug for U32Iter<'a> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        f.debug_struct("U32Iter").finish()
+    }
 }
 
 impl<'a> EsfMeasInfo<'a> {
     fn new(bytes: &'a [u8]) -> Self {
-        let mut chunks = bytes.chunks_exact(2);
-        let flags = u16::from_le_bytes(chunks.next().unwrap().try_into().unwrap());
-        let id = u16::from_le_bytes(chunks.next().unwrap().try_into().unwrap());
-
+        let flags = u16::from_le_bytes(bytes[0..2].try_into().unwrap());
+        let id = u16::from_le_bytes(bytes[2..4].try_into().unwrap());
+        let num_meas = usize::from(flags >> 11 & 0x1F);
+        let data = U32Iter::new(&bytes[4..num_meas * 4]);
         let calib_tag = if flags & 0x8 != 0 {
-            let first_last: [u8; 2] = chunks.next_back().unwrap().try_into().unwrap();
-            let second_last: [u8; 2] = chunks.next_back().unwrap().try_into().unwrap();
-            Some(u32::from_le_bytes(
-                [first_last, second_last].concat().try_into().unwrap(),
-            ))
+            let slice = bytes[num_meas * 4 + 4..num_meas * 4 + 8]
+                .try_into()
+                .unwrap();
+            Some(u32::from_le_bytes(slice))
         } else {
             None
         };
-
-        let data = Box::new(
-            chunks
-                .tuples::<(&[u8], &[u8])>()
-                .map(|(a, b)| u32::from_le_bytes([a, b].concat().try_into().unwrap())),
-        ) as Box<dyn Iterator<Item = &'a u32>>;
 
         Self {
             flags,
@@ -2020,7 +2037,12 @@ impl<'a> EsfMeasInfo<'a> {
 
 impl<'a> core::fmt::Debug for EsfMeasInfo<'a> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        f.debug_struct("EsfMeasInfo").finish()
+        f.debug_struct("EsfMeasInfo")
+            .field("flags", &self.flags)
+            .field("id", &self.id)
+            .field("data", &self.data)
+            .field("calib_tag", &self.calib_tag)
+            .finish()
     }
 }
 
