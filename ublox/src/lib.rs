@@ -69,7 +69,7 @@
 #[cfg(feature = "alloc")]
 extern crate alloc;
 
-#[cfg(feature = "use-serde")]
+#[cfg(feature = "serde")]
 #[macro_use]
 extern crate serde;
 
