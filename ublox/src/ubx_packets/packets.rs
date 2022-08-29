@@ -1994,6 +1994,10 @@ impl<'a> U32Iter<'a> {
     fn new(bytes: &'a [u8]) -> Self {
         U32Iter(bytes.chunks_exact(4))
     }
+
+    fn is_valid(bytes: &'a [u8]) -> bool {
+        bytes.len() % 4 == 0
+    }
 }
 
 impl<'a> core::iter::Iterator for U32Iter<'a> {
@@ -2249,35 +2253,8 @@ struct RxmSfrbx {
     version: u8,
     reserved3: u8,
 
-    #[ubx(map_type = DwrdIter, from = DwrdIter::new, is_valid = DwrdIter::is_valid)]
+    #[ubx(map_type = U32Iter, from = U32Iter::new, is_valid = U32Iter::is_valid)]
     dwrd: [u8; 0],
-}
-
-#[derive(Clone)]
-pub struct DwrdIter<'a>(core::slice::ChunksExact<'a, u8>);
-
-impl<'a> DwrdIter<'a> {
-    fn new(bytes: &'a [u8]) -> Self {
-        Self(bytes.chunks_exact(4))
-    }
-
-    fn is_valid(bytes: &'a [u8]) -> bool {
-        bytes.len() % 4 == 0
-    }
-}
-
-impl<'a> core::fmt::Debug for DwrdIter<'a> {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        f.debug_struct("DwrdIter").finish()
-    }
-}
-
-impl<'a> Iterator for DwrdIter<'a> {
-    type Item = u32;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        Some(u32::from_le_bytes(self.0.next()?.try_into().unwrap()))
-    }
 }
 
 #[ubx_packet_recv]
