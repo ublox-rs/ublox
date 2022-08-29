@@ -8,6 +8,7 @@ use chrono::prelude::*;
 use core::borrow::BorrowMut;
 use core::fmt;
 use core::fmt::Formatter;
+use itertools::Itertools;
 use num_traits::cast::{FromPrimitive, ToPrimitive};
 use num_traits::float::FloatCore;
 use num_traits::real::Real;
@@ -1973,15 +1974,77 @@ struct RxmRtcm {
 }
 
 #[ubx_packet_recv]
-#[ubx(class = 0x10, id = 0x02, fixed_payload_len = 16)]
+#[ubx(class = 0x10, id = 0x02, max_payload_len = 1240)]
 struct EsfMeas {
     time_tag: u32,
+    #[ubx(map_type = EsfMeasInfo, from = EsfMeasInfo::new)]
+    info: [u8; 0],
+}
+
+pub struct EsfMeasInfo<'a> {
     flags: u16,
     id: u16,
-    /// flags >> 11 & 0x1F
-    data: u32,
-    /// flags & 0x8
-    calib_tag: u32,
+    data: U32Iter<'a>,
+    calib_tag: Option<u32>,
+}
+
+pub struct U32Iter<'a>(core::slice::ChunksExact<'a, u8>);
+
+impl<'a> U32Iter<'a> {
+    fn new(bytes: &'a [u8]) -> Self {
+        U32Iter(bytes.chunks_exact(4))
+    }
+}
+
+impl<'a> core::iter::Iterator for U32Iter<'a> {
+    type Item = u32;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.0
+            .next()
+            .map(|bytes| u32::from_le_bytes(bytes.try_into().unwrap()))
+    }
+}
+
+impl<'a> core::fmt::Debug for U32Iter<'a> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        f.debug_struct("U32Iter").finish()
+    }
+}
+
+impl<'a> EsfMeasInfo<'a> {
+    fn new(bytes: &'a [u8]) -> Self {
+        let flags = u16::from_le_bytes(bytes[0..2].try_into().unwrap());
+        let id = u16::from_le_bytes(bytes[2..4].try_into().unwrap());
+        let num_meas = usize::from(flags >> 11 & 0x1F);
+        let data = U32Iter::new(&bytes[4..num_meas * 4]);
+        let calib_tag = if flags & 0x8 != 0 {
+            let slice = bytes[num_meas * 4 + 4..num_meas * 4 + 8]
+                .try_into()
+                .unwrap();
+            Some(u32::from_le_bytes(slice))
+        } else {
+            None
+        };
+
+        Self {
+            flags,
+            id,
+            data,
+            calib_tag,
+        }
+    }
+}
+
+impl<'a> core::fmt::Debug for EsfMeasInfo<'a> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        f.debug_struct("EsfMeasInfo")
+            .field("flags", &self.flags)
+            .field("id", &self.id)
+            .field("data", &self.data)
+            .field("calib_tag", &self.calib_tag)
+            .finish()
+    }
 }
 
 #[ubx_packet_recv]
