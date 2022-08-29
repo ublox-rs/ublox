@@ -7,7 +7,7 @@ use std::time::Duration;
 use ublox::*;
 
 fn main() {
-    let reader: Box<dyn Read> = Box::new(io::stdin().lock());
+    let reader: Box<dyn Read> = Box::new(io::stdin());
     let mut parser = Parser::default();
     let data: Vec<u8> = reader.bytes().map(|a| a.unwrap()).collect();
     let mut it = parser.consume(&data);
