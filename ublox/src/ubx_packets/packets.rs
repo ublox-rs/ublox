@@ -5,10 +5,8 @@ use super::{
 use crate::error::{MemWriterError, ParserError};
 use bitflags::bitflags;
 use chrono::prelude::*;
-use core::borrow::BorrowMut;
 use core::fmt;
 use core::fmt::Formatter;
-use itertools::Itertools;
 use num_traits::cast::{FromPrimitive, ToPrimitive};
 use num_traits::float::FloatCore;
 use num_traits::real::Real;
@@ -2331,6 +2329,7 @@ struct RxmRawx {
     week: u16,
     leap_s: i8,
     num_meas: u8,
+    #[ubx(map_type = RecStatFlags)]
     rec_stat: u8,
     reserved1: [u8; 3],
     #[ubx(map_type = RxmRawxInfoIter,
@@ -2339,23 +2338,58 @@ struct RxmRawx {
     iter: [u8; 0],
 }
 
+#[ubx_extend_bitflags]
+#[ubx(from, rest_reserved)]
+bitflags! {
+    pub struct RecStatFlags: u8 {
+        const LEAP_SEC = 0x01;
+        const CLOCK_RESET= 0x02;
+    }
+}
+
 #[ubx_packet_recv]
 #[ubx(class = 0x02, id = 0x15, fixed_payload_len = 32)]
 pub struct RxmRawxInfo {
     pr_mes: f64,
     cp_mes: f64,
-    do_mes: u32,
+    do_mes: f32,
     gnss_id: u8,
     sv_id: u8,
     reserved2: u8,
     freq_id: u8,
     lock_time: u16,
     cno: u8,
+    #[ubx(map_type = StdevFlags)]
     pr_stdev: u8,
+    #[ubx(map_type = StdevFlags)]
     cp_stdev: u8,
+    #[ubx(map_type = StdevFlags)]
     do_stdev: u8,
+    #[ubx(map_type = TrkStatFlags)]
     trk_stat: u8,
     reserved3: u8,
+}
+
+#[ubx_extend_bitflags]
+#[ubx(from, rest_reserved)]
+bitflags! {
+    pub struct StdevFlags: u8 {
+        const STD_1 = 0x01;
+        const STD_2 = 0x02;
+        const STD_3 = 0x04;
+        const STD_4 = 0x08;
+    }
+}
+
+#[ubx_extend_bitflags]
+#[ubx(from, rest_reserved)]
+bitflags! {
+    pub struct TrkStatFlags: u8 {
+        const PR_VALID = 0x01;
+        const CP_VALID = 0x02;
+        const HALF_CYCLE = 0x04;
+        const SUB_HALF_CYCLE = 0x08;
+    }
 }
 
 #[derive(Clone)]
