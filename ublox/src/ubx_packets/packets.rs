@@ -5,13 +5,10 @@ use super::{
 use crate::error::{MemWriterError, ParserError};
 use bitflags::bitflags;
 use chrono::prelude::*;
-use core::borrow::BorrowMut;
 use core::fmt;
 use core::fmt::Formatter;
-use itertools::Itertools;
 use num_traits::cast::{FromPrimitive, ToPrimitive};
 use num_traits::float::FloatCore;
-use num_traits::real::Real;
 use std::convert::TryInto;
 use ublox_derive::{
     define_recv_packets, ubx_extend, ubx_extend_bitflags, ubx_packet_recv, ubx_packet_recv_send,
@@ -1994,6 +1991,10 @@ impl<'a> U32Iter<'a> {
     fn new(bytes: &'a [u8]) -> Self {
         U32Iter(bytes.chunks_exact(4))
     }
+
+    fn is_valid(bytes: &'a [u8]) -> bool {
+        bytes.len() % 4 == 0
+    }
 }
 
 impl<'a> core::iter::Iterator for U32Iter<'a> {
@@ -2249,35 +2250,8 @@ struct RxmSfrbx {
     version: u8,
     reserved3: u8,
 
-    #[ubx(map_type = DwrdIter, from = DwrdIter::new, is_valid = DwrdIter::is_valid)]
+    #[ubx(map_type = U32Iter, from = U32Iter::new, is_valid = U32Iter::is_valid)]
     dwrd: [u8; 0],
-}
-
-#[derive(Clone)]
-pub struct DwrdIter<'a>(core::slice::ChunksExact<'a, u8>);
-
-impl<'a> DwrdIter<'a> {
-    fn new(bytes: &'a [u8]) -> Self {
-        Self(bytes.chunks_exact(4))
-    }
-
-    fn is_valid(bytes: &'a [u8]) -> bool {
-        bytes.len() % 4 == 0
-    }
-}
-
-impl<'a> core::fmt::Debug for DwrdIter<'a> {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        f.debug_struct("DwrdIter").finish()
-    }
-}
-
-impl<'a> Iterator for DwrdIter<'a> {
-    type Item = u32;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        Some(u32::from_le_bytes(self.0.next()?.try_into().unwrap()))
-    }
 }
 
 #[ubx_packet_recv]
@@ -2354,6 +2328,7 @@ struct RxmRawx {
     week: u16,
     leap_s: i8,
     num_meas: u8,
+    #[ubx(map_type = RecStatFlags)]
     rec_stat: u8,
     reserved1: [u8; 3],
     #[ubx(map_type = RxmRawxInfoIter,
@@ -2362,23 +2337,58 @@ struct RxmRawx {
     iter: [u8; 0],
 }
 
+#[ubx_extend_bitflags]
+#[ubx(from, rest_reserved)]
+bitflags! {
+    pub struct RecStatFlags: u8 {
+        const LEAP_SEC = 0x01;
+        const CLOCK_RESET= 0x02;
+    }
+}
+
 #[ubx_packet_recv]
 #[ubx(class = 0x02, id = 0x15, fixed_payload_len = 32)]
 pub struct RxmRawxInfo {
     pr_mes: f64,
     cp_mes: f64,
-    do_mes: u32,
+    do_mes: f32,
     gnss_id: u8,
     sv_id: u8,
     reserved2: u8,
     freq_id: u8,
     lock_time: u16,
     cno: u8,
+    #[ubx(map_type = StdevFlags)]
     pr_stdev: u8,
+    #[ubx(map_type = StdevFlags)]
     cp_stdev: u8,
+    #[ubx(map_type = StdevFlags)]
     do_stdev: u8,
+    #[ubx(map_type = TrkStatFlags)]
     trk_stat: u8,
     reserved3: u8,
+}
+
+#[ubx_extend_bitflags]
+#[ubx(from, rest_reserved)]
+bitflags! {
+    pub struct StdevFlags: u8 {
+        const STD_1 = 0x01;
+        const STD_2 = 0x02;
+        const STD_3 = 0x04;
+        const STD_4 = 0x08;
+    }
+}
+
+#[ubx_extend_bitflags]
+#[ubx(from, rest_reserved)]
+bitflags! {
+    pub struct TrkStatFlags: u8 {
+        const PR_VALID = 0x01;
+        const CP_VALID = 0x02;
+        const HALF_CYCLE = 0x04;
+        const SUB_HALF_CYCLE = 0x08;
+    }
 }
 
 #[derive(Clone)]
