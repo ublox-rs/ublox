@@ -251,6 +251,14 @@ struct NavDop {
     easting_dop: u16,
 }
 
+/// End of Epoch Marker
+#[ubx_packet_recv]
+#[ubx(class = 0x01, id = 0x61, fixed_payload_len = 4)]
+struct NavEoe {
+    /// GPS time of week for navigation epoch
+    itow: u32,
+}
+
 /// Navigation Solution Information
 #[ubx_packet_recv]
 #[ubx(class = 1, id = 6, fixed_payload_len = 52)]
@@ -1979,6 +1987,7 @@ define_recv_packets!(
         NavVelNed,
         NavTimeUTC,
         NavSat,
+        NavEoe,
         NavOdo,
         CfgOdo,
         MgaAck,
