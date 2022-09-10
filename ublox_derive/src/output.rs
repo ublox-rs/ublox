@@ -226,7 +226,7 @@ pub fn generate_send_code_for_packet(pack_descr: &PackDesc) -> TokenStream {
     let mut write_fields = Vec::with_capacity(pack_descr.fields.len());
     let mut extend_fields = Vec::with_capacity(pack_descr.fields.len());
     let mut off = 6usize;
-    for f in &pack_descr.fields {
+    for (fi, f) in pack_descr.fields.iter().enumerate() {
         let ty = f.intermediate_type();
         let name = f.intermediate_field_name();
         let field_comment = &f.comment;
@@ -246,7 +246,9 @@ pub fn generate_send_code_for_packet(pack_descr: &PackDesc) -> TokenStream {
                 });
 
                 builder_needs_lifetime = true;
-                continue;
+
+                assert_eq!(fi, pack_descr.fields.len() - 1, "Iterator field must be the last field.");
+                break;
             }
         };
 
