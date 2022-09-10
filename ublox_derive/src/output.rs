@@ -234,35 +234,34 @@ pub fn generate_send_code_for_packet(pack_descr: &PackDesc) -> TokenStream {
             #[doc = #field_comment]
             pub #name: #ty
         });
+
         let size_bytes = match f.size_bytes {
             Some(x) => x.get(),
-            None => 0,
+            None => {
+                // Iterator with `data` field.
+                extend_fields.push(quote! {
+                    for f in self.#name {
+                      len_bytes += f.extend_to(out);
+                    }
+                });
+
+                builder_needs_lifetime = true;
+                continue;
+            }
         };
 
-        if size_bytes == 0 {
-            // Iterator with `data` field.
-            extend_fields.push(quote! {
-                for f in self.#name {
-                  len_bytes += f.extend_to(out);
-                }
+        if let Some(into_fn) = f.map.map_type.as_ref().map(|x| &x.into_fn) {
+            pack_fields.push(quote! {
+                let bytes = #into_fn(self.#name).to_le_bytes()
             });
-
-            builder_needs_lifetime = true;
-            continue;
+        } else if !f.is_field_raw_ty_byte_array() {
+            pack_fields.push(quote! {
+              let bytes = self.#name.to_le_bytes()
+            });
         } else {
-            if let Some(into_fn) = f.map.map_type.as_ref().map(|x| &x.into_fn) {
-                pack_fields.push(quote! {
-                    let bytes = #into_fn(self.#name).to_le_bytes()
-                });
-            } else if !f.is_field_raw_ty_byte_array() {
-                pack_fields.push(quote! {
-                  let bytes = self.#name.to_le_bytes()
-                });
-            } else {
-                pack_fields.push(quote! {
-                  let bytes: &[u8] = &self.#name;
-                });
-            }
+            pack_fields.push(quote! {
+              let bytes: &[u8] = &self.#name;
+            });
         }
 
         write_fields.push(pack_fields.last().unwrap().clone());
