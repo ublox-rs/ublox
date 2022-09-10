@@ -59,7 +59,7 @@ macro_rules! from_cfg_v_bytes {
         u16::from_le_bytes([$buf[0], $buf[1]])
     };
     ($buf:expr, i16) => {
-      i16::from_le_bytes([$buf[0], $buf[1]])
+        i16::from_le_bytes([$buf[0], $buf[1]])
     };
     ($buf:expr, u32) => {
         u32::from_le_bytes([$buf[0], $buf[1], $buf[2], $buf[3]])
@@ -102,19 +102,19 @@ macro_rules! from_cfg_v_bytes {
         }
     };
     ($buf:expr, TpPulse) => {
-      match $buf[0] {
-          0 => TpPulse::Period,
-          1 => TpPulse::Freq,
-          _ => unreachable!(),
-      }
+        match $buf[0] {
+            0 => TpPulse::Period,
+            1 => TpPulse::Freq,
+            _ => unreachable!(),
+        }
     };
     ($buf:expr, TpPulseLength) => {
-      match $buf[0] {
-          0 => TpPulseLength::Ratio,
-          1 => TpPulseLength::Length,
-          _ => unreachable!(),
-    }
-};
+        match $buf[0] {
+            0 => TpPulseLength::Ratio,
+            1 => TpPulseLength::Length,
+            _ => unreachable!(),
+        }
+    };
 }
 
 macro_rules! into_cfg_kv_bytes {
@@ -430,16 +430,16 @@ cfg_val! {
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum TpPulse {
-  /// Time pulse period
-  Period = 0,
-  /// Time pulse frequency
-  Freq = 1,
+    /// Time pulse period
+    Period = 0,
+    /// Time pulse frequency
+    Freq = 1,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum TpPulseLength {
-  /// Time pulse ratio
-  Ratio = 0,
-  /// Time pulse length
-  Length = 1,
+    /// Time pulse ratio
+    Ratio = 0,
+    /// Time pulse length
+    Length = 1,
 }
