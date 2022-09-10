@@ -51,6 +51,11 @@ fn test_ubx_packet_recv_simple() {
             #[doc = "Contains a reference to an underlying buffer, contains accessor methods to retrieve data."]
             pub struct TestRef<'a>(&'a [u8]);
             impl<'a> TestRef<'a> {
+                #[inline]
+                pub fn as_bytes(&self) -> &[u8] {
+                    self.0
+                }
+
                 #[doc = ""]
                 #[inline]
                 pub fn itow(&self) -> u32 {
@@ -192,6 +197,11 @@ fn test_ubx_packet_recv_dyn_len() {
             #[doc = "Contains a reference to an underlying buffer, contains accessor methods to retrieve data."]
             pub struct TestRef<'a>(&'a [u8]);
             impl<'a> TestRef<'a> {
+                #[inline]
+                pub fn as_bytes(&self) -> &[u8] {
+                    self.0
+                }
+
                 #[doc = ""]
                 #[inline]
                 pub fn f1_raw(&self) -> &[u8] {
@@ -308,9 +318,9 @@ fn test_ubx_packet_send() {
                     ret[13usize] = bytes[3usize];
                     let bytes = self.a.to_le_bytes();
                     ret[14usize] = bytes[0usize];
-                    let (ck_a, ck_b) = ubx_checksum(&ret[2..17usize - 2]);
-                    ret[17usize - 2] = ck_a;
-                    ret[17usize - 1] = ck_b;
+                    let (ck_a, ck_b) = ubx_checksum(&ret[2..(Self::PACKET_LEN - 2)]);
+                    ret[Self::PACKET_LEN - 2] = ck_a;
+                    ret[Self::PACKET_LEN - 1] = ck_b;
                     ret
                 }
             }
