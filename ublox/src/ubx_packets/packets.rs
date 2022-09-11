@@ -2819,6 +2819,7 @@ define_recv_packets!(
         MgaAck,
         MgaGpsIono,
         MgaGpsEph,
+        MgaGloEph,
         AlpSrv,
         AckAck,
         AckNak,
