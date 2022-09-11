@@ -2198,6 +2198,77 @@ pub enum MsgAckInfoCode {
     RejectedUnknownType = 6,
 }
 
+#[ubx_packet_recv]
+#[ubx(class = 0x13, id = 0x00, fixed_payload_len = 16)]
+struct MgaGpsIono {
+    /// Message type: 0x06 for this type
+    msg_type: u8,
+    /// Message version: 0x00 for this version
+    version: u8,
+    reserved1: [u8;2],
+    /// Ionospheric parameter alpha0 [s]
+    #[ubx(map_type = f64, scale = 1.0)] // 2^-30
+    alpha0: i8,
+    /// Ionospheric parameter alpha1 [s/semi-circle]
+    #[ubx(map_type = f64, scale = 1.0)] // 2^-27
+    alpha1: i8,
+    /// Ionospheric parameter alpha1 [s/semi-circle^2]
+    #[ubx(map_type = f64, scale = 1.0)] // 2^-24
+    alpha2: i8,
+    /// Ionospheric parameter alpha1 [s/semi-circle^3]
+    #[ubx(map_type = f64, scale = 1.0)] // 2^-24
+    alpha3: i8,
+    /// Ionospheric parameter beta0 [s]
+    #[ubx(map_type = f64, scale = 1.0)] // 2^-11
+    beta0: i8,
+    /// Ionospheric parameter beta0 [s/semi-circle]
+    #[ubx(map_type = f64, scale = 1.0)] // 2^-14
+    beta1: i8,
+    /// Ionospheric parameter beta0 [s/semi-circle^2]
+    #[ubx(map_type = f64, scale = 1.0)] // 2^-16
+    beta2: i8,
+    /// Ionospheric parameter beta0 [s/semi-circle^3]
+    #[ubx(map_type = f64, scale = 1.0)] // 2^-16
+    beta3: i8,
+    reserved2: [u8;4],
+}
+
+#[ubx_packet_recv]
+#[ubx(class = 0x13, id = 0x00, fixed_payload_len = 68)]
+struct MgaGpsEph {
+    msg_type: u8,
+    version: u8,
+    sv_id: u8,
+    reserved1: u8,
+    fit_interval: u8,
+    ura_index: u8,
+    sv_health: u8,
+    tgd: i8,
+    iodc: u16,
+    toc: u16,
+    reserved2: u8,
+    af2: i8,
+    af1: i16,
+    af0: i32,
+    crs: i16,
+    delta_n: i16,
+    m0: i32,
+    cuc: i16,
+    cus: i16,
+    e: u32,
+    sqrt_a: u32,
+    toe: u16,
+    cic: i16,
+    omega0: i32,
+    cis: i16,
+    crc: i16,
+    i0: i32,
+    omega: i32,
+    omega_dot: i32,
+    idot: i16,
+    reserved3: [u8;2],
+}
+
 /// Time pulse time data
 #[ubx_packet_recv]
 #[ubx(class = 0x0d, id = 0x01, fixed_payload_len = 16)]
@@ -2709,6 +2780,8 @@ define_recv_packets!(
         NavOdo,
         CfgOdo,
         MgaAck,
+        MgaGpsIono,
+        MgaGpsEph,
         AlpSrv,
         AckAck,
         AckNak,
