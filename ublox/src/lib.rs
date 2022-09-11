@@ -69,6 +69,10 @@
 #[cfg(feature = "alloc")]
 extern crate alloc;
 
+#[cfg(feature = "serde")]
+#[macro_use]
+extern crate serde;
+
 pub use crate::{
     error::{DateTimeError, MemWriterError, ParserError},
     parser::{FixedLinearBuffer, Parser, ParserIter, UnderlyingBuffer},

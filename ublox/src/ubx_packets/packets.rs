@@ -320,6 +320,7 @@ struct NavSolution {
 #[ubx(from, rest_reserved)]
 #[repr(u8)]
 #[derive(Debug, Copy, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum GpsFix {
     NoFix = 0,
     DeadReckoningOnly = 1,
@@ -333,6 +334,7 @@ pub enum GpsFix {
 #[ubx(from, rest_reserved)]
 bitflags! {
     /// Navigation Status Flags
+    #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
     pub struct NavStatusFlags: u8 {
         /// position and velocity valid and within DOP and ACC Masks
         const GPS_FIX_OK = 1;
@@ -396,6 +398,7 @@ pub enum MapMatchingStatus {
 #[ubx(from, rest_reserved)]
 #[repr(u8)]
 #[derive(Debug, Copy, Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 enum NavStatusFlags2 {
     Acquisition = 0,
     Tracking = 1,
@@ -533,6 +536,7 @@ impl fmt::Debug for NavSatSvFlags {
 }
 
 #[derive(Copy, Clone, Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum NavSatQualityIndicator {
     NoSignal,
     Searching,
@@ -543,6 +547,7 @@ pub enum NavSatQualityIndicator {
 }
 
 #[derive(Copy, Clone, Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum NavSatSvHealth {
     Healthy,
     Unhealthy,
@@ -550,6 +555,7 @@ pub enum NavSatSvHealth {
 }
 
 #[derive(Copy, Clone, Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum NavSatOrbitSource {
     NoInfoAvailable,
     Ephemeris,
@@ -694,6 +700,7 @@ struct CfgOdo {
 #[ubx(from, into_raw, rest_reserved)]
 bitflags! {
     #[derive(Default)]
+    #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
     pub struct OdoCogFilterFlags: u8 {
         /// Odometer enabled flag
         const USE_ODO = 0x01;
@@ -711,6 +718,7 @@ bitflags! {
 #[ubx(from_unchecked, into_raw, rest_error)]
 #[repr(u8)]
 #[derive(Clone, Copy, Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum OdoProfile {
     Running = 0,
     Cycling = 1,
@@ -984,6 +992,7 @@ struct CfgAnt {
 #[ubx(from, into_raw, rest_reserved)]
 bitflags! {
     #[derive(Default)]
+    #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
     pub struct AntFlags: u16 {
         /// Enable supply voltage control signal
         const SVCS = 0x01;
@@ -1263,6 +1272,7 @@ bitflags! {
 #[ubx(into_raw, rest_reserved)]
 bitflags! {
     /// Battery backed RAM sections to clear
+    #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
     pub struct NavBbrMask: u16 {
         const EPHEMERIS = 1;
         const ALMANACH = 2;
@@ -1300,6 +1310,7 @@ impl NavBbrPredefinedMask {
 /// Reset Type
 #[repr(u8)]
 #[derive(Clone, Copy, Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum ResetMode {
     /// Hardware reset (Watchdog) immediately
     HardwareResetImmediately = 0,
@@ -1451,6 +1462,7 @@ struct CfgPrtUart {
 #[ubx(from_unchecked, into_raw, rest_error)]
 #[repr(u8)]
 #[derive(Debug, Copy, Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum UartPortId {
     Uart1 = 1,
     Uart2 = 2,
@@ -1458,6 +1470,7 @@ pub enum UartPortId {
 }
 
 #[derive(Debug, Copy, Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct UartMode {
     data_bits: DataBits,
     parity: Parity,
@@ -1493,6 +1506,7 @@ impl From<u32> for UartMode {
 }
 
 #[derive(Debug, Clone, Copy)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum DataBits {
     Seven,
     Eight,
@@ -1523,6 +1537,7 @@ impl From<u32> for DataBits {
 }
 
 #[derive(Debug, Clone, Copy)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum Parity {
     Even,
     Odd,
@@ -1555,6 +1570,7 @@ impl From<u32> for Parity {
 }
 
 #[derive(Debug, Clone, Copy)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum StopBits {
     One,
     OneHalf,
