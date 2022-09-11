@@ -275,7 +275,11 @@ pub fn generate_send_code_for_packet(pack_descr: &PackDesc) -> TokenStream {
         extend_fields.push(pack_fields.last().unwrap().clone());
         extend_fields.push(quote! {
             len_bytes += bytes.len();
-            out.extend(bytes.into_iter().cloned());
+            // TODO: Extend all at once when we bump MSRV
+            //out.extend(bytes.into_iter().cloned());
+            for b in bytes.iter() {
+                out.extend(core::iter::once(*b));
+            }
         });
 
         for i in 0..size_bytes {
@@ -373,7 +377,11 @@ pub fn generate_send_code_for_packet(pack_descr: &PackDesc) -> TokenStream {
                   // out.extend_reserve(6);
                   let mut len_bytes = 0;
                   let header = [SYNC_CHAR_1, SYNC_CHAR_2, #main_name::CLASS, #main_name::ID, 0, 0];
-                  out.extend(header);
+                  // TODO: Extend all at once when we bump MSRV
+                  //out.extend(header);
+                  for b in header.iter() {
+                      out.extend(core::iter::once(*b));
+                  }
                   #(#extend_fields);*;
 
                   let len_bytes = len_bytes.to_le_bytes();
@@ -381,7 +389,8 @@ pub fn generate_send_code_for_packet(pack_descr: &PackDesc) -> TokenStream {
                   out[5] = len_bytes[1];
 
                   let (ck_a, ck_b) = ubx_checksum(&out[2..]);
-                  out.extend([ck_a, ck_b]);
+                  out.extend(core::iter::once(ck_a));
+                  out.extend(core::iter::once(ck_b));
               }
           }
         })

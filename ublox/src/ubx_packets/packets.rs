@@ -1068,7 +1068,7 @@ struct CfgValSet<'a> {
     /// The layers from which the configuration items should be retrieved
     #[ubx(map_type = CfgLayer)]
     layers: u8,
-    reserved1: [u8; 2],
+    reserved1: u16,
     cfg_data: &'a [CfgVal],
 }
 
