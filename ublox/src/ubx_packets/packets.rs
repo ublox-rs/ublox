@@ -2,6 +2,7 @@ use super::{
     ubx_checksum, MemWriter, Position, UbxChecksumCalc, UbxPacketCreator, UbxPacketMeta,
     UbxUnknownPacketRef, SYNC_CHAR_1, SYNC_CHAR_2,
 };
+use crate::cfg_val::CfgVal;
 use crate::error::{MemWriterError, ParserError};
 use bitflags::bitflags;
 use chrono::prelude::*;
@@ -319,6 +320,7 @@ struct NavSolution {
 #[ubx(from, rest_reserved)]
 #[repr(u8)]
 #[derive(Debug, Copy, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum GpsFix {
     NoFix = 0,
     DeadReckoningOnly = 1,
@@ -332,6 +334,7 @@ pub enum GpsFix {
 #[ubx(from, rest_reserved)]
 bitflags! {
     /// Navigation Status Flags
+    #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
     pub struct NavStatusFlags: u8 {
         /// position and velocity valid and within DOP and ACC Masks
         const GPS_FIX_OK = 1;
@@ -395,6 +398,7 @@ pub enum MapMatchingStatus {
 #[ubx(from, rest_reserved)]
 #[repr(u8)]
 #[derive(Debug, Copy, Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 enum NavStatusFlags2 {
     Acquisition = 0,
     Tracking = 1,
@@ -532,6 +536,7 @@ impl fmt::Debug for NavSatSvFlags {
 }
 
 #[derive(Copy, Clone, Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum NavSatQualityIndicator {
     NoSignal,
     Searching,
@@ -542,6 +547,7 @@ pub enum NavSatQualityIndicator {
 }
 
 #[derive(Copy, Clone, Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum NavSatSvHealth {
     Healthy,
     Unhealthy,
@@ -549,6 +555,7 @@ pub enum NavSatSvHealth {
 }
 
 #[derive(Copy, Clone, Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum NavSatOrbitSource {
     NoInfoAvailable,
     Ephemeris,
@@ -693,6 +700,7 @@ struct CfgOdo {
 #[ubx(from, into_raw, rest_reserved)]
 bitflags! {
     #[derive(Default)]
+    #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
     pub struct OdoCogFilterFlags: u8 {
         /// Odometer enabled flag
         const USE_ODO = 0x01;
@@ -710,6 +718,7 @@ bitflags! {
 #[ubx(from_unchecked, into_raw, rest_error)]
 #[repr(u8)]
 #[derive(Clone, Copy, Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum OdoProfile {
     Running = 0,
     Cycling = 1,
@@ -758,8 +767,8 @@ bitflags! {
         const ERROR = 0x1;
         const WARNING = 0x2;
         const NOTICE = 0x4;
-        const DEBUG = 0x08;
-        const TEST  = 0x10;
+        const TEST  = 0x08;
+        const DEBUG = 0x10;
     }
 }
 
@@ -983,6 +992,7 @@ struct CfgAnt {
 #[ubx(from, into_raw, rest_reserved)]
 bitflags! {
     #[derive(Default)]
+    #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
     pub struct AntFlags: u16 {
         /// Enable supply voltage control signal
         const SVCS = 0x01;
@@ -997,10 +1007,272 @@ bitflags! {
     }
 }
 
+/// TP5: "Time Pulse" Config frame (32.10.38.4)
+#[ubx_packet_recv_send]
+#[ubx(
+    class = 0x06, 
+    id = 0x31, 
+    fixed_payload_len = 32,
+    flags = "default_for_builder"
+)]
+struct CfgTp5 {
+    #[ubx(map_type = CfgTp5TimePulseMode, may_fail)]
+    tp_idx: u8,
+    version: u8,
+    reserved1: [u8; 2],
+    /// Antenna cable delay [ns]
+    #[ubx(map_type = f32, scale = 1.0)]
+    ant_cable_delay: i16,
+    /// RF group delay [ns]
+    #[ubx(map_type = f32, scale = 1.0)]
+    rf_group_delay: i16,
+    /// Frequency in Hz or Period in us,
+    /// depending on `flags::IS_FREQ` bit
+    #[ubx(map_type = f64, scale = 1.0)]
+    freq_period: u32, 
+    /// Frequency in Hz or Period in us,
+    /// when locked to GPS time.
+    /// Only used when `flags::LOCKED_OTHER_SET` is set
+    #[ubx(map_type = f64, scale = 1.0)]
+    freq_period_lock: u32, 
+    /// Pulse length or duty cycle, [us] or [*2^-32],
+    /// depending on `flags::LS_LENGTH` bit
+    #[ubx(map_type = f64, scale = 1.0)]
+    pulse_len_ratio: u32,
+    /// Pulse Length in us or duty cycle (*2^-32), 
+    /// when locked to GPS time.
+    /// Only used when `flags::LOCKED_OTHER_SET` is set
+    #[ubx(map_type = f64, scale = 1.0)]
+    pulse_len_ratio_lock: u32,
+    /// User configurable time pulse delay in [ns]
+    #[ubx(map_type = f64, scale = 1.0)]
+    user_delay: i32,
+    /// Configuration flags, see [CfgTp5Flags]
+    #[ubx(map_type = CfgTp5Flags)]
+    flags: u32,
+}
+
+/// Time pulse selection, used in CfgTp5 frame
+#[ubx_extend]
+#[ubx(from_unchecked, into_raw, rest_error)]
+#[repr(u8)]
+#[derive(Clone, Copy, Debug)]
+pub enum CfgTp5TimePulseMode {
+    TimePulse = 0,
+    TimePulse2 = 1,
+}
+
+impl Default for CfgTp5TimePulseMode {
+    fn default() -> Self {
+        Self::TimePulse
+    }
+}
+
+/// Time MODE2 Config Frame (32.10.36.1)
+/// only available on `timing` receivers
+#[ubx_packet_recv_send]
+#[ubx(
+    class = 0x06, 
+    id = 0x3d, 
+    fixed_payload_len = 28, 
+    flags = "default_for_builder"
+)]
+struct CfgTmode2 {
+    /// Time transfer modes, see [CfgTmode2TimeXferModes] for details
+    #[ubx(map_type = CfgTmode2TimeXferModes, may_fail)]
+    time_transfer_mode: u8,
+    reserved1: u8,
+    #[ubx(map_type = CfgTmode2Flags)] 
+    flags: u16,
+    /// WGS84 ECEF.x coordinate in [m] or latitude in [deg° *1E-5],
+    /// depending on `flags` field 
+    #[ubx(map_type = f64, scale = 1e-2)]
+    ecef_x_or_lat: i32,
+    /// WGS84 ECEF.y coordinate in [m] or longitude in [deg° *1E-5],
+    /// depending on `flags` field 
+    #[ubx(map_type = f64, scale = 1e-2)]
+    ecef_y_or_lon: i32,
+    /// WGS84 ECEF.z coordinate or altitude, both in [m],
+    /// depending on `flags` field 
+    #[ubx(map_type = f64, scale = 1e-2)]
+    ecef_z_or_alt: i32,
+    /// Fixed position 3D accuracy in [m]
+    #[ubx(map_type = f64, scale = 1e-3)]
+    fixed_pos_acc: u32,
+    /// Survey in minimum duration in [s]
+    survey_in_min_duration: u32,
+    /// Survey in position accuracy limit in [m]
+    #[ubx(map_type = f64, scale = 1e-3)]
+    survery_in_accur_limit: u32,
+}
+
+/// Time transfer modes (32.10.36)
+#[ubx_extend]
+#[ubx(from_unchecked, into_raw, rest_error)]
+#[repr(u8)]
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub enum CfgTmode2TimeXferModes {
+    Disabled = 0,
+    SurveyIn = 1,
+    /// True position information required
+    /// when using `fixed mode`
+    FixedMode = 2,
+}
+
+impl Default for CfgTmode2TimeXferModes {
+    fn default() -> Self {
+        Self::Disabled
+    }
+}
+
+#[ubx_extend_bitflags]
+#[ubx(from, into_raw, rest_reserved)]
+bitflags! {
+    #[derive(Default)]
+    pub struct CfgTmode2Flags :u16 {
+        /// Position given in LAT/LON/ALT
+        /// default being WGS84 ECEF
+        const LLA = 0x01;
+        /// In case LLA was set, Altitude value is not valid
+        const ALT_INVALID = 0x02;
+    }
+}
+
+/// Time MODE3 Config Frame (32.10.37.1)
+/// only available on `timing` receivers
+#[ubx_packet_recv_send]
+#[ubx(
+    class = 0x06, 
+    id = 0x71, 
+    fixed_payload_len = 40,
+    flags = "default_for_builder"
+)] 
+struct CfgTmode3 {
+    version: u8,
+    reserved1: u8,
+    /// Receiver mode, see [CfgTmode3RcvrMode] enum
+    #[ubx(map_type = CfgTmode3RcvrMode)]
+    rcvr_mode: u8,
+    #[ubx(map_type = CfgTmode3Flags)] 
+    flags: u8,
+    /// WGS84 ECEF.x coordinate in [m] or latitude in [deg° *1E-5],
+    /// depending on `flags` field 
+    #[ubx(map_type = f64, scale = 1e-2)]
+    ecef_x_or_lat: i32,
+    /// WGS84 ECEF.y coordinate in [m] or longitude in [deg° *1E-5],
+    /// depending on `flags` field 
+    #[ubx(map_type = f64, scale = 1e-2)]
+    ecef_y_or_lon: i32,
+    /// WGS84 ECEF.z coordinate or altitude, both in [m], 
+    /// depending on `flags` field 
+    #[ubx(map_type = f64, scale = 1e-2)]
+    ecef_z_or_alt: i32,
+    /// High precision WGS84 ECEF.x coordinate in [tenths of mm],
+    /// or high precision latitude, in nano degrees,
+    /// depending on `flags` field.
+    #[ubx(map_type = f32, scale = 1.0)]
+    ecef_x_or_lat_hp: i8,
+    /// High precision WGS84 ECEF.y coordinate in [tenths of mm]
+    /// or high precision longitude, in nano degrees,
+    /// depending on `flags` field.
+    #[ubx(map_type = f32, scale = 1.0)]
+    ecef_y_or_lon_hp: i8,
+    /// High precision WGS84 ECEF.z coordinate or altitude,
+    /// both if tenths of [mm],
+    /// depending on `flags` field.
+    #[ubx(map_type = f32, scale = 1.0)]
+    ecef_z_or_alt_hp: i8,
+    reserved2: u8,
+    /// Fixed position 3D accuracy [0.1 mm]
+    #[ubx(map_type = f64, scale = 1e-4)]
+    fixed_pos_acc: u32,
+    /// Survey in minimum duration [s]
+    sv_in_min_duration: u32,
+    /// Survey in position accuracy limit [0.1 mm]
+    #[ubx(map_type = f64, scale = 1e-4)]
+    sv_in_accur_limit: u32,
+    reserved3: [u8; 8],
+}
+
+#[ubx_extend_bitflags]
+#[ubx(from, into_raw, rest_reserved)]
+bitflags! {
+    #[derive(Default)]
+    pub struct CfgTmode3RcvrMode: u8 {
+        const DISABLED = 0x01;
+        const SURVEY_IN = 0x02;
+        /// True ARP position is required in `FixedMode`
+        const FIXED_MODE = 0x04;
+    }
+}
+
+#[ubx_extend_bitflags]
+#[ubx(from, into_raw, rest_reserved)]
+bitflags! {
+    #[derive(Default)]
+    pub struct CfgTp5Flags: u32 {
+        // Enables time pulse
+        const ACTIVE = 0x01;
+        /// Synchronize time pulse to GNSS as
+        /// soon as GNSS time is valid.
+        /// Uses local lock otherwise.
+        const LOCK_GNSS_FREQ = 0x02;
+        /// use `freq_period_lock` and `pulse_len_ratio_lock`
+        /// fields as soon as GPS time is valid. Uses 
+        /// `freq_period` and `pulse_len_ratio` when GPS time is invalid.
+        const LOCKED_OTHER_SET = 0x04;
+        /// `freq_period` and `pulse_len_ratio` fields
+        /// are interprated as frequency when this bit is set
+        const IS_FREQ = 0x08;
+        /// Interprate pulse lengths instead of duty cycle
+        const IS_LENGTH = 0x10;
+        /// Align pulse to top of second
+        /// Period time must be integer fraction of `1sec`
+        /// `LOCK_GNSS_FREQ` is expected, to unlock this feature
+        const ALIGN_TO_TOW = 0x20;
+        /// Pulse polarity, 
+        /// 0: falling edge @ top of second,
+        /// 1: rising edge @ top of second,
+        const POLARITY = 0x40;
+        /// UTC time grid
+        const UTC_TIME_GRID = 0x80;
+        /// GPS time grid
+        const GPS_TIME_GRID = 0x100;
+        /// GLO time grid
+        const GLO_TIME_GRID = 0x200;
+        /// BDS time grid
+        const BDS_TIME_GRID = 0x400;
+        /// GAL time grid
+        /// not supported in protocol < 18
+        const GAL_TIME_GRID = 0x800;
+        /// Switches to FreqPeriodLock and PulseLenRatio
+        /// as soon as Sync Manager has an accurate time,
+        /// never switches back
+        const SYNC_MODE_0 = 0x1000;
+        /// Switches to FreqPeriodLock and PulseLenRatioLock
+        /// as soon as Sync Manager has an accurante time,
+        /// and switch back to FreqPeriodLock and PulseLenRatio
+        /// when time gets inaccurate
+        const SYNC_MODE_1 = 0x2000;
+    }
+}
+
+#[ubx_extend_bitflags]
+#[ubx(from, into_raw, rest_reserved)]
+bitflags! {
+    #[derive(Default)]
+    pub struct CfgTmode3Flags: u8 {
+        /// Set if position is given in Lat/Lon/Alt,
+        /// ECEF coordinates being used otherwise
+        const LLA = 0x01;
+    }
+}
+
 #[ubx_extend_bitflags]
 #[ubx(into_raw, rest_reserved)]
 bitflags! {
     /// Battery backed RAM sections to clear
+    #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
     pub struct NavBbrMask: u16 {
         const EPHEMERIS = 1;
         const ALMANACH = 2;
@@ -1038,6 +1310,7 @@ impl NavBbrPredefinedMask {
 /// Reset Type
 #[repr(u8)]
 #[derive(Clone, Copy, Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum ResetMode {
     /// Hardware reset (Watchdog) immediately
     HardwareResetImmediately = 0,
@@ -1052,6 +1325,76 @@ pub enum ResetMode {
 impl ResetMode {
     const fn into_raw(self) -> u8 {
         self as u8
+    }
+}
+
+#[ubx_packet_send]
+#[ubx(
+  class = 0x06,
+  id = 0x8a,
+  max_payload_len = 772, // 4 + (4 + 8) * 64
+)]
+struct CfgValSet<'a> {
+    /// Message version
+    version: u8,
+    /// The layers from which the configuration items should be retrieved
+    #[ubx(map_type = CfgLayer)]
+    layers: u8,
+    reserved1: u16,
+    cfg_data: &'a [CfgVal],
+}
+
+#[derive(Debug, Clone)]
+pub struct CfgValIter<'a> {
+    pub(crate) data: &'a [u8],
+    pub(crate) offset: usize,
+}
+
+impl<'a> CfgValIter<'a> {
+    pub fn new(data: &'a mut [u8], values: &[CfgVal]) -> Self {
+        let mut offset = 0;
+
+        for value in values {
+            offset += value.write_to(&mut data[offset..]);
+        }
+
+        Self {
+            data: &data[..offset],
+            offset: 0,
+        }
+    }
+}
+
+impl<'a> core::iter::Iterator for CfgValIter<'a> {
+    type Item = CfgVal;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.offset < self.data.len() {
+            let cfg_val = CfgVal::parse(&self.data[self.offset..]);
+
+            self.offset += cfg_val.len();
+
+            Some(cfg_val)
+        } else {
+            None
+        }
+    }
+}
+
+#[ubx_extend_bitflags]
+#[ubx(from, into_raw, rest_reserved)]
+bitflags! {
+    /// A mask describing where configuration is applied.
+    pub struct CfgLayer: u8 {
+        const RAM = 0b001;
+        const BBR = 0b010;
+        const FLASH = 0b100;
+    }
+}
+
+impl Default for CfgLayer {
+    fn default() -> Self {
+        Self::RAM | Self::BBR | Self::FLASH
     }
 }
 
@@ -1119,6 +1462,7 @@ struct CfgPrtUart {
 #[ubx(from_unchecked, into_raw, rest_error)]
 #[repr(u8)]
 #[derive(Debug, Copy, Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum UartPortId {
     Uart1 = 1,
     Uart2 = 2,
@@ -1126,6 +1470,7 @@ pub enum UartPortId {
 }
 
 #[derive(Debug, Copy, Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct UartMode {
     data_bits: DataBits,
     parity: Parity,
@@ -1161,6 +1506,7 @@ impl From<u32> for UartMode {
 }
 
 #[derive(Debug, Clone, Copy)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum DataBits {
     Seven,
     Eight,
@@ -1191,6 +1537,7 @@ impl From<u32> for DataBits {
 }
 
 #[derive(Debug, Clone, Copy)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum Parity {
     Even,
     Odd,
@@ -1223,6 +1570,7 @@ impl From<u32> for Parity {
 }
 
 #[derive(Debug, Clone, Copy)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum StopBits {
     One,
     OneHalf,
@@ -1290,7 +1638,7 @@ bitflags! {
     /// Used in `CfgPrtSpi` and `CfgPrtI2c`
     #[derive(Default)]
     pub struct InProtoMask: u16 {
-        const UBOX = 1;
+        const UBLOX = 1;
         const NMEA = 2;
         const RTCM = 4;
         /// The bitfield inRtcm3 is not supported in protocol
@@ -1402,6 +1750,9 @@ struct CfgRate {
 pub enum AlignmentToReferenceTime {
     Utc = 0,
     Gps = 1,
+    Glo = 2,
+    Bds = 3,
+    Gal = 4,
 }
 
 impl AlignmentToReferenceTime {
@@ -1628,6 +1979,28 @@ impl Default for CfgNav5UtcStandard {
 struct ScaleBack<T: FloatCore + FromPrimitive + ToPrimitive>(T);
 
 impl<T: FloatCore + FromPrimitive + ToPrimitive> ScaleBack<T> {
+    fn as_i8(self, x: T) -> i8 {
+        let x = (x * self.0).round();
+        if x < T::from_i8(i8::min_value()).unwrap() {
+            i8::min_value()
+        } else if x > T::from_i8(i8::max_value()).unwrap() {
+            i8::max_value()
+        } else {
+            x.to_i8().unwrap()
+        }
+    }
+
+    fn as_i16(self, x: T) -> i16 {
+        let x = (x * self.0).round();
+        if x < T::from_i16(i16::min_value()).unwrap() {
+            i16::min_value()
+        } else if x > T::from_i16(i16::max_value()).unwrap() {
+            i16::max_value()
+        } else {
+            x.to_i16().unwrap()
+        }
+    }
+
     fn as_i32(self, x: T) -> i32 {
         let x = (x * self.0).round();
         if x < T::from_i32(i32::min_value()).unwrap() {
@@ -1896,6 +2269,321 @@ struct MgaGpsEph {
     reserved3: [u8;2],
 }
 
+/// Time pulse time data
+#[ubx_packet_recv]
+#[ubx(class = 0x0d, id = 0x01, fixed_payload_len = 16)]
+struct TimTp {
+    /// Time pulse time of week according to time base
+    tow_ms: u32,
+    /// Submillisecond part of towMS (scaling: 2^(-32))
+    tow_sub_ms: u32,
+    /// Quantization error of time pulse
+    q_err: i32,
+    /// Time pulse week number according to time base
+    week: u16,
+    /// Flags
+    #[ubx(map_type = TimTpFlags, from = TimTpFlags)]
+    flags: u8,
+    /// Time reference information
+    #[ubx(map_type = TimTpRefInfo, from = TimTpRefInfo)]
+    ref_info: u8,
+}
+
+#[derive(Debug, Clone)]
+pub struct TimTpFlags(u8);
+
+impl TimTpFlags {
+    /// Time base
+    pub fn time_base(&self) -> TimTpTimeBase {
+        if self.0 & 0b1 == 0 {
+            TimTpTimeBase::Gnss
+        } else {
+            TimTpTimeBase::Utc
+        }
+    }
+
+    /// UTC availability
+    pub fn utc_available(&self) -> bool {
+        self.0 & 0b10 != 0
+    }
+
+    /// (T)RAIM state
+    ///
+    /// Returns `None` if unavailale.
+    pub fn raim_active(&self) -> Option<bool> {
+        match (self.0 >> 2) & 0b11 {
+            // Inactive.
+            0b01 => Some(false),
+            // Active.
+            0b10 => Some(true),
+            // Unavailable.
+            _ => None,
+        }
+    }
+
+    /// Quantization error validity
+    pub fn q_err_valid(&self) -> bool {
+        self.0 & 0b10000 == 0
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum TimTpTimeBase {
+    Gnss,
+    Utc,
+}
+
+#[derive(Debug, Clone)]
+pub struct TimTpRefInfo(u8);
+
+impl TimTpRefInfo {
+    /// GNSS reference information. Only valid if time base is GNSS.
+    pub fn time_ref_gnss(&self) -> Option<TimTpRefInfoTimeRefGnss> {
+        Some(match self.0 & 0b1111 {
+            0 => TimTpRefInfoTimeRefGnss::Gps,
+            1 => TimTpRefInfoTimeRefGnss::Glo,
+            2 => TimTpRefInfoTimeRefGnss::Bds,
+            3 => TimTpRefInfoTimeRefGnss::Gal,
+            4 => TimTpRefInfoTimeRefGnss::NavIc,
+            _ => return None,
+        })
+    }
+
+    /// UTC standard identifier. Only valid if time base is UTC.
+    pub fn utc_standard(&self) -> Option<TimTpRefInfoUtcStandard> {
+        Some(match self.0 >> 4 {
+            1 => TimTpRefInfoUtcStandard::Crl,
+            2 => TimTpRefInfoUtcStandard::Nist,
+            3 => TimTpRefInfoUtcStandard::Usno,
+            4 => TimTpRefInfoUtcStandard::Bipm,
+            5 => TimTpRefInfoUtcStandard::Eu,
+            6 => TimTpRefInfoUtcStandard::Su,
+            7 => TimTpRefInfoUtcStandard::Ntsc,
+            8 => TimTpRefInfoUtcStandard::Npli,
+            _ => return None,
+        })
+    }
+}
+
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub enum TimTpRefInfoTimeRefGnss {
+    Gps,
+    Glo,
+    Bds,
+    Gal,
+    NavIc,
+}
+
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub enum TimTpRefInfoUtcStandard {
+    Crl,
+    Nist,
+    Usno,
+    Bipm,
+    Eu,
+    Su,
+    Ntsc,
+    Npli,
+}
+
+/// Time mark data
+#[ubx_packet_recv]
+#[ubx(class = 0x0d, id = 0x03, fixed_payload_len = 28)]
+struct TimTm2 {
+    /// Channel (i.e. EXTINT) upon which the pulse was measured
+    ch: u8,
+    /// Flags
+    #[ubx(map_type = TimTm2Flags, from = TimTm2Flags)]
+    flags: u8,
+    /// Rising edge counter
+    count: u16,
+    /// Week number of last rising edge
+    wn_r: u16,
+    /// Week number of last falling edge
+    wn_f: u16,
+    /// Tow of rising edge
+    tow_ms_r: u32,
+    /// Millisecond fraction of tow of rising edge in nanoseconds
+    tow_sub_ms_r: u32,
+    /// Tow of falling edge
+    tow_ms_f: u32,
+    /// Millisecond fraction of tow of falling edge in nanoseconds
+    tow_sub_ms_f: u32,
+    /// Accuracy estimate
+    acc_est: u32,
+}
+
+#[derive(Debug, Clone)]
+pub struct TimTm2Flags(u8);
+
+impl TimTm2Flags {
+    pub fn mode(&self) -> TimTm2Mode {
+        if self.0 & 0b1 == 0 {
+            TimTm2Mode::Single
+        } else {
+            TimTm2Mode::Running
+        }
+    }
+
+    pub fn run(&self) -> TimTm2Run {
+        if self.0 & 0b10 == 0 {
+            TimTm2Run::Armed
+        } else {
+            TimTm2Run::Stopped
+        }
+    }
+
+    pub fn new_falling_edge(&self) -> bool {
+        self.0 & 0b100 != 0
+    }
+
+    pub fn new_rising_edge(&self) -> bool {
+        self.0 & 0b10000000 != 0
+    }
+
+    pub fn time_base(&self) -> TimTm2TimeBase {
+        match self.0 & 0b11000 {
+            0 => TimTm2TimeBase::Receiver,
+            1 => TimTm2TimeBase::Gnss,
+            2 => TimTm2TimeBase::Utc,
+            _ => unreachable!(),
+        }
+    }
+
+    /// UTC availability
+    pub fn utc_available(&self) -> bool {
+        self.0 & 0b100000 != 0
+    }
+
+    pub fn time_valid(&self) -> bool {
+        self.0 & 0b1000000 != 0
+    }
+}
+
+pub enum TimTm2Mode {
+    Single,
+    Running,
+}
+
+pub enum TimTm2Run {
+    Armed,
+    Stopped,
+}
+
+pub enum TimTm2TimeBase {
+    Receiver,
+    Gnss,
+    Utc,
+}
+
+#[ubx_packet_recv]
+#[ubx(class = 0x02, id = 0x15, max_payload_len = 8176)] // 16 + 255 * 32
+struct RxmRawx {
+    /// Measurement time of week in receiver local time approximately aligned to the GPS time system.
+    rcv_tow: f64,
+    /// GPS week number in receiver local time.
+    week: u16,
+    /// GPS leap seconds (GPS-UTC)
+    leap_s: i8,
+    /// Number of measurements to follow
+    num_meas: u8,
+    /// Receiver tracking status bitfield
+    #[ubx(map_type = RecStat)]
+    rec_stat: u8,
+    /// Message version
+    version: u8,
+    reserved1: [u8; 2],
+    /// Extended software information strings
+    #[ubx(map_type = MeasurementIter, may_fail,
+          from = Measurement::to_iter,
+          is_valid = Measurement::is_valid)]
+    measurements: [u8; 0],
+}
+
+#[ubx_extend_bitflags]
+#[ubx(from, into_raw, rest_reserved)]
+bitflags! {
+    /// `CfgNavX5Params2` parameters bitmask
+    #[derive(Default)]
+    pub struct RecStat: u8 {
+        /// Leap seconds have been determined
+        const LEAP_SEC = 0x1;
+        /// Clock reset applied.
+        const CLK_RESET = 0x2;
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct MeasurementIter<'a> {
+    data: &'a [u8],
+    offset: usize,
+}
+
+#[derive(Debug, Clone)]
+pub struct Measurement {
+    pub pr_mes: f64,
+    pub cp_mes: f64,
+    pub do_mes: f32,
+    pub gnss_id: u8,
+    pub sv_id: u8,
+    pub sig_id: u8,
+    pub freq_id: u8,
+    pub lock_time: u16,
+    pub cno: u8,
+    pub pr_stdev: u8,
+    pub cp_stdev: u8,
+    pub do_stdev: u8,
+    pub trk_stat: u8,
+    pub reserved2: u8,
+}
+
+impl Measurement {
+    pub(crate) fn is_valid(payload: &[u8]) -> bool {
+        payload.len() % 32 == 0
+    }
+
+    pub(crate) fn to_iter(payload: &[u8]) -> MeasurementIter {
+        MeasurementIter {
+            data: payload,
+            offset: 0,
+        }
+    }
+}
+
+impl<'a> core::iter::Iterator for MeasurementIter<'a> {
+    type Item = Measurement;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.offset < self.data.len() {
+            let data = &self.data[self.offset..(self.offset + 32)];
+            self.offset += 32;
+
+            Some(Measurement {
+                pr_mes: f64::from_le_bytes([
+                    data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7],
+                ]),
+                cp_mes: f64::from_le_bytes([
+                    data[8], data[9], data[10], data[11], data[12], data[13], data[14], data[15],
+                ]),
+                do_mes: f32::from_le_bytes([data[16], data[17], data[18], data[19]]),
+                gnss_id: data[20],
+                sv_id: data[21],
+                sig_id: data[22],
+                freq_id: data[23],
+                lock_time: u16::from_le_bytes([data[24], data[25]]),
+                cno: data[26],
+                pr_stdev: data[27],
+                cp_stdev: data[28],
+                do_stdev: data[29],
+                trk_stat: data[30],
+                reserved2: data[31],
+            })
+        } else {
+            None
+        }
+    }
+}
+
 /// Hardware status
 #[ubx_packet_recv]
 #[ubx(class = 0x0a, id = 0x09, fixed_payload_len = 60)]
@@ -1931,6 +2619,45 @@ pub enum AntennaStatus {
     Ok = 2,
     Short = 3,
     Open = 4,
+}
+
+/// GNSS status monitoring,
+/// gives currently selected constellations
+#[ubx_packet_recv]
+#[ubx(class = 0x0a, id = 0x28, fixed_payload_len = 8)]
+struct MonGnss {
+    /// Message version: 0x00
+    version: u8,
+    /// Supported major constellations bit mask
+    #[ubx(map_type = MonGnssConstellMask)]
+    supported: u8,
+    /// Default major GNSS constellations bit mask
+    #[ubx(map_type = MonGnssConstellMask)]
+    default: u8,
+    /// Currently enabled major constellations bit mask
+    #[ubx(map_type = MonGnssConstellMask)]
+    enabled: u8,
+    /// Maximum number of concurent Major GNSS
+    /// that can be supported by this receiver
+    simultaneous: u8,
+    reserved1: [u8; 3],
+}
+
+#[ubx_extend_bitflags]
+#[ubx(from, into_raw, rest_reserved)]
+bitflags! {
+    /// Selected / available Constellation Mask 
+    #[derive(Default)]
+    pub struct MonGnssConstellMask: u8 {
+        /// GPS constellation
+        const GPS = 0x01;
+        /// GLO constellation
+        const GLO = 0x02;
+        /// BDC constellation
+        const BDC = 0x04;
+        /// GAL constellation
+        const GAL = 0x08;
+    }
 }
 
 #[ubx_extend]
@@ -2063,12 +2790,19 @@ define_recv_packets!(
         CfgPrtUart,
         CfgNav5,
         CfgAnt,
+        CfgTmode2,
+        CfgTmode3,
+        CfgTp5,
         InfError,
         InfWarning,
         InfNotice,
         InfTest,
         InfDebug,
+        RxmRawx,
+        TimTp,
+        TimTm2,
         MonVer,
+        MonGnss,
         MonHw,
         RxmRtcm
     }
