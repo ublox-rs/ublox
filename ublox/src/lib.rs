@@ -9,16 +9,16 @@
 //!
 //! Constructing packets happens using the `Builder` variant of the packet, for example:
 //! ```
-//! use ublox::{CfgPrtUartBuilder, UartPortId};
+//! use ublox::{CfgPrtUartBuilder, InProtoMask, OutProtoMask, UartPortId};
 //!
 //! let packet: [u8; 28] = CfgPrtUartBuilder {
 //!    portid: UartPortId::Uart1,
 //!    reserved0: 0,
 //!    tx_ready: 0,
-//!    mode: 0x8d0,
+//!    mode: 0x8d0.into(),
 //!    baud_rate: 9600,
-//!    in_proto_mask: 0x07,
-//!    out_proto_mask: 0x01,
+//!    in_proto_mask: InProtoMask::from_bits(0x07).unwrap(),
+//!    out_proto_mask: OutProtoMask::from_bits(0x01).unwrap(),
 //!    flags: 0,
 //!    reserved5: 0,
 //! }.into_packet_bytes();

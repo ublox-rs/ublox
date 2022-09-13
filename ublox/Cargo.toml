@@ -17,9 +17,8 @@ alloc = []
 chrono = { version = "0.4.19", default-features = false, features = [] }
 bitflags = "1.2.1"
 ublox_derive = { path = "../ublox_derive", version = "0.0.4" }
-num-traits = { version = "0.2.12", default-features = false }
-itertools = "0.10.3"
-[build-dependencies]
+num-traits = { version = "0.2.12", default-features = false, features = ["std"] }
+serde = { version = "1.0.144", features = ["derive"] }
 
 [dev-dependencies]
 rand = "0.7.3"

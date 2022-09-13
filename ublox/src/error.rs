@@ -19,7 +19,7 @@ impl<E: core::fmt::Display> fmt::Display for MemWriterError<E> {
 impl<E> std::error::Error for MemWriterError<E> where E: std::error::Error {}
 
 /// Error that possible during packets parsing
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum ParserError {
     InvalidChecksum {
         expect: u16,

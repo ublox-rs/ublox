@@ -12,3 +12,4 @@ ublox = { path = "../ublox" }
 serialport = "3.3.0"
 clap = "2.33.3"
 chrono = "0.4.15"
+serde_json = "1.0.85"
