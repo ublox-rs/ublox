@@ -49,6 +49,7 @@ fn generate_serialize_impl(
         }
     });
     quote! {
+        #[cfg(feature = "serde")]
         impl serde::Serialize for #ref_name<'_> {
             fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
             where
@@ -503,6 +504,7 @@ pub fn generate_code_to_extend_enum(ubx_enum: &UbxExtendEnum) -> TokenStream {
         #from_code
         #to_code
 
+        #[cfg(feature = "serde")]
         impl serde::Serialize for #name {
             fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
             where
@@ -595,6 +597,7 @@ pub fn generate_code_to_extend_bitflags(bitflags: BitFlagsMacro) -> syn::Result<
 
     let serialize_fn = format_ident!("serialize_{}", repr_ty.to_token_stream().to_string());
     let serde = quote! {
+        #[cfg(feature = "serde")]
         impl serde::Serialize for #name {
             fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
             where
@@ -695,7 +698,7 @@ pub fn generate_code_for_parse(recv_packs: &RecvPackets) -> TokenStream {
             [a, b][(a < b) as usize]
         }
         pub(crate) const MAX_PAYLOAD_LEN: u16 = #max_payload_len_calc;
-        #[derive(serde::Serialize)]
+        #[cfg_attr(feature = "serde", derive(serde::Serialize))]
         pub struct PacketSerializer<'a, T> {
             class: u8,
             msg_id: u8,
@@ -703,6 +706,7 @@ pub fn generate_code_for_parse(recv_packs: &RecvPackets) -> TokenStream {
             msg: &'a T,
         }
 
+        #[cfg(feature = "serde")]
         impl serde::Serialize for #union_enum_name<'_> {
             fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
             where

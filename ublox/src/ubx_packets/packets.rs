@@ -354,7 +354,8 @@ bitflags! {
 
 /// Fix Status Information
 #[repr(transparent)]
-#[derive(Copy, Clone, serde::Serialize)]
+#[derive(Copy, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct FixStatusInfo(u8);
 
 impl FixStatusInfo {
@@ -385,7 +386,8 @@ impl fmt::Debug for FixStatusInfo {
     }
 }
 
-#[derive(Copy, serde::Serialize, Clone, Debug)]
+#[derive(Copy, Clone, Debug)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum MapMatchingStatus {
     None = 0,
     /// valid, i.e. map matching data was received, but was too old
@@ -411,7 +413,8 @@ enum NavStatusFlags2 {
 }
 
 #[repr(transparent)]
-#[derive(Copy, Clone, serde::Serialize)]
+#[derive(Copy, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct NavSatSvFlags(u32);
 
 impl NavSatSvFlags {
@@ -539,7 +542,8 @@ impl fmt::Debug for NavSatSvFlags {
     }
 }
 
-#[derive(Copy, Clone, Debug, serde::Serialize)]
+#[derive(Copy, Clone, Debug)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum NavSatQualityIndicator {
     NoSignal,
     Searching,
@@ -549,14 +553,16 @@ pub enum NavSatQualityIndicator {
     CarrierLock,
 }
 
-#[derive(Copy, Clone, Debug, serde::Serialize)]
+#[derive(Copy, Clone, Debug)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum NavSatSvHealth {
     Healthy,
     Unhealthy,
     Unknown(u8),
 }
 
-#[derive(Copy, Clone, Debug, serde::Serialize)]
+#[derive(Copy, Clone, Debug)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum NavSatOrbitSource {
     NoInfoAvailable,
     Ephemeris,
@@ -1111,7 +1117,8 @@ pub enum UartPortId {
     Usb = 3,
 }
 
-#[derive(Debug, serde::Serialize, Copy, Clone)]
+#[derive(Debug, Copy, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct UartMode {
     data_bits: DataBits,
     parity: Parity,
@@ -1146,7 +1153,8 @@ impl From<u32> for UartMode {
     }
 }
 
-#[derive(Debug, serde::Serialize, Clone, Copy)]
+#[derive(Debug, Clone, Copy)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum DataBits {
     Seven,
     Eight,
@@ -1176,7 +1184,8 @@ impl From<u32> for DataBits {
     }
 }
 
-#[derive(Debug, serde::Serialize, Clone, Copy)]
+#[derive(Debug, Clone, Copy)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum Parity {
     Even,
     Odd,
@@ -1208,7 +1217,8 @@ impl From<u32> for Parity {
     }
 }
 
-#[derive(Debug, serde::Serialize, Clone, Copy)]
+#[derive(Debug, Clone, Copy)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum StopBits {
     One,
     OneHalf,
@@ -1979,7 +1989,8 @@ impl<'a> EsfMeasRef<'a> {
     }
 }
 
-#[derive(Debug, serde::Serialize)]
+#[derive(Debug)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct EsfMeasData {
     pub data_type: u8,
     pub data_field: u32,
@@ -2023,7 +2034,8 @@ struct EsfRaw {
     data: [u8; 0],
 }
 
-#[derive(Debug, serde::Serialize)]
+#[derive(Debug)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct EsfRawData {
     pub data_type: u8,
     pub data_field: u32,

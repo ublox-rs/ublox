@@ -166,7 +166,7 @@ fn test_ubx_packet_recv_simple() {
                         .finish()
                 }
             }
-
+            #[cfg(feature = "serde")]
             impl serde::Serialize for TestRef<'_> {
                 fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
                 where
@@ -269,7 +269,7 @@ fn test_ubx_packet_recv_dyn_len() {
                         .finish()
                 }
             }
-
+            #[cfg(feature = "serde")]
             impl serde::Serialize for TestRef<'_> {
                 fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
                 where
@@ -469,6 +469,7 @@ fn test_upgrade_enum() {
                     }
                 }
             }
+            #[cfg(feature = "serde")]
             impl serde::Serialize for GpsFix {
                 fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
                 where
@@ -545,7 +546,7 @@ fn test_define_recv_packets() {
                 max_u16(Pack1::MAX_PAYLOAD_LEN, 0u16),
             );
 
-            #[derive(serde :: Serialize)]
+            #[cfg_attr(feature = "serde", derive(serde :: Serialize))]
             pub struct PacketSerializer<'a, T> {
                 class: u8,
                 msg_id: u8,
@@ -553,6 +554,7 @@ fn test_define_recv_packets() {
                 msg: &'a T,
             }
 
+            #[cfg(feature = "serde")]
             impl serde::Serialize for PacketRef<'_> {
                 fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
                 where
@@ -629,6 +631,8 @@ fn test_extend_bitflags() {
                     Self::from_bits_truncate(x)
                 }
             }
+
+            #[cfg(feature = "serde")]
             impl serde::Serialize for Test {
                 fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
                 where

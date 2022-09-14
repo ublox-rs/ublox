@@ -101,6 +101,7 @@ where
     }
 }
 
+#[cfg(feature = "serde")]
 impl<I> serde::Serialize for FieldIter<I>
 where
     I: Iterator + Clone,
