@@ -59,6 +59,7 @@ impl PayloadLen {
     }
 }
 
+#[derive(Debug)]
 pub struct PackField {
     pub name: Ident,
     pub ty: Type,
@@ -80,6 +81,7 @@ impl PackField {
     }
 }
 
+#[derive(Debug)]
 pub struct PackFieldMapDesc {
     pub map_type: Option<MapTypeDesc>,
     pub scale: Option<syn::LitFloat>,
@@ -88,6 +90,7 @@ pub struct PackFieldMapDesc {
     pub get_as_ref: bool,
 }
 
+#[derive(Debug)]
 pub struct MapTypeDesc {
     pub ty: Type,
     pub from_fn: TokenStream,

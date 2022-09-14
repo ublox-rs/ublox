@@ -9,16 +9,16 @@
 //!
 //! Constructing packets happens using the `Builder` variant of the packet, for example:
 //! ```
-//! use ublox::{CfgPrtUartBuilder, InProtoMask, OutProtoMask, UartPortId};
+//! use ublox::{CfgPrtUartBuilder, UartPortId, UartMode, DataBits, Parity, StopBits, InProtoMask, OutProtoMask};
 //!
 //! let packet: [u8; 28] = CfgPrtUartBuilder {
 //!    portid: UartPortId::Uart1,
 //!    reserved0: 0,
 //!    tx_ready: 0,
-//!    mode: 0x8d0.into(),
+//!    mode: UartMode::new(DataBits::Eight, Parity::None, StopBits::One),
 //!    baud_rate: 9600,
-//!    in_proto_mask: InProtoMask::from_bits(0x07).unwrap(),
-//!    out_proto_mask: OutProtoMask::from_bits(0x01).unwrap(),
+//!    in_proto_mask: InProtoMask::all(),
+//!    out_proto_mask: OutProtoMask::UBLOX,
 //!    flags: 0,
 //!    reserved5: 0,
 //! }.into_packet_bytes();
@@ -70,6 +70,10 @@
 extern crate alloc;
 extern crate core;
 #[cfg(feature = "serde")]
+extern crate serde;
+
+#[cfg(feature = "serde")]
+#[macro_use]
 extern crate serde;
 
 pub use crate::{

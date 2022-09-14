@@ -590,6 +590,8 @@ fn field_size_bytes(ty: &Type) -> syn::Result<Option<NonZeroUsize>> {
                 "Can not interpret array length",
             ))
         }
+    } else if let syn::Type::Reference(_) = ty {
+        Ok(None)
     } else {
         let mut valid_type_names = String::with_capacity(200);
         for (t, _) in &valid_types {
