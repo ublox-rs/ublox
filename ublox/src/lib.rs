@@ -72,10 +72,6 @@ extern crate core;
 #[cfg(feature = "serde")]
 extern crate serde;
 
-#[cfg(feature = "serde")]
-#[macro_use]
-extern crate serde;
-
 pub use crate::{
     error::{DateTimeError, MemWriterError, ParserError},
     parser::{FixedLinearBuffer, Parser, ParserIter, UnderlyingBuffer},

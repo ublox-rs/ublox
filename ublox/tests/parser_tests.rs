@@ -196,6 +196,67 @@ fn test_parse_cfg_nav5() {
 }
 
 #[test]
+#[cfg(feature = "serde")]
+fn test_esf_meas_serialize() {
+    let ret = [
+        181, 98, 16, 2, 16, 0, 243, 121, 129, 1, 24, 8, 0, 0, 77, 100, 0, 11, 211, 148, 129, 1,
+        213, 198,
+    ];
+
+    let mut parser = Parser::default();
+    let mut found = false;
+    let mut it = parser.consume(&ret);
+
+    while let Some(pack) = it.next() {
+        match pack {
+            Ok(pack) => {
+                let expected = serde_json::json! {
+                    {
+                      "class": 16,
+                      "msg_id": 2,
+                      "time_tag": 25262579,
+                      "flags": 2072,
+                      "id": 0,
+                      "data": [
+                        {
+                          "data_type": 11,
+                          "data_field": 25677
+                        }
+                      ],
+                      "calib_tag": 25269459
+                    }
+                };
+                let actual = serde_json::to_value(&pack).unwrap();
+                assert_eq!(expected, actual);
+                if let PacketRef::EsfMeas(pack) = pack {
+                    let expected = serde_json::json! {
+                        {
+                          "time_tag": 25262579,
+                          "flags": 2072,
+                          "id": 0,
+                          "data": [
+                            {
+                              "data_type": 11,
+                              "data_field": 25677
+                            }
+                          ],
+                          "calib_tag": 25269459
+                        }
+                    };
+                    let actual = serde_json::to_value(&pack).unwrap();
+                    assert_eq!(expected, actual);
+                } else {
+                    assert!(false);
+                }
+                found = true;
+            }
+            _ => assert!(false),
+        }
+    }
+    assert!(found);
+}
+
+#[test]
 fn test_zero_sized_ackack() {
     let ack_ack = [0xb5, 0x62, 0x05, 0x01, 0x00, 0x00, 0x06, 0x17];
     let mut parser = Parser::default();

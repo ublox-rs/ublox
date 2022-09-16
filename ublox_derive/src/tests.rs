@@ -560,7 +560,7 @@ fn test_define_recv_packets() {
             pub struct PacketSerializer<'a, T> {
                 class: u8,
                 msg_id: u8,
-                #[serde(flatten)]
+                #[cfg_attr(feature = "serde", serde(flatten))]
                 msg: &'a T,
             }
 

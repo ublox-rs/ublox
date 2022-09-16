@@ -11,9 +11,6 @@ fn main() {
     loop {
         match it.next() {
             Some(Ok(packet)) => {
-                // if let NavStatus(packet) = packet {
-                //     println!("{:?}", packet.fix_stat());
-                // }
                 println!("{}", serde_json::to_string_pretty(&packet).unwrap());
             }
             Some(Err(_)) => {}

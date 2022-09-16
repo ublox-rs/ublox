@@ -83,7 +83,8 @@ pub trait UbxPacketCreator {
 }
 
 /// Packet not supported yet by this crate
-#[derive(Debug, serde::Serialize)]
+#[derive(Debug)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct UbxUnknownPacketRef<'a> {
     pub payload: &'a [u8],
     pub class: u8,

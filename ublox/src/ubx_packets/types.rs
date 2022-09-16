@@ -4,7 +4,7 @@ use chrono::prelude::*;
 use core::{convert::TryFrom, fmt};
 
 /// Represents a world position, can be constructed from NavPosLlh and NavPosVelTime packets.
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, Clone, Copy)]
 pub struct Position {
     /// Logitude in degrees
@@ -18,7 +18,7 @@ pub struct Position {
 }
 
 #[derive(Debug, Clone, Copy)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Velocity {
     /// m/s over the ground
     pub speed: f64,

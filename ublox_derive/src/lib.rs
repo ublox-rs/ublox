@@ -11,7 +11,7 @@ use quote::ToTokens;
 
 use syn::{
     parse_macro_input, punctuated::Punctuated, spanned::Spanned, Attribute, Data, DeriveInput,
-    Fields, Ident, Variant, Type,
+    Fields, Ident, Type, Variant,
 };
 
 #[proc_macro_attribute]

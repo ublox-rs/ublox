@@ -320,7 +320,11 @@ pub fn generate_send_code_for_packet(pack_descr: &PackDesc) -> TokenStream {
 
                 builder_needs_lifetime = true;
 
-                assert_eq!(fi, pack_descr.fields.len() - 1, "Iterator field must be the last field.");
+                assert_eq!(
+                    fi,
+                    pack_descr.fields.len() - 1,
+                    "Iterator field must be the last field."
+                );
                 break;
             }
         };
@@ -671,8 +675,6 @@ pub fn generate_code_to_extend_bitflags(bitflags: BitFlagsMacro) -> syn::Result<
             where
                 S: serde::Serializer,
             {
-                // serializing debug gives naming
-                // serializer.serialize_str(format!("{:?}", self).as_str())
                 serializer.#serialize_fn(self.bits())
             }
         }
@@ -770,7 +772,7 @@ pub fn generate_code_for_parse(recv_packs: &RecvPackets) -> TokenStream {
         pub struct PacketSerializer<'a, T> {
             class: u8,
             msg_id: u8,
-            #[serde(flatten)]
+            #[cfg_attr(feature = "serde", serde(flatten))]
             msg: &'a T,
         }
 
