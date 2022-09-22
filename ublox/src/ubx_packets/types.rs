@@ -3,7 +3,7 @@ use crate::error::DateTimeError;
 use chrono::prelude::*;
 use core::convert::TryFrom;
 
-/// Represents a world position, can be constructed from NavPosLlh and NavPosVelTime packets.
+/// Represents a world position, can be constructed from NavPosLlh, NavHpPosLlh and NavPosVelTime packets.
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone, Copy)]
 pub struct Position {
@@ -33,6 +33,16 @@ impl<'a> From<&NavPosLlhRef<'a>> for Position {
             lon: packet.lon_degrees(),
             lat: packet.lat_degrees(),
             alt: packet.height_msl(),
+        }
+    }
+}
+
+impl<'a> From<&NavHpPosLlhRef<'a>> for Position {
+    fn from(packet: &NavHpPosLlhRef<'a>) -> Self {
+        Position {
+            lon: packet.lon_degrees() + packet.lon_hp_degrees(),
+            lat: packet.lat_degrees() + packet.lat_hp_degrees(),
+            alt: packet.height_msl() + packet.height_hp_msl(),
         }
     }
 }

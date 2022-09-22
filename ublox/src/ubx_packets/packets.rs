@@ -86,6 +86,67 @@ struct NavVelNed {
     course_heading_accuracy_estimate: u32,
 }
 
+/// High Precision Geodetic Position Solution
+#[ubx_packet_recv]
+#[ubx(class = 0x01, id = 0x14, fixed_payload_len = 36)]
+struct NavHpPosLlh {
+    /// Message version (0 for protocol version 27)
+    version: u8,
+
+    reserved1: [u8; 3],
+
+    /// GPS Millisecond Time of Week
+    itow: u32,
+
+    /// Longitude (deg)
+    #[ubx(map_type = f64, scale = 1e-7, alias = lon_degrees)]
+    lon: i32,
+
+    /// Latitude (deg)
+    #[ubx(map_type = f64, scale = 1e-7, alias = lat_degrees)]
+    lat: i32,
+
+    /// Height above Ellipsoid (m)
+    #[ubx(map_type = f64, scale = 1e-3)]
+    height_meters: i32,
+
+    /// Height above mean sea level (m)
+    #[ubx(map_type = f64, scale = 1e-3)]
+    height_msl: i32,
+
+    /// High precision component of longitude
+    /// Must be in the range -99..+99
+    /// Precise longitude in deg * 1e-7 = lon + (lonHp * 1e-2)
+    #[ubx(map_type = f64, scale = 1e-9, alias = lon_hp_degrees)]
+    lon_hp: i8,
+
+    /// High precision component of latitude
+    /// Must be in the range -99..+99
+    /// Precise latitude in deg * 1e-7 = lat + (latHp * 1e-2)
+    #[ubx(map_type = f64, scale = 1e-9, alias = lat_hp_degrees)]
+    lat_hp: i8,
+
+    /// High precision component of height above ellipsoid
+    /// Must be in the range -9..+9
+    /// Precise height in mm = height + (heightHp * 0.1)
+    #[ubx(map_type = f64, scale = 1e-1)]
+    height_hp_meters: i8,
+
+    /// High precision component of height above mean sea level
+    /// Must be in range -9..+9
+    /// Precise height in mm = hMSL + (hMSLHp * 0.1)
+    #[ubx(map_type = f64, scale = 1e-1)]
+    height_hp_msl: i8,
+
+    /// Horizontal accuracy estimate (mm)
+    #[ubx(map_type = f64, scale = 1e-1)]
+    horizontal_accuracy: u32,
+
+    /// Vertical accuracy estimate (mm)
+    #[ubx(map_type = f64, scale = 1e-1)]
+    vertical_accuracy: u32,
+}
+
 /// Navigation Position Velocity Time Solution
 #[ubx_packet_recv]
 #[ubx(class = 1, id = 0x07, fixed_payload_len = 92)]
@@ -2899,6 +2960,7 @@ define_recv_packets!(
         NavPosVelTime,
         NavSolution,
         NavVelNed,
+        NavHpPosLlh,
         NavTimeUTC,
         NavTimeLs,
         NavSat,
