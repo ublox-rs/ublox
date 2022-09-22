@@ -68,6 +68,11 @@ macro_rules! from_cfg_v_bytes {
     ($buf:expr, u32) => {
         u32::from_le_bytes([$buf[0], $buf[1], $buf[2], $buf[3]])
     };
+    ($buf:expr, u64) => {
+        u64::from_le_bytes([
+            $buf[0], $buf[1], $buf[2], $buf[3], $buf[4], $buf[5], $buf[6], $buf[7],
+        ])
+    };
     ($buf:expr, CfgInfMask) => {
         CfgInfMask::from_bits_truncate($buf[0])
     };
@@ -149,6 +154,10 @@ macro_rules! into_cfg_kv_bytes {
     ($this:expr, u32) => {{
       let bytes = $this.0.to_le_bytes();
       into_cfg_kv_bytes!(@inner [bytes[0], bytes[1], bytes[2], bytes[3]])
+    }};
+    ($this:expr, u64) => {{
+      let bytes = $this.0.to_le_bytes();
+      into_cfg_kv_bytes!(@inner [bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5], bytes[6], bytes[7]])
     }};
     ($this:expr, CfgInfMask) => {
       into_cfg_kv_bytes!(@inner [
