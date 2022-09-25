@@ -34,6 +34,31 @@ let packet: [u8; 28] = CfgPrtUartBuilder {
    reserved5: 0,
 }.into_packet_bytes();
 ```
+
+For variable-size packet like `CfgValSet`, you can construct it into a new `Vec<u8>`:
+```
+use ublox::{cfg_val::CfgVal::*, CfgLayer, CfgValSetBuilder};
+let packet_vec: Vec<u8> = CfgValSetBuilder {
+    version: 1,
+    layers: CfgLayer::RAM,
+    reserved1: 0,
+    cfg_data: &[UsbOutProtNmea(true), UsbOutProtRtcm3x(true), UsbOutProtUbx(true)],
+}
+.into_packet_vec();
+let packet: &[u8] = packet_vec.as_slice();
+```
+Or by extending to an existing one:
+```
+let mut packet_vec = Vec::new();
+CfgValSetBuilder {
+    version: 1,
+    layers: CfgLayer::RAM,
+    reserved1: 0,
+    cfg_data: &[UsbOutProtNmea(true), UsbOutProtRtcm3x(true), UsbOutProtUbx(true)],
+}
+.extend_to(&mut packet_vec);
+let packet = packet_vec.as_slice();
+```
 See the documentation for the individual `Builder` structs for information on the fields.
 
 Parsing Packets

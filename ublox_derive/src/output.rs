@@ -368,6 +368,13 @@ pub fn generate_send_code_for_packet(pack_descr: &PackDesc) -> TokenStream {
         ret.extend(quote! {
           impl #payload_struct_lifetime #payload_struct #payload_struct_lifetime {
               #[inline]
+              pub fn into_packet_vec(self) -> Vec<u8> {
+                let mut vec = Vec::new();
+                self.extend_to(&mut vec);
+                vec
+              }
+
+              #[inline]
               pub fn extend_to<T>(self, out: &mut T)
               where
                  T: core::iter::Extend<u8> +
