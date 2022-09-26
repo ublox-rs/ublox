@@ -1,6 +1,6 @@
 use super::{
     ubx_checksum, MemWriter, Position, UbxChecksumCalc, UbxPacketCreator, UbxPacketMeta,
-    UbxUnknownPacketRef, SYNC_CHAR_1, SYNC_CHAR_2,
+    UbxUnknownPacketOwned, UbxUnknownPacketRef, SYNC_CHAR_1, SYNC_CHAR_2,
 };
 use crate::cfg_val::CfgVal;
 use crate::error::{MemWriterError, ParserError};
@@ -140,11 +140,11 @@ struct NavHpPosLlh {
 
     /// Horizontal accuracy estimate (mm)
     #[ubx(map_type = f64, scale = 1e-1)]
-    horizontal_accuracy: u32,
+    horiz_accuracy: u32,
 
     /// Vertical accuracy estimate (mm)
     #[ubx(map_type = f64, scale = 1e-1)]
-    vertical_accuracy: u32,
+    vert_accuracy: u32,
 }
 
 /// Navigation Position Velocity Time Solution
@@ -802,7 +802,7 @@ impl Default for OdoProfile {
     }
 }
 
-/// Configure Jamming interference monitoring 
+/// Configure Jamming interference monitoring
 #[ubx_packet_recv_send]
 #[ubx(class = 0x06, id = 0x39, fixed_payload_len = 8)]
 struct CfgItfm {
@@ -843,7 +843,7 @@ impl Default for CfgItfmConfig {
 impl CfgItfmConfig {
     pub fn new(enable: bool, bb_threshold: u32, cw_threshold: u32) -> Self {
         Self {
-            enable, 
+            enable,
             bb_threshold: bb_threshold.into(),
             cw_threshold: cw_threshold.into(),
             algorithm_bits: CfgItfmAlgoBits::default(),
@@ -851,10 +851,10 @@ impl CfgItfmConfig {
     }
 
     const fn into_raw(self) -> u32 {
-        (self.enable as u32)<<31
-            | self.cw_threshold.into_raw() 
-                | self.bb_threshold.into_raw()
-                    | self.algorithm_bits.into_raw()
+        (self.enable as u32) << 31
+            | self.cw_threshold.into_raw()
+            | self.bb_threshold.into_raw()
+            | self.algorithm_bits.into_raw()
     }
 }
 
@@ -880,7 +880,7 @@ pub struct CfgItfmBbThreshold(u32);
 impl CfgItfmBbThreshold {
     const POSITION: u32 = 0;
     const LENGTH: u32 = 4;
-    const MASK: u32 = (1<<Self::LENGTH)-1;
+    const MASK: u32 = (1 << Self::LENGTH) - 1;
     const fn into_raw(self) -> u32 {
         (self.0 & Self::MASK) << Self::POSITION
     }
@@ -905,7 +905,7 @@ pub struct CfgItfmCwThreshold(u32);
 impl CfgItfmCwThreshold {
     const POSITION: u32 = 4;
     const LENGTH: u32 = 5;
-    const MASK: u32 = (1<<Self::LENGTH)-1;
+    const MASK: u32 = (1 << Self::LENGTH) - 1;
     const fn into_raw(self) -> u32 {
         (self.0 & Self::MASK) << Self::POSITION
     }
@@ -930,7 +930,7 @@ pub struct CfgItfmAlgoBits(u32);
 impl CfgItfmAlgoBits {
     const POSITION: u32 = 9;
     const LENGTH: u32 = 22;
-    const MASK: u32 = (1<<Self::LENGTH)-1;
+    const MASK: u32 = (1 << Self::LENGTH) - 1;
     const fn into_raw(self) -> u32 {
         (self.0 & Self::MASK) << Self::POSITION
     }
@@ -971,9 +971,9 @@ impl CfgItfmConfig2 {
     }
 
     const fn into_raw(self) -> u32 {
-        ((self.scan_aux_bands as u32)<< 14) 
-            | self.general.into_raw() 
-                | self.antenna.into_raw() as u32
+        ((self.scan_aux_bands as u32) << 14)
+            | self.general.into_raw()
+            | self.antenna.into_raw() as u32
     }
 }
 
@@ -997,7 +997,7 @@ pub struct CfgItfmGeneralBits(u32);
 impl CfgItfmGeneralBits {
     const POSITION: u32 = 0;
     const LENGTH: u32 = 12;
-    const MASK: u32 = (1<<Self::LENGTH)-1;
+    const MASK: u32 = (1 << Self::LENGTH) - 1;
     const fn into_raw(self) -> u32 {
         (self.0 & Self::MASK) << Self::POSITION
     }
@@ -1025,12 +1025,12 @@ impl From<u32> for CfgItfmGeneralBits {
 pub enum CfgItfmAntennaSettings {
     /// Type of Antenna is not known
     Unknown = 0,
-    /// Active antenna 
+    /// Active antenna
     Active = 1,
     /// Passive antenna
     Passive = 2,
 }
-        
+
 impl From<u32> for CfgItfmAntennaSettings {
     fn from(cfg: u32) -> Self {
         let cfg = (cfg & 0x3000) >> 12;
@@ -1325,8 +1325,8 @@ bitflags! {
 /// TP5: "Time Pulse" Config frame (32.10.38.4)
 #[ubx_packet_recv_send]
 #[ubx(
-    class = 0x06, 
-    id = 0x31, 
+    class = 0x06,
+    id = 0x31,
     fixed_payload_len = 32,
     flags = "default_for_builder"
 )]
@@ -1344,17 +1344,17 @@ struct CfgTp5 {
     /// Frequency in Hz or Period in us,
     /// depending on `flags::IS_FREQ` bit
     #[ubx(map_type = f64, scale = 1.0)]
-    freq_period: u32, 
+    freq_period: u32,
     /// Frequency in Hz or Period in us,
     /// when locked to GPS time.
     /// Only used when `flags::LOCKED_OTHER_SET` is set
     #[ubx(map_type = f64, scale = 1.0)]
-    freq_period_lock: u32, 
+    freq_period_lock: u32,
     /// Pulse length or duty cycle, [us] or [*2^-32],
     /// depending on `flags::LS_LENGTH` bit
     #[ubx(map_type = f64, scale = 1.0)]
     pulse_len_ratio: u32,
-    /// Pulse Length in us or duty cycle (*2^-32), 
+    /// Pulse Length in us or duty cycle (*2^-32),
     /// when locked to GPS time.
     /// Only used when `flags::LOCKED_OTHER_SET` is set
     #[ubx(map_type = f64, scale = 1.0)]
@@ -1387,9 +1387,9 @@ impl Default for CfgTp5TimePulseMode {
 /// only available on `timing` receivers
 #[ubx_packet_recv_send]
 #[ubx(
-    class = 0x06, 
-    id = 0x3d, 
-    fixed_payload_len = 28, 
+    class = 0x06,
+    id = 0x3d,
+    fixed_payload_len = 28,
     flags = "default_for_builder"
 )]
 struct CfgTmode2 {
@@ -1397,18 +1397,18 @@ struct CfgTmode2 {
     #[ubx(map_type = CfgTmode2TimeXferModes, may_fail)]
     time_transfer_mode: u8,
     reserved1: u8,
-    #[ubx(map_type = CfgTmode2Flags)] 
+    #[ubx(map_type = CfgTmode2Flags)]
     flags: u16,
     /// WGS84 ECEF.x coordinate in [m] or latitude in [deg° *1E-5],
-    /// depending on `flags` field 
+    /// depending on `flags` field
     #[ubx(map_type = f64, scale = 1e-2)]
     ecef_x_or_lat: i32,
     /// WGS84 ECEF.y coordinate in [m] or longitude in [deg° *1E-5],
-    /// depending on `flags` field 
+    /// depending on `flags` field
     #[ubx(map_type = f64, scale = 1e-2)]
     ecef_y_or_lon: i32,
     /// WGS84 ECEF.z coordinate or altitude, both in [m],
-    /// depending on `flags` field 
+    /// depending on `flags` field
     #[ubx(map_type = f64, scale = 1e-2)]
     ecef_z_or_alt: i32,
     /// Fixed position 3D accuracy in [m]
@@ -1456,7 +1456,7 @@ bitflags! {
 /// Time mode survey-in status
 #[ubx_packet_recv]
 #[ubx(class = 0x0d, id = 0x04, fixed_payload_len = 28)]
-struct TimSvin{
+struct TimSvin {
     /// Passed survey-in minimum duration
     /// Units: s
     dur: u32,
@@ -1474,7 +1474,7 @@ struct TimSvin{
     valid: u8,
     /// Survey-in in progress flag, 1 = in-progress, otherwise 0
     active: u8,
-    reserved: [u8; 2]
+    reserved: [u8; 2],
 }
 
 /// Leap second event information
@@ -1545,29 +1545,29 @@ bitflags! {
 /// only available on `timing` receivers
 #[ubx_packet_recv_send]
 #[ubx(
-    class = 0x06, 
-    id = 0x71, 
+    class = 0x06,
+    id = 0x71,
     fixed_payload_len = 40,
     flags = "default_for_builder"
-)] 
+)]
 struct CfgTmode3 {
     version: u8,
     reserved1: u8,
     /// Receiver mode, see [CfgTmode3RcvrMode] enum
     #[ubx(map_type = CfgTmode3RcvrMode)]
     rcvr_mode: u8,
-    #[ubx(map_type = CfgTmode3Flags)] 
+    #[ubx(map_type = CfgTmode3Flags)]
     flags: u8,
     /// WGS84 ECEF.x coordinate in [m] or latitude in [deg° *1E-5],
-    /// depending on `flags` field 
+    /// depending on `flags` field
     #[ubx(map_type = f64, scale = 1e-2)]
     ecef_x_or_lat: i32,
     /// WGS84 ECEF.y coordinate in [m] or longitude in [deg° *1E-5],
-    /// depending on `flags` field 
+    /// depending on `flags` field
     #[ubx(map_type = f64, scale = 1e-2)]
     ecef_y_or_lon: i32,
-    /// WGS84 ECEF.z coordinate or altitude, both in [m], 
-    /// depending on `flags` field 
+    /// WGS84 ECEF.z coordinate or altitude, both in [m],
+    /// depending on `flags` field
     #[ubx(map_type = f64, scale = 1e-2)]
     ecef_z_or_alt: i32,
     /// High precision WGS84 ECEF.x coordinate in [tenths of mm],
@@ -1621,7 +1621,7 @@ bitflags! {
         /// Uses local lock otherwise.
         const LOCK_GNSS_FREQ = 0x02;
         /// use `freq_period_lock` and `pulse_len_ratio_lock`
-        /// fields as soon as GPS time is valid. Uses 
+        /// fields as soon as GPS time is valid. Uses
         /// `freq_period` and `pulse_len_ratio` when GPS time is invalid.
         const LOCKED_OTHER_SET = 0x04;
         /// `freq_period` and `pulse_len_ratio` fields
@@ -1633,7 +1633,7 @@ bitflags! {
         /// Period time must be integer fraction of `1sec`
         /// `LOCK_GNSS_FREQ` is expected, to unlock this feature
         const ALIGN_TO_TOW = 0x20;
-        /// Pulse polarity, 
+        /// Pulse polarity,
         /// 0: falling edge @ top of second,
         /// 1: rising edge @ top of second,
         const POLARITY = 0x40;
@@ -2626,7 +2626,7 @@ struct MgaGloEph {
     e: u8,
     delta_tau: u8,
     tau: i32,
-    reserved2: [u8;4],
+    reserved2: [u8; 4],
 }
 
 #[ubx_packet_recv]
@@ -2636,7 +2636,7 @@ struct MgaGpsIono {
     msg_type: u8,
     /// Message version: 0x00 for this version
     version: u8,
-    reserved1: [u8;2],
+    reserved1: [u8; 2],
     /// Ionospheric parameter alpha0 [s]
     #[ubx(map_type = f64, scale = 1.0)] // 2^-30
     alpha0: i8,
@@ -2661,7 +2661,7 @@ struct MgaGpsIono {
     /// Ionospheric parameter beta0 [s/semi-circle^3]
     #[ubx(map_type = f64, scale = 1.0)] // 2^-16
     beta3: i8,
-    reserved2: [u8;4],
+    reserved2: [u8; 4],
 }
 
 #[ubx_packet_recv]
@@ -2697,7 +2697,7 @@ struct MgaGpsEph {
     omega: i32,
     omega_dot: i32,
     idot: i16,
-    reserved3: [u8;2],
+    reserved3: [u8; 2],
 }
 
 /// Time pulse time data
@@ -3077,7 +3077,7 @@ struct MonGnss {
 #[ubx_extend_bitflags]
 #[ubx(from, into_raw, rest_reserved)]
 bitflags! {
-    /// Selected / available Constellation Mask 
+    /// Selected / available Constellation Mask
     #[derive(Default)]
     pub struct MonGnssConstellMask: u8 {
         /// GPS constellation
@@ -3198,8 +3198,8 @@ struct RxmRtcm {
 }
 
 define_recv_packets!(
-    enum PacketRef {
-        _ = UbxUnknownPacketRef,
+    enum Packet {
+        _ = UbxUnknownPacket,
         NavPosLlh,
         NavStatus,
         NavDop,

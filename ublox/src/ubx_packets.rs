@@ -83,9 +83,17 @@ pub trait UbxPacketCreator {
 }
 
 /// Packet not supported yet by this crate
-#[derive(Debug)]
+#[derive(Clone, Copy, Debug)]
 pub struct UbxUnknownPacketRef<'a> {
     pub payload: &'a [u8],
+    pub class: u8,
+    pub msg_id: u8,
+}
+
+/// Packet not supported yet by this crate
+#[derive(Clone, Debug)]
+pub struct UbxUnknownPacketOwned {
+    pub payload: Vec<u8>,
     pub class: u8,
     pub msg_id: u8,
 }
