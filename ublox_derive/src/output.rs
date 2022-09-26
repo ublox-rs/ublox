@@ -686,7 +686,9 @@ pub fn generate_code_for_parse(recv_packs: &RecvPackets) -> TokenStream {
         });
         matches_owned.push(quote! {
             (#name::CLASS, #name::ID) if <#owned_name>::validate(payload).is_ok()  => {
-                Ok(#union_enum_name_owned::#name(#owned_name([0; #owned_name::PACKET_SIZE])))
+                let mut bytes = [0u8; #owned_name::PACKET_SIZE];
+                bytes.clone_from_slice(payload);
+                Ok(#union_enum_name_owned::#name(#owned_name(bytes)))
             }
         });
         matches_ref_to_owned.push(quote! {
