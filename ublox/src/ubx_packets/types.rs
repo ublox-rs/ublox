@@ -37,6 +37,16 @@ impl<'a> From<&NavPosLlhRef<'a>> for Position {
     }
 }
 
+impl<'a> From<&NavHpPosLlhRef<'a>> for Position {
+    fn from(packet: &NavHpPosLlhRef<'a>) -> Self {
+        Position {
+            lon: packet.lon_degrees() + packet.lon_hp_degrees(),
+            lat: packet.lat_degrees() + packet.lat_hp_degrees(),
+            alt: packet.height_msl() + packet.height_hp_msl(),
+        }
+    }
+}
+
 impl<'a> From<&NavVelNedRef<'a>> for Velocity {
     fn from(packet: &NavVelNedRef<'a>) -> Self {
         Velocity {
