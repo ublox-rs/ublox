@@ -799,7 +799,7 @@ struct CfgItfm {
 }
 
 #[derive(Debug, Copy, Clone)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct CfgItfmConfig {
     /// enable interference detection
     enable: bool,
@@ -858,7 +858,7 @@ impl From<u32> for CfgItfmConfig {
 }
 
 #[derive(Debug, Copy, Clone)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct CfgItfmBbThreshold(u32);
 
 impl CfgItfmBbThreshold {
@@ -883,7 +883,7 @@ impl From<u32> for CfgItfmBbThreshold {
 }
 
 #[derive(Debug, Copy, Clone)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct CfgItfmCwThreshold(u32);
 
 impl CfgItfmCwThreshold {
@@ -908,7 +908,7 @@ impl From<u32> for CfgItfmCwThreshold {
 }
 
 #[derive(Debug, Copy, Clone)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct CfgItfmAlgoBits(u32);
 
 impl CfgItfmAlgoBits {
@@ -933,7 +933,7 @@ impl From<u32> for CfgItfmAlgoBits {
 }
 
 #[derive(Debug, Copy, Clone)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct CfgItfmConfig2 {
     /// General settings, should be set to
     /// 0x31E default value, for correct setting
@@ -975,7 +975,7 @@ impl From<u32> for CfgItfmConfig2 {
 }
 
 #[derive(Debug, Copy, Clone)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct CfgItfmGeneralBits(u32);
 
 impl CfgItfmGeneralBits {
@@ -1005,7 +1005,7 @@ impl From<u32> for CfgItfmGeneralBits {
 #[ubx(from_unchecked, into_raw, rest_error)]
 #[repr(u8)]
 #[derive(Debug, Copy, Clone)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum CfgItfmAntennaSettings {
     /// Type of Antenna is not known
     Unknown = 0,
