@@ -50,6 +50,7 @@ fn test_ubx_packet_recv_simple() {
             #[doc = "Some comment"]
             #[doc = "Contains a reference to an underlying buffer, contains accessor methods to retrieve data."]
             pub struct TestRef<'a>(&'a [u8]);
+
             impl<'a> TestRef<'a> {
                 #[inline]
                 pub fn as_bytes(&self) -> &[u8] {
@@ -63,10 +64,11 @@ fn test_ubx_packet_recv_simple() {
                         self.0[0usize],
                         self.0[1usize],
                         self.0[2usize],
-                        self.0[3usize]]
-                    );
+                        self.0[3usize],
+                    ]);
                     val
                 }
+
                 #[doc = "this is lat"]
                 #[inline]
                 pub fn lat_degrees_raw(&self) -> i32 {
@@ -74,10 +76,11 @@ fn test_ubx_packet_recv_simple() {
                         self.0[4usize],
                         self.0[5usize],
                         self.0[6usize],
-                        self.0[7usize]]
-                    );
+                        self.0[7usize],
+                    ]);
                     val
                 }
+
                 #[doc = "this is lat"]
                 #[inline]
                 pub fn lat_degrees(&self) -> f64 {
@@ -85,18 +88,20 @@ fn test_ubx_packet_recv_simple() {
                         self.0[4usize],
                         self.0[5usize],
                         self.0[6usize],
-                        self.0[7usize]]
-                    );
+                        self.0[7usize],
+                    ]);
                     let val = <f64>::from(val);
                     let val = val * 1e-7;
                     val
                 }
+
                 #[doc = "this is a"]
                 #[inline]
                 pub fn a(&self) -> u8 {
                     let val = self.0[8usize];
                     val
                 }
+
                 #[doc = ""]
                 #[inline]
                 pub fn reserved1(&self) -> [u8; 5] {
@@ -109,12 +114,14 @@ fn test_ubx_packet_recv_simple() {
                     ];
                     val
                 }
+
                 #[doc = ""]
                 #[inline]
                 pub fn flags_raw(&self) -> u8 {
                     let val = self.0[14usize];
                     val
                 }
+
                 #[doc = ""]
                 #[inline]
                 pub fn flags(&self) -> Flags {
@@ -122,6 +129,7 @@ fn test_ubx_packet_recv_simple() {
                     let val = <Flags>::from_unchecked(val);
                     val
                 }
+
                 #[doc = ""]
                 #[inline]
                 pub fn b(&self) -> i8 {
@@ -132,17 +140,25 @@ fn test_ubx_packet_recv_simple() {
                 fn validate(payload: &[u8]) -> Result<(), ParserError> {
                     let expect = 16usize;
                     let got = payload.len();
-                    if got ==  expect {
+                    if got == expect {
                         let val = payload[14usize];
                         if !<Flags>::is_valid(val) {
-                            return Err(ParserError::InvalidField{packet: "Test", field: stringify!(flags)});
+                            return Err(ParserError::InvalidField {
+                                packet: "Test",
+                                field: stringify!(flags),
+                            });
                         }
                         Ok(())
                     } else {
-                        Err(ParserError::InvalidPacketLen{packet: "Test", expect, got})
+                        Err(ParserError::InvalidPacketLen {
+                            packet: "Test",
+                            expect,
+                            got,
+                        })
                     }
                 }
             }
+
             impl core::fmt::Debug for TestRef<'_> {
                 fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
                     f.debug_struct("Test")
@@ -153,6 +169,22 @@ fn test_ubx_packet_recv_simple() {
                         .field(stringify!(flags), &self.flags())
                         .field(stringify!(b), &self.b())
                         .finish()
+                }
+            }
+            #[cfg(feature = "serde")]
+            impl serde::Serialize for TestRef<'_> {
+                fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+                where
+                    S: serde::Serializer,
+                {
+                    let mut state = serializer.serialize_map(None)?;
+                    state.serialize_entry(stringify!(itow), &self.itow())?;
+                    state.serialize_entry(stringify!(lat), &self.lat_degrees())?;
+                    state.serialize_entry(stringify!(a), &self.a())?;
+                    state.serialize_entry(stringify!(reserved1), &self.reserved1())?;
+                    state.serialize_entry(stringify!(flags), &self.flags())?;
+                    state.serialize_entry(stringify!(b), &self.b())?;
+                    state.end()
                 }
             }
         },
@@ -196,6 +228,7 @@ fn test_ubx_packet_recv_dyn_len() {
             #[doc = ""]
             #[doc = "Contains a reference to an underlying buffer, contains accessor methods to retrieve data."]
             pub struct TestRef<'a>(&'a [u8]);
+
             impl<'a> TestRef<'a> {
                 #[inline]
                 pub fn as_bytes(&self) -> &[u8] {
@@ -224,21 +257,41 @@ fn test_ubx_packet_recv_dyn_len() {
                 }
 
                 fn validate(payload: &[u8]) -> Result<(), ParserError> {
-                    let min = 8usize;
                     let got = payload.len();
+                    let min = 8usize;
                     if got >= min {
                         Ok(())
                     } else {
-                        Err(ParserError::InvalidPacketLen{packet: "Test", expect: min, got})
+                        Err(ParserError::InvalidPacketLen {
+                            packet: "Test",
+                            expect: min,
+                            got,
+                        })
                     }
                 }
             }
+
             impl core::fmt::Debug for TestRef<'_> {
                 fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
                     f.debug_struct("Test")
                         .field(stringify!(f1), &self.f1())
                         .field(stringify!(rest), &self.rest())
                         .finish()
+                }
+            }
+            #[cfg(feature = "serde")]
+            impl serde::Serialize for TestRef<'_> {
+                fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+                where
+                    S: serde::Serializer,
+                {
+                    let mut state = serializer.serialize_map(None)?;
+                    state.serialize_entry(stringify!(f1), &self.f1())?;
+                    state.serialize_entry(
+                        stringify!(rest),
+                        &crate::ubx_packets::FieldIter(self.rest()),
+                    )?;
+                    state.end()
                 }
             }
         },
@@ -426,6 +479,15 @@ fn test_upgrade_enum() {
                     }
                 }
             }
+            #[cfg(feature = "serde")]
+            impl serde::Serialize for GpsFix {
+                fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+                where
+                    S: serde::Serializer,
+                {
+                    serializer.serialize_u8(*self as u8)
+                }
+            }
         },
     );
 }
@@ -452,7 +514,7 @@ fn test_define_recv_packets() {
             pub enum PacketRef<'a> {
                 Pack1(Pack1Ref<'a>),
                 Pack2(Pack2Ref<'a>),
-                Unknown(UnknownPacketRef<'a>)
+                Unknown(UnknownPacketRef<'a>),
             }
 
             impl<'a> PacketRef<'a> {
@@ -488,8 +550,43 @@ fn test_define_recv_packets() {
             const fn max_u16(a: u16, b: u16) -> u16 {
                 [a, b][(a < b) as usize]
             }
-            pub(crate) const MAX_PAYLOAD_LEN: u16 =
-                    max_u16(Pack2::MAX_PAYLOAD_LEN, max_u16(Pack1::MAX_PAYLOAD_LEN, 0u16));
+
+            pub(crate) const MAX_PAYLOAD_LEN: u16 = max_u16(
+                Pack2::MAX_PAYLOAD_LEN,
+                max_u16(Pack1::MAX_PAYLOAD_LEN, 0u16),
+            );
+
+            #[cfg_attr(feature = "serde", derive(serde :: Serialize))]
+            pub struct PacketSerializer<'a, T> {
+                class: u8,
+                msg_id: u8,
+                #[cfg_attr(feature = "serde", serde(flatten))]
+                msg: &'a T,
+            }
+
+            #[cfg(feature = "serde")]
+            impl serde::Serialize for PacketRef<'_> {
+                fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+                where
+                    S: serde::Serializer,
+                {
+                    match *self {
+                        PacketRef::Pack1(ref msg) => crate::ubx_packets::PacketSerializer {
+                            class: Pack1::CLASS,
+                            msg_id: Pack1::ID,
+                            msg,
+                        }
+                        .serialize(serializer),
+                        PacketRef::Pack2(ref msg) => crate::ubx_packets::PacketSerializer {
+                            class: Pack2::CLASS,
+                            msg_id: Pack2::ID,
+                            msg,
+                        }
+                        .serialize(serializer),
+                        PacketRef::Unknown(ref pack) => pack.serialize(serializer),
+                    }
+                }
+            }
         },
     );
 }
@@ -523,25 +620,35 @@ fn test_extend_bitflags() {
         tokens,
         quote! {
             bitflags! {
-                #[doc = "Navigation Status Flags"]
-                pub struct Test: u8 {
-                    #[doc = "position and velocity valid and within DOP and ACC Masks"]
-                    const F1 = (1 as u8);
-                    #[doc = "DGPS used"]
-                    const F2 = ((1 as u8) << 1u32);
-                    #[doc = "Week Number valid"]
-                    const F3 = ((1 as u8) << 2u32);
-                    #[doc = "Time of Week valid"]
-                    const F4 = ((1 as u8) << 3u32);
-                    const RESERVED4 = ((1 as u8) << 4u32);
-                    const RESERVED5 = ((1 as u8) << 5u32);
-                    const RESERVED6 = ((1 as u8) << 6u32);
-                    const RESERVED7 = ((1 as u8) << 7u32);
+                # [doc = "Navigation Status Flags"]
+                pub struct Test : u8 {
+                    # [doc = "position and velocity valid and within DOP and ACC Masks"]
+                    const F1 = (1 as u8) ;
+                    # [doc = "DGPS used"]
+                    const F2 = ((1 as u8) << 1u32) ;
+                    # [doc = "Week Number valid"]
+                    const F3 = ((1 as u8) << 2u32) ;
+                    # [doc = "Time of Week valid"]
+                    const F4 = ((1 as u8) << 3u32) ;
+                    const RESERVED4 = ((1 as u8) << 4u32) ;
+                    const RESERVED5 = ((1 as u8) << 5u32) ;
+                    const RESERVED6 = ((1 as u8) << 6u32) ;
+                    const RESERVED7 = ((1 as u8) << 7u32) ;
                 }
             }
             impl Test {
                 const fn from(x: u8) -> Self {
                     Self::from_bits_truncate(x)
+                }
+            }
+
+            #[cfg(feature = "serde")]
+            impl serde::Serialize for Test {
+                fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+                where
+                    S: serde::Serializer,
+                {
+                    serializer.serialize_u8(self.bits())
                 }
             }
         },
@@ -641,7 +748,7 @@ fn panic_on_parse_error(name: &str, src_cnt: &str, err: &Error) -> ! {
         .take(nlines)
         .enumerate()
     {
-        code_problem.push_str(&line);
+        code_problem.push_str(line);
         code_problem.push('\n');
         if i == 0 && start.column > 0 {
             write!(&mut code_problem, "{:1$}", ' ', start.column).expect("write to String failed");

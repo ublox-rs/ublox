@@ -8,9 +8,10 @@ mod types;
 
 use proc_macro2::TokenStream;
 use quote::ToTokens;
+
 use syn::{
     parse_macro_input, punctuated::Punctuated, spanned::Spanned, Attribute, Data, DeriveInput,
-    Fields, Ident, Variant,
+    Fields, Ident, Type, Variant,
 };
 
 #[proc_macro_attribute]
@@ -168,7 +169,7 @@ fn extend_bitflags(mac: syn::ItemMacro) -> syn::Result<TokenStream> {
                 .unwrap_or_else(|| mac.span()),
             format!(
                 "Expect bitflags invocation here, instead got '{}'",
-                mac.mac.path.into_token_stream().to_string()
+                mac.mac.path.into_token_stream()
             ),
         ));
     }
@@ -179,4 +180,12 @@ fn extend_bitflags(mac: syn::ItemMacro) -> syn::Result<TokenStream> {
 fn do_define_recv_packets(input: TokenStream) -> syn::Result<TokenStream> {
     let recv_packs = input::parse_idents_list(input)?;
     Ok(output::generate_code_for_parse(&recv_packs))
+}
+
+fn type_is_option(ty: &Type) -> bool {
+    matches!(ty, Type::Path(ref typepath) if typepath.qself.is_none() && path_is_option(&typepath.path))
+}
+
+fn path_is_option(path: &syn::Path) -> bool {
+    path.segments.len() == 1 && path.segments.iter().next().unwrap().ident == "Option"
 }

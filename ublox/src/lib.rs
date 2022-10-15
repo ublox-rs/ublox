@@ -68,9 +68,8 @@
 
 #[cfg(feature = "alloc")]
 extern crate alloc;
-
+extern crate core;
 #[cfg(feature = "serde")]
-#[macro_use]
 extern crate serde;
 
 pub use crate::{

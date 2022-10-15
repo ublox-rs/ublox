@@ -1,17 +1,25 @@
-use super::{
-    ubx_checksum, MemWriter, Position, UbxChecksumCalc, UbxPacketCreator, UbxPacketMeta,
-    UbxUnknownPacketRef, SYNC_CHAR_1, SYNC_CHAR_2,
-};
 use crate::cfg_val::CfgVal;
-use crate::error::{MemWriterError, ParserError};
+use core::convert::TryInto;
+use core::fmt;
+
 use bitflags::bitflags;
 use chrono::prelude::*;
-use core::fmt;
 use num_traits::cast::{FromPrimitive, ToPrimitive};
 use num_traits::float::FloatCore;
+
 use ublox_derive::{
     define_recv_packets, ubx_extend, ubx_extend_bitflags, ubx_packet_recv, ubx_packet_recv_send,
     ubx_packet_send,
+};
+
+use crate::error::{MemWriterError, ParserError};
+#[cfg(feature = "serde")]
+use crate::serde::ser::SerializeMap;
+use crate::ubx_packets::packets::mon_ver::is_cstr_valid;
+
+use super::{
+    ubx_checksum, MemWriter, Position, UbxChecksumCalc, UbxPacketCreator, UbxPacketMeta,
+    UbxUnknownPacketRef, SYNC_CHAR_1, SYNC_CHAR_2,
 };
 
 /// Geodetic Position Solution
@@ -389,7 +397,6 @@ struct NavSolution {
 #[ubx(from, rest_reserved)]
 #[repr(u8)]
 #[derive(Debug, Copy, Clone, PartialEq)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum GpsFix {
     NoFix = 0,
     DeadReckoningOnly = 1,
@@ -403,7 +410,6 @@ pub enum GpsFix {
 #[ubx(from, rest_reserved)]
 bitflags! {
     /// Navigation Status Flags
-    #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
     pub struct NavStatusFlags: u8 {
         /// position and velocity valid and within DOP and ACC Masks
         const GPS_FIX_OK = 1;
@@ -419,6 +425,7 @@ bitflags! {
 /// Fix Status Information
 #[repr(transparent)]
 #[derive(Copy, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct FixStatusInfo(u8);
 
 impl FixStatusInfo {
@@ -450,6 +457,7 @@ impl fmt::Debug for FixStatusInfo {
 }
 
 #[derive(Copy, Clone, Debug)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum MapMatchingStatus {
     None = 0,
     /// valid, i.e. map matching data was received, but was too old
@@ -467,7 +475,6 @@ pub enum MapMatchingStatus {
 #[ubx(from, rest_reserved)]
 #[repr(u8)]
 #[derive(Debug, Copy, Clone)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 enum NavStatusFlags2 {
     Acquisition = 0,
     Tracking = 1,
@@ -477,6 +484,7 @@ enum NavStatusFlags2 {
 
 #[repr(transparent)]
 #[derive(Copy, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct NavSatSvFlags(u32);
 
 impl NavSatSvFlags {
@@ -605,7 +613,7 @@ impl fmt::Debug for NavSatSvFlags {
 }
 
 #[derive(Copy, Clone, Debug)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum NavSatQualityIndicator {
     NoSignal,
     Searching,
@@ -616,7 +624,7 @@ pub enum NavSatQualityIndicator {
 }
 
 #[derive(Copy, Clone, Debug)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum NavSatSvHealth {
     Healthy,
     Unhealthy,
@@ -624,7 +632,7 @@ pub enum NavSatSvHealth {
 }
 
 #[derive(Copy, Clone, Debug)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum NavSatOrbitSource {
     NoInfoAvailable,
     Ephemeris,
@@ -648,23 +656,20 @@ struct NavSatSvInfo {
     flags: u32,
 }
 
-/*impl fmt::Debug for NavSatSvInfoRef<'_> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("NavSatSvInfo")
-            .field("gnss_id", &self.gnss_id())
-            .field("sv_id", &self.sv_id())
-            .field("cno", &self.cno())
-            .field("elev", &self.elev())
-            .field("azim", &self.azim())
-            .field("pr_res", &self.pr_res())
-            .field("flags", &self.flags())
-            .finish()
-    }
-}*/
-
+#[derive(Debug, Clone)]
 pub struct NavSatIter<'a> {
     data: &'a [u8],
     offset: usize,
+}
+
+impl<'a> NavSatIter<'a> {
+    fn new(data: &'a [u8]) -> Self {
+        Self { data, offset: 0 }
+    }
+
+    fn is_valid(bytes: &[u8]) -> bool {
+        bytes.len() % 12 == 0
+    }
 }
 
 impl<'a> core::iter::Iterator for NavSatIter<'a> {
@@ -681,12 +686,6 @@ impl<'a> core::iter::Iterator for NavSatIter<'a> {
     }
 }
 
-impl fmt::Debug for NavSatIter<'_> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("NavSatIter").finish()
-    }
-}
-
 #[ubx_packet_recv]
 #[ubx(class = 0x01, id = 0x35, max_payload_len = 1240)]
 struct NavSat {
@@ -698,29 +697,16 @@ struct NavSat {
 
     num_svs: u8,
 
-    reserved: u16,
+    reserved: [u8; 2],
 
-    #[ubx(map_type = NavSatIter,
+    #[ubx(
+        map_type = NavSatIter,
+        from = NavSatIter::new,
+        is_valid = NavSatIter::is_valid,
         may_fail,
-        is_valid = navsat::is_valid,
-        from = navsat::convert_to_iter,
-        get_as_ref)]
+        get_as_ref,
+    )]
     svs: [u8; 0],
-}
-
-mod navsat {
-    use super::NavSatIter;
-
-    pub(crate) fn convert_to_iter(bytes: &[u8]) -> NavSatIter {
-        NavSatIter {
-            data: bytes,
-            offset: 0,
-        }
-    }
-
-    pub(crate) fn is_valid(bytes: &[u8]) -> bool {
-        bytes.len() % 12 == 0
-    }
 }
 
 /// Odometer solution
@@ -769,7 +755,6 @@ struct CfgOdo {
 #[ubx(from, into_raw, rest_reserved)]
 bitflags! {
     #[derive(Default)]
-    #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
     pub struct OdoCogFilterFlags: u8 {
         /// Odometer enabled flag
         const USE_ODO = 0x01;
@@ -787,7 +772,6 @@ bitflags! {
 #[ubx(from_unchecked, into_raw, rest_error)]
 #[repr(u8)]
 #[derive(Clone, Copy, Debug)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum OdoProfile {
     Running = 0,
     Cycling = 1,
@@ -815,7 +799,7 @@ struct CfgItfm {
 }
 
 #[derive(Debug, Copy, Clone)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct CfgItfmConfig {
     /// enable interference detection
     enable: bool,
@@ -874,7 +858,7 @@ impl From<u32> for CfgItfmConfig {
 }
 
 #[derive(Debug, Copy, Clone)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct CfgItfmBbThreshold(u32);
 
 impl CfgItfmBbThreshold {
@@ -899,7 +883,7 @@ impl From<u32> for CfgItfmBbThreshold {
 }
 
 #[derive(Debug, Copy, Clone)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct CfgItfmCwThreshold(u32);
 
 impl CfgItfmCwThreshold {
@@ -924,7 +908,7 @@ impl From<u32> for CfgItfmCwThreshold {
 }
 
 #[derive(Debug, Copy, Clone)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct CfgItfmAlgoBits(u32);
 
 impl CfgItfmAlgoBits {
@@ -949,7 +933,7 @@ impl From<u32> for CfgItfmAlgoBits {
 }
 
 #[derive(Debug, Copy, Clone)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct CfgItfmConfig2 {
     /// General settings, should be set to
     /// 0x31E default value, for correct setting
@@ -991,7 +975,7 @@ impl From<u32> for CfgItfmConfig2 {
 }
 
 #[derive(Debug, Copy, Clone)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct CfgItfmGeneralBits(u32);
 
 impl CfgItfmGeneralBits {
@@ -1021,7 +1005,7 @@ impl From<u32> for CfgItfmGeneralBits {
 #[ubx(from_unchecked, into_raw, rest_error)]
 #[repr(u8)]
 #[derive(Debug, Copy, Clone)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Deserialize))]
 pub enum CfgItfmAntennaSettings {
     /// Type of Antenna is not known
     Unknown = 0,
@@ -1307,7 +1291,6 @@ struct CfgAnt {
 #[ubx(from, into_raw, rest_reserved)]
 bitflags! {
     #[derive(Default)]
-    #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
     pub struct AntFlags: u16 {
         /// Enable supply voltage control signal
         const SVCS = 0x01;
@@ -1325,8 +1308,8 @@ bitflags! {
 /// TP5: "Time Pulse" Config frame (32.10.38.4)
 #[ubx_packet_recv_send]
 #[ubx(
-    class = 0x06, 
-    id = 0x31, 
+    class = 0x06,
+    id = 0x31,
     fixed_payload_len = 32,
     flags = "default_for_builder"
 )]
@@ -1344,17 +1327,17 @@ struct CfgTp5 {
     /// Frequency in Hz or Period in us,
     /// depending on `flags::IS_FREQ` bit
     #[ubx(map_type = f64, scale = 1.0)]
-    freq_period: u32, 
+    freq_period: u32,
     /// Frequency in Hz or Period in us,
     /// when locked to GPS time.
     /// Only used when `flags::LOCKED_OTHER_SET` is set
     #[ubx(map_type = f64, scale = 1.0)]
-    freq_period_lock: u32, 
+    freq_period_lock: u32,
     /// Pulse length or duty cycle, [us] or [*2^-32],
     /// depending on `flags::LS_LENGTH` bit
     #[ubx(map_type = f64, scale = 1.0)]
     pulse_len_ratio: u32,
-    /// Pulse Length in us or duty cycle (*2^-32), 
+    /// Pulse Length in us or duty cycle (*2^-32),
     /// when locked to GPS time.
     /// Only used when `flags::LOCKED_OTHER_SET` is set
     #[ubx(map_type = f64, scale = 1.0)]
@@ -1387,9 +1370,9 @@ impl Default for CfgTp5TimePulseMode {
 /// only available on `timing` receivers
 #[ubx_packet_recv_send]
 #[ubx(
-    class = 0x06, 
-    id = 0x3d, 
-    fixed_payload_len = 28, 
+    class = 0x06,
+    id = 0x3d,
+    fixed_payload_len = 28,
     flags = "default_for_builder"
 )]
 struct CfgTmode2 {
@@ -1397,18 +1380,18 @@ struct CfgTmode2 {
     #[ubx(map_type = CfgTmode2TimeXferModes, may_fail)]
     time_transfer_mode: u8,
     reserved1: u8,
-    #[ubx(map_type = CfgTmode2Flags)] 
+    #[ubx(map_type = CfgTmode2Flags)]
     flags: u16,
     /// WGS84 ECEF.x coordinate in [m] or latitude in [deg° *1E-5],
-    /// depending on `flags` field 
+    /// depending on `flags` field
     #[ubx(map_type = f64, scale = 1e-2)]
     ecef_x_or_lat: i32,
     /// WGS84 ECEF.y coordinate in [m] or longitude in [deg° *1E-5],
-    /// depending on `flags` field 
+    /// depending on `flags` field
     #[ubx(map_type = f64, scale = 1e-2)]
     ecef_y_or_lon: i32,
     /// WGS84 ECEF.z coordinate or altitude, both in [m],
-    /// depending on `flags` field 
+    /// depending on `flags` field
     #[ubx(map_type = f64, scale = 1e-2)]
     ecef_z_or_alt: i32,
     /// Fixed position 3D accuracy in [m]
@@ -1456,7 +1439,7 @@ bitflags! {
 /// Time mode survey-in status
 #[ubx_packet_recv]
 #[ubx(class = 0x0d, id = 0x04, fixed_payload_len = 28)]
-struct TimSvin{
+struct TimSvin {
     /// Passed survey-in minimum duration
     /// Units: s
     dur: u32,
@@ -1474,7 +1457,7 @@ struct TimSvin{
     valid: u8,
     /// Survey-in in progress flag, 1 = in-progress, otherwise 0
     active: u8,
-    reserved: [u8; 2]
+    reserved: [u8; 2],
 }
 
 /// Leap second event information
@@ -1545,29 +1528,29 @@ bitflags! {
 /// only available on `timing` receivers
 #[ubx_packet_recv_send]
 #[ubx(
-    class = 0x06, 
-    id = 0x71, 
+    class = 0x06,
+    id = 0x71,
     fixed_payload_len = 40,
     flags = "default_for_builder"
-)] 
+)]
 struct CfgTmode3 {
     version: u8,
     reserved1: u8,
     /// Receiver mode, see [CfgTmode3RcvrMode] enum
     #[ubx(map_type = CfgTmode3RcvrMode)]
     rcvr_mode: u8,
-    #[ubx(map_type = CfgTmode3Flags)] 
+    #[ubx(map_type = CfgTmode3Flags)]
     flags: u8,
     /// WGS84 ECEF.x coordinate in [m] or latitude in [deg° *1E-5],
-    /// depending on `flags` field 
+    /// depending on `flags` field
     #[ubx(map_type = f64, scale = 1e-2)]
     ecef_x_or_lat: i32,
     /// WGS84 ECEF.y coordinate in [m] or longitude in [deg° *1E-5],
-    /// depending on `flags` field 
+    /// depending on `flags` field
     #[ubx(map_type = f64, scale = 1e-2)]
     ecef_y_or_lon: i32,
-    /// WGS84 ECEF.z coordinate or altitude, both in [m], 
-    /// depending on `flags` field 
+    /// WGS84 ECEF.z coordinate or altitude, both in [m],
+    /// depending on `flags` field
     #[ubx(map_type = f64, scale = 1e-2)]
     ecef_z_or_alt: i32,
     /// High precision WGS84 ECEF.x coordinate in [tenths of mm],
@@ -1621,7 +1604,7 @@ bitflags! {
         /// Uses local lock otherwise.
         const LOCK_GNSS_FREQ = 0x02;
         /// use `freq_period_lock` and `pulse_len_ratio_lock`
-        /// fields as soon as GPS time is valid. Uses 
+        /// fields as soon as GPS time is valid. Uses
         /// `freq_period` and `pulse_len_ratio` when GPS time is invalid.
         const LOCKED_OTHER_SET = 0x04;
         /// `freq_period` and `pulse_len_ratio` fields
@@ -1633,7 +1616,7 @@ bitflags! {
         /// Period time must be integer fraction of `1sec`
         /// `LOCK_GNSS_FREQ` is expected, to unlock this feature
         const ALIGN_TO_TOW = 0x20;
-        /// Pulse polarity, 
+        /// Pulse polarity,
         /// 0: falling edge @ top of second,
         /// 1: rising edge @ top of second,
         const POLARITY = 0x40;
@@ -1675,7 +1658,6 @@ bitflags! {
 #[ubx(into_raw, rest_reserved)]
 bitflags! {
     /// Battery backed RAM sections to clear
-    #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
     pub struct NavBbrMask: u16 {
         const EPHEMERIS = 1;
         const ALMANACH = 2;
@@ -1713,7 +1695,7 @@ impl NavBbrPredefinedMask {
 /// Reset Type
 #[repr(u8)]
 #[derive(Clone, Copy, Debug)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum ResetMode {
     /// Hardware reset (Watchdog) immediately
     HardwareResetImmediately = 0,
@@ -1865,7 +1847,6 @@ struct CfgPrtUart {
 #[ubx(from_unchecked, into_raw, rest_error)]
 #[repr(u8)]
 #[derive(Debug, Copy, Clone)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum UartPortId {
     Uart1 = 1,
     Uart2 = 2,
@@ -1873,7 +1854,7 @@ pub enum UartPortId {
 }
 
 #[derive(Debug, Copy, Clone)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct UartMode {
     data_bits: DataBits,
     parity: Parity,
@@ -1909,7 +1890,7 @@ impl From<u32> for UartMode {
 }
 
 #[derive(Debug, Clone, Copy)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum DataBits {
     Seven,
     Eight,
@@ -1940,7 +1921,7 @@ impl From<u32> for DataBits {
 }
 
 #[derive(Debug, Clone, Copy)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum Parity {
     Even,
     Odd,
@@ -1973,7 +1954,7 @@ impl From<u32> for Parity {
 }
 
 #[derive(Debug, Clone, Copy)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum StopBits {
     One,
     OneHalf,
@@ -2314,7 +2295,7 @@ bitflags! {
 #[ubx_extend]
 #[ubx(from_unchecked, into_raw, rest_error)]
 #[repr(u8)]
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum CfgNav5DynModel {
     Portable = 0,
     Stationary = 2,
@@ -2340,7 +2321,7 @@ impl Default for CfgNav5DynModel {
 #[ubx_extend]
 #[ubx(from_unchecked, into_raw, rest_error)]
 #[repr(u8)]
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum CfgNav5FixMode {
     Only2D = 1,
     Only3D = 2,
@@ -2357,7 +2338,7 @@ impl Default for CfgNav5FixMode {
 #[ubx_extend]
 #[ubx(from_unchecked, into_raw, rest_error)]
 #[repr(u8)]
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum CfgNav5UtcStandard {
     /// receiver selects based on GNSS configuration (see GNSS timebases)
     Automatic = 0,
@@ -2406,10 +2387,10 @@ impl<T: FloatCore + FromPrimitive + ToPrimitive> ScaleBack<T> {
 
     fn as_i32(self, x: T) -> i32 {
         let x = (x * self.0).round();
-        if x < T::from_i32(i32::min_value()).unwrap() {
-            i32::min_value()
-        } else if x > T::from_i32(i32::max_value()).unwrap() {
-            i32::max_value()
+        if x < T::from_i32(i32::MIN).unwrap() {
+            i32::MIN
+        } else if x > T::from_i32(i32::MAX).unwrap() {
+            i32::MAX
         } else {
             x.to_i32().unwrap()
         }
@@ -2418,10 +2399,10 @@ impl<T: FloatCore + FromPrimitive + ToPrimitive> ScaleBack<T> {
     fn as_u32(self, x: T) -> u32 {
         let x = (x * self.0).round();
         if !x.is_sign_negative() {
-            if x <= T::from_u32(u32::max_value()).unwrap() {
+            if x <= T::from_u32(u32::MAX).unwrap() {
                 x.to_u32().unwrap()
             } else {
-                u32::max_value()
+                u32::MAX
             }
         } else {
             0
@@ -2431,10 +2412,10 @@ impl<T: FloatCore + FromPrimitive + ToPrimitive> ScaleBack<T> {
     fn as_u16(self, x: T) -> u16 {
         let x = (x * self.0).round();
         if !x.is_sign_negative() {
-            if x <= T::from_u16(u16::max_value()).unwrap() {
+            if x <= T::from_u16(u16::MAX).unwrap() {
                 x.to_u16().unwrap()
             } else {
-                u16::max_value()
+                u16::MAX
             }
         } else {
             0
@@ -2444,10 +2425,10 @@ impl<T: FloatCore + FromPrimitive + ToPrimitive> ScaleBack<T> {
     fn as_u8(self, x: T) -> u8 {
         let x = (x * self.0).round();
         if !x.is_sign_negative() {
-            if x <= T::from_u8(u8::max_value()).unwrap() {
+            if x <= T::from_u8(u8::MAX).unwrap() {
                 x.to_u8().unwrap()
             } else {
-                u8::max_value()
+                u8::MAX
             }
         } else {
             0
@@ -2590,7 +2571,7 @@ struct MgaAck {
 #[ubx_extend]
 #[ubx(from, rest_reserved)]
 #[repr(u8)]
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum MsgAckInfoCode {
     Accepted = 0,
     RejectedNoTime = 1,
@@ -2626,7 +2607,7 @@ struct MgaGloEph {
     e: u8,
     delta_tau: u8,
     tau: i32,
-    reserved2: [u8;4],
+    reserved2: [u8; 4],
 }
 
 #[ubx_packet_recv]
@@ -2636,7 +2617,7 @@ struct MgaGpsIono {
     msg_type: u8,
     /// Message version: 0x00 for this version
     version: u8,
-    reserved1: [u8;2],
+    reserved1: [u8; 2],
     /// Ionospheric parameter alpha0 [s]
     #[ubx(map_type = f64, scale = 1.0)] // 2^-30
     alpha0: i8,
@@ -2661,7 +2642,7 @@ struct MgaGpsIono {
     /// Ionospheric parameter beta0 [s/semi-circle^3]
     #[ubx(map_type = f64, scale = 1.0)] // 2^-16
     beta3: i8,
-    reserved2: [u8;4],
+    reserved2: [u8; 4],
 }
 
 #[ubx_packet_recv]
@@ -2697,7 +2678,7 @@ struct MgaGpsEph {
     omega: i32,
     omega_dot: i32,
     idot: i16,
-    reserved3: [u8;2],
+    reserved3: [u8; 2],
 }
 
 /// Time pulse time data
@@ -2721,6 +2702,7 @@ struct TimTp {
 }
 
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TimTpFlags(u8);
 
 impl TimTpFlags {
@@ -2765,6 +2747,7 @@ pub enum TimTpTimeBase {
 }
 
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TimTpRefInfo(u8);
 
 impl TimTpRefInfo {
@@ -2845,6 +2828,7 @@ struct TimTm2 {
 }
 
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TimTm2Flags(u8);
 
 impl TimTm2Flags {
@@ -2919,15 +2903,18 @@ struct RxmRawx {
     /// Number of measurements to follow
     num_meas: u8,
     /// Receiver tracking status bitfield
-    #[ubx(map_type = RecStat)]
+    #[ubx(map_type = RecStatFlags)]
     rec_stat: u8,
     /// Message version
     version: u8,
     reserved1: [u8; 2],
     /// Extended software information strings
-    #[ubx(map_type = MeasurementIter, may_fail,
-          from = Measurement::to_iter,
-          is_valid = Measurement::is_valid)]
+    #[ubx(
+        map_type = RxmRawxInfoIter,
+        from = RxmRawxInfoIter::new,
+        may_fail,
+        is_valid = RxmRawxInfoIter::is_valid,
+    )]
     measurements: [u8; 0],
 }
 
@@ -2936,82 +2923,11 @@ struct RxmRawx {
 bitflags! {
     /// `CfgNavX5Params2` parameters bitmask
     #[derive(Default)]
-    pub struct RecStat: u8 {
+    pub struct RecStatFlags: u8 {
         /// Leap seconds have been determined
         const LEAP_SEC = 0x1;
         /// Clock reset applied.
         const CLK_RESET = 0x2;
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct MeasurementIter<'a> {
-    data: &'a [u8],
-    offset: usize,
-}
-
-#[derive(Debug, Clone)]
-pub struct Measurement {
-    pub pr_mes: f64,
-    pub cp_mes: f64,
-    pub do_mes: f32,
-    pub gnss_id: u8,
-    pub sv_id: u8,
-    pub sig_id: u8,
-    pub freq_id: u8,
-    pub lock_time: u16,
-    pub cno: u8,
-    pub pr_stdev: u8,
-    pub cp_stdev: u8,
-    pub do_stdev: u8,
-    pub trk_stat: u8,
-    pub reserved2: u8,
-}
-
-impl Measurement {
-    pub(crate) fn is_valid(payload: &[u8]) -> bool {
-        payload.len() % 32 == 0
-    }
-
-    pub(crate) fn to_iter(payload: &[u8]) -> MeasurementIter {
-        MeasurementIter {
-            data: payload,
-            offset: 0,
-        }
-    }
-}
-
-impl<'a> core::iter::Iterator for MeasurementIter<'a> {
-    type Item = Measurement;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.offset < self.data.len() {
-            let data = &self.data[self.offset..(self.offset + 32)];
-            self.offset += 32;
-
-            Some(Measurement {
-                pr_mes: f64::from_le_bytes([
-                    data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7],
-                ]),
-                cp_mes: f64::from_le_bytes([
-                    data[8], data[9], data[10], data[11], data[12], data[13], data[14], data[15],
-                ]),
-                do_mes: f32::from_le_bytes([data[16], data[17], data[18], data[19]]),
-                gnss_id: data[20],
-                sv_id: data[21],
-                sig_id: data[22],
-                freq_id: data[23],
-                lock_time: u16::from_le_bytes([data[24], data[25]]),
-                cno: data[26],
-                pr_stdev: data[27],
-                cp_stdev: data[28],
-                do_stdev: data[29],
-                trk_stat: data[30],
-                reserved2: data[31],
-            })
-        } else {
-            None
-        }
     }
 }
 
@@ -3043,7 +2959,7 @@ struct MonHw {
 #[ubx_extend]
 #[ubx(from, rest_reserved)]
 #[repr(u8)]
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum AntennaStatus {
     Init = 0,
     DontKnow = 1,
@@ -3077,7 +2993,7 @@ struct MonGnss {
 #[ubx_extend_bitflags]
 #[ubx(from, into_raw, rest_reserved)]
 bitflags! {
-    /// Selected / available Constellation Mask 
+    /// Selected / available Constellation Mask
     #[derive(Default)]
     pub struct MonGnssConstellMask: u8 {
         /// GPS constellation
@@ -3094,16 +3010,27 @@ bitflags! {
 #[ubx_extend]
 #[ubx(from, rest_reserved)]
 #[repr(u8)]
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum AntennaPower {
     Off = 0,
     On = 1,
     DontKnow = 2,
 }
 
+#[derive(Debug, Clone)]
 pub struct MonVerExtensionIter<'a> {
     data: &'a [u8],
     offset: usize,
+}
+
+impl<'a> MonVerExtensionIter<'a> {
+    fn new(data: &'a [u8]) -> Self {
+        Self { data, offset: 0 }
+    }
+
+    fn is_valid(payload: &[u8]) -> bool {
+        payload.len() % 30 == 0 && payload.chunks(30).any(|c| !is_cstr_valid(c))
+    }
 }
 
 impl<'a> core::iter::Iterator for MonVerExtensionIter<'a> {
@@ -3120,12 +3047,6 @@ impl<'a> core::iter::Iterator for MonVerExtensionIter<'a> {
     }
 }
 
-impl fmt::Debug for MonVerExtensionIter<'_> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("MonVerExtensionIter").finish()
-    }
-}
-
 /// Receiver/Software Version
 #[ubx_packet_recv]
 #[ubx(class = 0x0a, id = 0x04, max_payload_len = 1240)]
@@ -3139,14 +3060,12 @@ struct MonVer {
 
     /// Extended software information strings
     #[ubx(map_type = MonVerExtensionIter, may_fail,
-          from = mon_ver::extension_to_iter,
-          is_valid = mon_ver::is_extension_valid)]
+          from = MonVerExtensionIter::new,
+          is_valid = MonVerExtensionIter::is_valid)]
     extension: [u8; 0],
 }
 
 mod mon_ver {
-    use super::MonVerExtensionIter;
-
     pub(crate) fn convert_to_str_unchecked(bytes: &[u8]) -> &str {
         let null_pos = bytes
             .iter()
@@ -3165,26 +3084,6 @@ mod mon_ver {
         };
         core::str::from_utf8(&bytes[0..null_pos]).is_ok()
     }
-
-    pub(crate) fn is_extension_valid(payload: &[u8]) -> bool {
-        if payload.len() % 30 == 0 {
-            for chunk in payload.chunks(30) {
-                if !is_cstr_valid(chunk) {
-                    return false;
-                }
-            }
-            true
-        } else {
-            false
-        }
-    }
-
-    pub(crate) fn extension_to_iter(payload: &[u8]) -> MonVerExtensionIter {
-        MonVerExtensionIter {
-            data: payload,
-            offset: 0,
-        }
-    }
 }
 
 #[ubx_packet_recv]
@@ -3195,6 +3094,450 @@ struct RxmRtcm {
     sub_type: u16,
     ref_station: u16,
     msg_type: u16,
+}
+
+#[ubx_packet_recv]
+#[ubx(class = 0x10, id = 0x02, max_payload_len = 1240)]
+struct EsfMeas {
+    time_tag: u32,
+    flags: u16,
+    id: u16,
+    #[ubx(
+        map_type = EsfMeasDataIter,
+        from = EsfMeasDataIter::new,
+        size_fn = data_len,
+        is_valid = EsfMeasDataIter::is_valid,
+        may_fail,
+    )]
+    data: [u8; 0],
+    #[ubx(
+        map_type = Option<u32>,
+        from = EsfMeas::calib_tag,
+        size_fn = calib_tag_len,
+    )]
+    calib_tag: [u8; 0],
+}
+
+impl EsfMeas {
+    fn calib_tag(bytes: &[u8]) -> Option<u32> {
+        bytes.try_into().ok().map(u32::from_le_bytes)
+    }
+}
+
+impl<'a> EsfMeasRef<'a> {
+    fn data_len(&self) -> usize {
+        ((self.flags() >> 11 & 0x1f) as usize) * 4
+    }
+
+    fn calib_tag_len(&self) -> usize {
+        if self.flags() & 0x8 != 0 {
+            4
+        } else {
+            0
+        }
+    }
+}
+
+#[derive(Debug)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
+pub struct EsfMeasData {
+    pub data_type: u8,
+    pub data_field: u32,
+}
+
+#[derive(Debug, Clone)]
+pub struct EsfMeasDataIter<'a>(core::slice::ChunksExact<'a, u8>);
+
+impl<'a> EsfMeasDataIter<'a> {
+    fn new(bytes: &'a [u8]) -> Self {
+        Self(bytes.chunks_exact(4))
+    }
+
+    fn is_valid(bytes: &'a [u8]) -> bool {
+        bytes.len() % 4 == 0
+    }
+}
+
+impl<'a> core::iter::Iterator for EsfMeasDataIter<'a> {
+    type Item = EsfMeasData;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let data = self.0.next()?.try_into().map(u32::from_le_bytes).unwrap();
+        Some(EsfMeasData {
+            data_type: ((data & 0x3F000000) >> 24).try_into().unwrap(),
+            data_field: data & 0xFFFFFF,
+        })
+    }
+}
+
+#[ubx_packet_recv]
+#[ubx(class = 0x10, id = 0x03, max_payload_len = 1240)]
+struct EsfRaw {
+    msss: u32,
+    #[ubx(
+        map_type = EsfRawDataIter,
+        from = EsfRawDataIter::new,
+        is_valid = EsfRawDataIter::is_valid,
+        may_fail,
+    )]
+    data: [u8; 0],
+}
+
+#[derive(Debug)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
+pub struct EsfRawData {
+    pub data_type: u8,
+    pub data_field: u32,
+    pub sensor_time_tag: u32,
+}
+
+#[derive(Debug, Clone)]
+pub struct EsfRawDataIter<'a>(core::slice::ChunksExact<'a, u8>);
+
+impl<'a> EsfRawDataIter<'a> {
+    fn new(bytes: &'a [u8]) -> Self {
+        Self(bytes.chunks_exact(8))
+    }
+
+    fn is_valid(bytes: &'a [u8]) -> bool {
+        bytes.len() % 8 == 0
+    }
+}
+
+impl<'a> core::iter::Iterator for EsfRawDataIter<'a> {
+    type Item = EsfRawData;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let chunk = self.0.next()?;
+        let data = u32::from_le_bytes(chunk[0..4].try_into().unwrap());
+        let sensor_time_tag = u32::from_le_bytes(chunk[4..8].try_into().unwrap());
+        Some(EsfRawData {
+            data_type: ((data >> 24) & 0xFF).try_into().unwrap(),
+            data_field: data & 0xFFFFFF,
+            sensor_time_tag,
+        })
+    }
+}
+
+#[ubx_packet_recv]
+#[ubx(class = 0x10, id = 0x15, fixed_payload_len = 36)]
+struct EsfIns {
+    // #[ubx(map_type = EsfInsBitFlags)]
+    bit_field: u32,
+    reserved: [u8; 4],
+    i_tow: u32,
+
+    #[ubx(map_type = f64, scale = 1e-3, alias = x_angular_rate)]
+    x_ang_rate: i32,
+
+    #[ubx(map_type = f64, scale = 1e-3, alias = y_angular_rate)]
+    y_ang_rate: i32,
+
+    #[ubx(map_type = f64, scale = 1e-3, alias = z_angular_rate)]
+    z_ang_rate: i32,
+
+    #[ubx(map_type = f64, scale = 1e-2, alias = x_acceleration)]
+    x_accel: i32,
+
+    #[ubx(map_type = f64, scale = 1e-2, alias = y_acceleration)]
+    y_accel: i32,
+
+    #[ubx(map_type = f64, scale = 1e-2, alias = z_acceleration)]
+    z_accel: i32,
+}
+
+#[ubx_extend_bitflags]
+#[ubx(from, rest_reserved)]
+bitflags! {
+    pub struct EsfInsBitFlags: u32 {
+        const VERSION = 1;
+        const X_ANG_RATE_VALID = 0x100;
+        const Y_ANG_RATE_VALID = 0x200;
+        const Z_ANG_RATE_VALID = 0x400;
+        const X_ACCEL_VALID = 0x800;
+        const Y_ACCEL_VALID = 0x1000;
+        const Z_ACCEL_VALID = 0x2000;
+    }
+}
+
+#[ubx_packet_recv]
+#[ubx(class = 0x28, id = 0x00, fixed_payload_len = 72)]
+struct HnrPvt {
+    i_tow: u32,
+    year: u16,
+    month: u8,
+    day: u8,
+    hour: u8,
+    min: u8,
+    sec: u8,
+
+    #[ubx(map_type = HnrPvtValidFlags)]
+    valid: u8,
+    nano: i32,
+    #[ubx(map_type = GpsFix)]
+    gps_fix: u8,
+
+    #[ubx(map_type = HnrPvtFlags)]
+    flags: u8,
+
+    reserved1: [u8; 2],
+
+    #[ubx(map_type = f64, scale = 1e-7, alias = longitude)]
+    lon: i32,
+    #[ubx(map_type = f64, scale = 1e-7, alias = latitude)]
+    lat: i32,
+
+    height: i32,
+    height_msl: i32,
+    g_speed: i32,
+    speed: i32,
+
+    #[ubx(map_type = f64, scale = 1e-5, alias = heading_motion)]
+    head_mot: i32,
+    #[ubx(map_type = f64, scale = 1e-5, alias = heading_vehicle)]
+    head_veh: i32,
+
+    h_acc: u32,
+    v_acc: u32,
+    s_acc: u32,
+
+    #[ubx(map_type = f64, scale = 1e-5, alias = heading_accurracy)]
+    head_acc: u32,
+
+    reserved2: [u8; 4],
+}
+
+#[ubx_packet_recv]
+#[ubx(class = 0x01, id = 0x05, fixed_payload_len = 32)]
+struct NavAtt {
+    itow: u32,
+    version: u8,
+    reserved1: [u8; 3],
+    #[ubx(map_type = f64, scale = 1e-5, alias = vehicle_roll)]
+    roll: i32,
+    #[ubx(map_type = f64, scale = 1e-5, alias = vehicle_pitch)]
+    pitch: i32,
+    #[ubx(map_type = f64, scale = 1e-5, alias = vehicle_heading)]
+    heading: i32,
+    #[ubx(map_type = f64, scale = 1e-5, alias = vehicle_roll_accuracy)]
+    acc_roll: u32,
+    #[ubx(map_type = f64, scale = 1e-5, alias = vehicle_pitch_accuracy)]
+    acc_pitch: u32,
+    #[ubx(map_type = f64, scale = 1e-5, alias = vehicle_heading_accuracy)]
+    acc_heading: u32,
+}
+
+#[ubx_packet_recv]
+#[ubx(class = 0x01, id = 0x22, fixed_payload_len = 20)]
+struct NavClock {
+    itow: u32,
+    clk_b: i32,
+    clk_d: i32,
+    t_acc: u32,
+    f_acc: u32,
+}
+
+#[ubx_extend_bitflags]
+#[ubx(from, rest_reserved)]
+bitflags! {
+    /// Fix status flags for `HnrPvt`
+    pub struct HnrPvtFlags: u8 {
+        /// position and velocity valid and within DOP and ACC Masks
+        const GPS_FIX_OK = 0x01;
+        /// DGPS used
+        const DIFF_SOLN = 0x02;
+        /// 1 = heading of vehicle is valid
+        const WKN_SET = 0x04;
+        const TOW_SET = 0x08;
+        const HEAD_VEH_VALID = 0x10;
+    }
+}
+
+#[ubx_extend_bitflags]
+#[ubx(from, rest_reserved)]
+bitflags! {
+    pub struct HnrPvtValidFlags: u8 {
+        const VALID_DATE = 0x01;
+        const VALID_TIME = 0x02;
+        const FULLY_RESOLVED = 0x04;
+    }
+}
+
+#[ubx_packet_recv]
+#[ubx(class = 0x02, id = 0x13, max_payload_len = 72)]
+struct RxmSfrbx {
+    gnss_id: u8,
+    sv_id: u8,
+    reserved1: u8,
+    freq_id: u8,
+    num_words: u8,
+    reserved2: u8,
+    version: u8,
+    reserved3: u8,
+    #[ubx(
+        map_type = DwrdIter,
+        from = DwrdIter::new,
+        is_valid = DwrdIter::is_valid,
+        may_fail,
+    )]
+    dwrd: [u8; 0],
+}
+
+#[derive(Debug, Clone)]
+pub struct DwrdIter<'a>(core::slice::ChunksExact<'a, u8>);
+
+impl<'a> DwrdIter<'a> {
+    fn new(bytes: &'a [u8]) -> Self {
+        DwrdIter(bytes.chunks_exact(4))
+    }
+
+    fn is_valid(bytes: &'a [u8]) -> bool {
+        bytes.len() % 4 == 0
+    }
+}
+
+impl<'a> core::iter::Iterator for DwrdIter<'a> {
+    type Item = u32;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.0
+            .next()
+            .map(|bytes| u32::from_le_bytes(bytes.try_into().unwrap()))
+    }
+}
+
+#[ubx_packet_recv]
+#[ubx(class = 0x01, id = 0x11, fixed_payload_len = 20)]
+struct NavVelECEF {
+    itow: u32,
+    ecef_vx: i32,
+    ecef_vy: i32,
+    ecef_vz: u32,
+    s_acc: u32,
+}
+
+#[ubx_packet_recv]
+#[ubx(class = 0x13, id = 0x00, fixed_payload_len = 68)]
+struct MgaGpsEPH {
+    msg_type: u8,
+    version: u8,
+    sv_id: u8,
+    reserved1: u8,
+    fit_interval: u8,
+    ura_index: u8,
+    sv_health: u8,
+    #[ubx(map_type = f64, scale = 2e-31)]
+    tgd: i8,
+    iodc: u16,
+    #[ubx(map_type = f64, scale = 2e+4)]
+    toc: u16,
+    reserved2: u8,
+    #[ubx(map_type = f64, scale = 2e-55)]
+    af2: i8,
+    #[ubx(map_type = f64, scale = 2e-43)]
+    afl: i16,
+    #[ubx(map_type = f64, scale = 2e-31)]
+    af0: i32,
+    #[ubx(map_type = f64, scale = 2e-5)]
+    crs: i16,
+    #[ubx(map_type = f64, scale = 2e-43)]
+    delta_n: i16,
+    #[ubx(map_type = f64, scale = 2e-31)]
+    m0: i32,
+    #[ubx(map_type = f64, scale = 2e-29)]
+    cuc: i16,
+    #[ubx(map_type = f64, scale = 2e-29)]
+    cus: i16,
+    #[ubx(map_type = f64, scale = 2e-33)]
+    e: u32,
+    #[ubx(map_type = f64, scale = 2e-19)]
+    sqrt_a: u32,
+    #[ubx(map_type = f64, scale = 2e+4)]
+    toe: u16,
+    #[ubx(map_type = f64, scale = 2e-29)]
+    cic: i16,
+    #[ubx(map_type = f64, scale = 2e-31)]
+    omega0: i32,
+    #[ubx(map_type = f64, scale = 2e-29)]
+    cis: i16,
+    #[ubx(map_type = f64, scale = 2e-5)]
+    crc: i16,
+    #[ubx(map_type = f64, scale = 2e-31)]
+    i0: i32,
+    #[ubx(map_type = f64, scale = 2e-31)]
+    omega: i32,
+    #[ubx(map_type = f64, scale = 2e-43)]
+    omega_dot: i32,
+    #[ubx(map_type = f64, scale = 2e-43)]
+    idot: i16,
+    reserved3: [u8; 2],
+}
+
+#[ubx_packet_recv]
+#[ubx(class = 0x02, id = 0x15, fixed_payload_len = 32)]
+#[derive(Debug)]
+pub struct RxmRawxInfo {
+    pr_mes: f64,
+    cp_mes: f64,
+    do_mes: f32,
+    gnss_id: u8,
+    sv_id: u8,
+    reserved2: u8,
+    freq_id: u8,
+    lock_time: u16,
+    cno: u8,
+    #[ubx(map_type = StdevFlags)]
+    pr_stdev: u8,
+    #[ubx(map_type = StdevFlags)]
+    cp_stdev: u8,
+    #[ubx(map_type = StdevFlags)]
+    do_stdev: u8,
+    #[ubx(map_type = TrkStatFlags)]
+    trk_stat: u8,
+    reserved3: u8,
+}
+
+#[ubx_extend_bitflags]
+#[ubx(from, rest_reserved)]
+bitflags! {
+    pub struct StdevFlags: u8 {
+        const STD_1 = 0x01;
+        const STD_2 = 0x02;
+        const STD_3 = 0x04;
+        const STD_4 = 0x08;
+    }
+}
+
+#[ubx_extend_bitflags]
+#[ubx(from, rest_reserved)]
+bitflags! {
+    pub struct TrkStatFlags: u8 {
+        const PR_VALID = 0x01;
+        const CP_VALID = 0x02;
+        const HALF_CYCLE = 0x04;
+        const SUB_HALF_CYCLE = 0x08;
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct RxmRawxInfoIter<'a>(core::slice::ChunksExact<'a, u8>);
+
+impl<'a> RxmRawxInfoIter<'a> {
+    fn new(data: &'a [u8]) -> Self {
+        Self(data.chunks_exact(32))
+    }
+
+    fn is_valid(bytes: &'a [u8]) -> bool {
+        bytes.len() % 32 == 0
+    }
+}
+
+impl<'a> core::iter::Iterator for RxmRawxInfoIter<'a> {
+    type Item = RxmRawxInfoRef<'a>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.0.next().map(RxmRawxInfoRef)
+    }
 }
 
 define_recv_packets!(
@@ -3241,6 +3584,15 @@ define_recv_packets!(
         MonGnss,
         MonHw,
         RxmRtcm,
+        EsfMeas,
+        EsfIns,
+        HnrPvt,
+        NavAtt,
+        NavClock,
+        NavVelECEF,
+        MgaGpsEPH,
+        RxmSfrbx,
+        EsfRaw,
         TimSvin,
     }
 );

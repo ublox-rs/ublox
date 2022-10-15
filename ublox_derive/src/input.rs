@@ -5,6 +5,7 @@ use crate::types::{
 };
 use proc_macro2::{Span, TokenStream};
 use quote::ToTokens;
+
 use std::num::NonZeroUsize;
 use syn::{
     braced, parse::Parse, punctuated::Punctuated, spanned::Spanned, Attribute, Error, Fields,
@@ -24,7 +25,12 @@ pub fn parse_packet_description(
     let name = struct_name.to_string();
     let fields = parse_fields(fields)?;
 
-    if let Some(field) = fields.iter().rev().skip(1).find(|x| x.size_bytes.is_none()) {
+    if let Some(field) = fields
+        .iter()
+        .rev()
+        .skip(1)
+        .find(|f| f.size_bytes.is_none() && f.size_fn().is_none())
+    {
         return Err(Error::new(
             field.name.span(),
             "Non-finite size for field which is not the last field",
@@ -397,6 +403,7 @@ fn parse_fields(fields: Fields) -> syn::Result<Vec<PackField>> {
             ..
         } = f;
         let size_bytes = field_size_bytes(&ty)?;
+
         let name = name.ok_or_else(|| Error::new(f_sp, "No field name"))?;
         let comment = extract_item_comment(&attrs)?;
         let mut map = PackFieldMap::default();
@@ -445,6 +452,7 @@ mod kw {
     syn::custom_keyword!(is_valid);
     syn::custom_keyword!(get_as_ref);
     syn::custom_keyword!(into);
+    syn::custom_keyword!(size_fn);
 }
 
 #[derive(Default)]
@@ -467,6 +475,7 @@ pub struct MapType {
     pub from_fn: Option<TokenStream>,
     pub is_valid_fn: Option<TokenStream>,
     pub into_fn: Option<TokenStream>,
+    pub size_fn: Option<TokenStream>,
 }
 
 impl Parse for PackFieldMap {
@@ -476,7 +485,7 @@ impl Parse for PackFieldMap {
         let mut custom_from_fn: Option<syn::Path> = None;
         let mut custom_into_fn: Option<syn::Expr> = None;
         let mut custom_is_valid_fn: Option<syn::Path> = None;
-
+        let mut custom_size_fn: Option<syn::Path> = None;
         while !input.is_empty() {
             let lookahead = input.lookahead1();
 
@@ -503,6 +512,10 @@ impl Parse for PackFieldMap {
                 input.parse::<kw::is_valid>()?;
                 input.parse::<Token![=]>()?;
                 custom_is_valid_fn = Some(input.parse()?);
+            } else if lookahead.peek(kw::size_fn) {
+                input.parse::<kw::size_fn>()?;
+                input.parse::<Token![=]>()?;
+                custom_size_fn = Some(input.parse()?);
             } else if lookahead.peek(kw::get_as_ref) {
                 input.parse::<kw::get_as_ref>()?;
                 map.get_as_ref = true;
@@ -525,6 +538,7 @@ impl Parse for PackFieldMap {
                 from_fn: custom_from_fn.map(ToTokens::into_token_stream),
                 is_valid_fn: custom_is_valid_fn.map(ToTokens::into_token_stream),
                 into_fn: custom_into_fn.map(ToTokens::into_token_stream),
+                size_fn: custom_size_fn.map(ToTokens::into_token_stream),
             });
         }
 
@@ -547,15 +561,14 @@ impl Parse for Comment {
 }
 
 fn field_size_bytes(ty: &Type) -> syn::Result<Option<NonZeroUsize>> {
-    //TODO: make this array static
-    //TODO: support f32, f64
-    let valid_types: [(Type, NonZeroUsize); 7] = [
+    let valid_types: [(Type, NonZeroUsize); 8] = [
         (syn::parse_quote!(u8), NonZeroUsize::new(1).unwrap()),
         (syn::parse_quote!(i8), NonZeroUsize::new(1).unwrap()),
         (syn::parse_quote!(u16), NonZeroUsize::new(2).unwrap()),
         (syn::parse_quote!(i16), NonZeroUsize::new(2).unwrap()),
         (syn::parse_quote!(u32), NonZeroUsize::new(4).unwrap()),
         (syn::parse_quote!(i32), NonZeroUsize::new(4).unwrap()),
+        (syn::parse_quote!(f32), NonZeroUsize::new(4).unwrap()),
         (syn::parse_quote!(f64), NonZeroUsize::new(8).unwrap()),
     ];
     if let Some((_ty, size)) = valid_types.iter().find(|x| x.0 == *ty) {

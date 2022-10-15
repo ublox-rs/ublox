@@ -1,10 +1,10 @@
 use super::packets::*;
 use crate::error::DateTimeError;
 use chrono::prelude::*;
-use core::convert::TryFrom;
+use core::{convert::TryFrom, fmt};
 
-/// Represents a world position, can be constructed from NavPosLlh, NavHpPosLlh and NavPosVelTime packets.
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+/// Represents a world position, can be constructed from NavPosLlh and NavPosVelTime packets.
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, Clone, Copy)]
 pub struct Position {
     /// Logitude in degrees
@@ -18,7 +18,7 @@ pub struct Position {
 }
 
 #[derive(Debug, Clone, Copy)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Velocity {
     /// m/s over the ground
     pub speed: f64,
@@ -99,5 +99,30 @@ impl<'a> TryFrom<&NavPosVelTimeRef<'a>> for DateTime<Utc> {
             + chrono::Duration::nanoseconds(i64::from(sol.nanosecond()));
 
         Ok(DateTime::from_utc(dt, Utc))
+    }
+}
+
+pub(crate) struct FieldIter<I>(pub(crate) I);
+
+impl<I> fmt::Debug for FieldIter<I>
+where
+    I: fmt::Debug,
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.0.fmt(f)
+    }
+}
+
+#[cfg(feature = "serde")]
+impl<I> serde::Serialize for FieldIter<I>
+where
+    I: Iterator + Clone,
+    I::Item: serde::Serialize,
+{
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        serializer.collect_seq(self.0.clone())
     }
 }
