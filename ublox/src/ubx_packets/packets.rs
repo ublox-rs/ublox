@@ -3029,7 +3029,7 @@ impl<'a> MonVerExtensionIter<'a> {
     }
 
     fn is_valid(payload: &[u8]) -> bool {
-        payload.len() % 30 == 0 && payload.chunks(30).any(|c| !is_cstr_valid(c))
+        payload.len() % 30 == 0 && payload.chunks(30).all(|c| is_cstr_valid(c))
     }
 }
 
@@ -3596,3 +3596,26 @@ define_recv_packets!(
         TimSvin,
     }
 );
+
+#[test]
+fn test_mon_ver_interpret() {
+    let payload: [u8; 160] = [
+        82, 79, 77, 32, 67, 79, 82, 69, 32, 51, 46, 48, 49, 32, 40, 49, 48, 55, 56, 56, 56, 41, 0,
+        0, 0, 0, 0, 0, 0, 0, 48, 48, 48, 56, 48, 48, 48, 48, 0, 0, 70, 87, 86, 69, 82, 61, 83, 80,
+        71, 32, 51, 46, 48, 49, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 80, 82, 79, 84, 86,
+        69, 82, 61, 49, 56, 46, 48, 48, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 71, 80,
+        83, 59, 71, 76, 79, 59, 71, 65, 76, 59, 66, 68, 83, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 83, 66, 65, 83, 59, 73, 77, 69, 83, 59, 81, 90, 83, 83, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0,
+    ];
+    assert_eq!(Ok(()), <MonVerRef>::validate(&payload));
+    let ver = MonVerRef(&payload);
+    assert_eq!("ROM CORE 3.01 (107888)", ver.software_version());
+    assert_eq!("00080000", ver.hardware_version());
+    let mut it = ver.extension();
+    assert_eq!("FWVER=SPG 3.01", it.next().unwrap());
+    assert_eq!("PROTVER=18.00", it.next().unwrap());
+    assert_eq!("GPS;GLO;GAL;BDS", it.next().unwrap());
+    assert_eq!("SBAS;IMES;QZSS", it.next().unwrap());
+    assert_eq!(None, it.next());
+}
