@@ -987,9 +987,9 @@ mod test {
         }
         assert!(it.next().is_none());
     }
-}
 
-#[test]
-fn test_max_payload_len() {
-    assert!(MAX_PAYLOAD_LEN >= 1240);
+    #[test]
+    fn test_max_payload_len() {
+        assert!(MAX_PAYLOAD_LEN >= 1240);
+    }
 }
