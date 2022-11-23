@@ -2,18 +2,20 @@ name: Rust
 
 on:
   push:
-    branches: [ master ]
   pull_request:
-    branches: [ master ]
 
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
-
+    strategy:
+      matrix:
+        feature-args:
+          - ''
+          - --no-default-features --features alloc
+          - --no-default-features
     steps:
     - uses: actions/checkout@v2
     - name: Install libudev
@@ -25,6 +27,6 @@ jobs:
         override: true
         components: rustfmt, clippy
     - name: Build
-      run: cargo build --verbose
+      run: cargo build --verbose ${{ matrix.feature-args }}
     - name: Run tests
-      run: cargo test --verbose
+      run: cargo test --verbose ${{ matrix.feature-args }}

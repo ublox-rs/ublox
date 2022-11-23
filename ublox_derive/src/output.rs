@@ -444,6 +444,7 @@ pub fn generate_send_code_for_packet(pack_descr: &PackDesc) -> TokenStream {
     } else {
         ret.extend(quote! {
           impl #payload_struct_lifetime #payload_struct #payload_struct_lifetime {
+              #[cfg(feature = "alloc")]
               #[inline]
               pub fn into_packet_vec(self) -> Vec<u8> {
                 let mut vec = Vec::new();
