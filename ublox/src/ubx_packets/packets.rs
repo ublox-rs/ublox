@@ -158,7 +158,7 @@ struct NavHpPosLlh {
 /// Navigation Position Velocity Time Solution
 #[ubx_packet_recv]
 #[ubx(class = 1, id = 0x07, fixed_payload_len = 92)]
-struct NavPosVelTime {
+struct NavPvt {
     /// GPS Millisecond Time of Week
     itow: u32,
     year: u16,
@@ -174,9 +174,9 @@ struct NavPosVelTime {
     /// GNSS fix Type
     #[ubx(map_type = GpsFix)]
     fix_type: u8,
-    #[ubx(map_type = NavPosVelTimeFlags)]
+    #[ubx(map_type = NavPvtFlags)]
     flags: u8,
-    #[ubx(map_type = NavPosVelTimeFlags2)]
+    #[ubx(map_type = NavPvtFlags2)]
     flags2: u8,
     num_satellites: u8,
     #[ubx(map_type = f64, scale = 1e-7, alias = lon_degrees)]
@@ -236,8 +236,8 @@ struct NavPosVelTime {
 #[ubx_extend_bitflags]
 #[ubx(from, rest_reserved)]
 bitflags! {
-    /// Fix status flags for `NavPosVelTime`
-    pub struct NavPosVelTimeFlags: u8 {
+    /// Fix status flags for `NavPvt`
+    pub struct NavPvtFlags: u8 {
         /// position and velocity valid and within DOP and ACC Masks
         const GPS_FIX_OK = 1;
         /// DGPS used
@@ -252,8 +252,8 @@ bitflags! {
 #[ubx_extend_bitflags]
 #[ubx(from, rest_reserved)]
 bitflags! {
-    /// Additional flags for `NavPosVelTime`
-    pub struct NavPosVelTimeFlags2: u8 {
+    /// Additional flags for `NavPvt`
+    pub struct NavPvtFlags2: u8 {
         /// 1 = information about UTC Date and Time of Day validity confirmation
         /// is available. This flag is only supported in Protocol Versions
         /// 19.00, 19.10, 20.10, 20.20, 20.30, 22.00, 23.00, 23.01,27 and 28.
@@ -786,7 +786,7 @@ impl Default for OdoProfile {
     }
 }
 
-/// Configure Jamming interference monitoring 
+/// Configure Jamming interference monitoring
 #[ubx_packet_recv_send]
 #[ubx(class = 0x06, id = 0x39, fixed_payload_len = 8)]
 struct CfgItfm {
@@ -827,7 +827,7 @@ impl Default for CfgItfmConfig {
 impl CfgItfmConfig {
     pub fn new(enable: bool, bb_threshold: u32, cw_threshold: u32) -> Self {
         Self {
-            enable, 
+            enable,
             bb_threshold: bb_threshold.into(),
             cw_threshold: cw_threshold.into(),
             algorithm_bits: CfgItfmAlgoBits::default(),
@@ -835,10 +835,10 @@ impl CfgItfmConfig {
     }
 
     const fn into_raw(self) -> u32 {
-        (self.enable as u32)<<31
-            | self.cw_threshold.into_raw() 
-                | self.bb_threshold.into_raw()
-                    | self.algorithm_bits.into_raw()
+        (self.enable as u32) << 31
+            | self.cw_threshold.into_raw()
+            | self.bb_threshold.into_raw()
+            | self.algorithm_bits.into_raw()
     }
 }
 
@@ -864,7 +864,7 @@ pub struct CfgItfmBbThreshold(u32);
 impl CfgItfmBbThreshold {
     const POSITION: u32 = 0;
     const LENGTH: u32 = 4;
-    const MASK: u32 = (1<<Self::LENGTH)-1;
+    const MASK: u32 = (1 << Self::LENGTH) - 1;
     const fn into_raw(self) -> u32 {
         (self.0 & Self::MASK) << Self::POSITION
     }
@@ -889,7 +889,7 @@ pub struct CfgItfmCwThreshold(u32);
 impl CfgItfmCwThreshold {
     const POSITION: u32 = 4;
     const LENGTH: u32 = 5;
-    const MASK: u32 = (1<<Self::LENGTH)-1;
+    const MASK: u32 = (1 << Self::LENGTH) - 1;
     const fn into_raw(self) -> u32 {
         (self.0 & Self::MASK) << Self::POSITION
     }
@@ -914,7 +914,7 @@ pub struct CfgItfmAlgoBits(u32);
 impl CfgItfmAlgoBits {
     const POSITION: u32 = 9;
     const LENGTH: u32 = 22;
-    const MASK: u32 = (1<<Self::LENGTH)-1;
+    const MASK: u32 = (1 << Self::LENGTH) - 1;
     const fn into_raw(self) -> u32 {
         (self.0 & Self::MASK) << Self::POSITION
     }
@@ -955,9 +955,9 @@ impl CfgItfmConfig2 {
     }
 
     const fn into_raw(self) -> u32 {
-        ((self.scan_aux_bands as u32)<< 14) 
-            | self.general.into_raw() 
-                | self.antenna.into_raw() as u32
+        ((self.scan_aux_bands as u32) << 14)
+            | self.general.into_raw()
+            | self.antenna.into_raw() as u32
     }
 }
 
@@ -981,7 +981,7 @@ pub struct CfgItfmGeneralBits(u32);
 impl CfgItfmGeneralBits {
     const POSITION: u32 = 0;
     const LENGTH: u32 = 12;
-    const MASK: u32 = (1<<Self::LENGTH)-1;
+    const MASK: u32 = (1 << Self::LENGTH) - 1;
     const fn into_raw(self) -> u32 {
         (self.0 & Self::MASK) << Self::POSITION
     }
@@ -1009,12 +1009,12 @@ impl From<u32> for CfgItfmGeneralBits {
 pub enum CfgItfmAntennaSettings {
     /// Type of Antenna is not known
     Unknown = 0,
-    /// Active antenna 
+    /// Active antenna
     Active = 1,
     /// Passive antenna
     Passive = 2,
 }
-        
+
 impl From<u32> for CfgItfmAntennaSettings {
     fn from(cfg: u32) -> Self {
         let cfg = (cfg & 0x3000) >> 12;
@@ -3546,7 +3546,7 @@ define_recv_packets!(
         NavPosLlh,
         NavStatus,
         NavDop,
-        NavPosVelTime,
+        NavPvt,
         NavSolution,
         NavVelNed,
         NavHpPosLlh,
