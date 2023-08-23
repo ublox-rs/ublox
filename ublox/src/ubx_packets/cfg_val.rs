@@ -298,15 +298,16 @@ macro_rules! cfg_val {
       }
 
       #[track_caller]
-      pub fn parse(buf: &[u8]) -> Self {
+      pub fn parse(buf: &[u8]) -> Option<Self> {
         let key_id = u32::from_le_bytes([buf[0], buf[1], buf[2], buf[3]]);
         match key_id {
           $(
             $cfg_key_id => {
-              Self::$cfg_item(from_cfg_v_bytes!(&buf[4..], $cfg_value_type))
+              Some(Self::$cfg_item(from_cfg_v_bytes!(&buf[4..], $cfg_value_type)))
             },
           )*
-          _ => unimplemented!("unknown key ID: 0x{:8X}", key_id),
+          // _ => unimplemented!("unknown key ID: 0x{:8X}", key_id),
+          _ => None,
         }
       }
 
@@ -340,6 +341,10 @@ macro_rules! cfg_val {
           )*
         }
       }
+    }
+
+    impl serde::Serialize for CfgVal {
+      fn serialize<S>(&self, _: S) -> Result<<S>::Ok, <S>::Error> where S: serde::Serializer { todo!() }
     }
 
     $(
