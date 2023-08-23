@@ -42,6 +42,16 @@ impl KeyId {
     pub const fn item_id(&self) -> u8 {
         self.0 as u8
     }
+
+    pub fn extend_to<T>(&self, buf: &mut T) -> usize
+    where
+        T: core::iter::Extend<u8>
+    {
+        let bytes = self.0.to_le_bytes();
+        assert_eq!(bytes.len(), Self::SIZE);
+	    buf.extend(bytes);
+        Self::SIZE
+    }
 }
 
 macro_rules! from_cfg_v_bytes {
@@ -53,7 +63,10 @@ macro_rules! from_cfg_v_bytes {
         }
     };
     ($buf:expr, u8) => {
-        $buf[0]
+      $buf[0]
+    };
+    ($buf:expr, i8) => {
+      $buf[0] as i8
     };
     ($buf:expr, u16) => {
         u16::from_le_bytes([$buf[0], $buf[1]])
@@ -62,7 +75,10 @@ macro_rules! from_cfg_v_bytes {
         i16::from_le_bytes([$buf[0], $buf[1]])
     };
     ($buf:expr, u32) => {
-        u32::from_le_bytes([$buf[0], $buf[1], $buf[2], $buf[3]])
+      u32::from_le_bytes([$buf[0], $buf[1], $buf[2], $buf[3]])
+    };
+    ($buf:expr, i32) => {
+      i32::from_le_bytes([$buf[0], $buf[1], $buf[2], $buf[3]])
     };
     ($buf:expr, u64) => {
         u64::from_le_bytes([
@@ -139,6 +155,9 @@ macro_rules! into_cfg_kv_bytes {
     ($this:expr, u8) => {{
       into_cfg_kv_bytes!(@inner [$this.0])
     }};
+    ($this:expr, i8) => {{
+      into_cfg_kv_bytes!(@inner [$this.0 as u8])
+    }};
     ($this:expr, u16) => {{
       let bytes = $this.0.to_le_bytes();
       into_cfg_kv_bytes!(@inner [bytes[0], bytes[1]])
@@ -148,6 +167,10 @@ macro_rules! into_cfg_kv_bytes {
       into_cfg_kv_bytes!(@inner [bytes[0], bytes[1]])
     }};
     ($this:expr, u32) => {{
+      let bytes = $this.0.to_le_bytes();
+      into_cfg_kv_bytes!(@inner [bytes[0], bytes[1], bytes[2], bytes[3]])
+    }};
+    ($this:expr, i32) => {{
       let bytes = $this.0.to_le_bytes();
       into_cfg_kv_bytes!(@inner [bytes[0], bytes[1], bytes[2], bytes[3]])
     }};
@@ -212,6 +235,16 @@ macro_rules! cfg_val {
     )*
   ) => {
     #[derive(Debug, Clone)]
+    #[non_exhaustive]
+    pub enum CfgKey {
+      WildcardAll = 0xffffffff,
+      $(
+        $(#[$class_comment])*
+        $cfg_item = $cfg_key_id,
+      )*
+    }
+
+    #[derive(Debug, Clone, Copy)]
     #[non_exhaustive]
     pub enum CfgVal {
       $(
@@ -289,6 +322,18 @@ macro_rules! cfg_val {
         }
       }
     )*
+  }
+}
+
+impl CfgKey {
+  pub fn extend_to<T>(&self, buf: &mut T) -> usize
+  where
+      T: core::iter::Extend<u8>
+  {
+      let bytes = (*self as u32).to_le_bytes();
+      let bytes_len = bytes.len();
+	  buf.extend(bytes);
+      bytes_len
   }
 }
 
