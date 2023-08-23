@@ -1,4 +1,4 @@
-use crate::cfg_val::CfgVal;
+use crate::cfg_val::{CfgVal, CfgKey};
 use core::convert::TryInto;
 use core::fmt;
 
@@ -2356,6 +2356,22 @@ struct CfgValSet<'a> {
     layers: u8,
     reserved1: u16,
     cfg_data: &'a [CfgVal],
+}
+
+#[ubx_packet_send]
+#[ubx(
+  class = 0x06,
+  id = 0x8b,
+  max_payload_len = 260, // 4 + 4 * 64
+)]
+struct CfgValGet<'a> {
+    /// Message version
+    version: u8,
+    /// The layers from which the configuration items should be retrieved
+    #[ubx(map_type = CfgReadLayer)]
+    layers: u8,
+    position: u16,
+    cfg_data: &'a [CfgKey],
 }
 
 #[derive(Debug, Clone)]
@@ -5067,6 +5083,24 @@ struct SecUniqId {
     version: u8,
     reserved1: [u8; 3],
     unique_id: [u8; 5],
+}
+
+/// The `CfgReadLayer` enum is used to specify the configuration layer to read from.
+/// The configuration system in the ublox device is stacked, so a property
+/// may be empty for a particular layer and you will receive a NAK.
+#[ubx_extend]
+#[ubx(from_unchecked, into_raw, rest_error)]
+#[repr(u8)]
+#[derive(Debug, Copy, Clone)]
+pub enum CfgReadLayer {
+  /// Read from RAM
+  Ram = 0,
+  /// Read from Bbr (battery backed RAM)
+  Bbr = 1,
+  /// Read from Flash, if available
+  Flash = 2,
+  /// Read the current configuration from the active source
+  Default = 7
 }
 
 #[cfg(test)]
