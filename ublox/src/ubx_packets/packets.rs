@@ -1,4 +1,4 @@
-use crate::cfg_val::{CfgVal, CfgKey};
+use crate::cfg_val::{CfgKey, CfgVal};
 use core::convert::TryInto;
 use core::fmt;
 
@@ -5093,14 +5093,14 @@ struct SecUniqId {
 #[repr(u8)]
 #[derive(Debug, Copy, Clone)]
 pub enum CfgReadLayer {
-  /// Read from RAM
-  Ram = 0,
-  /// Read from Bbr (battery backed RAM)
-  Bbr = 1,
-  /// Read from Flash, if available
-  Flash = 2,
-  /// Read the current configuration from the active source
-  Default = 7
+    /// Read from RAM
+    Ram = 0,
+    /// Read from Bbr (battery backed RAM)
+    Bbr = 1,
+    /// Read from Flash, if available
+    Flash = 2,
+    /// Read the current configuration from the active source
+    Default = 7,
 }
 
 #[cfg(test)]
