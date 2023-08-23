@@ -2358,12 +2358,15 @@ struct CfgValSet<'a> {
     cfg_data: &'a [CfgVal],
 }
 
+pub const MAX_CFG_KEYS: u16 = 64;
+
 #[ubx_packet_send]
 #[ubx(
   class = 0x06,
   id = 0x8b,
-  max_payload_len = 260, // 4 + 4 * 64
+  max_payload_len = 260, // 4 + sizeof(u32) * MAX_CFG_KEYS
 )]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 struct CfgValGet<'a> {
     /// Message version
     version: u8,
@@ -2371,7 +2374,79 @@ struct CfgValGet<'a> {
     #[ubx(map_type = CfgReadLayer)]
     layers: u8,
     position: u16,
-    cfg_data: &'a [CfgKey],
+    cfg_keys: &'a [CfgKey],
+}
+
+#[ubx_packet_recv]
+#[ubx(
+  class = 0x06,
+  id = 0x8b,
+  max_payload_len = 772, // 4 + (sizeof(u32) + sizeof(largest val)) * MAX_CFG_KEYS
+)]
+struct CfgValGetResponse {
+    /// Message version
+    version: u8,
+    #[ubx(map_type = CfgReadLayer)]
+    layers: u8,
+    position: u16,
+    #[ubx(
+        map_type = CfgValReadIter,
+        from = CfgValReadIter::new,
+        may_fail,
+        is_valid = CfgValReadIter::is_valid,
+    )]
+    cfg_data: [u8; 0],
+}
+
+/// The `CfgReadLayer` enum is used to specify the configuration layer to read from.
+/// The configuration system in the ublox device is stacked, so a property
+/// may be empty for a particular layer and you will receive a NAK.
+#[ubx_extend]
+#[ubx(from, into_raw, rest_reserved)]
+#[repr(u8)]
+#[derive(Debug, Copy, Clone)]
+pub enum CfgReadLayer {
+    /// Read from RAM
+    Ram = 0,
+    /// Read from Bbr (battery backed RAM)
+    Bbr = 1,
+    /// Read from Flash, if available
+    Flash = 2,
+    /// Read the current configuration from the active source
+    Default = 7,
+}
+
+#[derive(Debug, Clone)]
+pub struct CfgValReadIter<'a> {
+    data: &'a [u8],
+}
+
+impl<'a> CfgValReadIter<'a> {
+    fn new(data: &'a [u8]) -> Self {
+        // todo!("stolen from RxmRawxInfoIter. Reimplement.");
+        Self { data }
+    }
+
+    fn is_valid(bytes: &'a [u8]) -> bool {
+        // we need at least 4 bytes for a key id + val
+        bytes.len() > 5
+    }
+}
+
+impl<'a> core::iter::Iterator for CfgValReadIter<'a> {
+    type Item = CfgVal;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if Self::is_valid(self.data) {
+            if let Some(cfg_val) = CfgVal::parse(self.data) {
+                self.data = &self.data[cfg_val.len()..];
+                return Some(cfg_val);
+            }
+            // TODO: Is there some logging mechanism?
+            // eprintln!("Failure parsing key in (key,value) list, {:?}", self.data);
+        }
+        None
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -2395,19 +2470,17 @@ impl<'a> CfgValIter<'a> {
     }
 }
 
-impl core::iter::Iterator for CfgValIter<'_> {
+impl<'a> core::iter::Iterator for CfgValIter<'a> {
     type Item = CfgVal;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.offset < self.data.len() {
-            let cfg_val = CfgVal::parse(&self.data[self.offset..]);
-
-            self.offset += cfg_val.len();
-
-            Some(cfg_val)
-        } else {
-            None
+            if let Some(cfg_val) = CfgVal::parse(&self.data[self.offset..]) {
+                self.offset += cfg_val.len();
+                return Some(cfg_val);
+            }
         }
+        None
     }
 }
 
@@ -2769,6 +2842,7 @@ struct CfgRate {
 /// Alignment to reference time
 #[repr(u16)]
 #[derive(Clone, Copy, Debug)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum AlignmentToReferenceTime {
     Utc = 0,
     Gps = 1,
@@ -5083,24 +5157,6 @@ struct SecUniqId {
     version: u8,
     reserved1: [u8; 3],
     unique_id: [u8; 5],
-}
-
-/// The `CfgReadLayer` enum is used to specify the configuration layer to read from.
-/// The configuration system in the ublox device is stacked, so a property
-/// may be empty for a particular layer and you will receive a NAK.
-#[ubx_extend]
-#[ubx(from_unchecked, into_raw, rest_error)]
-#[repr(u8)]
-#[derive(Debug, Copy, Clone)]
-pub enum CfgReadLayer {
-    /// Read from RAM
-    Ram = 0,
-    /// Read from Bbr (battery backed RAM)
-    Bbr = 1,
-    /// Read from Flash, if available
-    Flash = 2,
-    /// Read the current configuration from the active source
-    Default = 7,
 }
 
 #[cfg(test)]
