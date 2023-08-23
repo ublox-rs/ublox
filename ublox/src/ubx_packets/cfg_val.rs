@@ -45,11 +45,11 @@ impl KeyId {
 
     pub fn extend_to<T>(&self, buf: &mut T) -> usize
     where
-        T: core::iter::Extend<u8>
+        T: core::iter::Extend<u8>,
     {
         let bytes = self.0.to_le_bytes();
         assert_eq!(bytes.len(), Self::SIZE);
-	    buf.extend(bytes);
+        buf.extend(bytes);
         Self::SIZE
     }
 }
@@ -63,10 +63,10 @@ macro_rules! from_cfg_v_bytes {
         }
     };
     ($buf:expr, u8) => {
-      $buf[0]
+        $buf[0]
     };
     ($buf:expr, i8) => {
-      $buf[0] as i8
+        $buf[0] as i8
     };
     ($buf:expr, u16) => {
         u16::from_le_bytes([$buf[0], $buf[1]])
@@ -75,10 +75,10 @@ macro_rules! from_cfg_v_bytes {
         i16::from_le_bytes([$buf[0], $buf[1]])
     };
     ($buf:expr, u32) => {
-      u32::from_le_bytes([$buf[0], $buf[1], $buf[2], $buf[3]])
+        u32::from_le_bytes([$buf[0], $buf[1], $buf[2], $buf[3]])
     };
     ($buf:expr, i32) => {
-      i32::from_le_bytes([$buf[0], $buf[1], $buf[2], $buf[3]])
+        i32::from_le_bytes([$buf[0], $buf[1], $buf[2], $buf[3]])
     };
     ($buf:expr, u64) => {
         u64::from_le_bytes([
@@ -133,6 +133,21 @@ macro_rules! from_cfg_v_bytes {
         match $buf[0] {
             0 => TpPulseLength::Ratio,
             1 => TpPulseLength::Length,
+            _ => unreachable!(),
+        }
+    };
+    ($buf:expr, TModeMode) => {
+        match $buf[0] {
+            0 => TModeMode::Disabled,
+            1 => TModeMode::SurveyIn,
+            2 => TModeMode::FixedMode,
+            _ => unreachable!(),
+        }
+    };
+    ($buf:expr, TModePosType) => {
+        match $buf[0] {
+            0 => TModePosType::ECEF,
+            1 => TModePosType::LLH,
             _ => unreachable!(),
         }
     };
@@ -225,6 +240,16 @@ macro_rules! into_cfg_kv_bytes {
           $this.0 as u8
       ])
     };
+    ($this:expr, TModeMode) => {
+      into_cfg_kv_bytes!(@inner [
+          $this.0 as u8
+      ])
+    };
+    ($this:expr, TModePosType) => {
+      into_cfg_kv_bytes!(@inner [
+          $this.0 as u8
+      ])
+    };
 }
 
 macro_rules! cfg_val {
@@ -234,10 +259,10 @@ macro_rules! cfg_val {
       $cfg_item:ident, $cfg_key_id:expr, $cfg_value_type:ident,
     )*
   ) => {
-    #[derive(Debug, Clone)]
+    #[derive(Debug, Clone, Copy)]
     #[non_exhaustive]
     pub enum CfgKey {
-      WildcardAll = 0xffffffff,
+      WildcardAll = 0x7fffffff,
       $(
         $(#[$class_comment])*
         $cfg_item = $cfg_key_id,
@@ -326,15 +351,15 @@ macro_rules! cfg_val {
 }
 
 impl CfgKey {
-  pub fn extend_to<T>(&self, buf: &mut T) -> usize
-  where
-      T: core::iter::Extend<u8>
-  {
-      let bytes = (*self as u32).to_le_bytes();
-      let bytes_len = bytes.len();
-	  buf.extend(bytes);
-      bytes_len
-  }
+    pub fn extend_to<T>(&self, buf: &mut T) -> usize
+    where
+        T: core::iter::Extend<u8>,
+    {
+        let bytes = (*self as u32).to_le_bytes();
+        let bytes_len = bytes.len();
+        buf.extend(bytes);
+        bytes_len
+    }
 }
 
 cfg_val! {
@@ -1152,6 +1177,56 @@ cfg_val! {
   TpAlignToTowTp1,       0x1005000a, bool,
   TpPolTp1,              0x1005000b, bool,
   TpTimegridTp1,         0x2005000c, AlignmentToReferenceTime,
+
+  // CFG-TMode* (Time-only mode settings - position fixed)
+  /// Receiver mode
+  TModeModeDef, 0x20030001,  TModeMode,
+  /// Determines whether the ARP position is given in ECEF or LAT/LON/HEIGHT?
+  TModePosTypeDef, 0x20030002,  TModePosType,
+  /// cm ECEF X coordinate of the ARP position.
+  /// This will only be used if TModeMODE=FIXED and TModePOS_TYPE=ECEF.
+  TModeEcefX, 0x40030003,  i32,
+  /// cm ECEF Y coordinate of the ARP position.
+  /// This will only be used if TModeMODE=FIXED and TModePOS_TYPE=ECEF.
+  TModeEcefY, 0x40030004,  i32,
+  /// cm ECEF Z coordinate of the ARP position.
+  /// This will only be used if TModeMODE=FIXED and TModePOS_TYPE=ECEF.
+  TModeEcefZ, 0x40030005,  i32,
+  /// 0.1 mm High-precision ECEF X coordinate of the ARP position, [-99 to +99].
+  /// This will only be used if TModeMODE=FIXED and TModePOS_TYPE=ECEF.
+  TModeEcefXHp, 0x20030006,  i8,
+  /// 0.1 mm High-precision ECEF Y coordinate of the ARP position [-99 to +99].
+  /// This will only be used if TModeMODE=FIXED and TModePOS_TYPE=ECEF.
+  TModeEcefYHp, 0x20030007,  i8,
+  /// 0.1 mm High-precision ECEF Z coordinate of the ARP position [-99 to +99].
+  /// This will only be used if TModeMODE=FIXED and TModePOS_TYPE=ECEF.
+  TModeEcefZHp, 0x20030008,  i8,
+  /// 1e-7 deg Latitude of the ARP position.
+  /// This will only be used if TModeMODE=FIXED and TModePOS_TYPE=LLH.
+  TModeLat, 0x40030009,  i32,
+  /// 1e-7 deg Longitude of the ARP position.
+  /// This will only be used if TModeMODE=FIXED and TModePOS_TYPE=LLH.
+  TModeLon, 0x4003000a,  i32,
+  /// cm Height of the ARP position.
+  /// This will only be used if TModeMODE=FIXED and TModePOS_TYPE=LLH.
+  TModeHeight, 0x4003000b,  i32,
+  /// 1e-9 deg High-precision latitude of the ARP position [-99 to +99].
+  /// This will only be used if TModeMODE=FIXED and TModePOS_TYPE=LLH.
+  TModeLatHp, 0x2003000c,  i8,
+  /// 1e-9 deg High-precision longitude of the ARP position [-99 to +99].
+  /// This will only be used if TModeMODE=FIXED and TModePOS_TYPE=LLH.
+  TModeLonHp, 0x2003000d,  i8,
+  /// 0.1 mm High-precision height of the ARP position [-99 to +99].
+  /// This will only be used if TModeMODE=FIXED and TModePOS_TYPE=LLH.
+  TModeHeightHp, 0x2003000e,  i8,
+  /// 0.1 mm Fixed position 3D accuracy
+  TModeFixedPosAcc, 0x4003000f,  u32,
+  /// Survey-in minimum duration.
+  /// This will only be used if TModeMODE=SURVEY_IN.
+  TModeSvInMinDur, 0x40030010,  u32,
+  /// 0.1 mm Survey-in position accuracy limit
+  /// This will only be used if TModeMODE=SURVEY_IN.
+  TModeSvInAccLimit, 0x40030011,  u32,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -1168,4 +1243,20 @@ pub enum TpPulseLength {
     Ratio = 0,
     /// Time pulse length
     Length = 1,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum TModeMode {
+    Disabled = 0,
+    SurveyIn = 1,
+    // true ARP position information required
+    FixedMode = 2,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum TModePosType {
+    /// ECEF position
+    ECEF = 0,
+    /// Lat/Lon/Height position
+    LLH = 1,
 }
