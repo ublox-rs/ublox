@@ -1232,7 +1232,7 @@ cfg_val! {
   TModeHeightHp, 0x2003000e,  i8,
   /// 0.1 mm Fixed position 3D accuracy
   TModeFixedPosAcc, 0x4003000f,  u32,
-  /// Survey-in minimum duration.
+  /// Survey-in minimum duration in seconds
   /// This will only be used if TModeMODE=SURVEY_IN.
   TModeSvInMinDur, 0x40030010,  u32,
   /// 0.1 mm Survey-in position accuracy limit

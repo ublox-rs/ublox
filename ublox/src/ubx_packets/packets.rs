@@ -721,6 +721,44 @@ struct NavOdo {
     distance_std: u32,
 }
 
+/// Survey-in status / results
+#[ubx_packet_recv]
+#[ubx(class = 0x01, id = 0x3B, fixed_payload_len = 40)]
+struct NavSvIn {
+    /// Message version
+    version: u8,
+    /// Reserved
+    reserved1: [u8; 3],
+    /// GPS time of week of the navigation epoch in ms
+    i_tow: u32,
+    /// Passed survey-in observation time (seconds)
+    dur: u32,
+    /// Current survey-in mean position ECEF X coordinate (cm)
+    mean_x: i32,
+    /// Current survey-in mean position ECEF Y coordinate (cm)
+    mean_y: i32,
+    /// Current survey-in mean position ECEF Z coordinate (cm)
+    mean_z: i32,
+    /// Current high-precision survey-in mean position ECEF X coordinate (in 0.1mm)
+    mean_xhp: i8,
+    /// Current high-precision survey-in mean position ECEF Y coordinate (in 0.1mm)
+    mean_yhp: i8,
+    /// Current high-precision survey-in mean position ECEF Z coordinate (in 0.1mm)
+    mean_zhp: i8,
+    /// reserved
+    reserved2: u8,
+    /// Current survey-in mean position accuracy (in 0.1mm)
+    mean_acc: u32,
+    /// Number of position observations used during survey-in
+    obs: u32,
+    /// Survey-in position validity flag, 1 = valid, otherwise 0
+    valid: u8,
+    /// Survey-in in progress flag, 1 = in-progress, otherwise 0
+    active: u8,
+    /// reserved
+    reserved3: [u8; 2],
+}
+
 /// Reset odometer
 #[ubx_packet_send]
 #[ubx(class = 0x01, id = 0x10, fixed_payload_len = 0)]
@@ -3654,6 +3692,7 @@ define_recv_packets!(
         NavSat,
         NavEoe,
         NavOdo,
+        NavSvIn,
         CfgOdo,
         MgaAck,
         MgaGpsIono,
