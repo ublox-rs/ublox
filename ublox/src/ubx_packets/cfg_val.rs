@@ -144,6 +144,20 @@ macro_rules! from_cfg_v_bytes {
             _ => unreachable!(),
         }
     };
+    ($buf:expr, NavSpgDynModelEnum) => {
+      match $buf[0] {
+        0 => NavSpgDynModelEnum::PORT,
+        2 => NavSpgDynModelEnum::STAT,
+        3 => NavSpgDynModelEnum::PED,
+        4 => NavSpgDynModelEnum::AUTOMOT,
+        5 => NavSpgDynModelEnum::SEA,
+        6 => NavSpgDynModelEnum::AIR1,
+        7 => NavSpgDynModelEnum::AIR2,
+        8 => NavSpgDynModelEnum::AIR4,
+        9 => NavSpgDynModelEnum::WRIST,
+          _ => unreachable!(),
+      }
+    };
     ($buf:expr, TModeMode) => {
       match $buf[0] {
           0 => TModeMode::Disabled,
@@ -244,6 +258,11 @@ macro_rules! into_cfg_kv_bytes {
       ])
     };
     ($this:expr, TpPulseLength) => {
+      into_cfg_kv_bytes!(@inner [
+          $this.0 as u8
+      ])
+    };
+    ($this:expr, NavSpgDynModelEnum) => {
       into_cfg_kv_bytes!(@inner [
           $this.0 as u8
       ])
@@ -1172,6 +1191,9 @@ cfg_val! {
   SignalGloL1Ena,        0x10310018, bool,
   SignalGLoL2Ena,        0x1031001a, bool,
 
+  // CFG-NAV-*
+  NavSpgDynModel,        0x20110021, NavSpgDynModelEnum,
+
   // CFG-TP-*
   TpPulseDef,            0x20050023, TpPulse,
   TpPulseLengthDef,      0x20050030, TpPulseLength,
@@ -1254,6 +1276,19 @@ pub enum TpPulseLength {
     Ratio = 0,
     /// Time pulse length
     Length = 1,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum NavSpgDynModelEnum {
+  PORT = 0, // Portable
+  STAT = 2, // Stationary
+  PED = 3, // Pedestrian
+  AUTOMOT = 4, // Automotive
+  SEA = 5, // Sea
+  AIR1 = 6, // Airborne with <1g acceleration
+  AIR2 = 7, // Airborne with <2g acceleration
+  AIR4 = 8, // Airborne with <4g acceleration
+  WRIST = 9, // Wrist worn watch (not available in all products)
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
