@@ -2428,8 +2428,8 @@ impl<'a> CfgValReadIter<'a> {
     }
 
     fn is_valid(bytes: &'a [u8]) -> bool {
-        // we need at least 4 bytes for a key id + val
-        bytes.len() > 5
+        // we need at least 5 bytes for a key id (4) + val (1)
+        bytes.len() >= 5
     }
 }
 
