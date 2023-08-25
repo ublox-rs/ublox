@@ -392,6 +392,112 @@ struct NavSolution {
     reserved2: [u8; 4],
 }
 
+#[derive(Clone, Copy, Debug)]
+pub enum CarrierPhaseRangeSolutionStatus {
+    /// No carrier phase range solution
+    NoSolution,
+    /// Carrier phase range solution with floating ambiguities
+    SolutionWithFloatingAmbiguities,
+    /// Carrier phase range solution with fixed ambiguities
+    SolutionWithFixedAmbiguities,
+}
+
+#[repr(transparent)]
+#[derive(Copy, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
+pub struct NavRelPosNedFlags(u32);
+
+impl NavRelPosNedFlags {
+    pub fn gnss_fix_ok(&self) -> bool {
+        self.0 & 0x1 != 0
+    }
+
+    pub fn diff_soln(&self) -> bool {
+        (self.0 >> 1) & 0x1 != 0
+    }
+
+    pub fn rel_pos_valid(&self) -> bool {
+        (self.0 >> 2) & 0x1 != 0
+    }
+
+    pub fn carr_soln(&self) -> CarrierPhaseRangeSolutionStatus {
+        match (self.0 >> 3) & 0x3 {
+            0 => CarrierPhaseRangeSolutionStatus::NoSolution,
+            1 => CarrierPhaseRangeSolutionStatus::SolutionWithFloatingAmbiguities,
+            2 => CarrierPhaseRangeSolutionStatus::SolutionWithFixedAmbiguities,
+            unknown => panic!("Unexpected 2-bit bitfield value {}!", unknown),
+        }
+    }
+
+    pub fn is_moving(&self) -> bool {
+        (self.0 >> 5) & 0x1 != 0
+    }
+
+    pub fn ref_pos_miss(&self) -> bool {
+        (self.0 >> 6) & 0x1 != 0
+    }
+
+    pub fn ref_obs_miss(&self) -> bool {
+        (self.0 >> 7) & 0x1 != 0
+    }
+
+    pub fn rel_pos_heading_valid(&self) -> bool {
+        (self.0 >> 8) & 0x1 != 0
+    }
+
+    pub fn rel_pos_normalized(&self) -> bool {
+        (self.0 >> 9) & 0x1 != 0
+    }
+
+    pub const fn from(x: u32) -> Self {
+        Self(x)
+    }
+}
+
+impl fmt::Debug for NavRelPosNedFlags {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("NavRelPosNedFlags")
+            .field("gnss_fix_ok", &self.gnss_fix_ok())
+            .field("diff_soln", &self.diff_soln())
+            .field("rel_pos_valid", &self.rel_pos_valid())
+            .field("carr_soln", &self.carr_soln())
+            .field("is_moving", &self.is_moving())
+            .field("ref_pos_miss", &self.ref_pos_miss())
+            .field("ref_obs_miss", &self.ref_obs_miss())
+            .field("rel_pos_heading_valid", &self.rel_pos_heading_valid())
+            .field("rel_pos_normalized", &self.rel_pos_normalized())
+            .finish()
+    }
+}
+
+#[ubx_packet_recv]
+#[ubx(class = 0x01, id = 0x3c, fixed_payload_len = 64)]
+struct NavRelPosNed {
+    version: u8,
+    _reserved0: u8,
+    ref_station_id: u16,
+    itow: u32, // ms
+    rel_pos_n: i32, // cm
+    rel_pos_e: i32, // cm
+    rel_pos_d: i32, // cm
+    rel_pos_length: i32,  // cm
+    rel_pos_heading: i32, // 1e-5 deg
+    _reserved1: u32,
+    rel_pos_hpn: i8, // 0.1 mm
+    rel_pos_hpe: i8, // 0.1 mm
+    rel_pos_hpd: i8, // 0.1 mm
+    rel_pos_hp_length: i8, // 0.1 mm
+    acc_n: u32, // 0.1 mm
+    acc_e: u32, // 0.1 mm
+    acc_d: u32, // 0.1 mm
+    acc_length: u32, // 0.1 mm
+    acc_heading: u32, // 1e-5 deg
+    _reserved2: u32,
+
+    #[ubx(map_type = NavRelPosNedFlags)]
+    flags: u32,
+}
+
 /// GPS fix Type
 #[ubx_extend]
 #[ubx(from, rest_reserved)]
@@ -3685,6 +3791,7 @@ define_recv_packets!(
         NavDop,
         NavPosVelTime,
         NavSolution,
+        NavRelPosNed,
         NavVelNed,
         NavHpPosLlh,
         NavTimeUTC,

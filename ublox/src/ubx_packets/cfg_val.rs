@@ -362,6 +362,8 @@ macro_rules! cfg_val {
       }
     }
 
+    // TODO: I can't seem to get the derive(serde::Serialize) to work on CfgVal.
+    // I need some help to figure that out...
     impl serde::Serialize for CfgVal {
       fn serialize<S>(&self, _: S) -> Result<<S>::Ok, <S>::Error> where S: serde::Serializer { todo!() }
     }
