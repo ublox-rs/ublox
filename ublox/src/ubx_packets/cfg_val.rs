@@ -383,287 +383,287 @@ cfg_val! {
 
   // CFG-MSGOUT-*
   /// Output rate of the NMEA-GX-DTM message on port I2C
-  MsgoutNmeaIdDtmI2C, 0x209100a6, u8,
+  MsgoutNmeaIdDtmI2c, 0x209100a6, u8,
   /// Output rate of the NMEA-GX-DTM message on port SPI
   MsgoutNmeaIdDtmSpi, 0x209100aa, u8,
   /// Output rate of the NMEA-GX-DTM message on port UART1
-  MsgoutNmeaIdDtmuart1, 0x209100a7, u8,
+  MsgoutNmeaIdDtmUart1, 0x209100a7, u8,
   /// Output rate of the NMEA-GX-DTM message on port UART2
-  MsgoutNmeaIdDtmuart2, 0x209100a8, u8,
+  MsgoutNmeaIdDtmUart2, 0x209100a8, u8,
   /// Output rate of the NMEA-GX-DTM message on port USB
-  MsgoutNmeaIdDtmusb, 0x209100a9, u8,
+  MsgoutNmeaIdDtmUsb, 0x209100a9, u8,
   /// Output rate of the NMEA-GX-GBS message on port I2C
-  MsgoutNmeaIdGbsI2C, 0x209100dd, u8,
+  MsgoutNmeaIdGbsI2c, 0x209100dd, u8,
   /// Output rate of the NMEA-GX-GBS message on port SPI
   MsgoutNmeaIdGbsSpi, 0x209100e1, u8,
   /// Output rate of the NMEA-GX-GBS message on port UART1
-  MsgoutNmeaIdGbsuart1, 0x209100de, u8,
+  MsgoutNmeaIdGbsUart1, 0x209100de, u8,
   /// Output rate of the NMEA-GX-GBS message on port UART2
-  MsgoutNmeaIdGbsuart2, 0x209100df, u8,
+  MsgoutNmeaIdGbsUart2, 0x209100df, u8,
   /// Output rate of the NMEA-GX-GBS message on port USB
-  MsgoutNmeaIdGbsusb, 0x209100e0, u8,
+  MsgoutNmeaIdGbsUsb, 0x209100e0, u8,
   /// Output rate of the NMEA-GX-GGA message on port I2C
-  MsgoutNmeaIdGgai2C, 0x209100ba, u8,
+  MsgoutNmeaIdGgaI2c, 0x209100ba, u8,
   /// Output rate of the NMEA-GX-GGA message on port SPI
   MsgoutNmeaIdGgaSpi, 0x209100be, u8,
   /// Output rate of the NMEA-GX-GGA message on port UART1
-  MsgoutNmeaIdGgauart1, 0x209100bb, u8,
+  MsgoutNmeaIdGgaUart1, 0x209100bb, u8,
   /// Output rate of the NMEA-GX-GGA message on port UART2
-  MsgoutNmeaIdGgauart2, 0x209100bc, u8,
+  MsgoutNmeaIdGgaUart2, 0x209100bc, u8,
   /// Output rate of the NMEA-GX-GGA message on port USB
-  MsgoutNmeaIdGgausb, 0x209100bd, u8,
+  MsgoutNmeaIdGgaUsb, 0x209100bd, u8,
   /// Output rate of the NMEA-GX-GLL message on port I2C
-  MsgoutNmeaIdGllI2C, 0x209100c9, u8,
+  MsgoutNmeaIdGllI2c, 0x209100c9, u8,
   /// Output rate of the NMEA-GX-GLL message on port SPI
   MsgoutNmeaIdGllSpi, 0x209100cd, u8,
   /// Output rate of the NMEA-GX-GLL message on port UART1
-  MsgoutNmeaIdGlluart1, 0x209100ca, u8,
+  MsgoutNmeaIdGllUart1, 0x209100ca, u8,
   /// Output rate of the NMEA-GX-GLL message on port UART2
-  MsgoutNmeaIdGlluart2, 0x209100cb, u8,
+  MsgoutNmeaIdGllUart2, 0x209100cb, u8,
   /// Output rate of the NMEA-GX-GLL message on port USB
   MsgoutNmeaIdGllUsb, 0x209100cc, u8,
   /// Output rate of the NMEA-GX-GNS message on port I2C
-  MsgoutNmeaIdGnsI2C, 0x209100b5, u8,
+  MsgoutNmeaIdGnsI2c, 0x209100b5, u8,
   /// Output rate of the NMEA-GX-GNS message on port SPI
   MsgoutNmeaIdGnsSpi, 0x209100b9, u8,
   /// Output rate of the NMEA-GX-GNS message on port UART1
-  MsgoutNmeaIdGnsuart1, 0x209100b6, u8,
+  MsgoutNmeaIdGnsUart1, 0x209100b6, u8,
   /// Output rate of the NMEA-GX-GNS message on port UART2
-  MsgoutNmeaIdGnsuart2, 0x209100b7, u8,
+  MsgoutNmeaIdGnsUart2, 0x209100b7, u8,
   /// Output rate of the NMEA-GX-GNS message on port USB
-  MsgoutNmeaIdGnsusb, 0x209100b8, u8,
+  MsgoutNmeaIdGnsUsb, 0x209100b8, u8,
   /// Output rate of the NMEA-GX-GRS message on port I2C
-  MsgoutNmeaIdGrsI2C, 0x209100ce, u8,
+  MsgoutNmeaIdGrsI2c, 0x209100ce, u8,
   /// Output rate of the NMEA-GX-GRS message on port SPI
   MsgoutNmeaIdGrsSpi, 0x209100d2, u8,
   /// Output rate of the NMEA-GX-GRS message on port UART1
-  MsgoutNmeaIdGrsuart1, 0x209100cf, u8,
+  MsgoutNmeaIdGrsUart1, 0x209100cf, u8,
   /// Output rate of the NMEA-GX-GRS message on port UART2
-  MsgoutNmeaIdGrsuart2, 0x209100d0, u8,
+  MsgoutNmeaIdGrsUart2, 0x209100d0, u8,
   /// Output rate of the NMEA-GX-GRS message on port USB
-  MsgoutNmeaIdGrsusb, 0x209100d1, u8,
+  MsgoutNmeaIdGrsUsb, 0x209100d1, u8,
   /// Output rate of the NMEA-GX-GSA message on port I2C
-  MsgoutNmeaIdGsaI2C, 0x209100bf, u8,
+  MsgoutNmeaIdGsaI2c, 0x209100bf, u8,
   /// Output rate of the NMEA-GX-GSA message on port SPI
   MsgoutNmeaIdGsaSpi, 0x209100c3, u8,
   /// Output rate of the NMEA-GX-GSA message on port UART1
-  MsgoutNmeaIdGsauart1, 0x209100c0, u8,
+  MsgoutNmeaIdGsaUart1, 0x209100c0, u8,
   /// Output rate of the NMEA-GX-GSA message on port UART2
-  MsgoutNmeaIdGsauart2, 0x209100c1, u8,
+  MsgoutNmeaIdGsaUart2, 0x209100c1, u8,
   /// Output rate of the NMEA-GX-GSA message on port USB
-  MsgoutNmeaIdGsausb, 0x209100c2, u8,
+  MsgoutNmeaIdGsaUsb, 0x209100c2, u8,
   /// Output rate of the NMEA-GX-GST message on port I2C
-  MsgoutNmeaIdGstI2C, 0x209100d3, u8,
+  MsgoutNmeaIdGstI2c, 0x209100d3, u8,
   /// Output rate of the NMEA-GX-GST message on port SPI
   MsgoutNmeaIdGstSpi, 0x209100d7, u8,
   /// Output rate of the NMEA-GX-GST message on port UART1
-  MsgoutNmeaIdGstuart1, 0x209100d4, u8,
+  MsgoutNmeaIdGstUart1, 0x209100d4, u8,
   /// Output rate of the NMEA-GX-GST message on port UART2
-  MsgoutNmeaIdGstuart2, 0x209100d5, u8,
+  MsgoutNmeaIdGstUart2, 0x209100d5, u8,
   /// Output rate of the NMEA-GX-GST message on port USB
   MsgoutNmeaIdGstUsb, 0x209100d6, u8,
   /// Output rate of the NMEA-GX-GSV message on port I2C
-  MsgoutNmeaIdGsvI2C, 0x209100c4, u8,
+  MsgoutNmeaIdGsvI2c, 0x209100c4, u8,
   /// Output rate of the NMEA-GX-GSV message on port SPI
   MsgoutNmeaIdGsvSpi, 0x209100c8, u8,
   /// Output rate of the NMEA-GX-GSV message on port UART1
-  MsgoutNmeaIdGsvuart1, 0x209100c5, u8,
+  MsgoutNmeaIdGsvUart1, 0x209100c5, u8,
   /// Output rate of the NMEA-GX-GSV message on port UART2
-  MsgoutNmeaIdGsvuart2, 0x209100c6, u8,
+  MsgoutNmeaIdGsvUart2, 0x209100c6, u8,
   /// Output rate of the NMEA-GX-GSV message on port USB
-  MsgoutNmeaIdGsvusb, 0x209100c7, u8,
+  MsgoutNmeaIdGsvUsb, 0x209100c7, u8,
   /// Output rate of the NMEA-GX-RMC message on port I2C
-  MsgoutNmeaIdRmcI2C, 0x209100ab, u8,
+  MsgoutNmeaIdRmcI2c, 0x209100ab, u8,
   /// Output rate of the NMEA-GX-RMC message on port SPI
   MsgoutNmeaIdRmcSpi, 0x209100af, u8,
   /// Output rate of the NMEA-GX-RMC message on port UART1
-  MsgoutNmeaIdRmcuart1, 0x209100ac, u8,
+  MsgoutNmeaIdRmcUart1, 0x209100ac, u8,
   /// Output rate of the NMEA-GX-RMC message on port UART2
-  MsgoutNmeaIdRmcuart2, 0x209100ad, u8,
+  MsgoutNmeaIdRmcUart2, 0x209100ad, u8,
   /// Output rate of the NMEA-GX-RMC message on port USB
-  MsgoutNmeaIdRmcusb, 0x209100ae, u8,
+  MsgoutNmeaIdRmcUsb, 0x209100ae, u8,
   /// Output rate of the NMEA-GX-VLW message on port I2C
-  MsgoutNmeaIdVlwI2C, 0x209100e7, u8,
+  MsgoutNmeaIdVlwI2c, 0x209100e7, u8,
   /// Output rate of the NMEA-GX-VLW message on port SPI
   MsgoutNmeaIdVlwSpi, 0x209100eb, u8,
   /// Output rate of the NMEA-GX-VLW message on port UART1
-  MsgoutNmeaIdVlwuart1, 0x209100e8, u8,
+  MsgoutNmeaIdVlwUart1, 0x209100e8, u8,
   /// Output rate of the NMEA-GX-VLW message on port UART2
-  MsgoutNmeaIdVlwuart2, 0x209100e9, u8,
+  MsgoutNmeaIdVlwUart2, 0x209100e9, u8,
   /// Output rate of the NMEA-GX-VLW message on port USB
-  MsgoutNmeaIdVlwusb, 0x209100ea, u8,
+  MsgoutNmeaIdVlwUsb, 0x209100ea, u8,
   /// Output rate of the NMEA-GX-VTG message on port I2C
-  MsgoutNmeaIdVtgI2C, 0x209100b0, u8,
+  MsgoutNmeaIdVtgI2c, 0x209100b0, u8,
   /// Output rate of the NMEA-GX-VTG message on port SPI
   MsgoutNmeaIdVtgSpi, 0x209100b4, u8,
   /// Output rate of the NMEA-GX-VTG message on port UART1
-  MsgoutNmeaIdVtguart1, 0x209100b1, u8,
+  MsgoutNmeaIdVtgUart1, 0x209100b1, u8,
   /// Output rate of the NMEA-GX-VTG message on port UART2
-  MsgoutNmeaIdVtguart2, 0x209100b2, u8,
+  MsgoutNmeaIdVtgUart2, 0x209100b2, u8,
   /// Output rate of the NMEA-GX-VTG message on port USB
-  MsgoutNmeaIdVtgusb, 0x209100b3, u8,
+  MsgoutNmeaIdVtgUsb, 0x209100b3, u8,
   /// Output rate of the NMEA-GX-ZDA message on port I2C
-  MsgoutNmeaIdZdaI2C, 0x209100d8, u8,
+  MsgoutNmeaIdZdaI2c, 0x209100d8, u8,
   /// Output rate of the NMEA-GX-ZDA message on port SPI
   MsgoutNmeaIdZdaSpi, 0x209100dc, u8,
   /// Output rate of the NMEA-GX-ZDA message on port UART1
-  MsgoutNmeaIdZdauart1, 0x209100d9, u8,
+  MsgoutNmeaIdZdaUart1, 0x209100d9, u8,
   /// Output rate of the NMEA-GX-ZDA message on port UART2
-  MsgoutNmeaIdZdauart2, 0x209100da, u8,
+  MsgoutNmeaIdZdaUart2, 0x209100da, u8,
   /// Output rate of the NMEA-GX-ZDA message on port USB
-  MsgoutNmeaIdZdausb, 0x209100db, u8,
+  MsgoutNmeaIdZdaUsb, 0x209100db, u8,
   /// Output rate of the NMEA-GX-PUBX00 message on port I2C
-  MsgoutPubxIdPolypi2C, 0x209100ec, u8,
+  MsgoutPubxIdPolypI2c, 0x209100ec, u8,
   /// Output rate of the NMEA-GX-PUBX00 message on port SPI
-  MsgoutPubxIdPolypspi, 0x209100f0, u8,
+  MsgoutPubxIdPolypSpi, 0x209100f0, u8,
   /// Output rate of the NMEA-GX-PUBX00 message on port UART1
-  MsgoutPubxIdPolypuart1, 0x209100ed, u8,
+  MsgoutPubxIdPolypUart1, 0x209100ed, u8,
   /// Output rate of the NMEA-GX-PUBX00 message on port UART2
-  MsgoutPubxIdPolypuart2, 0x209100ee, u8,
+  MsgoutPubxIdPolypUart2, 0x209100ee, u8,
   /// Output rate of the NMEA-GX-PUBX00 message on port USB
-  MsgoutPubxIdPolypusb, 0x209100ef, u8,
+  MsgoutPubxIdPolypUsb, 0x209100ef, u8,
   /// Output rate of the NMEA-GX-PUBX03 message on port I2C
-  MsgoutPubxIdPolysi2C, 0x209100f1, u8,
+  MsgoutPubxIdPolysI2c, 0x209100f1, u8,
   /// Output rate of the NMEA-GX-PUBX03 message on port SPI
-  MsgoutPubxIdPolysspi, 0x209100f5, u8,
+  MsgoutPubxIdPolysSpi, 0x209100f5, u8,
   /// Output rate of the NMEA-GX-PUBX03 message on port UART1
-  MsgoutPubxIdPolysuart1, 0x209100f2, u8,
+  MsgoutPubxIdPolysUart1, 0x209100f2, u8,
   /// Output rate of the NMEA-GX-PUBX03 message on port UART2
-  MsgoutPubxIdPolysuart2, 0x209100f3, u8,
+  MsgoutPubxIdPolysUart2, 0x209100f3, u8,
   /// Output rate of the NMEA-GX-PUBX03 message on port USB
-  MsgoutPubxIdPolysusb, 0x209100f4, u8,
+  MsgoutPubxIdPolysUsb, 0x209100f4, u8,
   /// Output rate of the NMEA-GX-PUBX04 message on port I2C
-  MsgoutPubxIdPolyti2C, 0x209100f6, u8,
+  MsgoutPubxIdPolytI2c, 0x209100f6, u8,
   /// Output rate of the NMEA-GX-PUBX04 message on port SPI
-  MsgoutPubxIdPolytspi, 0x209100fa, u8,
+  MsgoutPubxIdPolytSpi, 0x209100fa, u8,
   /// Output rate of the NMEA-GX-PUBX04 message on port UART1
-  MsgoutPubxIdPolytuart1, 0x209100f7, u8,
+  MsgoutPubxIdPolytUart1, 0x209100f7, u8,
   /// Output rate of the NMEA-GX-PUBX04 message on port UART2
-  MsgoutPubxIdPolytuart2, 0x209100f8, u8,
+  MsgoutPubxIdPolytUart2, 0x209100f8, u8,
   /// Output rate of the NMEA-GX-PUBX04 message on port USB
-  MsgoutPubxIdPolytusb, 0x209100f9, u8,
+  MsgoutPubxIdPolytUsb, 0x209100f9, u8,
   /// Output rate of the RTCM-3XTYPE1005 message on port I2C
-  MsgoutRtcm3xtype1005i2c, 0x209102bd, u8,
+  MsgoutRtcm3xType1005I2c, 0x209102bd, u8,
   /// Output rate of the RTCM-3XTYPE1005 message on port SPI
-  MsgoutRtcm3xtype1005spi, 0x209102c1, u8,
+  MsgoutRtcm3xType1005Spi, 0x209102c1, u8,
   /// Output rate of the RTCM-3XTYPE1005 message on port UART1
-  MsgoutRtcm3Xtype1005Uart1, 0x209102be, u8,
+  MsgoutRtcm3xType1005Uart1, 0x209102be, u8,
   /// Output rate of the RTCM-3XTYPE1005 message on port UART2
-  MsgoutRtcm3Xtype1005Uart2, 0x209102bf, u8,
+  MsgoutRtcm3xType1005Uart2, 0x209102bf, u8,
   /// Output rate of the RTCM-3XTYPE1005 message on port USB
-  MsgoutRtcm3Xtype1005Usb, 0x209102c0, u8,
+  MsgoutRtcm3xType1005Usb, 0x209102c0, u8,
   /// Output rate of the RTCM-3XTYPE1074 message on port I2C
-  MsgoutRtcm3Xtype1074I2C, 0x2091035e, u8,
+  MsgoutRtcm3xType1074I2c, 0x2091035e, u8,
   /// Output rate of the RTCM-3XTYPE1074 message on port SPI
-  MsgoutRtcm3Xtype1074Spi, 0x20910362, u8,
+  MsgoutRtcm3xType1074Spi, 0x20910362, u8,
   /// Output rate of the RTCM-3XTYPE1074 message on port UART1
-  MsgoutRtcm3Xtype1074Uart1, 0x2091035f, u8,
+  MsgoutRtcm3xType1074Uart1, 0x2091035f, u8,
   /// Output rate of the RTCM-3XTYPE1074 message on port UART2
-  MsgoutRtcm3Xtype1074Uart2, 0x20910360, u8,
+  MsgoutRtcm3xType1074Uart2, 0x20910360, u8,
   /// Output rate of the RTCM-3XTYPE1074 message on port USB
-  MsgoutRtcm3Xtype1074Usb, 0x20910361, u8,
+  MsgoutRtcm3xType1074Usb, 0x20910361, u8,
   /// Output rate of the RTCM-3XTYPE1077 message on port I2C
-  MsgoutRtcm3Xtype1077I2C, 0x209102cc, u8,
+  MsgoutRtcm3xType1077I2c, 0x209102cc, u8,
   /// Output rate of the RTCM-3XTYPE1077 message on port SPI
-  MsgoutRtcm3Xtype1077Spi, 0x209102d0, u8,
+  MsgoutRtcm3xType1077Spi, 0x209102d0, u8,
   /// Output rate of the RTCM-3XTYPE1077 message on port UART1
-  MsgoutRtcm3Xtype1077Uart1, 0x209102cd, u8,
+  MsgoutRtcm3xType1077Uart1, 0x209102cd, u8,
   /// Output rate of the RTCM-3XTYPE1077 message on port UART2
-  MsgoutRtcm3Xtype1077Uart2, 0x209102ce, u8,
+  MsgoutRtcm3xType1077Uart2, 0x209102ce, u8,
   /// Output rate of the RTCM-3XTYPE1077 message on port USB
-  MsgoutRtcm3Xtype1077Usb, 0x209102cf, u8,
+  MsgoutRtcm3xType1077Usb, 0x209102cf, u8,
   /// Output rate of the RTCM-3XTYPE1084 message on port I2C
-  MsgoutRtcm3Xtype1084I2C, 0x20910363, u8,
+  MsgoutRtcm3xType1084I2c, 0x20910363, u8,
   /// Output rate of the RTCM-3XTYPE1084 message on port SPI
-  MsgoutRtcm3Xtype1084Spi, 0x20910367, u8,
+  MsgoutRtcm3xType1084Spi, 0x20910367, u8,
   /// Output rate of the RTCM-3XTYPE1084 message on port UART1
-  MsgoutRtcm3Xtype1084Uart1, 0x20910364, u8,
+  MsgoutRtcm3xType1084Uart1, 0x20910364, u8,
   /// Output rate of the RTCM-3XTYPE1084 message on port UART2
-  MsgoutRtcm3Xtype1084Uart2, 0x20910365, u8,
+  MsgoutRtcm3xType1084Uart2, 0x20910365, u8,
   /// Output rate of the RTCM-3XTYPE1084 message on port USB
-  MsgoutRtcm3Xtype1084Usb, 0x20910366, u8,
+  MsgoutRtcm3xType1084Usb, 0x20910366, u8,
   /// Output rate of the RTCM-3XTYPE1087 message on port I2C
-  MsgoutRtcm3Xtype1087I2C, 0x209102d1, u8,
+  MsgoutRtcm3xType1087I2c, 0x209102d1, u8,
   /// Output rate of the RTCM-3XTYPE1087 message on port SPI
-  MsgoutRtcm3Xtype1087Spi, 0x209102d5, u8,
+  MsgoutRtcm3xType1087Spi, 0x209102d5, u8,
   /// Output rate of the RTCM-3XTYPE1087 message on port UART1
-  MsgoutRtcm3Xtype1087Uart1, 0x209102d2, u8,
+  MsgoutRtcm3xType1087Uart1, 0x209102d2, u8,
   /// Output rate of the RTCM-3XTYPE1087 message on port UART2
-  MsgoutRtcm3Xtype1087Uart2, 0x209102d3, u8,
+  MsgoutRtcm3xType1087Uart2, 0x209102d3, u8,
   /// Output rate of the RTCM-3XTYPE1087 message on port USB
-  MsgoutRtcm3Xtype1087Usb, 0x209102d4, u8,
+  MsgoutRtcm3xType1087Usb, 0x209102d4, u8,
   /// Output rate of the RTCM-3XTYPE1094 message on port I2C
-  MsgoutRtcm3Xtype1094I2C, 0x20910368, u8,
+  MsgoutRtcm3xType1094I2c, 0x20910368, u8,
   /// Output rate of the RTCM-3XTYPE1094 message on port SPI
-  MsgoutRtcm3Xtype1094Spi, 0x2091036c, u8,
+  MsgoutRtcm3xType1094Spi, 0x2091036c, u8,
   /// Output rate of the RTCM-3XTYPE1094 message on port UART1
-  MsgoutRtcm3Xtype1094Uart1, 0x20910369, u8,
+  MsgoutRtcm3xType1094Uart1, 0x20910369, u8,
   /// Output rate of the RTCM-3XTYPE1094 message on port UART2
-  MsgoutRtcm3Xtype1094Uart2, 0x2091036a, u8,
+  MsgoutRtcm3xType1094Uart2, 0x2091036a, u8,
   /// Output rate of the RTCM-3XTYPE1094 message on port USB
-  MsgoutRtcm3Xtype1094Usb, 0x2091036b, u8,
+  MsgoutRtcm3xType1094Usb, 0x2091036b, u8,
   /// Output rate of the RTCM-3XTYPE1097 message on port I2C
-  MsgoutRtcm3Xtype1097I2C, 0x20910318, u8,
+  MsgoutRtcm3xType1097I2c, 0x20910318, u8,
   /// Output rate of the RTCM-3XTYPE1097 message on port SPI
-  MsgoutRtcm3Xtype1097Spi, 0x2091031c, u8,
+  MsgoutRtcm3xType1097Spi, 0x2091031c, u8,
   /// Output rate of the RTCM-3XTYPE1097 message on port UART1
-  MsgoutRtcm3Xtype1097Uart1, 0x20910319, u8,
+  MsgoutRtcm3xType1097Uart1, 0x20910319, u8,
   /// Output rate of the RTCM-3XTYPE1097 message on port UART2
-  MsgoutRtcm3Xtype1097Uart2, 0x2091031a, u8,
+  MsgoutRtcm3xType1097Uart2, 0x2091031a, u8,
   /// Output rate of the RTCM-3XTYPE1097 message on port USB
-  MsgoutRtcm3Xtype1097Usb, 0x2091031b, u8,
+  MsgoutRtcm3xType1097Usb, 0x2091031b, u8,
   /// Output rate of the RTCM-3XTYPE1124 message on port I2C
-  MsgoutRtcm3Xtype1124I2C, 0x2091036d, u8,
+  MsgoutRtcm3xType1124I2c, 0x2091036d, u8,
   /// Output rate of the RTCM-3XTYPE1124 message on port SPI
-  MsgoutRtcm3Xtype1124Spi, 0x20910371, u8,
+  MsgoutRtcm3xType1124Spi, 0x20910371, u8,
   /// Output rate of the RTCM-3XTYPE1124 message on port UART1
-  MsgoutRtcm3Xtype1124Uart1, 0x2091036e, u8,
+  MsgoutRtcm3xType1124Uart1, 0x2091036e, u8,
   /// Output rate of the RTCM-3XTYPE1124 message on port UART2
-  MsgoutRtcm3Xtype1124Uart2, 0x2091036f, u8,
+  MsgoutRtcm3xType1124Uart2, 0x2091036f, u8,
   /// Output rate of the RTCM-3XTYPE1124 message on port USB
-  MsgoutRtcm3Xtype1124Usb, 0x20910370, u8,
+  MsgoutRtcm3xType1124Usb, 0x20910370, u8,
   /// Output rate of the RTCM-3XTYPE1127 message on port I2C
-  MsgoutRtcm3Xtype1127I2C, 0x209102d6, u8,
+  MsgoutRtcm3xType1127I2c, 0x209102d6, u8,
   /// Output rate of the RTCM-3XTYPE1127 message on port SPI
-  MsgoutRtcm3Xtype1127Spi, 0x209102da, u8,
+  MsgoutRtcm3xType1127Spi, 0x209102da, u8,
   /// Output rate of the RTCM-3XTYPE1127 message on port UART1
-  MsgoutRtcm3Xtype1127Uart1, 0x209102d7, u8,
+  MsgoutRtcm3xType1127Uart1, 0x209102d7, u8,
   /// Output rate of the RTCM-3XTYPE1127 message on port UART2
-  MsgoutRtcm3Xtype1127Uart2, 0x209102d8, u8,
+  MsgoutRtcm3xType1127Uart2, 0x209102d8, u8,
   /// Output rate of the RTCM-3XTYPE1127 message on port USB
-  MsgoutRtcm3Xtype1127Usb, 0x209102d9, u8,
+  MsgoutRtcm3xType1127Usb, 0x209102d9, u8,
   /// Output rate of the RTCM-3XTYPE1230 message on port I2C
-  MsgoutRtcm3Xtype1230I2C, 0x20910303, u8,
+  MsgoutRtcm3xType1230I2c, 0x20910303, u8,
   /// Output rate of the RTCM-3XTYPE1230 message on port SPI
-  MsgoutRtcm3Xtype1230Spi, 0x20910307, u8,
+  MsgoutRtcm3xType1230Spi, 0x20910307, u8,
   /// Output rate of the RTCM-3XTYPE1230 message on port UART1
-  MsgoutRtcm3Xtype1230Uart1, 0x20910304, u8,
+  MsgoutRtcm3xType1230Uart1, 0x20910304, u8,
   /// Output rate of the RTCM-3XTYPE1230 message on port UART2
-  MsgoutRtcm3Xtype1230Uart2, 0x20910305, u8,
+  MsgoutRtcm3xType1230Uart2, 0x20910305, u8,
   /// Output rate of the RTCM-3XTYPE1230 message on port USB
-  MsgoutRtcm3Xtype1230Usb, 0x20910306, u8,
+  MsgoutRtcm3xType1230Usb, 0x20910306, u8,
   /// Output rate of the UBX-LOG-INFO message on port I2C
-  MsgoutUbxLogInfoi2C, 0x20910259, u8,
+  MsgoutUbxLogInfoI2c, 0x20910259, u8,
   /// Output rate of the UBX-LOG-INFO message on port SPI
   MsgoutUbxLogInfoSpi, 0x2091025d, u8,
   /// Output rate of the UBX-LOG-INFO message on port UART1
-  MsgoutUbxLogInfouart1, 0x2091025a, u8,
+  MsgoutUbxLogInfoUart1, 0x2091025a, u8,
   /// Output rate of the UBX-LOG-INFO message on port UART2
-  MsgoutUbxLogInfouart2, 0x2091025b, u8,
+  MsgoutUbxLogInfoUart2, 0x2091025b, u8,
   /// Output rate of the UBX-LOG-INFO message on port USB
-  MsgoutUbxLogInfousb, 0x2091025c, u8,
+  MsgoutUbxLogInfoUsb, 0x2091025c, u8,
   /// Output rate of the UBX-MONCOMMS message on port I2C
-  MsgoutUbxMoncommsI2C, 0x2091034f, u8,
+  MsgoutUbxMonCommsI2c, 0x2091034f, u8,
   /// Output rate of the UBX-MONCOMMS message on port SPI
-  MsgoutUbxMoncommsSpi, 0x20910353, u8,
+  MsgoutUbxMonCommsSpi, 0x20910353, u8,
   /// Output rate of the UBX-MONCOMMS message on port UART1
-  MsgoutUbxMoncommsUart1, 0x20910350, u8,
+  MsgoutUbxMonCommsUart1, 0x20910350, u8,
   /// Output rate of the UBX-MONCOMMS message on port UART2
-  MsgoutUbxMoncommsUart2, 0x20910351, u8,
+  MsgoutUbxMonCommsUart2, 0x20910351, u8,
   /// Output rate of the UBX-MONCOMMS message on port USB
-  MsgoutUbxMoncommsUsb, 0x20910352, u8,
+  MsgoutUbxMonCommsUsb, 0x20910352, u8,
   /// Output rate of the UBX-MON-HW2 message on port I2C
-  MsgoutUbxMonHw2I2C, 0x209101b9, u8,
+  MsgoutUbxMonHw2I2c, 0x209101b9, u8,
   /// Output rate of the UBX-MON-HW2 message on port SPI
   MsgoutUbxMonHw2Spi, 0x209101bd, u8,
   /// Output rate of the UBX-MON-HW2 message on port UART1
@@ -673,7 +673,7 @@ cfg_val! {
   /// Output rate of the UBX-MON-HW2 message on port USB
   MsgoutUbxMonHw2Usb, 0x209101bc, u8,
   /// Output rate of the UBX-MON-HW3 message on port I2C
-  MsgoutUbxMonHw3I2C, 0x20910354, u8,
+  MsgoutUbxMonHw3I2c, 0x20910354, u8,
   /// Output rate of the UBX-MON-HW3 message on port SPI
   MsgoutUbxMonHw3Spi, 0x20910358, u8,
   /// Output rate of the UBX-MON-HW3 message on port UART1
@@ -683,367 +683,367 @@ cfg_val! {
   /// Output rate of the UBX-MON-HW3 message on port USB
   MsgoutUbxMonHw3Usb, 0x20910357, u8,
   /// Output rate of the UBX-MON-HW message on port I2C
-  MsgoutUbxMonHwi2C, 0x209101b4, u8,
+  MsgoutUbxMonHwI2c, 0x209101b4, u8,
   /// Output rate of the UBX-MON-HW message on port SPI
   MsgoutUbxMonHwSpi, 0x209101b8, u8,
   /// Output rate of the UBX-MON-HW message on port UART1
-  MsgoutUbxMonHwuart1, 0x209101b5, u8,
+  MsgoutUbxMonHwUart1, 0x209101b5, u8,
   /// Output rate of the UBX-MON-HW message on port UART2
-  MsgoutUbxMonHwuart2, 0x209101b6, u8,
+  MsgoutUbxMonHwUart2, 0x209101b6, u8,
   /// Output rate of the UBX-MON-HW message on port USB
-  MsgoutUbxMonHwusb, 0x209101b7, u8,
+  MsgoutUbxMonHwUsb, 0x209101b7, u8,
   /// Output rate of the UBX-MON-IO message on port I2C
-  MsgoutUbxMonIoI2C, 0x209101a5, u8,
+  MsgoutUbxMonIoI2c, 0x209101a5, u8,
   /// Output rate of the UBX-MON-IO message on port SPI
   MsgoutUbxMonIoSpi, 0x209101a9, u8,
   /// Output rate of the UBX-MON-IO message on port UART1
-  MsgoutUbxMonIouart1, 0x209101a6, u8,
+  MsgoutUbxMonIoUart1, 0x209101a6, u8,
   /// Output rate of the UBX-MON-IO message on port UART2
-  MsgoutUbxMonIouart2, 0x209101a7, u8,
+  MsgoutUbxMonIoUart2, 0x209101a7, u8,
   /// Output rate of the UBX-MON-IO message on port USB
   MsgoutUbxMonIoUsb, 0x209101a8, u8,
   /// Output rate of the UBX-MON-MSGPP message on port I2C
-  MsgoutUbxMonmsgppI2C, 0x20910196, u8,
+  MsgoutUbxMonMsgPpI2c, 0x20910196, u8,
   /// Output rate of the UBX-MON-MSGPP message on port SPI
-  MsgoutUbxMonmsgppSpi, 0x2091019a, u8,
+  MsgoutUbxMonMsgPpSpi, 0x2091019a, u8,
   /// Output rate of the UBX-MON-MSGPP message on port UART1
-  MsgoutUbxMonmsgppUart1, 0x20910197, u8,
+  MsgoutUbxMonMsgPpUart1, 0x20910197, u8,
   /// Output rate of the UBX-MON-MSGPP message on port UART2
-  MsgoutUbxMonmsgppUart2, 0x20910198, u8,
+  MsgoutUbxMonMsgPpUart2, 0x20910198, u8,
   /// Output rate of the UBX-MON-MSGPP message on port USB
-  MsgoutUbxMonmsgppUsb, 0x20910199, u8,
+  MsgoutUbxMonMsgPpUsb, 0x20910199, u8,
   /// Output rate of the UBX-MON-RF message on port I2C
-  MsgoutUbxMonRfI2C, 0x20910359, u8,
+  MsgoutUbxMonRfI2c, 0x20910359, u8,
   /// Output rate of the UBX-MON-RF message on port SPI
   MsgoutUbxMonRfSpi, 0x2091035d, u8,
   /// Output rate of the UBX-MON-RF message on port UART1
-  MsgoutUbxMonRfuart1, 0x2091035a, u8,
+  MsgoutUbxMonRfUart1, 0x2091035a, u8,
   /// Output rate of the UBX-MON-RF message on port UART2
-  MsgoutUbxMonRfuart2, 0x2091035b, u8,
+  MsgoutUbxMonRfUart2, 0x2091035b, u8,
   /// Output rate of the UBX-MON-RF message on port USB
   MsgoutUbxMonRfUsb, 0x2091035c, u8,
   /// Output rate of the UBX-MON-RXBUF message on port I2C
-  MsgoutUbxMonRxbufi2C, 0x209101a0, u8,
+  MsgoutUbxMonRxbufI2c, 0x209101a0, u8,
   /// Output rate of the UBX-MON-RXBUF message on port SPI
-  MsgoutUbxMonRxbufspi, 0x209101a4, u8,
+  MsgoutUbxMonRxbufSpi, 0x209101a4, u8,
   /// Output rate of the UBX-MON-RXBUF message on port UART1
-  MsgoutUbxMonRxbufuart1, 0x209101a1, u8,
+  MsgoutUbxMonRxbufUart1, 0x209101a1, u8,
   /// Output rate of the UBX-MON-RXBUF message on port UART2
-  MsgoutUbxMonRxbufuart2, 0x209101a2, u8,
+  MsgoutUbxMonRxbufUart2, 0x209101a2, u8,
   /// Output rate of the UBX-MON-RXBUF message on port USB
-  MsgoutUbxMonRxbufusb, 0x209101a3, u8,
+  MsgoutUbxMonRxbufUsb, 0x209101a3, u8,
   /// Output rate of the UBX-MON-RXR message on port I2C
-  MsgoutUbxMonRxri2C, 0x20910187, u8,
+  MsgoutUbxMonRxrI2c, 0x20910187, u8,
   /// Output rate of the UBX-MON-RXR message on port SPI
   MsgoutUbxMonRxrSpi, 0x2091018b, u8,
   /// Output rate of the UBX-MON-RXR message on port UART1
-  MsgoutUbxMonRxruart1, 0x20910188, u8,
+  MsgoutUbxMonRxrUart1, 0x20910188, u8,
   /// Output rate of the UBX-MON-RXR message on port UART2
-  MsgoutUbxMonRxruart2, 0x20910189, u8,
+  MsgoutUbxMonRxrUart2, 0x20910189, u8,
   /// Output rate of the UBX-MON-RXR message on port USB
-  MsgoutUbxMonRxrusb, 0x2091018a, u8,
+  MsgoutUbxMonRxrUsb, 0x2091018a, u8,
   /// Output rate of the UBX-MON-TXBUF message on port I2C
-  MsgoutUbxMonTxbufi2C, 0x2091019b, u8,
+  MsgoutUbxMonTxbufI2c, 0x2091019b, u8,
   /// Output rate of the UBX-MON-TXBUF message on port SPI
-  MsgoutUbxMonTxbufspi, 0x2091019f, u8,
+  MsgoutUbxMonTxbufSpi, 0x2091019f, u8,
   /// Output rate of the UBX-MON-TXBUF message on port UART1
-  MsgoutUbxMonTxbufuart1, 0x2091019c, u8,
+  MsgoutUbxMonTxbufUart1, 0x2091019c, u8,
   /// Output rate of the UBX-MON-TXBUF message on port UART2
-  MsgoutUbxMonTxbufuart2, 0x2091019d, u8,
+  MsgoutUbxMonTxbufUart2, 0x2091019d, u8,
   /// Output rate of the UBX-MON-TXBUF message on port USB
-  MsgoutUbxMonTxbufusb, 0x2091019e, u8,
+  MsgoutUbxMonTxbufUsb, 0x2091019e, u8,
   /// Output rate of the UBX-NAV-CLOCK message on port I2C
-  MsgoutUbxNavClocki2C, 0x20910065, u8,
+  MsgoutUbxNavClockI2c, 0x20910065, u8,
   /// Output rate of the UBX-NAV-CLOCK message on port SPI
-  MsgoutUbxNavClockspi, 0x20910069, u8,
+  MsgoutUbxNavClockSpi, 0x20910069, u8,
   /// Output rate of the UBX-NAV-CLOCK message on port UART1
-  MsgoutUbxNavClockuart1, 0x20910066, u8,
+  MsgoutUbxNavClockUart1, 0x20910066, u8,
   /// Output rate of the UBX-NAV-CLOCK message on port UART2
-  MsgoutUbxNavClockuart2, 0x20910067, u8,
+  MsgoutUbxNavClockUart2, 0x20910067, u8,
   /// Output rate of the UBX-NAV-CLOCK message on port USB
-  MsgoutUbxNavClockusb, 0x20910068, u8,
+  MsgoutUbxNavClockUsb, 0x20910068, u8,
   /// Output rate of the UBX-NAV-DOP message on port I2C
-  MsgoutUbxNavDopI2C, 0x20910038, u8,
+  MsgoutUbxNavDopI2c, 0x20910038, u8,
   /// Output rate of the UBX-NAV-DOP message on port SPI
   MsgoutUbxNavDopSpi, 0x2091003c, u8,
   /// Output rate of the UBX-NAV-DOP message on port UART1
-  MsgoutUbxNavDopuart1, 0x20910039, u8,
+  MsgoutUbxNavDopUart1, 0x20910039, u8,
   /// Output rate of the UBX-NAV-DOP message on port UART2
-  MsgoutUbxNavDopuart2, 0x2091003a, u8,
+  MsgoutUbxNavDopUart2, 0x2091003a, u8,
   /// Output rate of the UBX-NAV-DOP message on port USB
-  MsgoutUbxNavDopusb, 0x2091003b, u8,
+  MsgoutUbxNavDopUsb, 0x2091003b, u8,
   /// Output rate of the UBX-NAV-EOE message on port I2C
-  MsgoutUbxNavEoeI2C, 0x2091015f, u8,
+  MsgoutUbxNavEoeI2c, 0x2091015f, u8,
   /// Output rate of the UBX-NAV-EOE message on port SPI
   MsgoutUbxNavEoeSpi, 0x20910163, u8,
   /// Output rate of the UBX-NAV-EOE message on port UART1
-  MsgoutUbxNavEoeuart1, 0x20910160, u8,
+  MsgoutUbxNavEoeUart1, 0x20910160, u8,
   /// Output rate of the UBX-NAV-EOE message on port UART2
-  MsgoutUbxNavEoeuart2, 0x20910161, u8,
+  MsgoutUbxNavEoeUart2, 0x20910161, u8,
   /// Output rate of the UBX-NAV-EOE message on port USB
-  MsgoutUbxNavEoeusb, 0x20910162, u8,
+  MsgoutUbxNavEoeUsb, 0x20910162, u8,
   /// Output rate of the UBX-NAVGEOFENCE message on port I2C
-  MsgoutUbxNavgeofenceI2C, 0x209100a1, u8,
+  MsgoutUbxNavGeofenceI2c, 0x209100a1, u8,
   /// Output rate of the UBX-NAVGEOFENCE message on port SPI
-  MsgoutUbxNavgeofenceSpi, 0x209100a5, u8,
+  MsgoutUbxNavGeofenceSpi, 0x209100a5, u8,
   /// Output rate of the UBX-NAVGEOFENCE message on port UART1
-  MsgoutUbxNavgeofenceUart1, 0x209100a2, u8,
+  MsgoutUbxNavGeofenceUart1, 0x209100a2, u8,
   /// Output rate of the UBX-NAVGEOFENCE message on port UART2
-  MsgoutUbxNavgeofenceUart2, 0x209100a3, u8,
+  MsgoutUbxNavGeofenceUart2, 0x209100a3, u8,
   /// Output rate of the UBX-NAVGEOFENCE message on port USB
-  MsgoutUbxNavgeofenceUsb, 0x209100a4, u8,
+  MsgoutUbxNavGeofenceUsb, 0x209100a4, u8,
   /// Output rate of the UBX-NAVHPPOSECEF message on port I2C
-  MsgoutUbxNavhpposecefI2C, 0x2091002e, u8,
+  MsgoutUbxNavHpPosEcefI2c, 0x2091002e, u8,
   /// Output rate of the UBX-NAVHPPOSECEF message on port SPI
-  MsgoutUbxNavhpposecefSpi, 0x20910032, u8,
+  MsgoutUbxNavHpPosEcefSpi, 0x20910032, u8,
   /// Output rate of the UBX-NAVHPPOSECEF message on port UART1
-  MsgoutUbxNavhpposecefUart1, 0x2091002f, u8,
+  MsgoutUbxNavHpPosEcefUart1, 0x2091002f, u8,
   /// Output rate of the UBX-NAVHPPOSECEF message on port UART2
-  MsgoutUbxNavhpposecefUart2, 0x20910030, u8,
+  MsgoutUbxNavHpPosEcefUart2, 0x20910030, u8,
   /// Output rate of the UBX-NAVHPPOSECEF message on port USB
-  MsgoutUbxNavhpposecefUsb, 0x20910031, u8,
+  MsgoutUbxNavHpPosEcefUsb, 0x20910031, u8,
   /// Output rate of the UBX-NAVHPPOSLLH message on port I2C
-  MsgoutUbxNavhpposllhI2C, 0x20910033, u8,
+  MsgoutUbxNavHpPosllhI2c, 0x20910033, u8,
   /// Output rate of the UBX-NAVHPPOSLLH message on port SPI
-  MsgoutUbxNavhpposllhSpi, 0x20910037, u8,
+  MsgoutUbxNavHpPosllhSpi, 0x20910037, u8,
   /// Output rate of the UBX-NAVHPPOSLLH message on port UART1
-  MsgoutUbxNavhpposllhUart1, 0x20910034, u8,
+  MsgoutUbxNavHpPosllhUart1, 0x20910034, u8,
   /// Output rate of the UBX-NAVHPPOSLLH message on port UART2
-  MsgoutUbxNavhpposllhUart2, 0x20910035, u8,
+  MsgoutUbxNavHpPosllhUart2, 0x20910035, u8,
   /// Output rate of the UBX-NAVHPPOSLLH message on port USB
-  MsgoutUbxNavhpposllhUsb, 0x20910036, u8,
+  MsgoutUbxNavHpPosllhUsb, 0x20910036, u8,
   /// Output rate of the UBX-NAV-ODO message on port I2C
-  MsgoutUbxNavOdoi2C, 0x2091007e, u8,
+  MsgoutUbxNavOdoI2c, 0x2091007e, u8,
   /// Output rate of the UBX-NAV-ODO message on port SPI
-  MsgoutUbxNavOdospi, 0x20910082, u8,
+  MsgoutUbxNavOdoSpi, 0x20910082, u8,
   /// Output rate of the UBX-NAV-ODO message on port UART1
-  MsgoutUbxNavOdouart1, 0x2091007f, u8,
+  MsgoutUbxNavOdoUart1, 0x2091007f, u8,
   /// Output rate of the UBX-NAV-ODO message on port UART2
-  MsgoutUbxNavOdouart2, 0x20910080, u8,
+  MsgoutUbxNavOdoUart2, 0x20910080, u8,
   /// Output rate of the UBX-NAV-ODO message on port USB
-  MsgoutUbxNavOdousb, 0x20910081, u8,
+  MsgoutUbxNavOdoUsb, 0x20910081, u8,
   /// Output rate of the UBX-NAV-ORB message on port I2C
-  MsgoutUbxNavOrbI2C, 0x20910010, u8,
+  MsgoutUbxNavOrbI2c, 0x20910010, u8,
   /// Output rate of the UBX-NAV-ORB message on port SPI
   MsgoutUbxNavOrbSpi, 0x20910014, u8,
   /// Output rate of the UBX-NAV-ORB message on port UART1
-  MsgoutUbxNavOrbuart1, 0x20910011, u8,
+  MsgoutUbxNavOrbUart1, 0x20910011, u8,
   /// Output rate of the UBX-NAV-ORB message on port UART2
-  MsgoutUbxNavOrbuart2, 0x20910012, u8,
+  MsgoutUbxNavOrbUart2, 0x20910012, u8,
   /// Output rate of the UBX-NAV-ORB message on port USB
-  MsgoutUbxNavOrbusb, 0x20910013, u8,
+  MsgoutUbxNavOrbUsb, 0x20910013, u8,
   /// Output rate of the UBX-NAV-POSECEF message on port I2C
-  MsgoutUbxNavposecefI2C, 0x20910024, u8,
+  MsgoutUbxNavPosEcefI2c, 0x20910024, u8,
   /// Output rate of the UBX-NAV-POSECEF message on port SPI
-  MsgoutUbxNavposecefSpi, 0x20910028, u8,
+  MsgoutUbxNavPosEcefSpi, 0x20910028, u8,
   /// Output rate of the UBX-NAV-POSECEF message on port UART1
-  MsgoutUbxNavposecefUart1, 0x20910025, u8,
+  MsgoutUbxNavPosEcefUart1, 0x20910025, u8,
   /// Output rate of the UBX-NAV-POSECEF message on port UART2
-  MsgoutUbxNavposecefUart2, 0x20910026, u8,
+  MsgoutUbxNavPosEcefUart2, 0x20910026, u8,
   /// Output rate of the UBX-NAV-POSECEF message on port USB
-  MsgoutUbxNavposecefUsb, 0x20910027, u8,
+  MsgoutUbxNavPosEcefUsb, 0x20910027, u8,
   /// Output rate of the UBX-NAV-POSLLH message on port I2C
-  MsgoutUbxNavPosllhi2C, 0x20910029, u8,
+  MsgoutUbxNavPosLlhI2c, 0x20910029, u8,
   /// Output rate of the UBX-NAV-POSLLH message on port SPI
-  MsgoutUbxNavPosllhspi, 0x2091002d, u8,
+  MsgoutUbxNavPosLlhSpi, 0x2091002d, u8,
   /// Output rate of the UBX-NAV-POSLLH message on port UART1
-  MsgoutUbxNavPosllhuart1, 0x2091002a, u8,
+  MsgoutUbxNavPosLlhUart1, 0x2091002a, u8,
   /// Output rate of the UBX-NAV-POSLLH message on port UART2
-  MsgoutUbxNavPosllhuart2, 0x2091002b, u8,
+  MsgoutUbxNavPosLlhUart2, 0x2091002b, u8,
   /// Output rate of the UBX-NAV-POSLLH message on port USB
-  MsgoutUbxNavPosllhusb, 0x2091002c, u8,
+  MsgoutUbxNavPosLlhUsb, 0x2091002c, u8,
   /// Output rate of the UBX-NAV-PVT message on port I2C
-  MsgoutUbxNavPvtI2C, 0x20910006, u8,
+  MsgoutUbxNavPvtI2c, 0x20910006, u8,
   /// Output rate of the UBX-NAV-PVT message on port SPI
   MsgoutUbxNavPvtSpi, 0x2091000a, u8,
   /// Output rate of the UBX-NAV-PVT message on port UART1
-  MsgoutUbxNavPvtuart1, 0x20910007, u8,
+  MsgoutUbxNavPvtUart1, 0x20910007, u8,
   /// Output rate of the UBX-NAV-PVT message on port UART2
-  MsgoutUbxNavPvtuart2, 0x20910008, u8,
+  MsgoutUbxNavPvtUart2, 0x20910008, u8,
   /// Output rate of the UBX-NAV-PVT message on port USB
-  MsgoutUbxNavPvtusb, 0x20910009, u8,
+  MsgoutUbxNavPvtUsb, 0x20910009, u8,
   /// Output rate of the UBX-NAVRELPOSNED message on port I2C
-  MsgoutUbxNavrelposnedI2C, 0x2091008d, u8,
+  MsgoutUbxNavRelposnedI2c, 0x2091008d, u8,
   /// Output rate of the UBX-NAVRELPOSNED message on port SPI
-  MsgoutUbxNavrelposnedSpi, 0x20910091, u8,
+  MsgoutUbxNavRelposnedSpi, 0x20910091, u8,
   /// Output rate of the UBX-NAVRELPOSNED message on port UART1
-  MsgoutUbxNavrelposnedUart1, 0x2091008e, u8,
+  MsgoutUbxNavRelposnedUart1, 0x2091008e, u8,
   /// Output rate of the UBX-NAVRELPOSNED message on port UART2
-  MsgoutUbxNavrelposnedUart2, 0x2091008f, u8,
+  MsgoutUbxNavRelposnedUart2, 0x2091008f, u8,
   /// Output rate of the UBX-NAVRELPOSNED message on port USB
-  MsgoutUbxNavrelposnedUsb, 0x20910090, u8,
+  MsgoutUbxNavRelposnedUsb, 0x20910090, u8,
   /// Output rate of the UBX-NAV-SAT message on port I2C
-  MsgoutUbxNavSatI2C, 0x20910015, u8,
+  MsgoutUbxNavSatI2c, 0x20910015, u8,
   /// Output rate of the UBX-NAV-SAT message on port SPI
   MsgoutUbxNavSatSpi, 0x20910019, u8,
   /// Output rate of the UBX-NAV-SAT message on port UART1
-  MsgoutUbxNavSatuart1, 0x20910016, u8,
+  MsgoutUbxNavSatUart1, 0x20910016, u8,
   /// Output rate of the UBX-NAV-SAT message on port UART2
-  MsgoutUbxNavSatuart2, 0x20910017, u8,
+  MsgoutUbxNavSatUart2, 0x20910017, u8,
   /// Output rate of the UBX-NAV-SAT message on port USB
-  MsgoutUbxNavSatusb, 0x20910018, u8,
+  MsgoutUbxNavSatUsb, 0x20910018, u8,
   /// Output rate of the UBX-NAV-SIG message on port I2C
-  MsgoutUbxNavSigI2C, 0x20910345, u8,
+  MsgoutUbxNavSigI2c, 0x20910345, u8,
   /// Output rate of the UBX-NAV-SIG message on port SPI
   MsgoutUbxNavSigSpi, 0x20910349, u8,
   /// Output rate of the UBX-NAV-SIG message on port UART1
-  MsgoutUbxNavSiguart1, 0x20910346, u8,
+  MsgoutUbxNavSigUart1, 0x20910346, u8,
   /// Output rate of the UBX-NAV-SIG message on port UART2
-  MsgoutUbxNavSiguart2, 0x20910347, u8,
+  MsgoutUbxNavSigUart2, 0x20910347, u8,
   /// Output rate of the UBX-NAV-SIG message on port USB
   MsgoutUbxNavSigUsb, 0x20910348, u8,
   /// Output rate of the UBX-NAV-STATUS message on port I2C
-  MsgoutUbxNavstatusI2C, 0x2091001a, u8,
+  MsgoutUbxNavStatusI2c, 0x2091001a, u8,
   /// Output rate of the UBX-NAV-STATUS message on port SPI
-  MsgoutUbxNavstatusSpi, 0x2091001e, u8,
+  MsgoutUbxNavStatusSpi, 0x2091001e, u8,
   /// Output rate of the UBX-NAV-STATUS message on port UART1
-  MsgoutUbxNavstatusUart1, 0x2091001b, u8,
+  MsgoutUbxNavStatusUart1, 0x2091001b, u8,
   /// Output rate of the UBX-NAV-STATUS message on port UART2
-  MsgoutUbxNavstatusUart2, 0x2091001c, u8,
+  MsgoutUbxNavStatusUart2, 0x2091001c, u8,
   /// Output rate of the UBX-NAV-STATUS message on port USB
-  MsgoutUbxNavstatusUsb, 0x2091001d, u8,
+  MsgoutUbxNavStatusUsb, 0x2091001d, u8,
   /// Output rate of the UBX-NAV-SVIN message on port I2C
-  MsgoutUbxNavSvini2C, 0x20910088, u8,
+  MsgoutUbxNavSvinI2c, 0x20910088, u8,
   /// Output rate of the UBX-NAV-SVIN message on port SPI
   MsgoutUbxNavSvinSpi, 0x2091008c, u8,
   /// Output rate of the UBX-NAV-SVIN message on port UART1
-  MsgoutUbxNavSvinuart1, 0x20910089, u8,
+  MsgoutUbxNavSvinUart1, 0x20910089, u8,
   /// Output rate of the UBX-NAV-SVIN message on port UART2
-  MsgoutUbxNavSvinuart2, 0x2091008a, u8,
+  MsgoutUbxNavSvinUart2, 0x2091008a, u8,
   /// Output rate of the UBX-NAV-SVIN message on port USB
-  MsgoutUbxNavSvinusb, 0x2091008b, u8,
+  MsgoutUbxNavSvinUsb, 0x2091008b, u8,
   /// Output rate of the UBX-NAV-TIMEBDS message on port I2C
-  MsgoutUbxNavtimebdsI2C, 0x20910051, u8,
+  MsgoutUbxNavTimeBdsI2c, 0x20910051, u8,
   /// Output rate of the UBX-NAV-TIMEBDS message on port SPI
-  MsgoutUbxNavtimebdsSpi, 0x20910055, u8,
+  MsgoutUbxNavTimeBdsSpi, 0x20910055, u8,
   /// Output rate of the UBX-NAV-TIMEBDS message on port UART1
-  MsgoutUbxNavtimebdsUart1, 0x20910052, u8,
+  MsgoutUbxNavTimeBdsUart1, 0x20910052, u8,
   /// Output rate of the UBX-NAV-TIMEBDS message on port UART2
-  MsgoutUbxNavtimebdsUart2, 0x20910053, u8,
+  MsgoutUbxNavTimeBdsUart2, 0x20910053, u8,
   /// Output rate of the UBX-NAV-TIMEBDS message on port USB
-  MsgoutUbxNavtimebdsUsb, 0x20910054, u8,
+  MsgoutUbxNavTimeBdsUsb, 0x20910054, u8,
   /// Output rate of the UBX-NAVTIMEGAL message on port I2C
-  MsgoutUbxNavtimegalI2C, 0x20910056, u8,
+  MsgoutUbxNavTimeGalI2c, 0x20910056, u8,
   /// Output rate of the UBX-NAVTIMEGAL message on port SPI
-  MsgoutUbxNavtimegalSpi, 0x2091005a, u8,
+  MsgoutUbxNavTimeGalSpi, 0x2091005a, u8,
   /// Output rate of the UBX-NAVTIMEGAL message on port UART1
-  MsgoutUbxNavtimegalUart1, 0x20910057, u8,
+  MsgoutUbxNavTimeGalUart1, 0x20910057, u8,
   /// Output rate of the UBX-NAVTIMEGAL message on port UART2
-  MsgoutUbxNavtimegalUart2, 0x20910058, u8,
+  MsgoutUbxNavTimeGalUart2, 0x20910058, u8,
   /// Output rate of the UBX-NAVTIMEGAL message on port USB
-  MsgoutUbxNavtimegalUsb, 0x20910059, u8,
+  MsgoutUbxNavTimeGalUsb, 0x20910059, u8,
   /// Output rate of the UBX-NAVTIMEGLO message on port I2C
-  MsgoutUbxNavtimegloI2C, 0x2091004c, u8,
+  MsgoutUbxNavTimeGloI2c, 0x2091004c, u8,
   /// Output rate of the UBX-NAVTIMEGLO message on port SPI
-  MsgoutUbxNavtimegloSpi, 0x20910050, u8,
+  MsgoutUbxNavTimeGloSpi, 0x20910050, u8,
   /// Output rate of the UBX-NAVTIMEGLO message on port UART1
-  MsgoutUbxNavtimegloUart1, 0x2091004d, u8,
+  MsgoutUbxNavTimeGloUart1, 0x2091004d, u8,
   /// Output rate of the UBX-NAVTIMEGLO message on port UART2
-  MsgoutUbxNavtimegloUart2, 0x2091004e, u8,
+  MsgoutUbxNavTimeGloUart2, 0x2091004e, u8,
   /// Output rate of the UBX-NAVTIMEGLO message on port USB
-  MsgoutUbxNavtimegloUsb, 0x2091004f, u8,
+  MsgoutUbxNavTimeGloUsb, 0x2091004f, u8,
   /// Output rate of the UBX-NAV-TIMEGPS message on port I2C
-  MsgoutUbxNavtimegpsI2C, 0x20910047, u8,
+  MsgoutUbxNavTimeGpsI2c, 0x20910047, u8,
   /// Output rate of the UBX-NAV-TIMEGPS message on port SPI
-  MsgoutUbxNavtimegpsSpi, 0x2091004b, u8,
+  MsgoutUbxNavTimeGpsSpi, 0x2091004b, u8,
   /// Output rate of the UBX-NAV-TIMEGPS message on port UART1
-  MsgoutUbxNavtimegpsUart1, 0x20910048, u8,
+  MsgoutUbxNavTimeGpsUart1, 0x20910048, u8,
   /// Output rate of the UBX-NAV-TIMEGPS message on port UART2
-  MsgoutUbxNavtimegpsUart2, 0x20910049, u8,
+  MsgoutUbxNavTimeGpsUart2, 0x20910049, u8,
   /// Output rate of the UBX-NAV-TIMEGPS message on port USB
-  MsgoutUbxNavtimegpsUsb, 0x2091004a, u8,
+  MsgoutUbxNavTimeGpsUsb, 0x2091004a, u8,
   /// Output rate of the UBX-NAV-TIMELS message on port I2C
-  MsgoutUbxNavTimelsi2C, 0x20910060, u8,
+  MsgoutUbxNavTimeLsI2c, 0x20910060, u8,
   /// Output rate of the UBX-NAV-TIMELS message on port SPI
-  MsgoutUbxNavTimelsspi, 0x20910064, u8,
+  MsgoutUbxNavTimeLsSpi, 0x20910064, u8,
   /// Output rate of the UBX-NAV-TIMELS message on port UART1
-  MsgoutUbxNavTimelsuart1, 0x20910061, u8,
+  MsgoutUbxNavTimeLsUart1, 0x20910061, u8,
   /// Output rate of the UBX-NAV-TIMELS message on port UART2
-  MsgoutUbxNavTimelsuart2, 0x20910062, u8,
+  MsgoutUbxNavTimeLsUart2, 0x20910062, u8,
   /// Output rate of the UBX-NAV-TIMELS message on port USB
-  MsgoutUbxNavTimelsusb, 0x20910063, u8,
+  MsgoutUbxNavTimeLsUsb, 0x20910063, u8,
   /// Output rate of the UBX-NAVTIMEUTC message on port I2C
-  MsgoutUbxNavtimeutcI2C, 0x2091005b, u8,
+  MsgoutUbxNavTimeUtcI2c, 0x2091005b, u8,
   /// Output rate of the UBX-NAVTIMEUTC message on port SPI
-  MsgoutUbxNavtimeutcSpi, 0x2091005f, u8,
+  MsgoutUbxNavTimeUtcSpi, 0x2091005f, u8,
   /// Output rate of the UBX-NAVTIMEUTC message on port UART1
-  MsgoutUbxNavtimeutcUart1, 0x2091005c, u8,
+  MsgoutUbxNavTimeUtcUart1, 0x2091005c, u8,
   /// Output rate of the UBX-NAVTIMEUTC message on port UART2
-  MsgoutUbxNavtimeutcUart2, 0x2091005d, u8,
+  MsgoutUbxNavTimeUtcUart2, 0x2091005d, u8,
   /// Output rate of the UBX-NAVTIMEUTC message on port USB
-  MsgoutUbxNavtimeutcUsb, 0x2091005e, u8,
+  MsgoutUbxNavTimeUtcUsb, 0x2091005e, u8,
   /// Output rate of the UBX-NAV-VELECEF message on port I2C
-  MsgoutUbxNavvelecefI2C, 0x2091003d, u8,
+  MsgoutUbxNavVelEcefI2c, 0x2091003d, u8,
   /// Output rate of the UBX-NAV-VELECEF message on port SPI
-  MsgoutUbxNavvelecefSpi, 0x20910041, u8,
+  MsgoutUbxNavVelEcefSpi, 0x20910041, u8,
   /// Output rate of the UBX-NAV-VELECEF message on port UART1
-  MsgoutUbxNavvelecefUart1, 0x2091003e, u8,
+  MsgoutUbxNavVelEcefUart1, 0x2091003e, u8,
   /// Output rate of the UBX-NAV-VELECEF message on port UART2
-  MsgoutUbxNavvelecefUart2, 0x2091003f, u8,
+  MsgoutUbxNavVelEcefUart2, 0x2091003f, u8,
   /// Output rate of the UBX-NAV-VELECEF message on port USB
-  MsgoutUbxNavvelecefUsb, 0x20910040, u8,
+  MsgoutUbxNavVelEcefUsb, 0x20910040, u8,
   /// Output rate of the UBX-NAV-VELNED message on port I2C
-  MsgoutUbxNavvelnedI2C, 0x20910042, u8,
+  MsgoutUbxNavVelNedI2c, 0x20910042, u8,
   /// Output rate of the UBX-NAV-VELNED message on port SPI
-  MsgoutUbxNavvelnedSpi, 0x20910046, u8,
+  MsgoutUbxNavVelNedSpi, 0x20910046, u8,
   /// Output rate of the UBX-NAV-VELNED message on port UART1
-  MsgoutUbxNavvelnedUart1, 0x20910043, u8,
+  MsgoutUbxNavVelNedUart1, 0x20910043, u8,
   /// Output rate of the UBX-NAV-VELNED message on port UART2
-  MsgoutUbxNavvelnedUart2, 0x20910044, u8,
+  MsgoutUbxNavVelNedUart2, 0x20910044, u8,
   /// Output rate of the UBX-NAV-VELNED message on port USB
-  MsgoutUbxNavvelnedUsb, 0x20910045, u8,
+  MsgoutUbxNavVelNedUsb, 0x20910045, u8,
   /// Output rate of the UBX-RXM-MEASX message on port I2C
-  MsgoutUbxRxmMeasxi2C, 0x20910204, u8,
+  MsgoutUbxRxmMeasxI2c, 0x20910204, u8,
   /// Output rate of the UBX-RXM-MEASX message on port SPI
-  MsgoutUbxRxmMeasxspi, 0x20910208, u8,
+  MsgoutUbxRxmMeasxSpi, 0x20910208, u8,
   /// Output rate of the UBX-RXM-MEASX message on port UART1
-  MsgoutUbxRxmMeasxuart1, 0x20910205, u8,
+  MsgoutUbxRxmMeasxUart1, 0x20910205, u8,
   /// Output rate of the UBX-RXM-MEASX message on port UART2
-  MsgoutUbxRxmMeasxuart2, 0x20910206, u8,
+  MsgoutUbxRxmMeasxUart2, 0x20910206, u8,
   /// Output rate of the UBX-RXM-MEASX message on port USB
-  MsgoutUbxRxmMeasxusb, 0x20910207, u8,
+  MsgoutUbxRxmMeasxUsb, 0x20910207, u8,
   /// Output rate of the UBX-RXM-RAWX message on port I2C
-  MsgoutUbxRxmRawxi2C, 0x209102a4, u8,
+  MsgoutUbxRxmRawxI2c, 0x209102a4, u8,
   /// Output rate of the UBX-RXM-RAWX message on port SPI
-  MsgoutUbxRxmRawxspi, 0x209102a8, u8,
+  MsgoutUbxRxmRawxSpi, 0x209102a8, u8,
   /// Output rate of the UBX-RXM-RAWX message on port UART1
-  MsgoutUbxRxmRawxuart1, 0x209102a5, u8,
+  MsgoutUbxRxmRawxUart1, 0x209102a5, u8,
   /// Output rate of the UBX-RXM-RAWX message on port UART2
-  MsgoutUbxRxmRawxuart2, 0x209102a6, u8,
+  MsgoutUbxRxmRawxUart2, 0x209102a6, u8,
   /// Output rate of the UBX-RXM-RAWX message on port USB
-  MsgoutUbxRxmRawxusb, 0x209102a7, u8,
+  MsgoutUbxRxmRawxUsb, 0x209102a7, u8,
   /// Output rate of the UBX-RXM-RLM message on port I2C
-  MsgoutUbxRxmRlmi2C, 0x2091025e, u8,
+  MsgoutUbxRxmRlmI2c, 0x2091025e, u8,
   /// Output rate of the UBX-RXM-RLM message on port SPI
   MsgoutUbxRxmRlmSpi, 0x20910262, u8,
   /// Output rate of the UBX-RXM-RLM message on port UART1
-  MsgoutUbxRxmRlmuart1, 0x2091025f, u8,
+  MsgoutUbxRxmRlmUart1, 0x2091025f, u8,
   /// Output rate of the UBX-RXM-RLM message on port UART2
-  MsgoutUbxRxmRlmuart2, 0x20910260, u8,
+  MsgoutUbxRxmRlmUart2, 0x20910260, u8,
   /// Output rate of the UBX-RXM-RLM message on port USB
-  MsgoutUbxRxmRlmusb, 0x20910261, u8,
+  MsgoutUbxRxmRlmUsb, 0x20910261, u8,
   /// Output rate of the UBX-RXM-RTCM message on port I2C
-  MsgoutUbxRxmRtcmi2C, 0x20910268, u8,
+  MsgoutUbxRxmRtcmI2c, 0x20910268, u8,
   /// Output rate of the UBX-RXM-RTCM message on port SPI
-  MsgoutUbxRxmRtcmspi, 0x2091026c, u8,
+  MsgoutUbxRxmRtcmSpi, 0x2091026c, u8,
   /// Output rate of the UBX-RXM-RTCM message on port UART1
-  MsgoutUbxRxmRtcmuart1, 0x20910269, u8,
+  MsgoutUbxRxmRtcmUart1, 0x20910269, u8,
   /// Output rate of the UBX-RXM-RTCM message on port UART2
-  MsgoutUbxRxmRtcmuart2, 0x2091026a, u8,
+  MsgoutUbxRxmRtcmUart2, 0x2091026a, u8,
   /// Output rate of the UBX-RXM-RTCM message on port USB
-  MsgoutUbxRxmRtcmusb, 0x2091026b, u8,
+  MsgoutUbxRxmRtcmUsb, 0x2091026b, u8,
   /// Output rate of the UBX-RXM-SFRBX message on port I2C
-  MsgoutUbxRxmSfrbxi2C, 0x20910231, u8,
+  MsgoutUbxRxmSfrbxI2c, 0x20910231, u8,
   /// Output rate of the UBX-RXM-SFRBX message on port SPI
-  MsgoutUbxRxmSfrbxspi, 0x20910235, u8,
+  MsgoutUbxRxmSfrbxSpi, 0x20910235, u8,
   /// Output rate of the UBX-RXM-SFRBX message on port UART1
-  MsgoutUbxRxmSfrbxuart1, 0x20910232, u8,
+  MsgoutUbxRxmSfrbxUart1, 0x20910232, u8,
   /// Output rate of the UBX-RXM-SFRBX message on port UART2
-  MsgoutUbxRxmSfrbxuart2, 0x20910233, u8,
+  MsgoutUbxRxmSfrbxUart2, 0x20910233, u8,
   /// Output rate of the UBX-RXM-SFRBX message on port USB
-  MsgoutUbxRxmSfrbxusb, 0x20910234, u8,
+  MsgoutUbxRxmSfrbxUsb, 0x20910234, u8,
   /// Output rate of the UBX-TIM-TM2 message on port I2C
-  MsgoutUbxTimTm2I2C, 0x20910178, u8,
+  MsgoutUbxTimTm2I2c, 0x20910178, u8,
   /// Output rate of the UBX-TIM-TM2 message on port SPI
   MsgoutUbxTimTm2Spi, 0x2091017c, u8,
   /// Output rate of the UBX-TIM-TM2 message on port UART1
@@ -1053,25 +1053,25 @@ cfg_val! {
   /// Output rate of the UBX-TIM-TM2 message on port USB
   MsgoutUbxTimTm2Usb, 0x2091017b, u8,
   /// Output rate of the UBX-TIM-TP message on port I2C
-  MsgoutUbxTimTpI2C, 0x2091017d, u8,
+  MsgoutUbxTimTpI2c, 0x2091017d, u8,
   /// Output rate of the UBX-TIM-TP message on port SPI
   MsgoutUbxTimTpSpi, 0x20910181, u8,
   /// Output rate of the UBX-TIM-TP message on port UART1
-  MsgoutUbxTimTpuart1, 0x2091017e, u8,
+  MsgoutUbxTimTpUart1, 0x2091017e, u8,
   /// Output rate of the UBX-TIM-TP message on port UART2
-  MsgoutUbxTimTpuart2, 0x2091017f, u8,
+  MsgoutUbxTimTpUart2, 0x2091017f, u8,
   /// Output rate of the UBX-TIM-TP message on port USB
   MsgoutUbxTimTpUsb, 0x20910180, u8,
   /// Output rate of the UBX-TIM-VRFY message on port I2C
-  MsgoutUbxTimVrfyI2C, 0x20910092, u8,
+  MsgoutUbxTimVrfyI2c, 0x20910092, u8,
   /// Output rate of the UBX-TIM-VRFY message on port SPI
   MsgoutUbxTimVrfySpi, 0x20910096, u8,
   /// Output rate of the UBX-TIM-VRFY message on port UART1
-  MsgoutUbxTimVrfyuart1, 0x20910093, u8,
+  MsgoutUbxTimVrfyUart1, 0x20910093, u8,
   /// Output rate of the UBX-TIM-VRFY message on port UART2
-  MsgoutUbxTimVrfyuart2, 0x20910094, u8,
+  MsgoutUbxTimVrfyUart2, 0x20910094, u8,
   /// Output rate of the UBX-TIM-VRFY message on port USB
-  MsgoutUbxTimVrfyusb, 0x20910095, u8,
+  MsgoutUbxTimVrfyUsb, 0x20910095, u8,
 
   // CFG-SIGNAL-*
   SignalGpsEna,          0x1031001f, bool,
