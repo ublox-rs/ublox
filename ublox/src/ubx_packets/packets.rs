@@ -1,4 +1,4 @@
-use crate::cfg_val::CfgVal;
+use crate::cfg_val::{CfgVal, CfgKey};
 use core::convert::TryInto;
 use core::fmt;
 
@@ -392,6 +392,112 @@ struct NavSolution {
     reserved2: [u8; 4],
 }
 
+#[derive(Clone, Copy, Debug)]
+pub enum CarrierPhaseRangeSolutionStatus {
+    /// No carrier phase range solution
+    NoSolution,
+    /// Carrier phase range solution with floating ambiguities
+    SolutionWithFloatingAmbiguities,
+    /// Carrier phase range solution with fixed ambiguities
+    SolutionWithFixedAmbiguities,
+}
+
+#[repr(transparent)]
+#[derive(Copy, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
+pub struct NavRelPosNedFlags(u32);
+
+impl NavRelPosNedFlags {
+    pub fn gnss_fix_ok(&self) -> bool {
+        self.0 & 0x1 != 0
+    }
+
+    pub fn diff_soln(&self) -> bool {
+        (self.0 >> 1) & 0x1 != 0
+    }
+
+    pub fn rel_pos_valid(&self) -> bool {
+        (self.0 >> 2) & 0x1 != 0
+    }
+
+    pub fn carr_soln(&self) -> CarrierPhaseRangeSolutionStatus {
+        match (self.0 >> 3) & 0x3 {
+            0 => CarrierPhaseRangeSolutionStatus::NoSolution,
+            1 => CarrierPhaseRangeSolutionStatus::SolutionWithFloatingAmbiguities,
+            2 => CarrierPhaseRangeSolutionStatus::SolutionWithFixedAmbiguities,
+            unknown => panic!("Unexpected 2-bit bitfield value {}!", unknown),
+        }
+    }
+
+    pub fn is_moving(&self) -> bool {
+        (self.0 >> 5) & 0x1 != 0
+    }
+
+    pub fn ref_pos_miss(&self) -> bool {
+        (self.0 >> 6) & 0x1 != 0
+    }
+
+    pub fn ref_obs_miss(&self) -> bool {
+        (self.0 >> 7) & 0x1 != 0
+    }
+
+    pub fn rel_pos_heading_valid(&self) -> bool {
+        (self.0 >> 8) & 0x1 != 0
+    }
+
+    pub fn rel_pos_normalized(&self) -> bool {
+        (self.0 >> 9) & 0x1 != 0
+    }
+
+    pub const fn from(x: u32) -> Self {
+        Self(x)
+    }
+}
+
+impl fmt::Debug for NavRelPosNedFlags {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("NavRelPosNedFlags")
+            .field("gnss_fix_ok", &self.gnss_fix_ok())
+            .field("diff_soln", &self.diff_soln())
+            .field("rel_pos_valid", &self.rel_pos_valid())
+            .field("carr_soln", &self.carr_soln())
+            .field("is_moving", &self.is_moving())
+            .field("ref_pos_miss", &self.ref_pos_miss())
+            .field("ref_obs_miss", &self.ref_obs_miss())
+            .field("rel_pos_heading_valid", &self.rel_pos_heading_valid())
+            .field("rel_pos_normalized", &self.rel_pos_normalized())
+            .finish()
+    }
+}
+
+#[ubx_packet_recv]
+#[ubx(class = 0x01, id = 0x3c, fixed_payload_len = 64)]
+struct NavRelPosNed {
+    version: u8,
+    _reserved0: u8,
+    ref_station_id: u16,
+    itow: u32, // ms
+    rel_pos_n: i32, // cm
+    rel_pos_e: i32, // cm
+    rel_pos_d: i32, // cm
+    rel_pos_length: i32,  // cm
+    rel_pos_heading: i32, // 1e-5 deg
+    _reserved1: u32,
+    rel_pos_hpn: i8, // 0.1 mm
+    rel_pos_hpe: i8, // 0.1 mm
+    rel_pos_hpd: i8, // 0.1 mm
+    rel_pos_hp_length: i8, // 0.1 mm
+    acc_n: u32, // 0.1 mm
+    acc_e: u32, // 0.1 mm
+    acc_d: u32, // 0.1 mm
+    acc_length: u32, // 0.1 mm
+    acc_heading: u32, // 1e-5 deg
+    _reserved2: u32,
+
+    #[ubx(map_type = NavRelPosNedFlags)]
+    flags: u32,
+}
+
 /// GPS fix Type
 #[ubx_extend]
 #[ubx(from, rest_reserved)]
@@ -719,6 +825,44 @@ struct NavOdo {
     distance: u32,
     total_distance: u32,
     distance_std: u32,
+}
+
+/// Survey-in status / results
+#[ubx_packet_recv]
+#[ubx(class = 0x01, id = 0x3B, fixed_payload_len = 40)]
+struct NavSvIn {
+    /// Message version
+    version: u8,
+    /// Reserved
+    reserved1: [u8; 3],
+    /// GPS time of week of the navigation epoch in ms
+    i_tow: u32,
+    /// Passed survey-in observation time (seconds)
+    dur: u32,
+    /// Current survey-in mean position ECEF X coordinate (cm)
+    mean_x: i32,
+    /// Current survey-in mean position ECEF Y coordinate (cm)
+    mean_y: i32,
+    /// Current survey-in mean position ECEF Z coordinate (cm)
+    mean_z: i32,
+    /// Current high-precision survey-in mean position ECEF X coordinate (in 0.1mm)
+    mean_xhp: i8,
+    /// Current high-precision survey-in mean position ECEF Y coordinate (in 0.1mm)
+    mean_yhp: i8,
+    /// Current high-precision survey-in mean position ECEF Z coordinate (in 0.1mm)
+    mean_zhp: i8,
+    /// reserved
+    reserved2: u8,
+    /// Current survey-in mean position accuracy (in 0.1mm)
+    mean_acc: u32,
+    /// Number of position observations used during survey-in
+    obs: u32,
+    /// Survey-in position validity flag, 1 = valid, otherwise 0
+    valid: u8,
+    /// Survey-in in progress flag, 1 = in-progress, otherwise 0
+    active: u8,
+    /// reserved
+    reserved3: [u8; 2],
 }
 
 /// Reset odometer
@@ -1729,6 +1873,80 @@ struct CfgValSet<'a> {
     cfg_data: &'a [CfgVal],
 }
 
+pub const MAX_CFG_KEYS: u16 = 64;
+
+#[ubx_packet_send]
+#[ubx(
+  class = 0x06,
+  id = 0x8b,
+  max_payload_len = 260, // 4 + sizeof(u32) * MAX_CFG_KEYS
+)]
+struct CfgValGet<'a> {
+    /// Message version
+    version: u8,
+    /// The layers from which the configuration items should be retrieved
+    #[ubx(map_type = CfgReadLayer)]
+    layers: u8,
+    position: u16,
+    cfg_keys: &'a [CfgKey],
+}
+
+#[ubx_packet_recv]
+#[ubx(
+  class = 0x06,
+  id = 0x8b,
+  max_payload_len = 772, // 4 + (sizeof(u32) + sizeof(largest val)) * MAX_CFG_KEYS
+)]
+struct CfgValGetResponse {
+    /// Message version
+    version: u8,
+    #[ubx(map_type = CfgReadLayer)]
+    layers: u8,
+    position: u16,
+    #[ubx(
+        map_type = CfgValReadIter,
+        from = CfgValReadIter::new,
+        may_fail,
+        is_valid = CfgValReadIter::is_valid,
+    )]
+    cfg_data: [u8; 0],
+}
+
+#[derive(Debug, Clone)]
+pub struct CfgValReadIter<'a> {
+    data: &'a [u8],
+}
+
+impl<'a> CfgValReadIter<'a> {
+    fn new(data: &'a [u8]) -> Self {
+        // todo!("stolen from RxmRawxInfoIter. Reimplement.");
+        Self {
+            data,
+        }
+    }
+
+    fn is_valid(bytes: &'a [u8]) -> bool {
+        // we need at least 5 bytes for a key id (4) + val (1)
+        bytes.len() >= 5
+    }
+}
+
+impl<'a> core::iter::Iterator for CfgValReadIter<'a> {
+    type Item = CfgVal;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if Self::is_valid(self.data) {
+            if let Some(cfg_val) = CfgVal::parse(self.data) {
+                self.data = &self.data[cfg_val.len()..];
+                return Some(cfg_val)
+            }
+            // TODO: Is there some logging mechanism?
+            println!("Failure parsing key in (key,value) list, {:?}", self.data);
+        }
+        None
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct CfgValIter<'a> {
     pub(crate) data: &'a [u8],
@@ -1755,14 +1973,12 @@ impl<'a> core::iter::Iterator for CfgValIter<'a> {
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.offset < self.data.len() {
-            let cfg_val = CfgVal::parse(&self.data[self.offset..]);
-
-            self.offset += cfg_val.len();
-
-            Some(cfg_val)
-        } else {
-            None
+            if let Some(cfg_val) = CfgVal::parse(&self.data[self.offset..]) {
+                self.offset += cfg_val.len();
+                return Some(cfg_val)
+            }
         }
+        None
     }
 }
 
@@ -3406,13 +3622,39 @@ impl<'a> core::iter::Iterator for DwrdIter<'a> {
     }
 }
 
+#[ubx_extend_bitflags]
+#[ubx(from, rest_reserved)]
+bitflags! {
+    pub struct NavHpPosEcefFlags: u8 {
+        const INVALID = 0x01;
+    }
+}
+
+#[ubx_packet_recv]
+#[ubx(class = 0x01, id = 0x13, fixed_payload_len = 28)]
+struct NavHpPosEcef {
+    version: u8,
+    reserved1: [u8; 3],
+    itow: u32, // ms
+    ecef_x: i32, // cm
+    ecef_y: i32, // cm
+    ecef_z: i32, // cm
+    ecef_hp_x: i8, // 0.1 mm
+    ecef_hp_y: i8, // 0.1 mm
+    ecef_hp_z: i8, // 0.1 mm
+    #[ubx(map_type = StdevFlags)]
+    flags : u8,
+    s_acc: u32, // 0.1 mm
+}
+
+
 #[ubx_packet_recv]
 #[ubx(class = 0x01, id = 0x11, fixed_payload_len = 20)]
 struct NavVelECEF {
     itow: u32,
     ecef_vx: i32,
     ecef_vy: i32,
-    ecef_vz: u32,
+    ecef_vz: i32,
     s_acc: u32,
 }
 
@@ -3549,61 +3791,83 @@ struct SecUniqId {
     unique_id: [u8; 5],
 }
 
+/// The `CfgReadLayer` enum is used to specify the configuration layer to read from.
+/// The configuration system in the ublox device is stacked, so a property
+/// may be empty for a particular layer and you will receive a NAK.
+#[ubx_extend]
+#[ubx(from, into_raw, rest_reserved)]
+#[repr(u8)]
+#[derive(Debug, Copy, Clone)]
+pub enum CfgReadLayer {
+  /// Read from RAM
+  Ram = 0,
+  /// Read from Bbr (battery backed RAM)
+  Bbr = 1,
+  /// Read from Flash, if available
+  Flash = 2,
+  /// Read the current configuration from the active source
+  Default = 7
+}
+
 define_recv_packets!(
     enum PacketRef {
         _ = UbxUnknownPacketRef,
-        NavPosLlh,
-        NavStatus,
-        NavDop,
-        NavPosVelTime,
-        NavSolution,
-        NavVelNed,
-        NavHpPosLlh,
-        NavTimeUTC,
-        NavTimeLs,
-        NavSat,
-        NavEoe,
-        NavOdo,
-        CfgOdo,
-        MgaAck,
-        MgaGpsIono,
-        MgaGpsEph,
-        MgaGloEph,
-        AlpSrv,
         AckAck,
         AckNak,
+        AlpSrv,
+        CfgAnt,
         CfgItfm,
+        CfgNav5,
+        CfgOdo,
         CfgPrtI2c,
         CfgPrtSpi,
         CfgPrtUart,
-        CfgNav5,
-        CfgAnt,
         CfgTmode2,
         CfgTmode3,
         CfgTp5,
+        CfgValGetResponse,
+        EsfIns,
+        EsfMeas,
+        EsfRaw,
+        HnrPvt,
+        InfDebug,
         InfError,
-        InfWarning,
         InfNotice,
         InfTest,
-        InfDebug,
-        RxmRawx,
-        TimTp,
-        TimTm2,
-        MonVer,
+        InfWarning,
+        MgaAck,
+        MgaGloEph,
+        MgaGpsEph,
+        MgaGpsEPH,
+        MgaGpsIono,
         MonGnss,
         MonHw,
-        RxmRtcm,
-        EsfMeas,
-        EsfIns,
-        HnrPvt,
+        MonVer,
         NavAtt,
         NavClock,
+        NavDop,
+        NavEoe,
+        NavHpPosEcef,
+        NavHpPosLlh,
+        NavOdo,
+        NavPosLlh,
+        NavPosVelTime,
+        NavRelPosNed,
+        NavSat,
+        NavSolution,
+        NavStatus,
+        NavSvIn,
+        NavTimeLs,
+        NavTimeUTC,
         NavVelECEF,
-        MgaGpsEPH,
+        NavVelNed,
+        RxmRawx,
+        RxmRtcm,
         RxmSfrbx,
-        EsfRaw,
         TimSvin,
         SecUniqId,
+        TimTm2,
+        TimTp,
     }
 );
 
