@@ -4,7 +4,7 @@ ublox for Rust
 [![ublox on Travis CI][travis-image]][travis]
 [![ublox on docs.rs][docs-badge]][docs-url]
 [![MIT licensed][mit-badge]][mit-url]
-[![rustc: 1.59][mrvs-badge]][mrvs-url]
+[![rustc v1.59][mrvs-badge]][mrvs-url]
 
 [travis-image]: https://api.travis-ci.com/lkolbly/ublox.svg?branch=master
 [travis]: https://travis-ci.com/lkolbly/ublox
