@@ -35,7 +35,7 @@
 //!
 //! let mut parser = Parser::default();
 //! let my_raw_data = vec![1, 2, 3, 4]; // From your serial port
-//! let mut it = parser.consume(&my_raw_data);
+//! let mut it = parser.consume_ubx(&my_raw_data);
 //! loop {
 //!     match it.next() {
 //!         Some(Ok(packet)) => {

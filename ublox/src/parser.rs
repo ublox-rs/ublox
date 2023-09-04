@@ -908,7 +908,7 @@ mod test {
         let buffer = FixedLinearBuffer::new(&mut buffer);
         let mut parser = Parser::new(buffer);
 
-        let mut it = parser.consume(&bytes);
+        let mut it = parser.consume_ubx(&bytes);
         for _ in 0..5 {
             match it.next() {
                 Some(Ok(PacketRef::AckAck(_packet))) => {

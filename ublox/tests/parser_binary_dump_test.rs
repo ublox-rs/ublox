@@ -58,7 +58,7 @@ fn test_parse_big_dump() {
     for chunk_size in &read_sizes {
         let (buf, rest) = log.split_at(*chunk_size);
         log = rest;
-        let mut it = parser.consume(buf);
+        let mut it = parser.consume_ubx(buf);
         while let Some(pack) = it.next() {
             match pack {
                 Ok(pack) => match pack {
