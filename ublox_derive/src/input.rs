@@ -89,13 +89,13 @@ pub fn parse_ubx_enum_type(
                 ));
             }
             syn::parse_quote! { u8 }
-        }
+        },
         _ => {
             return Err(Error::new(
                 attr.span(),
                 "Invalid repr attribute for ubx_type enum",
             ))
-        }
+        },
     };
     let mut variants = Vec::with_capacity(in_variants.len());
     for var in in_variants {
@@ -241,7 +241,7 @@ fn parse_ubx_extend_attrs(
                     return Err(Error::new(item.span(), "Invalid ubx attribute"));
                 }
             }
-        }
+        },
         _ => return Err(Error::new(attr.span(), "Invalid ubx attributes")),
     }
 
@@ -334,7 +334,7 @@ fn parse_ubx_attr(attrs: &[Attribute], struct_name: &Ident) -> syn::Result<PackH
                 } else {
                     return Err(Error::new(path.span(), "Unsupported attribute"));
                 }
-            }
+            },
             _ => return Err(Error::new(e.span(), "Unsupported attribute")),
         }
     }
@@ -349,13 +349,13 @@ fn parse_ubx_attr(attrs: &[Attribute], struct_name: &Ident) -> syn::Result<PackH
                 meta.span(),
                 "You should not note max_payload_len AND fixed_payload_len",
             ))
-        }
+        },
         (None, None) => {
             return Err(Error::new(
                 meta.span(),
                 "You should note max_payload_len or fixed_payload_len",
             ))
-        }
+        },
     };
 
     Ok(PackHeader {
@@ -378,7 +378,7 @@ fn extract_item_comment(attrs: &[Attribute]) -> syn::Result<String> {
                         _ => return Err(Error::new(lit.span(), "Invalid comment")),
                     };
                     doc_comments.push_str(&lit.value());
-                }
+                },
                 _ => return Err(Error::new(a.span(), "Invalid comments")),
             }
         }
@@ -391,7 +391,7 @@ fn parse_fields(fields: Fields) -> syn::Result<Vec<PackField>> {
         syn::Fields::Named(x) => x,
         _ => {
             return Err(Error::new(fields.span(), "Unsupported fields format"));
-        }
+        },
     };
     let mut ret = Vec::with_capacity(fields.named.len());
     for f in fields.named {

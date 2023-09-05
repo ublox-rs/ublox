@@ -50,7 +50,7 @@ impl fmt::Display for ParserError {
             ),
             ParserError::InvalidField { packet, field } => {
                 write!(f, "Invalid field {} of packet {}", field, packet)
-            }
+            },
             ParserError::InvalidPacketLen {
                 packet,
                 expect,

@@ -724,12 +724,12 @@ fn rustfmt_cnt(source: Vec<u8>) -> io::Result<Vec<u8>> {
             println!("warning=Rustfmt could not format some lines.");
             println!("{}", std::str::from_utf8(&stderr).unwrap());
             Ok(src)
-        }
+        },
         _ => {
             println!("warning=Internal rustfmt error");
             println!("{}", std::str::from_utf8(&stderr).unwrap());
             Ok(src)
-        }
+        },
     }
 }
 

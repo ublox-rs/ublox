@@ -30,14 +30,14 @@ fn parse_all<T: UnderlyingBuffer>(mut parser: Parser<T>, data: &[u8], chunk_size
             match it.next() {
                 Some(Ok(_packet)) => {
                     count += 1;
-                }
+                },
                 Some(Err(e)) => {
                     panic!("No errors allowed! got: {:?}", e);
-                }
+                },
                 None => {
                     // We've eaten all the packets we have
                     break;
-                }
+                },
             }
         }
     }
