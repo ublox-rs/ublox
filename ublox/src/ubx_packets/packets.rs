@@ -605,7 +605,7 @@ impl NavSatSvFlags {
             5 | 6 | 7 => NavSatQualityIndicator::CarrierLock,
             _ => {
                 panic!("Unexpected 3-bit bitfield value {}!", bits);
-            }
+            },
         }
     }
 
@@ -1346,7 +1346,7 @@ impl AidIniBuilder {
             (true, yr) => yr - 2000,
             (false, _) => {
                 panic!("AID-INI packet only supports years after 2000");
-            }
+            },
         } * 100
             + tm.month0()) as u16;
         self.tow_or_hms = tm.hour() * 10000 + tm.minute() * 100 + tm.second();
@@ -3296,7 +3296,7 @@ mod mon_ver {
             Some(pos) => pos,
             None => {
                 return false;
-            }
+            },
         };
         core::str::from_utf8(&bytes[0..null_pos]).is_ok()
     }

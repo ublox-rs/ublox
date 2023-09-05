@@ -20,7 +20,7 @@ fn extract_only_ack_ack<T: ublox::UnderlyingBuffer>(
         match pack {
             Ok(PacketRef::AckAck(pack)) => {
                 ret.push(Ok((pack.class(), pack.msg_id())));
-            }
+            },
             Err(err) => ret.push(Err(err)),
             _ => assert!(false),
         }
@@ -188,7 +188,7 @@ fn test_parse_cfg_nav5() {
                 assert_eq!(17, pack.cno_thresh());
                 assert_eq!(0x1717, pack.static_hold_max_dist());
                 assert_eq!(CfgNav5UtcStandard::UtcChina, pack.utc_standard());
-            }
+            },
             _ => assert!(false),
         }
     }
@@ -249,7 +249,7 @@ fn test_esf_meas_serialize() {
                     assert!(false);
                 }
                 found = true;
-            }
+            },
             _ => assert!(false),
         }
     }
@@ -264,7 +264,7 @@ fn test_zero_sized_ackack() {
     match it.next() {
         Some(Ok(PacketRef::Unknown(_))) => {
             // This is expected
-        }
+        },
         _ => panic!(),
     }
     assert!(it.next().is_none());
@@ -292,19 +292,19 @@ fn test_double_start_at_end() {
         match it.next() {
             Some(Err(_)) => {
                 // First, a buffer-too-small error
-            }
+            },
             _ => panic!(),
         }
         match it.next() {
             Some(Ok(PacketRef::Unknown(_))) => {
                 // Then an unknown packet
-            }
+            },
             _ => panic!(),
         }
         match it.next() {
             Some(Ok(PacketRef::AckAck(_))) => {
                 // Then the ackack we passed
-            }
+            },
             _ => panic!(),
         }
         assert!(it.next().is_none());
@@ -313,11 +313,11 @@ fn test_double_start_at_end() {
     match it.next() {
         Some(Ok(ublox::PacketRef::AckAck { .. })) => {
             // This is what we expect
-        }
+        },
         _ => {
             // Parsing other packets or ending the iteration is a failure
             panic!();
-        }
+        },
     }
     assert!(it.next().is_none());
 }

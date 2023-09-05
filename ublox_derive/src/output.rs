@@ -326,7 +326,7 @@ pub fn generate_send_code_for_packet(pack_descr: &PackDesc) -> TokenStream {
                     "Iterator field must be the last field."
                 );
                 break;
-            }
+            },
         };
 
         if let Some(into_fn) = f.map.map_type.as_ref().map(|x| &x.into_fn) {
@@ -522,7 +522,7 @@ pub fn generate_code_to_extend_enum(ubx_enum: &UbxExtendEnum) -> TokenStream {
                     }
                 }
             }
-        }
+        },
         Some(UbxTypeFromFn::FromUnchecked) => {
             assert_ne!(Some(UbxEnumRestHandling::Reserved), ubx_enum.rest_handling);
             let mut match_branches = Vec::with_capacity(variants.len());
@@ -555,7 +555,7 @@ pub fn generate_code_to_extend_enum(ubx_enum: &UbxExtendEnum) -> TokenStream {
                     }
                 }
             }
-        }
+        },
         None => quote! {},
     };
 
@@ -604,7 +604,7 @@ pub fn generate_code_to_extend_bitflags(bitflags: BitFlagsMacro) -> syn::Result<
                 bitflags.name.span(),
                 "Only reserved supported",
             ))
-        }
+        },
         Some(UbxEnumRestHandling::Reserved) => (),
     }
 

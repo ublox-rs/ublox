@@ -459,38 +459,28 @@ fn extract_packet_ubx<'a, 'b, T: UnderlyingBuffer>(buf : &'b mut DualBuffer<'a, 
     checksummer.update(b);
     let (ck_a, ck_b) = checksummer.result();
 
-    let (expect_ck_a, expect_ck_b) = (buf[6 + pack_len], buf[6 + pack_len + 1]);
-    if (ck_a, ck_b) != (expect_ck_a, expect_ck_b) {
-        buf.drain(2);
-        return Some(Err(ParserError::InvalidChecksum {
-            expect: u16::from_le_bytes([expect_ck_a, expect_ck_b]),
-            got: u16::from_le_bytes([ck_a, ck_b]),
-        }));
-    }
-    let class_id = buf[2];
-    let msg_id = buf[3];
-    buf.drain(6);
-    let msg_data = match buf.take(pack_len + 2) {
-        Ok(x) => x,
-        Err(e) => {
-            return Some(Err(e));
+        let (expect_ck_a, expect_ck_b) = (self.buf[6 + pack_len], self.buf[6 + pack_len + 1]);
+        if (ck_a, ck_b) != (expect_ck_a, expect_ck_b) {
+            self.buf.drain(2);
+            return Some(Err(ParserError::InvalidChecksum {
+                expect: u16::from_le_bytes([expect_ck_a, expect_ck_b]),
+                got: u16::from_le_bytes([ck_a, ck_b]),
+            }));
         }
-    };
-    return Some(match_packet(
-        class_id,
-        msg_id,
-        &msg_data[..msg_data.len() - 2], // Exclude the checksum
-    ));
-}
-
-impl<'a, T: UnderlyingBuffer> UbxParserIter<'a, T> {
-    fn find_sync(&self) -> Option<usize> {
-        for i in 0..self.buf.len() {
-            if self.buf[i] == SYNC_CHAR_1 {
-                return Some(i);
-            }
-        }
-        None
+        let class_id = self.buf[2];
+        let msg_id = self.buf[3];
+        self.buf.drain(6);
+        let msg_data = match self.buf.take(pack_len + 2) {
+            Ok(x) => x,
+            Err(e) => {
+                return Some(Err(e));
+            },
+        };
+        return Some(match_packet(
+            class_id,
+            msg_id,
+            &msg_data[..msg_data.len() - 2], // Exclude the checksum
+        ));
     }
 
     #[allow(clippy::should_implement_trait)]
@@ -504,7 +494,7 @@ impl<'a, T: UnderlyingBuffer> UbxParserIter<'a, T> {
                 None => {
                     self.buf.clear();
                     return None;
-                }
+                },
             };
             self.buf.drain(pos);
 
@@ -769,7 +759,7 @@ mod test {
         match dual.take(6) {
             Err(ParserError::OutOfMemory { required_size }) => {
                 assert_eq!(required_size, 6);
-            }
+            },
             _ => assert!(false),
         }
     }
@@ -913,7 +903,7 @@ mod test {
             match it.next() {
                 Some(Ok(PacketRef::AckAck(_packet))) => {
                     // We're good
-                }
+                },
                 _ => assert!(false),
             }
         }
@@ -933,7 +923,7 @@ mod test {
             match it.next() {
                 Some(Ok(PacketRef::AckAck(_packet))) => {
                     // We're good
-                }
+                },
                 _ => assert!(false),
             }
             assert!(it.next().is_none());
@@ -977,10 +967,10 @@ mod test {
             match it.next() {
                 Some(Err(ParserError::OutOfMemory { required_size })) => {
                     assert_eq!(required_size, bytes.len() - 6);
-                }
+                },
                 _ => {
                     assert!(false);
-                }
+                },
             }
             assert!(it.next().is_none());
         }
@@ -993,7 +983,7 @@ mod test {
             match it.next() {
                 Some(Ok(PacketRef::AckAck(_packet))) => {
                     // We're good
-                }
+                },
                 _ => assert!(false),
             }
             assert!(it.next().is_none());
@@ -1030,10 +1020,10 @@ mod test {
         match it.next() {
             Some(Ok(PacketRef::CfgNav5(_packet))) => {
                 // We're good
-            }
+            },
             _ => {
                 assert!(false);
-            }
+            },
         }
         assert!(it.next().is_none());
     }
@@ -1067,10 +1057,10 @@ mod test {
         match it.next() {
             Some(Ok(PacketRef::CfgNav5(_packet))) => {
                 // We're good
-            }
+            },
             _ => {
                 assert!(false);
-            }
+            },
         }
         assert!(it.next().is_none());
     }
@@ -1100,19 +1090,19 @@ mod test {
             Some(Ok(PacketRef::CfgNav5(packet))) => {
                 // We're good
                 assert_eq!(packet.pacc(), 21);
-            }
+            },
             _ => {
                 assert!(false);
-            }
+            },
         }
         match it.next() {
             Some(Ok(PacketRef::CfgNav5(packet))) => {
                 // We're good
                 assert_eq!(packet.pacc(), 18);
-            }
+            },
             _ => {
                 assert!(false);
-            }
+            },
         }
         assert!(it.next().is_none());
     }
