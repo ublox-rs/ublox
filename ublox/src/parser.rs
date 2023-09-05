@@ -468,7 +468,7 @@ impl<'a, T: UnderlyingBuffer> ParserIter<'a, T> {
             Ok(x) => x,
             Err(e) => {
                 return Some(Err(e));
-            }
+            },
         };
         return Some(match_packet(
             class_id,
@@ -487,7 +487,7 @@ impl<'a, T: UnderlyingBuffer> ParserIter<'a, T> {
                 None => {
                     self.buf.clear();
                     return None;
-                }
+                },
             };
             self.buf.drain(pos);
 
@@ -640,7 +640,7 @@ mod test {
         match dual.take(6) {
             Err(ParserError::OutOfMemory { required_size }) => {
                 assert_eq!(required_size, 6);
-            }
+            },
             _ => assert!(false),
         }
     }
@@ -784,7 +784,7 @@ mod test {
             match it.next() {
                 Some(Ok(PacketRef::AckAck(_packet))) => {
                     // We're good
-                }
+                },
                 _ => assert!(false),
             }
         }
@@ -804,7 +804,7 @@ mod test {
             match it.next() {
                 Some(Ok(PacketRef::AckAck(_packet))) => {
                     // We're good
-                }
+                },
                 _ => assert!(false),
             }
             assert!(it.next().is_none());
@@ -848,10 +848,10 @@ mod test {
             match it.next() {
                 Some(Err(ParserError::OutOfMemory { required_size })) => {
                     assert_eq!(required_size, bytes.len() - 6);
-                }
+                },
                 _ => {
                     assert!(false);
-                }
+                },
             }
             assert!(it.next().is_none());
         }
@@ -864,7 +864,7 @@ mod test {
             match it.next() {
                 Some(Ok(PacketRef::AckAck(_packet))) => {
                     // We're good
-                }
+                },
                 _ => assert!(false),
             }
             assert!(it.next().is_none());
@@ -901,10 +901,10 @@ mod test {
         match it.next() {
             Some(Ok(PacketRef::CfgNav5(_packet))) => {
                 // We're good
-            }
+            },
             _ => {
                 assert!(false);
-            }
+            },
         }
         assert!(it.next().is_none());
     }
@@ -938,10 +938,10 @@ mod test {
         match it.next() {
             Some(Ok(PacketRef::CfgNav5(_packet))) => {
                 // We're good
-            }
+            },
             _ => {
                 assert!(false);
-            }
+            },
         }
         assert!(it.next().is_none());
     }
@@ -971,19 +971,19 @@ mod test {
             Some(Ok(PacketRef::CfgNav5(packet))) => {
                 // We're good
                 assert_eq!(packet.pacc(), 21);
-            }
+            },
             _ => {
                 assert!(false);
-            }
+            },
         }
         match it.next() {
             Some(Ok(PacketRef::CfgNav5(packet))) => {
                 // We're good
                 assert_eq!(packet.pacc(), 18);
-            }
+            },
             _ => {
                 assert!(false);
-            }
+            },
         }
         assert!(it.next().is_none());
     }
