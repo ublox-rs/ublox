@@ -125,11 +125,11 @@ fn parse_meta_data(text: &str) -> Result<Meta, String> {
     }
     let missed = || "missed field".to_string();
     Ok(Meta {
-        wrong_chksum: wrong_chksum.ok_or_else(&missed)?,
-        other_errors: other_errors.ok_or_else(&missed)?,
-        nav_pos_llh: nav_pos_llh.ok_or_else(&missed)?,
-        nav_stat: nav_stat.ok_or_else(&missed)?,
-        ack_ack: ack_ack.ok_or_else(&missed)?,
-        unknown: unknown.ok_or_else(&missed)?,
+        wrong_chksum: wrong_chksum.ok_or_else(missed)?,
+        other_errors: other_errors.ok_or_else(missed)?,
+        nav_pos_llh: nav_pos_llh.ok_or_else(missed)?,
+        nav_stat: nav_stat.ok_or_else(missed)?,
+        ack_ack: ack_ack.ok_or_else(missed)?,
+        unknown: unknown.ok_or_else(missed)?,
     })
 }

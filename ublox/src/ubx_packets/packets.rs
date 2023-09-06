@@ -502,7 +502,7 @@ struct NavRelPosNed {
 #[ubx_extend]
 #[ubx(from, rest_reserved)]
 #[repr(u8)]
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum GpsFix {
     NoFix = 0,
     DeadReckoningOnly = 1,
@@ -912,22 +912,18 @@ bitflags! {
 }
 
 /// Odometer configuration profile
+#[derive(Default)]
 #[ubx_extend]
 #[ubx(from_unchecked, into_raw, rest_error)]
 #[repr(u8)]
 #[derive(Clone, Copy, Debug)]
 pub enum OdoProfile {
+    #[default]
     Running = 0,
     Cycling = 1,
     Swimming = 2,
     Car = 3,
     Custom = 4,
-}
-
-impl Default for OdoProfile {
-    fn default() -> Self {
-        Self::Running
-    }
 }
 
 /// Configure Jamming interference monitoring
@@ -942,7 +938,7 @@ struct CfgItfm {
     config2: u32,
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Default)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct CfgItfmConfig {
     /// enable interference detection
@@ -955,17 +951,6 @@ pub struct CfgItfmConfig {
     /// should be set to 0x16B156 default value
     /// for correct settings
     algorithm_bits: CfgItfmAlgoBits,
-}
-
-impl Default for CfgItfmConfig {
-    fn default() -> Self {
-        Self {
-            enable: false,
-            bb_threshold: CfgItfmBbThreshold::default(),
-            cw_threshold: CfgItfmCwThreshold::default(),
-            algorithm_bits: CfgItfmAlgoBits::default(),
-        }
-    }
 }
 
 impl CfgItfmConfig {
@@ -1145,6 +1130,7 @@ impl From<u32> for CfgItfmGeneralBits {
 
 /// ITFM Antenna settings helps the interference
 /// monitoring module
+#[derive(Default)]
 #[ubx_extend]
 #[ubx(from_unchecked, into_raw, rest_error)]
 #[repr(u8)]
@@ -1152,6 +1138,7 @@ impl From<u32> for CfgItfmGeneralBits {
 #[cfg_attr(feature = "serde", derive(serde::Deserialize))]
 pub enum CfgItfmAntennaSettings {
     /// Type of Antenna is not known
+    #[default]
     Unknown = 0,
     /// Active antenna
     Active = 1,
@@ -1167,12 +1154,6 @@ impl From<u32> for CfgItfmAntennaSettings {
             2 => CfgItfmAntennaSettings::Passive,
             _ => CfgItfmAntennaSettings::Unknown,
         }
-    }
-}
-
-impl Default for CfgItfmAntennaSettings {
-    fn default() -> Self {
-        Self::Unknown
     }
 }
 
@@ -1495,19 +1476,15 @@ struct CfgTp5 {
 }
 
 /// Time pulse selection, used in CfgTp5 frame
+#[derive(Default)]
 #[ubx_extend]
 #[ubx(from_unchecked, into_raw, rest_error)]
 #[repr(u8)]
 #[derive(Clone, Copy, Debug)]
 pub enum CfgTp5TimePulseMode {
+    #[default]
     TimePulse = 0,
     TimePulse2 = 1,
-}
-
-impl Default for CfgTp5TimePulseMode {
-    fn default() -> Self {
-        Self::TimePulse
-    }
 }
 
 /// Time MODE2 Config Frame (32.10.36.1)
@@ -1549,22 +1526,18 @@ struct CfgTmode2 {
 }
 
 /// Time transfer modes (32.10.36)
+#[derive(Default)]
 #[ubx_extend]
 #[ubx(from_unchecked, into_raw, rest_error)]
 #[repr(u8)]
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum CfgTmode2TimeXferModes {
+    #[default]
     Disabled = 0,
     SurveyIn = 1,
     /// True position information required
     /// when using `fixed mode`
     FixedMode = 2,
-}
-
-impl Default for CfgTmode2TimeXferModes {
-    fn default() -> Self {
-        Self::Disabled
-    }
 }
 
 #[ubx_extend_bitflags]
@@ -2025,18 +1998,14 @@ struct CfgPrtI2c {
 }
 
 /// Port Identifier Number (= 0 for I2C ports)
+#[derive(Default)]
 #[ubx_extend]
 #[ubx(from_unchecked, into_raw, rest_error)]
 #[repr(u8)]
 #[derive(Debug, Copy, Clone)]
 pub enum I2cPortId {
+    #[default]
     I2c = 0,
-}
-
-impl Default for I2cPortId {
-    fn default() -> Self {
-        Self::I2c
-    }
 }
 
 /// Port Configuration for UART
@@ -2265,18 +2234,14 @@ bitflags! {
 }
 
 /// Port Identifier Number (= 4 for SPI port)
+#[derive(Default)]
 #[ubx_extend]
 #[ubx(from_unchecked, into_raw, rest_error)]
 #[repr(u8)]
 #[derive(Debug, Copy, Clone)]
 pub enum SpiPortId {
+    #[default]
     Spi = 4,
-}
-
-impl Default for SpiPortId {
-    fn default() -> Self {
-        Self::Spi
-    }
 }
 
 /// UTC Time Solution
@@ -2508,6 +2473,7 @@ bitflags! {
 }
 
 /// Dynamic platform model
+#[derive(Default)]
 #[ubx_extend]
 #[ubx(from_unchecked, into_raw, rest_error)]
 #[repr(u8)]
@@ -2520,6 +2486,7 @@ pub enum CfgNav5DynModel {
     Sea = 5,
     AirborneWithLess1gAcceleration = 6,
     AirborneWithLess2gAcceleration = 7,
+    #[default]
     AirborneWith4gAcceleration = 8,
     /// not supported in protocol versions less than 18
     WristWornWatch = 9,
@@ -2527,13 +2494,8 @@ pub enum CfgNav5DynModel {
     Bike = 10,
 }
 
-impl Default for CfgNav5DynModel {
-    fn default() -> Self {
-        Self::AirborneWith4gAcceleration
-    }
-}
-
 /// Position Fixing Mode
+#[derive(Default)] // default needs to be derived before ubx_extend
 #[ubx_extend]
 #[ubx(from_unchecked, into_raw, rest_error)]
 #[repr(u8)]
@@ -2541,22 +2503,19 @@ impl Default for CfgNav5DynModel {
 pub enum CfgNav5FixMode {
     Only2D = 1,
     Only3D = 2,
+    #[default]
     Auto2D3D = 3,
 }
 
-impl Default for CfgNav5FixMode {
-    fn default() -> Self {
-        CfgNav5FixMode::Auto2D3D
-    }
-}
-
 /// UTC standard to be used
+#[derive(Default)]
 #[ubx_extend]
 #[ubx(from_unchecked, into_raw, rest_error)]
 #[repr(u8)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum CfgNav5UtcStandard {
     /// receiver selects based on GNSS configuration (see GNSS timebases)
+    #[default]
     Automatic = 0,
     /// UTC as operated by the U.S. NavalObservatory (USNO);
     /// derived from GPStime
@@ -2566,12 +2525,6 @@ pub enum CfgNav5UtcStandard {
     /// UTC as operated by the National TimeService Center, China;
     /// derived from BeiDou time
     UtcChina = 7,
-}
-
-impl Default for CfgNav5UtcStandard {
-    fn default() -> Self {
-        Self::Automatic
-    }
 }
 
 #[derive(Clone, Copy)]
@@ -2956,7 +2909,7 @@ impl TimTpFlags {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TimTpTimeBase {
     Gnss,
     Utc,
@@ -2995,7 +2948,7 @@ impl TimTpRefInfo {
     }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum TimTpRefInfoTimeRefGnss {
     Gps,
     Glo,
@@ -3004,7 +2957,7 @@ pub enum TimTpRefInfoTimeRefGnss {
     NavIc,
 }
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum TimTpRefInfoUtcStandard {
     Crl,
     Nist,
@@ -3245,7 +3198,7 @@ impl<'a> MonVerExtensionIter<'a> {
     }
 
     fn is_valid(payload: &[u8]) -> bool {
-        payload.len() % 30 == 0 && payload.chunks(30).all(|c| is_cstr_valid(c))
+        payload.len() % 30 == 0 && payload.chunks(30).all(is_cstr_valid)
     }
 }
 

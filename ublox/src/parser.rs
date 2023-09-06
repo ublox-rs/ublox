@@ -44,12 +44,7 @@ pub trait UnderlyingBuffer:
 
     /// Locates the given u8 value within the buffer, returning the index (if it is found).
     fn find(&self, value: u8) -> Option<usize> {
-        for i in 0..self.len() {
-            if self[i] == value {
-                return Some(i);
-            }
-        }
-        None
+        (0..self.len()).find(|&i| self[i] == value)
     }
 
     /// Returns whether the buffer is empty.
@@ -157,12 +152,7 @@ impl<'a> UnderlyingBuffer for FixedLinearBuffer<'a> {
     }
 
     fn find(&self, value: u8) -> Option<usize> {
-        for i in 0..self.len {
-            if self.buffer[i] == value {
-                return Some(i);
-            }
-        }
-        None
+        (0..self.len()).find(|&i| self[i] == value)
     }
 }
 
@@ -442,22 +432,27 @@ pub struct UbxParserIter<'a, T: UnderlyingBuffer> {
     buf: DualBuffer<'a, T>,
 }
 
-fn extract_packet_ubx<'a, 'b, T: UnderlyingBuffer>(buf : &'b mut DualBuffer<'a, T>, pack_len: usize) -> Option<Result<PacketRef<'b>, ParserError>> {
-    if !buf.can_drain_and_take(6, pack_len + 2) {
-        if buf.potential_lost_bytes() > 0 {
-            // We ran out of space, drop this packet and move on
-            buf.drain(2);
-            return Some(Err(ParserError::OutOfMemory {
-                required_size: pack_len + 2,
-            }));
-        }
-        return None;
+impl<'a, T: UnderlyingBuffer> ParserIter<'a, T> {
+    fn find_sync(&self) -> Option<usize> {
+        (0..self.buf.len()).find(|&i| self.buf[i] == SYNC_CHAR_1)
     }
-    let mut checksummer = UbxChecksumCalc::new();
-    let (a, b) = buf.peek_raw(2..(4 + pack_len + 2));
-    checksummer.update(a);
-    checksummer.update(b);
-    let (ck_a, ck_b) = checksummer.result();
+
+    fn extract_packet(&mut self, pack_len: usize) -> Option<Result<PacketRef, ParserError>> {
+        if !self.buf.can_drain_and_take(6, pack_len + 2) {
+            if self.buf.potential_lost_bytes() > 0 {
+                // We ran out of space, drop this packet and move on
+                self.buf.drain(2);
+                return Some(Err(ParserError::OutOfMemory {
+                    required_size: pack_len + 2,
+                }));
+            }
+            return None;
+        }
+        let mut checksummer = UbxChecksumCalc::new();
+        let (a, b) = self.buf.peek_raw(2..(4 + pack_len + 2));
+        checksummer.update(a);
+        checksummer.update(b);
+        let (ck_a, ck_b) = checksummer.result();
 
         let (expect_ck_a, expect_ck_b) = (self.buf[6 + pack_len], self.buf[6 + pack_len + 1]);
         if (ck_a, ck_b) != (expect_ck_a, expect_ck_b) {
@@ -756,12 +751,9 @@ mod test {
 
         let mut dual = DualBuffer::new(&mut buf, &new[..]);
         // This should throw
-        match dual.take(6) {
-            Err(ParserError::OutOfMemory { required_size }) => {
-                assert_eq!(required_size, 6);
-            },
-            _ => assert!(false),
-        }
+        assert!(
+            matches!(dual.take(6), Err(ParserError::OutOfMemory { required_size }) if required_size == 6)
+        );
     }
 
     #[test]
@@ -900,12 +892,7 @@ mod test {
 
         let mut it = parser.consume_ubx(&bytes);
         for _ in 0..5 {
-            match it.next() {
-                Some(Ok(PacketRef::AckAck(_packet))) => {
-                    // We're good
-                },
-                _ => assert!(false),
-            }
+            assert!(matches!(it.next(), Some(Ok(PacketRef::AckAck(_)))));
         }
         assert!(it.next().is_none());
     }
@@ -919,13 +906,8 @@ mod test {
         let bytes = [0xb5, 0xb5, 0x62, 0x5, 0x1, 0x2, 0x0, 0x4, 0x5, 0x11, 0x38];
 
         {
-            let mut it = parser.consume_ubx(&bytes);
-            match it.next() {
-                Some(Ok(PacketRef::AckAck(_packet))) => {
-                    // We're good
-                },
-                _ => assert!(false),
-            }
+            let mut it = parser.consume(&bytes);
+            assert!(matches!(it.next(), Some(Ok(PacketRef::AckAck(_)))));
             assert!(it.next().is_none());
         }
     }
@@ -963,15 +945,10 @@ mod test {
         }
 
         {
-            let mut it = parser.consume_ubx(&bytes[8..]);
-            match it.next() {
-                Some(Err(ParserError::OutOfMemory { required_size })) => {
-                    assert_eq!(required_size, bytes.len() - 6);
-                },
-                _ => {
-                    assert!(false);
-                },
-            }
+            let mut it = parser.consume(&bytes[8..]);
+            assert!(
+                matches!(it.next(), Some(Err(ParserError::OutOfMemory { required_size })) if required_size == bytes.len() - 6)
+            );
             assert!(it.next().is_none());
         }
 
@@ -979,13 +956,8 @@ mod test {
         let bytes = [0xb5, 0x62, 0x5, 0x1, 0x2, 0x0, 0x4, 0x5, 0x11, 0x38];
 
         {
-            let mut it = parser.consume_ubx(&bytes);
-            match it.next() {
-                Some(Ok(PacketRef::AckAck(_packet))) => {
-                    // We're good
-                },
-                _ => assert!(false),
-            }
+            let mut it = parser.consume(&bytes);
+            assert!(matches!(it.next(), Some(Ok(PacketRef::AckAck(_)))));
             assert!(it.next().is_none());
         }
     }
@@ -1016,15 +988,8 @@ mod test {
         let mut buffer = [0; 1024];
         let buffer = FixedLinearBuffer::new(&mut buffer);
         let mut parser = Parser::new(buffer);
-        let mut it = parser.consume_ubx(&bytes);
-        match it.next() {
-            Some(Ok(PacketRef::CfgNav5(_packet))) => {
-                // We're good
-            },
-            _ => {
-                assert!(false);
-            },
-        }
+        let mut it = parser.consume(&bytes);
+        assert!(matches!(it.next(), Some(Ok(PacketRef::CfgNav5(_)))));
         assert!(it.next().is_none());
     }
 
@@ -1053,15 +1018,8 @@ mod test {
         .into_packet_bytes();
 
         let mut parser = Parser::default();
-        let mut it = parser.consume_ubx(&bytes);
-        match it.next() {
-            Some(Ok(PacketRef::CfgNav5(_packet))) => {
-                // We're good
-            },
-            _ => {
-                assert!(false);
-            },
-        }
+        let mut it = parser.consume(&bytes);
+        assert!(matches!(it.next(), Some(Ok(PacketRef::CfgNav5(_)))));
         assert!(it.next().is_none());
     }
 
@@ -1092,7 +1050,7 @@ mod test {
                 assert_eq!(packet.pacc(), 21);
             },
             _ => {
-                assert!(false);
+                panic!()
             },
         }
         match it.next() {
@@ -1101,13 +1059,14 @@ mod test {
                 assert_eq!(packet.pacc(), 18);
             },
             _ => {
-                assert!(false);
+                panic!()
             },
         }
         assert!(it.next().is_none());
     }
 
     #[test]
+    #[allow(clippy::assertions_on_constants)]
     fn test_max_payload_len() {
         assert!(MAX_PAYLOAD_LEN >= 1240);
     }
