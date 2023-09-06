@@ -22,7 +22,7 @@ fn extract_only_ack_ack<T: ublox::UnderlyingBuffer>(
                 ret.push(Ok((pack.class(), pack.msg_id())));
             }
             Err(err) => ret.push(Err(err)),
-            _ => assert!(false),
+            _ => panic!(),
         }
     }
     ret
@@ -66,7 +66,7 @@ fn test_parse_ack_ack_in_one_go() {
 #[test]
 fn test_parse_ack_ack_bad_checksum() {
     let mut parser = Parser::default();
-    let mut bad_pack = FULL_ACK_ACK_PACK.clone();
+    let mut bad_pack = FULL_ACK_ACK_PACK;
     bad_pack[bad_pack.len() - 3] = 5;
     assert_eq!(
         my_vec![Err(ParserError::InvalidChecksum {
@@ -94,7 +94,7 @@ fn test_parse_ack_ack_parted_two_packets() {
         extract_only_ack_ack(parser.consume(&FULL_ACK_ACK_PACK[0..5])),
     );
     assert_eq!(5, parser.buffer_len());
-    let mut rest_and_next = (&FULL_ACK_ACK_PACK[5..]).to_vec();
+    let mut rest_and_next = FULL_ACK_ACK_PACK[5..].to_vec();
     rest_and_next.extend_from_slice(&FULL_ACK_ACK_PACK);
     assert_eq!(
         my_vec![Ok((6, 1)), Ok((6, 1))],
@@ -189,7 +189,7 @@ fn test_parse_cfg_nav5() {
                 assert_eq!(0x1717, pack.static_hold_max_dist());
                 assert_eq!(CfgNav5UtcStandard::UtcChina, pack.utc_standard());
             }
-            _ => assert!(false),
+            _ => panic!(),
         }
     }
     assert!(found);
@@ -206,7 +206,6 @@ fn test_esf_meas_serialize() {
     let mut parser = Parser::default();
     let mut found = false;
     let mut it = parser.consume(&ret);
-
     while let Some(pack) = it.next() {
         match pack {
             Ok(pack) => {
@@ -246,11 +245,11 @@ fn test_esf_meas_serialize() {
                     let actual = serde_json::to_value(&pack).unwrap();
                     assert_eq!(expected, actual);
                 } else {
-                    assert!(false);
+                    panic!();
                 }
                 found = true;
             }
-            _ => assert!(false),
+            _ => panic!(),
         }
     }
     assert!(found);
@@ -261,12 +260,7 @@ fn test_zero_sized_ackack() {
     let ack_ack = [0xb5, 0x62, 0x05, 0x01, 0x00, 0x00, 0x06, 0x17];
     let mut parser = Parser::default();
     let mut it = parser.consume(&ack_ack);
-    match it.next() {
-        Some(Ok(PacketRef::Unknown(_))) => {
-            // This is expected
-        }
-        _ => panic!(),
-    }
+    assert!(matches!(it.next(), Some(Ok(PacketRef::Unknown(_)))));
     assert!(it.next().is_none());
 }
 
@@ -289,35 +283,16 @@ fn test_double_start_at_end() {
     let ack_ack = [0xb5, 0x62, 0x5, 0x1, 0x2, 0x0, 0x4, 0x5, 0x11, 0x38];
     {
         let mut it = parser.consume(&ack_ack);
-        match it.next() {
-            Some(Err(_)) => {
-                // First, a buffer-too-small error
-            }
-            _ => panic!(),
-        }
-        match it.next() {
-            Some(Ok(PacketRef::Unknown(_))) => {
-                // Then an unknown packet
-            }
-            _ => panic!(),
-        }
-        match it.next() {
-            Some(Ok(PacketRef::AckAck(_))) => {
-                // Then the ackack we passed
-            }
-            _ => panic!(),
-        }
+        // First, a buffer-too-small error
+        assert!(matches!(it.next(), Some(Err(_))));
+        // Then an unknown packet
+        assert!(matches!(it.next(), Some(Ok(PacketRef::Unknown(_)))));
+        // Then the ackack we passed
+        assert!(matches!(it.next(), Some(Ok(PacketRef::AckAck(_)))));
         assert!(it.next().is_none());
     }
     let mut it = parser.consume(&ack_ack);
-    match it.next() {
-        Some(Ok(ublox::PacketRef::AckAck { .. })) => {
-            // This is what we expect
-        }
-        _ => {
-            // Parsing other packets or ending the iteration is a failure
-            panic!();
-        }
-    }
+    // Parsing other packets or ending the iteration is a failure
+    assert!(matches!(it.next(), Some(Ok(PacketRef::AckAck(_)))));
     assert!(it.next().is_none());
 }

@@ -42,12 +42,7 @@ pub trait UnderlyingBuffer:
 
     /// Locates the given u8 value within the buffer, returning the index (if it is found).
     fn find(&self, value: u8) -> Option<usize> {
-        for i in 0..self.len() {
-            if self[i] == value {
-                return Some(i);
-            }
-        }
-        None
+        (0..self.len()).find(|&i| self[i] == value)
     }
 
     /// Returns whether the buffer is empty.
@@ -155,12 +150,7 @@ impl<'a> UnderlyingBuffer for FixedLinearBuffer<'a> {
     }
 
     fn find(&self, value: u8) -> Option<usize> {
-        for i in 0..self.len {
-            if self.buffer[i] == value {
-                return Some(i);
-            }
-        }
-        None
+        (0..self.len()).find(|&i| self[i] == value)
     }
 }
 
@@ -428,12 +418,7 @@ pub struct ParserIter<'a, T: UnderlyingBuffer> {
 
 impl<'a, T: UnderlyingBuffer> ParserIter<'a, T> {
     fn find_sync(&self) -> Option<usize> {
-        for i in 0..self.buf.len() {
-            if self.buf[i] == SYNC_CHAR_1 {
-                return Some(i);
-            }
-        }
-        None
+        (0..self.buf.len()).find(|&i| self.buf[i] == SYNC_CHAR_1)
     }
 
     fn extract_packet(&mut self, pack_len: usize) -> Option<Result<PacketRef, ParserError>> {
@@ -641,7 +626,7 @@ mod test {
             Err(ParserError::OutOfMemory { required_size }) => {
                 assert_eq!(required_size, 6);
             }
-            _ => assert!(false),
+            _ => unreachable!(),
         }
     }
 
@@ -781,12 +766,7 @@ mod test {
 
         let mut it = parser.consume(&bytes);
         for _ in 0..5 {
-            match it.next() {
-                Some(Ok(PacketRef::AckAck(_packet))) => {
-                    // We're good
-                }
-                _ => assert!(false),
-            }
+            assert!(matches!(it.next(), Some(Ok(PacketRef::AckAck(_)))));
         }
         assert!(it.next().is_none());
     }
@@ -801,12 +781,7 @@ mod test {
 
         {
             let mut it = parser.consume(&bytes);
-            match it.next() {
-                Some(Ok(PacketRef::AckAck(_packet))) => {
-                    // We're good
-                }
-                _ => assert!(false),
-            }
+            assert!(matches!(it.next(), Some(Ok(PacketRef::AckAck(_)))));
             assert!(it.next().is_none());
         }
     }
@@ -850,7 +825,7 @@ mod test {
                     assert_eq!(required_size, bytes.len() - 6);
                 }
                 _ => {
-                    assert!(false);
+                    unreachable!();
                 }
             }
             assert!(it.next().is_none());
@@ -861,12 +836,7 @@ mod test {
 
         {
             let mut it = parser.consume(&bytes);
-            match it.next() {
-                Some(Ok(PacketRef::AckAck(_packet))) => {
-                    // We're good
-                }
-                _ => assert!(false),
-            }
+            assert!(matches!(it.next(), Some(Ok(PacketRef::AckAck(_)))));
             assert!(it.next().is_none());
         }
     }
@@ -898,14 +868,7 @@ mod test {
         let buffer = FixedLinearBuffer::new(&mut buffer);
         let mut parser = Parser::new(buffer);
         let mut it = parser.consume(&bytes);
-        match it.next() {
-            Some(Ok(PacketRef::CfgNav5(_packet))) => {
-                // We're good
-            }
-            _ => {
-                assert!(false);
-            }
-        }
+        assert!(matches!(it.next(), Some(Ok(PacketRef::CfgNav5(_)))));
         assert!(it.next().is_none());
     }
 
@@ -935,14 +898,7 @@ mod test {
 
         let mut parser = Parser::default();
         let mut it = parser.consume(&bytes);
-        match it.next() {
-            Some(Ok(PacketRef::CfgNav5(_packet))) => {
-                // We're good
-            }
-            _ => {
-                assert!(false);
-            }
-        }
+        assert!(matches!(it.next(), Some(Ok(PacketRef::CfgNav5(_)))));
         assert!(it.next().is_none());
     }
 
@@ -973,7 +929,7 @@ mod test {
                 assert_eq!(packet.pacc(), 21);
             }
             _ => {
-                assert!(false);
+                panic!()
             }
         }
         match it.next() {
@@ -982,13 +938,14 @@ mod test {
                 assert_eq!(packet.pacc(), 18);
             }
             _ => {
-                assert!(false);
+                panic!()
             }
         }
         assert!(it.next().is_none());
     }
 
     #[test]
+    #[allow(clippy::assertions_on_constants)]
     fn test_max_payload_len() {
         assert!(MAX_PAYLOAD_LEN >= 1240);
     }
