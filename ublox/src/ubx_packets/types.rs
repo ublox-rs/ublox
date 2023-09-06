@@ -98,7 +98,7 @@ impl<'a> TryFrom<&NavPosVelTimeRef<'a>> for DateTime<Utc> {
         let dt = NaiveDateTime::new(date, time)
             + chrono::Duration::nanoseconds(i64::from(sol.nanosecond()));
 
-        Ok(DateTime::from_utc(dt, Utc))
+        Ok(DateTime::from_naive_utc_and_offset(dt, Utc))
     }
 }
 

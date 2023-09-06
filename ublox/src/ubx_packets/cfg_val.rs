@@ -235,6 +235,10 @@ macro_rules! cfg_val {
         }
       }
 
+      pub const fn is_empty(&self) -> bool {
+          self.len() == 0
+      }
+
       #[track_caller]
       pub fn parse(buf: &[u8]) -> Self {
         let key_id = u32::from_le_bytes([buf[0], buf[1], buf[2], buf[3]]);
@@ -1108,7 +1112,7 @@ cfg_val! {
   TpTimegridTp1,         0x2005000c, AlignmentToReferenceTime,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TpPulse {
     /// Time pulse period
     Period = 0,
@@ -1116,7 +1120,7 @@ pub enum TpPulse {
     Freq = 1,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TpPulseLength {
     /// Time pulse ratio
     Ratio = 0,
