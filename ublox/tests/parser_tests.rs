@@ -66,7 +66,7 @@ fn test_parse_ack_ack_in_one_go() {
 #[test]
 fn test_parse_ack_ack_bad_checksum() {
     let mut parser = Parser::default();
-    let mut bad_pack = FULL_ACK_ACK_PACK.clone();
+    let mut bad_pack = FULL_ACK_ACK_PACK;
     bad_pack[bad_pack.len() - 3] = 5;
     assert_eq!(
         my_vec![Err(ParserError::InvalidChecksum {
@@ -94,7 +94,7 @@ fn test_parse_ack_ack_parted_two_packets() {
         extract_only_ack_ack(parser.consume(&FULL_ACK_ACK_PACK[0..5])),
     );
     assert_eq!(5, parser.buffer_len());
-    let mut rest_and_next = (&FULL_ACK_ACK_PACK[5..]).to_vec();
+    let mut rest_and_next = (FULL_ACK_ACK_PACK[5..]).to_vec();
     rest_and_next.extend_from_slice(&FULL_ACK_ACK_PACK);
     assert_eq!(
         my_vec![Ok((6, 1)), Ok((6, 1))],

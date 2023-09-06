@@ -453,7 +453,7 @@ impl<'a, T: UnderlyingBuffer> ParserIter<'a, T> {
             Ok(x) => x,
             Err(e) => {
                 return Some(Err(e));
-            }
+            },
         };
         return Some(match_packet(
             class_id,
@@ -472,7 +472,7 @@ impl<'a, T: UnderlyingBuffer> ParserIter<'a, T> {
                 None => {
                     self.buf.clear();
                     return None;
-                }
+                },
             };
             self.buf.drain(pos);
 
@@ -622,12 +622,9 @@ mod test {
 
         let mut dual = DualBuffer::new(&mut buf, &new[..]);
         // This should throw
-        match dual.take(6) {
-            Err(ParserError::OutOfMemory { required_size }) => {
-                assert_eq!(required_size, 6);
-            }
-            _ => unreachable!(),
-        }
+        assert!(
+            matches!(dual.take(6), Err(ParserError::OutOfMemory { required_size }) if required_size == 6)
+        );
     }
 
     #[test]
@@ -820,14 +817,9 @@ mod test {
 
         {
             let mut it = parser.consume(&bytes[8..]);
-            match it.next() {
-                Some(Err(ParserError::OutOfMemory { required_size })) => {
-                    assert_eq!(required_size, bytes.len() - 6);
-                }
-                _ => {
-                    unreachable!();
-                }
-            }
+            assert!(
+                matches!(it.next(), Some(Err(ParserError::OutOfMemory { required_size })) if required_size == bytes.len() - 6)
+            );
             assert!(it.next().is_none());
         }
 
@@ -927,19 +919,19 @@ mod test {
             Some(Ok(PacketRef::CfgNav5(packet))) => {
                 // We're good
                 assert_eq!(packet.pacc(), 21);
-            }
+            },
             _ => {
                 panic!()
-            }
+            },
         }
         match it.next() {
             Some(Ok(PacketRef::CfgNav5(packet))) => {
                 // We're good
                 assert_eq!(packet.pacc(), 18);
-            }
+            },
             _ => {
                 panic!()
-            }
+            },
         }
         assert!(it.next().is_none());
     }
