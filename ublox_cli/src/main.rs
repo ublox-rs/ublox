@@ -34,14 +34,14 @@ impl Device {
                 match it.next() {
                     Some(Ok(packet)) => {
                         cb(packet);
-                    }
+                    },
                     Some(Err(_)) => {
                         // Received a malformed packet, ignore it
-                    }
+                    },
                     None => {
                         // We've eaten all the packets we have
                         break;
-                    }
+                    },
                 }
             }
         }
@@ -72,7 +72,7 @@ impl Device {
                 } else {
                     Err(e)
                 }
-            }
+            },
         }
     }
 }
@@ -160,7 +160,7 @@ fn main() {
                         packet.hardware_version()
                     );
                     println!("{:?}", packet);
-                }
+                },
                 PacketRef::NavPosVelTime(sol) => {
                     let has_time = sol.fix_type() == GpsFix::Fix3D
                         || sol.fix_type() == GpsFix::GPSPlusDeadReckoning
@@ -186,10 +186,10 @@ fn main() {
                         let time: DateTime<Utc> = (&sol).try_into().unwrap();
                         println!("Time: {:?}", time);
                     }
-                }
+                },
                 _ => {
                     println!("{:?}", packet);
-                }
+                },
             })
             .unwrap();
     }
