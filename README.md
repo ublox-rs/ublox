@@ -1,17 +1,14 @@
 ublox for Rust
 ==============
 
-[![ublox on Travis CI][travis-image]][travis]
 [![ublox on docs.rs][docs-badge]][docs-url]
 [![MIT licensed][mit-badge]][mit-url]
 [![rustc v1.65][mrvs-badge]][mrvs-url]
 
-[travis-image]: https://api.travis-ci.com/lkolbly/ublox.svg?branch=master
-[travis]: https://travis-ci.com/lkolbly/ublox
 [docs-badge]: https://docs.rs/ublox/badge.svg
 [docs-url]: https://docs.rs/ublox
 [mit-badge]: https://img.shields.io/badge/license-MIT-blue.svg
-[mit-url]: https://github.com/lkolbly/ublox/blob/master/LICENSE
+[mit-url]: https://github.com/lkolbly/ublox/blob/master/LICENSE.md
 [mrvs-url]: https://www.whatrustisit.com
 [mrvs-badge]: https://img.shields.io/badge/minimum%20rustc-1.65-blue?logo=rust
 
@@ -94,7 +91,3 @@ no_std Support
 
 This library supports no_std environments with a deterministic-size `Parser`. See the documentation for more information.
 
-Minimum Supported Rust Version
-==============================
-
-This crate will always support at least the previous year's worth of Rust compilers. Currently, that means that the MSRV is `1.49.0`. Note that, as we are pre-1.0, breaking the MSRV will not force a minor update - the MSRV can change in a patch update.
