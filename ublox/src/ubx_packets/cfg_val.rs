@@ -1112,7 +1112,7 @@ cfg_val! {
   TpTimegridTp1,         0x2005000c, AlignmentToReferenceTime,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TpPulse {
     /// Time pulse period
     Period = 0,
@@ -1120,7 +1120,7 @@ pub enum TpPulse {
     Freq = 1,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TpPulseLength {
     /// Time pulse ratio
     Ratio = 0,

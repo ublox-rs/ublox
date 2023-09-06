@@ -396,7 +396,7 @@ struct NavSolution {
 #[ubx_extend]
 #[ubx(from, rest_reserved)]
 #[repr(u8)]
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum GpsFix {
     NoFix = 0,
     DeadReckoningOnly = 1,
@@ -1386,7 +1386,7 @@ struct CfgTmode2 {
 #[ubx_extend]
 #[ubx(from_unchecked, into_raw, rest_error)]
 #[repr(u8)]
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum CfgTmode2TimeXferModes {
     #[default]
     Disabled = 0,
@@ -2693,7 +2693,7 @@ impl TimTpFlags {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TimTpTimeBase {
     Gnss,
     Utc,
@@ -2732,7 +2732,7 @@ impl TimTpRefInfo {
     }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum TimTpRefInfoTimeRefGnss {
     Gps,
     Glo,
@@ -2741,7 +2741,7 @@ pub enum TimTpRefInfoTimeRefGnss {
     NavIc,
 }
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum TimTpRefInfoUtcStandard {
     Crl,
     Nist,
