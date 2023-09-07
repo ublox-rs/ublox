@@ -14,7 +14,7 @@ ublox for Rust
 
 This project aims to build a pure-rust I/O library for ublox GPS devices, specifically using the UBX protocol.
 
-An example of using this library to talk to a device can be seen in the `ublox_cli` subfolder of this project.
+Examples of usage of the library can be found in the [examples/](./examples) directory. A basic CLI for interacting with an uBlox device can be found in [examples/basic_cli](./examples/basic_cli/) directory. See the specific [examples/README](./examples/README.md).
 
 Constructing Packets
 ====================
@@ -91,3 +91,7 @@ no_std Support
 
 This library supports no_std environments with a deterministic-size `Parser`. See the documentation for more information.
 
+Minimum Supported Rust Version
+==============================
+
+The library crate will support at least the previous year's worth of Rust compilers. Currently, the MSRV is `1.65.0`. Note that, as we are pre-1.0, breaking the MSRV will not force a minor update - the MSRV can change in a patch update.

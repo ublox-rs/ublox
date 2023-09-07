@@ -32,5 +32,30 @@ jobs:
       run: cargo test --verbose ${{ matrix.feature-args }}
     - name: Coding style
       run: |
-        cargo fmt --all -- --check 
+        cargo fmt --all -- --check
         cargo clippy --all-features --all-targets -- -D warnings
+    - name: Examples - build
+      run: cd ${{ github.workspace }} && cargo build
+    - name: Examples - coding style
+      run: |
+        cd ${{ github.workspace }} && cargo fmt --all -- --check
+        cd ${{ github.workspace }} && cargo clippy --all-features --all-targets -- -D warnings
+
+  build_examples:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install libudev
+      run: sudo apt-get update && sudo apt-get install -y libudev-dev
+    - name: Install MSRV
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: 1.70.0
+        override: true
+        components: rustfmt, clippy
+    - name: Build
+      run: cd ${{ github.workspace }}/examples && cargo build
+    - name: Coding style
+      run: |
+        cd ${{ github.workspace }}/examples && cargo fmt --all -- --check
+        cd ${{ github.workspace }}/examples && cargo clippy --all-features --all-targets -- -D warnings

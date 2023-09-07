@@ -23,7 +23,8 @@ ublox_derive = {path = "../ublox_derive", version = "0.0.4"}
 [dev-dependencies]
 cpu-time = "1.0.0"
 cpuprofiler = "0.0.4"
-criterion = "0.5.1"
+# Latest depends on clap v4 which requires rustc 1.70
+criterion = "0.4.0"
 rand = "0.8.5"
 serde_json = "1.0.85"
 
