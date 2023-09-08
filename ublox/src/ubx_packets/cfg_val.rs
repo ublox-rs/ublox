@@ -286,7 +286,7 @@ macro_rules! cfg_val {
       $cfg_item:ident, $cfg_key_id:expr, $cfg_value_type:ident,
     )*
   ) => {
-    #[derive(Debug, Clone, Copy)]
+    #[derive(Debug, Clone)]
     #[non_exhaustive]
     pub enum CfgKey {
       WildcardAll = 0xffffffff,

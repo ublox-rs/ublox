@@ -1,5 +1,8 @@
-/target
+Cargo.lock
+target/
+
 **/*.rs.bk
 *~
-Cargo.lock
+
 .idea/
+.vscode

@@ -1,23 +1,20 @@
 ublox for Rust
 ==============
 
-[![ublox on Travis CI][travis-image]][travis]
 [![ublox on docs.rs][docs-badge]][docs-url]
 [![MIT licensed][mit-badge]][mit-url]
 [![rustc v1.65][mrvs-badge]][mrvs-url]
 
-[travis-image]: https://api.travis-ci.com/lkolbly/ublox.svg?branch=master
-[travis]: https://travis-ci.com/lkolbly/ublox
 [docs-badge]: https://docs.rs/ublox/badge.svg
 [docs-url]: https://docs.rs/ublox
 [mit-badge]: https://img.shields.io/badge/license-MIT-blue.svg
-[mit-url]: https://github.com/lkolbly/ublox/blob/master/LICENSE
+[mit-url]: https://github.com/lkolbly/ublox/blob/master/LICENSE.md
 [mrvs-url]: https://www.whatrustisit.com
 [mrvs-badge]: https://img.shields.io/badge/minimum%20rustc-1.65-blue?logo=rust
 
 This project aims to build a pure-rust I/O library for ublox GPS devices, specifically using the UBX protocol.
 
-An example of using this library to talk to a device can be seen in the `ublox_cli` subfolder of this project.
+Examples of usage of the library can be found in the [examples/](./examples) directory. A basic CLI for interacting with an uBlox device can be found in [examples/basic_cli](./examples/basic_cli/) directory. See the specific [examples/README](./examples/README.md).
 
 Constructing Packets
 ====================
@@ -97,4 +94,4 @@ This library supports no_std environments with a deterministic-size `Parser`. Se
 Minimum Supported Rust Version
 ==============================
 
-This crate will always support at least the previous year's worth of Rust compilers. Currently, that means that the MSRV is `1.49.0`. Note that, as we are pre-1.0, breaking the MSRV will not force a minor update - the MSRV can change in a patch update.
+The library crate will support at least the previous year's worth of Rust compilers. Currently, the MSRV is `1.65.0`. Note that, as we are pre-1.0, breaking the MSRV will not force a minor update - the MSRV can change in a patch update.

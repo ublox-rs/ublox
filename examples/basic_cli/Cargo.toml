@@ -1,0 +1,17 @@
+[package]
+authors = ["Lane Kolbly <lane@rscheme.org>"]
+edition = "2018"
+name = "ublox_cli"
+publish = false
+rust-version = "1.70"
+version = "0.1.0"
+
+[dependencies]
+chrono = "0.4.29"
+clap = {version = "4.2.7", features = ["cargo"]}
+serde_json = "1.0.105"
+serialport = "4.2.2"
+ublox = {path = "../../ublox"}
+
+[features]
+alloc = ["ublox/alloc"]

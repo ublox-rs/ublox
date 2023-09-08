@@ -1,5 +1,9 @@
 use chrono::prelude::*;
-use clap::{App, Arg};
+use clap::{value_parser, Arg, Command};
+use serialport::{
+    DataBits as SerialDataBits, FlowControl as SerialFlowControl, Parity as SerialParity,
+    StopBits as SerialStopBits,
+};
 use std::convert::TryInto;
 use std::time::Duration;
 use ublox::*;
@@ -78,44 +82,76 @@ impl Device {
 }
 
 fn main() {
-    let matches = App::new("ublox CLI example program")
-        .about("Demonstrates usage of the Rust ublox API")
+    let matches = Command::new("uBlox CLI example program")
+        .author(clap::crate_authors!())
+        .about("Demonstrates usage of the Rust uBlox API")
+        .arg_required_else_help(true)
         .arg(
-            Arg::with_name("port")
-                .short("p")
+            Arg::new("port")
+                .value_name("port")
+                .short('p')
                 .long("port")
-                .takes_value(true)
                 .required(true)
                 .help("Serial port to open"),
         )
         .arg(
-            Arg::with_name("baud")
-                .short("s")
+            Arg::new("baud")
+                .value_name("baud")
+                .short('s')
                 .long("baud")
-                .takes_value(true)
+                .required(false)
+                .value_parser(value_parser!(u32))
                 .help("Baud rate of the port"),
+        )
+        .arg(
+            Arg::new("stop-bits")
+                .long("stop-bits")
+                .help("Number of stop bits to use")
+                .required(false)
+                .value_parser(["1", "2"])
+                .default_value("1"),
+        )
+        .arg(
+            Arg::new("data-bits")
+                .long("data-bits")
+                .help("Number of data bits to use")
+                .required(false)
+                .value_parser(["5", "6", "7", "8"])
+                .default_value("8"),
         )
         .get_matches();
 
-    let port = matches.value_of("port").unwrap();
-    let baud: u32 = matches
-        .value_of("baud")
-        .unwrap_or("9600")
-        .parse()
-        .expect("Could not parse baudrate as an integer");
-
-    let s = serialport::SerialPortSettings {
-        baud_rate: baud,
-        data_bits: serialport::DataBits::Eight,
-        flow_control: serialport::FlowControl::None,
-        parity: serialport::Parity::None,
-        stop_bits: serialport::StopBits::One,
-        timeout: Duration::from_millis(1),
+    let port = matches
+        .get_one::<String>("port")
+        .expect("Expected required 'port' cli argumnet");
+    let baud = matches.get_one::<u32>("baud").cloned().unwrap_or(9600);
+    let stop_bits = match matches.get_one::<String>("stop-bits").map(|s| s.as_str()) {
+        Some("2") => SerialStopBits::Two,
+        _ => SerialStopBits::One,
     };
-    let port = serialport::open_with_settings(port, &s).unwrap();
+    let data_bits = match matches.get_one::<String>("data-bits").map(|s| s.as_str()) {
+        Some("5") => SerialDataBits::Five,
+        Some("6") => SerialDataBits::Six,
+        Some("7") => SerialDataBits::Seven,
+        _ => SerialDataBits::Eight,
+    };
+
+    let builder = serialport::new(port, baud)
+        .stop_bits(stop_bits)
+        .data_bits(data_bits)
+        .timeout(Duration::from_millis(1))
+        .parity(SerialParity::None)
+        .flow_control(SerialFlowControl::None);
+
+    println!("{:?}", &builder);
+    let port = builder.open().unwrap_or_else(|e| {
+        eprintln!("Failed to open \"{}\". Error: {}", port, e);
+        ::std::process::exit(1);
+    });
     let mut device = Device::new(port);
 
     // Configure the device to talk UBX
+    println!("Configuring UART1 port ...");
     device
         .write_all(
             &CfgPrtUartBuilder {
@@ -123,16 +159,18 @@ fn main() {
                 reserved0: 0,
                 tx_ready: 0,
                 mode: UartMode::new(DataBits::Eight, Parity::None, StopBits::One),
-                baud_rate: 9600,
-                in_proto_mask: InProtoMask::all(),
-                out_proto_mask: OutProtoMask::UBLOX,
+                baud_rate: baud,
+                in_proto_mask: InProtoMask::UBLOX,
+                out_proto_mask: OutProtoMask::union(OutProtoMask::NMEA, OutProtoMask::UBLOX),
                 flags: 0,
                 reserved5: 0,
             }
             .into_packet_bytes(),
         )
-        .unwrap();
-    device.wait_for_ack::<CfgPrtUart>().unwrap();
+        .expect("Could not configure UBX-CFG-PRT-UART");
+    device
+        .wait_for_ack::<CfgPrtUart>()
+        .expect("Could not acknowledge UBX-CFG-PRT-UART msg");
 
     // Enable the NavPosVelTime packet
     device
@@ -140,24 +178,27 @@ fn main() {
             &CfgMsgAllPortsBuilder::set_rate_for::<NavPosVelTime>([0, 1, 0, 0, 0, 0])
                 .into_packet_bytes(),
         )
-        .unwrap();
-    device.wait_for_ack::<CfgMsgAllPorts>().unwrap();
+        .expect("Could not configure ports for UBX-NAV-PVT");
+    device
+        .wait_for_ack::<CfgMsgAllPorts>()
+        .expect("Could not acknowledge UBX-CFG-PRT-UART msg");
 
     // Send a packet request for the MonVer packet
     device
         .write_all(&UbxPacketRequest::request_for::<MonVer>().into_packet_bytes())
-        .unwrap();
+        .expect("Unable to write request/poll for UBX-MON-VER message");
 
     // Start reading data
-    println!("Opened u-blox device, waiting for solutions...");
+    println!("Opened uBlox device, waiting for messages...");
     loop {
         device
             .update(|packet| match packet {
                 PacketRef::MonVer(packet) => {
                     println!(
-                        "SW version: {} HW version: {}",
+                        "SW version: {} HW version: {}; Extensions: {:?}",
                         packet.software_version(),
-                        packet.hardware_version()
+                        packet.hardware_version(),
+                        packet.extension().collect::<Vec<&str>>()
                     );
                     println!("{:?}", packet);
                 },
@@ -183,7 +224,9 @@ fn main() {
                     }
 
                     if has_time {
-                        let time: DateTime<Utc> = (&sol).try_into().unwrap();
+                        let time: DateTime<Utc> = (&sol)
+                            .try_into()
+                            .expect("Could not parse NAV-PVT time field to UTC");
                         println!("Time: {:?}", time);
                     }
                 },

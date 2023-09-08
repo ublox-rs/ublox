@@ -44,7 +44,7 @@ fn test_parse_big_dump() {
     let mut rng = thread_rng();
     let mut i = 0;
     while i < biglog.len() {
-        let chunk: usize = rng.gen_range(1, MAX_SIZE);
+        let chunk: usize = rng.gen_range(1..MAX_SIZE);
         let chunk = (biglog.len() - i).min(chunk);
         read_sizes.push(chunk);
         i += chunk;
