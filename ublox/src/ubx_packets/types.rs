@@ -3,7 +3,7 @@ use crate::error::DateTimeError;
 use chrono::prelude::*;
 use core::{convert::TryFrom, fmt};
 
-/// Represents a world position, can be constructed from NavPosLlh and NavPosVelTime packets.
+/// Represents a world position, can be constructed from NavPosLlh and NavPvt packets.
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, Clone, Copy)]
 pub struct Position {
@@ -56,8 +56,8 @@ impl<'a> From<&NavVelNedRef<'a>> for Velocity {
     }
 }
 
-impl<'a> From<&NavPosVelTimeRef<'a>> for Position {
-    fn from(packet: &NavPosVelTimeRef<'a>) -> Self {
+impl<'a> From<&NavPvtRef<'a>> for Position {
+    fn from(packet: &NavPvtRef<'a>) -> Self {
         Position {
             lon: packet.lon_degrees(),
             lat: packet.lat_degrees(),
@@ -66,8 +66,8 @@ impl<'a> From<&NavPosVelTimeRef<'a>> for Position {
     }
 }
 
-impl<'a> From<&NavPosVelTimeRef<'a>> for Velocity {
-    fn from(packet: &NavPosVelTimeRef<'a>) -> Self {
+impl<'a> From<&NavPvtRef<'a>> for Velocity {
+    fn from(packet: &NavPvtRef<'a>) -> Self {
         Velocity {
             speed: packet.ground_speed(),
             heading: packet.heading_degrees(),
@@ -75,9 +75,9 @@ impl<'a> From<&NavPosVelTimeRef<'a>> for Velocity {
     }
 }
 
-impl<'a> TryFrom<&NavPosVelTimeRef<'a>> for DateTime<Utc> {
+impl<'a> TryFrom<&NavPvtRef<'a>> for DateTime<Utc> {
     type Error = DateTimeError;
-    fn try_from(sol: &NavPosVelTimeRef<'a>) -> Result<Self, Self::Error> {
+    fn try_from(sol: &NavPvtRef<'a>) -> Result<Self, Self::Error> {
         let date = NaiveDate::from_ymd_opt(
             i32::from(sol.year()),
             u32::from(sol.month()),

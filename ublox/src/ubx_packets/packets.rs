@@ -161,7 +161,7 @@ struct NavHpPosLlh {
 /// Navigation Position Velocity Time Solution
 #[ubx_packet_recv]
 #[ubx(class = 1, id = 0x07, fixed_payload_len = 92)]
-struct NavPosVelTime {
+struct NavPvt {
     /// GPS Millisecond Time of Week
     itow: u32,
     year: u16,
@@ -177,9 +177,9 @@ struct NavPosVelTime {
     /// GNSS fix Type
     #[ubx(map_type = GpsFix)]
     fix_type: u8,
-    #[ubx(map_type = NavPosVelTimeFlags)]
+    #[ubx(map_type = NavPvtFlags)]
     flags: u8,
-    #[ubx(map_type = NavPosVelTimeFlags2)]
+    #[ubx(map_type = NavPvtFlags2)]
     flags2: u8,
     num_satellites: u8,
     #[ubx(map_type = f64, scale = 1e-7, alias = lon_degrees)]
@@ -239,9 +239,9 @@ struct NavPosVelTime {
 #[ubx_extend_bitflags]
 #[ubx(from, rest_reserved)]
 bitflags! {
-    /// Fix status flags for `NavPosVelTime`
+    /// Fix status flags for `NavPvt`
     #[derive(Debug)]
-    pub struct NavPosVelTimeFlags: u8 {
+    pub struct NavPvtFlags: u8 {
         /// position and velocity valid and within DOP and ACC Masks
         const GPS_FIX_OK = 1;
         /// DGPS used
@@ -256,9 +256,9 @@ bitflags! {
 #[ubx_extend_bitflags]
 #[ubx(from, rest_reserved)]
 bitflags! {
-    /// Additional flags for `NavPosVelTime`
+    /// Additional flags for `NavPvt`
     #[derive(Debug)]
-    pub struct NavPosVelTimeFlags2: u8 {
+    pub struct NavPvtFlags2: u8 {
         /// 1 = information about UTC Date and Time of Day validity confirmation
         /// is available. This flag is only supported in Protocol Versions
         /// 19.00, 19.10, 20.10, 20.20, 20.30, 22.00, 23.00, 23.01,27 and 28.
@@ -3522,7 +3522,7 @@ define_recv_packets!(
         NavPosLlh,
         NavStatus,
         NavDop,
-        NavPosVelTime,
+        NavPvt,
         NavSolution,
         NavVelNed,
         NavHpPosLlh,
