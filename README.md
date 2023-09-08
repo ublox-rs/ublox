@@ -1,6 +1,7 @@
 ublox for Rust
 ==============
 
+[![Rust](https://github.com/ublox-rs/ublox/actions/workflows/rust.yml/badge.svg)](https://github.com/ublox-rs/ublox/actions/workflows/rust.yml)
 [![ublox on docs.rs][docs-badge]][docs-url]
 [![MIT licensed][mit-badge]][mit-url]
 [![rustc v1.65][mrvs-badge]][mrvs-url]
