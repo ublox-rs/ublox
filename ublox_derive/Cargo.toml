@@ -1,10 +1,10 @@
 [package]
-name = "ublox_derive"
-description = "Utility macros for the ublox crate"
-version = "0.0.4"
 authors = ["Lane Kolbly <lane@rscheme.org>"]
+description = "Utility macros for the ublox crate"
+edition = "2021"
 license = "MIT"
-edition = "2018"
+name = "ublox_derive"
+version = "0.0.4"
 
 [lib]
 proc-macro = true
@@ -12,8 +12,10 @@ proc-macro = true
 [dependencies]
 proc-macro2 = "1.0"
 quote = "1.0"
-syn = { version = "1.0.14", features = ["extra-traits", "full"] }
+# cannot be bumped to major relese:
+# see API changes at https://github.com/dtolnay/syn/releases/tag/2.0.0
+syn = {version = "1.0.109", features = ["extra-traits", "full"]}
 
 [dev-dependencies]
-which = { version = "3.0", default-features = false }
-proc-macro2 = { version = "1.0", features = ["span-locations"] }
+proc-macro2 = {version = "1.0", features = ["span-locations"]}
+which = {version = "4.4.0", default-features = false}
