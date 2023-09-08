@@ -12,3 +12,6 @@ clap = {version = "4.2.7", features = ["cargo"]}
 serde_json = "1.0.105"
 serialport = "4.2.2"
 ublox = {path = "../../ublox"}
+
+[features]
+alloc = ["ublox/alloc"]

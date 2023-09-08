@@ -2,6 +2,9 @@ use crate::cfg_val::CfgVal;
 use core::convert::TryInto;
 use core::fmt;
 
+#[cfg(feature = "alloc")]
+use alloc::vec::Vec;
+
 use bitflags::bitflags;
 use chrono::prelude::*;
 use num_traits::cast::{FromPrimitive, ToPrimitive};
@@ -2236,7 +2239,7 @@ struct CfgNav5 {
 #[ubx(from, into_raw, rest_reserved)]
 bitflags! {
     /// `CfgNav5` parameters bitmask
-    #[derive(Default, Debug)]
+    #[derive(Default, Debug, PartialEq, Eq)]
     pub struct CfgNav5Params: u16 {
         /// Apply dynamic model settings
         const DYN = 1;
