@@ -3247,16 +3247,25 @@ struct HnrPvt {
 
     #[ubx(map_type = f64, scale = 1e-7, alias = longitude)]
     lon: i32,
+
     #[ubx(map_type = f64, scale = 1e-7, alias = latitude)]
     lat: i32,
 
+    #[ubx(map_type = f64, scale = 1e-3, alias = height_above_ellipsoid)]
     height: i32,
+
+    #[ubx(map_type = f64, scale = 1e-3, alias = height_msl)]
     height_msl: i32,
+
+    #[ubx(map_type = f64, scale = 1e-3, alias = ground_speed_2d)]
     g_speed: i32,
+
+    #[ubx(map_type = f64, scale = 1e-3, alias = speed_3d)]
     speed: i32,
 
     #[ubx(map_type = f64, scale = 1e-5, alias = heading_motion)]
     head_mot: i32,
+
     #[ubx(map_type = f64, scale = 1e-5, alias = heading_vehicle)]
     head_veh: i32,
 
