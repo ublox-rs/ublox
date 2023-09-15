@@ -827,7 +827,7 @@ struct NavSat {
 struct NavOdo {
     version: u8,
     reserved: [u8; 3],
-    i_tow: u32,
+    itow: u32,
     distance: u32,
     total_distance: u32,
     distance_std: u32,
@@ -1588,7 +1588,7 @@ struct TimSvin {
 #[ubx(class = 0x01, id = 0x26, fixed_payload_len = 24)]
 struct NavTimeLs {
     /// GPS time of week of the navigation epoch in ms.
-    i_tow: u32,
+    itow: u32,
     ///Message version (0x00 for this version)
     version: u8,
     reserved_1: [u8; 3],
@@ -3402,7 +3402,7 @@ struct EsfIns {
     #[ubx(map_type = EsfInsBitFlags)]
     bit_field: u32,
     reserved: [u8; 4],
-    i_tow: u32,
+    itow: u32,
 
     #[ubx(map_type = f64, scale = 1e-3, alias = x_angular_rate)]
     x_ang_rate: i32,
@@ -3464,7 +3464,7 @@ pub struct HnrIns {
     #[ubx(map_type = HnrInsBitFlags)]
     bit_field: u32,
     reserved: [u8; 4],
-    i_tow: u32,
+    itow: u32,
 
     #[ubx(map_type = f64, scale = 1e-3, alias = x_angular_rate)]
     x_ang_rate: i32,
@@ -3504,7 +3504,7 @@ bitflags! {
 #[ubx(class = 0x28, id = 0x00, fixed_payload_len = 72)]
 #[derive(Debug)]
 struct HnrPvt {
-    i_tow: u32,
+    itow: u32,
     year: u16,
     month: u8,
     day: u8,
