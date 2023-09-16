@@ -14,6 +14,7 @@ jobs:
       matrix:
         feature-args:
           - ''
+          - --release 
           - --no-default-features --features alloc
           - --no-default-features
     steps:
