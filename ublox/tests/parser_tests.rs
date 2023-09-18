@@ -278,7 +278,7 @@ fn test_double_start_at_end() {
         0xb5, 0x62, 0x05, 0x01, 0x00, 0x00, 0x06, 0x17, // Zero-sized packet
     ];
 
-    let mut buf = vec![0; 10];
+    let mut buf = [0; 10];
     let buf = ublox::FixedLinearBuffer::new(&mut buf[..]);
     let mut parser = ublox::Parser::new(buf);
 
