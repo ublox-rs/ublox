@@ -608,7 +608,7 @@ impl NavSatSvFlags {
             2 => NavSatQualityIndicator::SignalAcquired,
             3 => NavSatQualityIndicator::SignalDetected,
             4 => NavSatQualityIndicator::CodeLock,
-            5 | 6 | 7 => NavSatQualityIndicator::CarrierLock,
+            5..=7 => NavSatQualityIndicator::CarrierLock,
             _ => {
                 panic!("Unexpected 3-bit bitfield value {}!", bits);
             },
