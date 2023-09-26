@@ -35,12 +35,6 @@ jobs:
       run: |
         cargo fmt --all -- --check
         cargo clippy --all-features --all-targets -- -D warnings
-    - name: Examples - build
-      run: cd ${{ github.workspace }} && cargo build
-    - name: Examples - coding style
-      run: |
-        cd ${{ github.workspace }} && cargo fmt --all -- --check
-        cd ${{ github.workspace }} && cargo clippy --all-features --all-targets -- -D warnings
 
   build_embedded:
     runs-on: ubuntu-latest
