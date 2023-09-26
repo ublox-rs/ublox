@@ -25,6 +25,15 @@ use super::{
     UbxUnknownPacketRef, SYNC_CHAR_1, SYNC_CHAR_2,
 };
 
+/// Used to help serialize the packet's fields flattened within a struct containing the msg_id and class fields, but
+/// without using the serde FlatMapSerializer which requires alloc.
+#[cfg(feature = "serde")]
+pub(crate) trait SerializeUbxPacketFields {
+    fn serialize_fields<S>(&self, serializer: &mut S) -> Result<(), S::Error>
+    where
+        S: serde::ser::SerializeMap;
+}
+
 /// Geodetic Position Solution
 #[ubx_packet_recv]
 #[ubx(class = 1, id = 2, fixed_payload_len = 28)]

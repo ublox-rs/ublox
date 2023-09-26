@@ -172,18 +172,28 @@ fn test_ubx_packet_recv_simple() {
                 }
             }
             #[cfg(feature = "serde")]
-            impl serde::Serialize for TestRef<'_> {
-                fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+            impl SerializeUbxPacketFields for TestRef<'_> {
+                fn serialize_fields<S>(&self, state: &mut S) -> Result<(), S::Error>
                 where
-                    S: serde::Serializer,
+                    S: serde::ser::SerializeMap,
                 {
-                    let mut state = serializer.serialize_map(None)?;
                     state.serialize_entry(stringify!(itow), &self.itow())?;
                     state.serialize_entry(stringify!(lat), &self.lat_degrees())?;
                     state.serialize_entry(stringify!(a), &self.a())?;
                     state.serialize_entry(stringify!(reserved1), &self.reserved1())?;
                     state.serialize_entry(stringify!(flags), &self.flags())?;
                     state.serialize_entry(stringify!(b), &self.b())?;
+                    Ok(())
+                }
+            }
+            #[cfg(feature = "serde")]
+            impl serde::Serialize for TestRef<'_> {
+                fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+                where
+                    S: serde::Serializer,
+                {
+                    let mut state = serializer.serialize_map(None)?;
+                    self.serialize_fields(&mut state)?;
                     state.end()
                 }
             }
@@ -280,17 +290,27 @@ fn test_ubx_packet_recv_dyn_len() {
                 }
             }
             #[cfg(feature = "serde")]
+            impl SerializeUbxPacketFields for TestRef<'_> {
+                fn serialize_fields<S>(&self, state: &mut S) -> Result<(), S::Error>
+                where
+                    S: serde::ser::SerializeMap,
+                {
+                    state.serialize_entry(stringify!(f1), &self.f1())?;
+                    state.serialize_entry(
+                        stringify!(rest),
+                        &crate::ubx_packets::FieldIter(self.rest()),
+                    )?;
+                    Ok(())
+                }
+            }
+            #[cfg(feature = "serde")]
             impl serde::Serialize for TestRef<'_> {
                 fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
                 where
                     S: serde::Serializer,
                 {
                     let mut state = serializer.serialize_map(None)?;
-                    state.serialize_entry(stringify!(f1), &self.f1())?;
-                    state.serialize_entry(
-                        stringify!(rest),
-                        &crate::ubx_packets::FieldIter(self.rest()),
-                    )?;
+                    self.serialize_fields(&mut state)?;
                     state.end()
                 }
             }
@@ -556,12 +576,25 @@ fn test_define_recv_packets() {
                 max_u16(Pack1::MAX_PAYLOAD_LEN, 0u16),
             );
 
-            #[cfg_attr(feature = "serde", derive(serde :: Serialize))]
+            #[cfg(feature = "serde")]
             pub struct PacketSerializer<'a, T> {
                 class: u8,
                 msg_id: u8,
-                #[cfg_attr(feature = "serde", serde(flatten))]
                 msg: &'a T,
+            }
+
+            #[cfg(feature = "serde")]
+            impl<'a, T: SerializeUbxPacketFields> serde::Serialize for PacketSerializer<'a, T> {
+                fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+                where
+                    S: serde::Serializer,
+                {
+                    let mut state = serializer.serialize_map(None)?;
+                    state.serialize_entry("class", &self.class)?;
+                    state.serialize_entry("msg_id", &self.msg_id)?;
+                    self.msg.serialize_fields(&mut state)?;
+                    state.end()
+                }
             }
 
             #[cfg(feature = "serde")]
