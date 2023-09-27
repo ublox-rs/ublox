@@ -50,13 +50,24 @@ fn generate_serialize_impl(
     });
     quote! {
         #[cfg(feature = "serde")]
+        impl SerializeUbxPacketFields for #ref_name<'_> {
+            fn serialize_fields<S>(&self, state: &mut S) -> Result<(), S::Error>
+            where
+                S: serde::ser::SerializeMap,
+            {
+                #(#fields)*
+                Ok(())
+            }
+        }
+
+        #[cfg(feature = "serde")]
         impl serde::Serialize for #ref_name<'_> {
             fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
             where
                 S: serde::Serializer,
             {
                 let mut state = serializer.serialize_map(None)?;
-                #(#fields)*
+                self.serialize_fields(&mut state)?;
                 state.end()
             }
         }
@@ -776,12 +787,25 @@ pub fn generate_code_for_parse(recv_packs: &RecvPackets) -> TokenStream {
             [a, b][(a < b) as usize]
         }
         pub(crate) const MAX_PAYLOAD_LEN: u16 = #max_payload_len_calc;
-        #[cfg_attr(feature = "serde", derive(serde::Serialize))]
+        #[cfg(feature = "serde")]
         pub struct PacketSerializer<'a, T> {
             class: u8,
             msg_id: u8,
-            #[cfg_attr(feature = "serde", serde(flatten))]
             msg: &'a T,
+        }
+
+        #[cfg(feature = "serde")]
+        impl<'a, T: SerializeUbxPacketFields> serde::Serialize for PacketSerializer<'a, T> {
+            fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+            where
+                S: serde::Serializer,
+            {
+                let mut state = serializer.serialize_map(None)?;
+                state.serialize_entry("class", &self.class)?;
+                state.serialize_entry("msg_id", &self.msg_id)?;
+                self.msg.serialize_fields(&mut state)?;
+                state.end()
+            }
         }
 
         #[cfg(feature = "serde")]
