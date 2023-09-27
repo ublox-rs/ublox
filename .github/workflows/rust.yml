@@ -15,9 +15,10 @@ jobs:
         feature-args:
           - ''
           - --no-default-features --features alloc
+          - --no-default-features --features serde
           - --no-default-features
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: Install libudev
       run: sudo apt-get update && sudo apt-get install -y libudev-dev
     - name: Install MSRV
@@ -34,17 +35,29 @@ jobs:
       run: |
         cargo fmt --all -- --check
         cargo clippy --all-features --all-targets -- -D warnings
-    - name: Examples - build
-      run: cd ${{ github.workspace }} && cargo build
-    - name: Examples - coding style
-      run: |
-        cd ${{ github.workspace }} && cargo fmt --all -- --check
-        cd ${{ github.workspace }} && cargo clippy --all-features --all-targets -- -D warnings
+
+  build_embedded:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Install MSRV
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: 1.70.0
+        override: true
+    - name: Install embedded targets
+      run: rustup target add thumbv6m-none-eabi thumbv7m-none-eabi thumbv7em-none-eabihf
+    - name: Build
+      run: cargo build --verbose --no-default-features --target thumbv6m-none-eabi --target thumbv7m-none-eabi --target thumbv7em-none-eabihf
+    - name: Build (alloc)
+      run: cargo build --verbose --no-default-features --target thumbv6m-none-eabi --target thumbv7m-none-eabi --target thumbv7em-none-eabihf --features alloc
+    - name: Build (serde)
+      run: cargo build --verbose --no-default-features --target thumbv6m-none-eabi --target thumbv7m-none-eabi --target thumbv7em-none-eabihf --features serde
 
   build_examples:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: Install libudev
       run: sudo apt-get update && sudo apt-get install -y libudev-dev
     - name: Install MSRV
