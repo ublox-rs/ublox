@@ -18,7 +18,7 @@ bitflags = "2.3.1"
 chrono = {version = "0.4.19", default-features = false, features = []}
 num-traits = {version = "0.2.12", default-features = false}
 serde = {version = "1.0.144", optional = true, default-features = false, features = ["derive"]}
-ublox_derive = {path = "../ublox_derive", version = "0.1.0"}
+ublox_derive = {path = "../ublox_derive", version = "=0.1.0"}
 
 [dev-dependencies]
 cpu-time = "1.0.0"
