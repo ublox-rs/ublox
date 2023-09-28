@@ -4,7 +4,7 @@ description = "Utility macros for the ublox crate"
 edition = "2021"
 license = "MIT"
 name = "ublox_derive"
-version = "0.0.4"
+version = "0.1.0"
 
 [lib]
 proc-macro = true
