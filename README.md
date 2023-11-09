@@ -15,7 +15,7 @@ uBlox for Rust
 
 This project aims to build a pure-rust I/O library for uBlox GPS devices, specifically using the UBX protocol.
 
-Examples of usage of the library can be found in the [examples/](./examples) directory. A basic CLI for interacting with an uBlox device can be found in [examples/basic_cli](./examples/basic_cli/) directory. See the specific [examples/README](./examples/README.md).
+Examples of usage of the library can be found in the [examples/](./examples) directory. A basic CLI for interacting with an uBlox device can be found in [examples/ublox-cli](./examples/ublox-cli/) directory. See the specific [examples/README](./examples/README.md).
 
 Constructing Packets
 ====================
