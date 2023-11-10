@@ -1,4 +1,4 @@
-ublox for Rust
+uBlox for Rust
 ==============
 
 [![Rust](https://github.com/ublox-rs/ublox/actions/workflows/rust.yml/badge.svg)](https://github.com/ublox-rs/ublox/actions/workflows/rust.yml)
@@ -13,9 +13,9 @@ ublox for Rust
 [mrvs-url]: https://www.whatrustisit.com
 [mrvs-badge]: https://img.shields.io/badge/minimum%20rustc-1.65-blue?logo=rust
 
-This project aims to build a pure-rust I/O library for ublox GPS devices, specifically using the UBX protocol.
+This project aims to build a pure-rust I/O library for uBlox GPS devices, specifically using the UBX protocol.
 
-Examples of usage of the library can be found in the [examples/](./examples) directory. A basic CLI for interacting with an uBlox device can be found in [examples/basic_cli](./examples/basic_cli/) directory. See the specific [examples/README](./examples/README.md).
+Examples of usage of the library can be found in the [examples/](./examples) directory. A basic CLI for interacting with an uBlox device can be found in [examples/ublox-cli](./examples/ublox-cli/) directory. See the specific [examples/README](./examples/README.md).
 
 Constructing Packets
 ====================

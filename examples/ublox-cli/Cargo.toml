@@ -1,7 +1,7 @@
 [package]
-authors = ["Lane Kolbly <lane@rscheme.org>"]
-edition = "2018"
-name = "ublox_cli"
+authors = ["Lane Kolbly <lane@rscheme.org>", "Andrei Gherghescu <andrei.github.book663@passfwd.com>"]
+edition = "2021"
+name = "ublox-cli"
 publish = false
 rust-version = "1.70"
 version = "0.1.0"
