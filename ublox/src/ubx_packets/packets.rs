@@ -724,8 +724,146 @@ struct NavSat {
     svs: [u8; 0],
 }
 
-/// Odometer solution
+#[repr(transparent)]
+#[derive(Copy, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
+pub struct NavSigFlags(u16);
+
+impl NavSigFlags {
+    /* Re-use the NavSatHealth enum for the signal health */
+    pub fn health(self) -> NavSatSvHealth {
+        let bits = self.0 & 0x3;
+        match bits {
+            1 => NavSatSvHealth::Healthy,
+            2 => NavSatSvHealth::Unhealthy,
+            x => NavSatSvHealth::Unknown(x as u8),
+        }
+    }
+
+    pub fn pr_smoothed(self) -> bool {
+        (self.0 >> 2) & 0x1 != 0
+    }
+
+    pub fn pr_used(self) -> bool {
+        (self.0 >> 3) & 0x1 != 0
+    }
+
+    pub fn cr_used(self) -> bool {
+        (self.0 >> 4) & 0x1 != 0
+    }
+
+    pub fn do_used(self) -> bool {
+        (self.0 >> 5) & 0x1 != 0
+    }
+
+    pub fn pr_corr_used(self) -> bool {
+        (self.0 >> 6) & 0x1 != 0
+    }
+
+    pub fn cr_corr_used(self) -> bool {
+        (self.0 >> 7) & 0x1 != 0
+    }
+
+    pub fn do_corr_used(self) -> bool {
+        (self.0 >> 8) & 0x1 != 0
+    }
+
+    pub const fn from(x: u16) -> Self {
+        Self(x)
+    }
+}
+
+impl fmt::Debug for NavSigFlags {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("NavSatSvFlags")
+            .field("health", &self.health())
+            .field("pr_smoothed", &self.pr_smoothed())
+            .field("pr__used", &self.pr_used())
+            .field("cr__used", &self.cr_used())
+            .field("do__used", &self.do_used())
+            .field("pr_corr_used", &self.pr_corr_used())
+            .field("cr_corr_used", &self.cr_corr_used())
+            .field("do_corr_used", &self.do_corr_used())
+            .finish()
+    }
+}
+
 #[ubx_packet_recv]
+#[ubx(class = 0x01, id = 0x35, fixed_payload_len = 16)]
+struct NavSigInfo {
+    gnss_id: u8,
+    sv_id: u8,
+    sig_id: u8,
+    freq_id: u8,
+    pr_res: i16,
+    cno: u8,
+    quality_ind: u8,
+    corr_source: u8,
+    ion_model: u8,
+    #[ubx(map_type = NavSigFlags)]
+    flags: u16,
+    reserved: [u8; 4],
+}
+
+#[derive(Clone)]
+pub struct NavSigIter<'a> {
+    data: &'a [u8],
+    offset: usize,
+}
+
+impl<'a> NavSigIter<'a> {
+    fn new(data: &'a [u8]) -> Self {
+        Self { data, offset: 0 }
+    }
+
+    fn is_valid(bytes: &[u8]) -> bool {
+        bytes.len() % 16 == 0
+    }
+}
+
+impl<'a> core::iter::Iterator for NavSigIter<'a> {
+    type Item = NavSigInfoRef<'a>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.offset < self.data.len() {
+            let data = &self.data[self.offset..self.offset + 16];
+            self.offset += 16;
+            Some(NavSigInfoRef(data))
+        } else {
+            None
+        }
+    }
+}
+
+impl fmt::Debug for NavSigIter<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("NavSigIter").finish()
+    }
+}
+
+#[ubx_packet_recv]
+#[ubx(class = 0x01, id = 0x43, max_payload_len = 1240)]
+struct NavSig {
+    /// GPS time of week in ms
+    itow: u32,
+
+    /// Message version, should be 0
+    version: u8,
+
+    num_sigs: u8,
+
+    reserved: u16,
+
+    #[ubx(map_type = NavSigIter,
+        may_fail,
+        is_valid = NavSigIter::is_valid,
+        from = NavSigIter::new,
+        get_as_ref)]
+    sigs: [u8; 0],
+}
+
+/// Odometer solution
+#[ubx_packet_recv_send]
 #[ubx(class = 0x01, id = 0x09, fixed_payload_len = 20)]
 struct NavOdo {
     version: u8,
@@ -1025,6 +1163,120 @@ impl From<u32> for CfgItfmAntennaSettings {
             2 => CfgItfmAntennaSettings::Passive,
             _ => CfgItfmAntennaSettings::Unknown,
         }
+    }
+}
+
+/// Multi-GNSS config
+
+/// GNSS system types
+#[repr(u8)]
+#[derive(Clone, Copy, Debug)]
+pub enum GnssId {
+    GPS = 0,
+    SBAS = 1,
+    GALILEO = 2,
+    BEIDOU = 3,
+    IMES = 4,
+    QZSS = 5,
+    GLONASS = 6,
+}
+
+#[ubx_packet_recv_send]
+#[ubx(
+    class = 0x06,
+    id = 0x3e,
+    fixed_payload_len = 12,
+    flags = "default_for_builder"
+)]
+struct CfgGnss {
+    msg_version: u8,       // message version (0 for this version)
+    num_trk_ch_hw: u8,     // number of tracking channels hardware (read only)
+    num_trk_ch_use: u8,    // number of tracking channels to use (<= numTrkChHw) (read/write)
+    num_config_blocks: u8, // number of config blocks to follow (only 1 supported)
+
+    //#[ubx(map_type = GnssBlockIter,
+    //    may_fail,
+    //    is_valid = gnssblock::is_valid,
+    //    from = gnssblock::convert_to_iter,
+    //    into = gnssblock::into_raw,
+    //    get_as_ref)]
+    //blocks: [u8; 0],
+    gnss_id: u8,    // GNSS identifier (see [GnssId])
+    res_trk_ch: u8, // Minimum number of tracking channels reserved for this GNSS (read only)
+    max_trk_ch: u8, // maximum number of tracking channels supported by this GNSS (read only)
+    reserved1: u8,  // reserved
+    flags: u32,     // Flags bit mask
+                    //
+                    // Bits 23-16 - sigCfgMask
+                    // Depends on the GNSS id
+                    // 0 - GPS
+                    //   0x01: L1C/A
+                    //   0x10: L2C
+                    //   0x20: L5
+                    // 1 - SBAS
+                    //   0x001: SBAS L1C/A
+                    // 2 - Galileo
+                    //   0x01: E1
+                    //   0x10: E5A
+                    //   0x20: E5B
+                    // 3 - Beidou 3
+                    //   0x01: B1I
+                    //   0x10: B1C
+                    //   0x80: B2A
+                    // 5 - QZSS
+                    //   0x01: L1C/A
+                    //   0x04: L1S
+                    //   0x10: L2C
+                    //   0x20: L5
+                    // 6 - GloNASS
+                    //   0x01: L1OF
+                    //   0x10: L2OF
+                    //
+}
+
+#[ubx_packet_recv_send]
+#[ubx(class = 0x06, id = 0x3e, fixed_payload_len = 8)]
+struct GnssBlock<'a> {
+    gnss_id: u8,
+    res_trk_ch: u8,
+    max_trk_ch: u8,
+    reserved1: u8,
+    flags: u32,
+}
+
+#[derive(Debug)]
+pub struct GnssBlockIter<'a> {
+    data: &'a [u8],
+    offset: usize,
+}
+
+impl<'a> core::iter::Iterator for GnssBlockIter<'a> {
+    type Item = GnssBlockRef<'a>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.offset < self.data.len() {
+            let data = &self.data[self.offset..self.offset + 8];
+            self.offset += 8;
+            Some(GnssBlockRef(data))
+        } else {
+            None
+        }
+    }
+}
+
+mod gnssblock {
+
+    use super::GnssBlockIter;
+
+    pub(crate) fn convert_to_iter(bytes: &[u8]) -> GnssBlockIter {
+        GnssBlockIter {
+            data: bytes,
+            offset: 0,
+        }
+    }
+
+    pub(crate) fn is_valid(bytes: &[u8]) -> bool {
+        bytes.len() % 8 == 0
     }
 }
 
@@ -3603,6 +3855,7 @@ define_recv_packets!(
         NavStatus,
         NavDop,
         NavPvt,
+        NavSig,
         NavSolution,
         NavVelNed,
         NavHpPosLlh,
@@ -3625,6 +3878,7 @@ define_recv_packets!(
         CfgPrtUart,
         CfgNav5,
         CfgAnt,
+        CfgGnss,
         CfgTmode2,
         CfgTmode3,
         CfgTp5,
