@@ -172,8 +172,6 @@ struct NavHpPosLlh {
 bitflags! {
     #[derive(Default, Debug)]
     pub struct NavHpPosEcefFlags: u8 {
-        /// Position given in LAT/LON/ALT
-        /// default being WGS84 ECEF
         const INVALID_ECEF = 1;
 
     }
