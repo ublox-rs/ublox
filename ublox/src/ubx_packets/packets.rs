@@ -3666,6 +3666,7 @@ define_recv_packets!(
         NavSolution,
         NavVelNed,
         NavHpPosLlh,
+        NavHpPosEcef,
         NavTimeUTC,
         NavTimeLs,
         NavSat,
