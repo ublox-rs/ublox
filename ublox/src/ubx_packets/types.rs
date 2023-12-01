@@ -21,13 +21,13 @@ pub struct Position {
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, Clone, Copy)]
 pub struct PositionECEF {
-    /// Logitude in degrees
+    /// x coordinates in meters
     pub x: f64,
 
-    /// Latitude in degrees
+    /// y coordinates in meters
     pub y: f64,
 
-    /// Altitude in meters
+    /// z coordinates in meters
     pub z: f64,
 }
 
