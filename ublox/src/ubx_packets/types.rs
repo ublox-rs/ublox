@@ -31,7 +31,6 @@ pub struct PositionECEF {
     pub z: f64,
 }
 
-
 #[derive(Debug, Clone, Copy)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Velocity {
@@ -71,7 +70,6 @@ impl<'a> From<&NavHpPosEcefRef<'a>> for PositionECEF {
         }
     }
 }
-
 
 impl<'a> From<&NavVelNedRef<'a>> for Velocity {
     fn from(packet: &NavVelNedRef<'a>) -> Self {
