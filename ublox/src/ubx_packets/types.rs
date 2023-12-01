@@ -17,6 +17,20 @@ pub struct Position {
     pub alt: f64,
 }
 
+/// Represents a world position in the ECEF coordinate system
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Debug, Clone, Copy)]
+pub struct PositionECEF {
+    /// x coordinates in meters
+    pub x: f64,
+
+    /// y coordinates in meters
+    pub y: f64,
+
+    /// z coordinates in meters
+    pub z: f64,
+}
+
 #[derive(Debug, Clone, Copy)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Velocity {
@@ -43,6 +57,16 @@ impl<'a> From<&NavHpPosLlhRef<'a>> for Position {
             lon: packet.lon_degrees() + packet.lon_hp_degrees(),
             lat: packet.lat_degrees() + packet.lat_hp_degrees(),
             alt: packet.height_msl() + packet.height_hp_msl(),
+        }
+    }
+}
+
+impl<'a> From<&NavHpPosEcefRef<'a>> for PositionECEF {
+    fn from(packet: &NavHpPosEcefRef<'a>) -> Self {
+        PositionECEF {
+            x: 10e-2 * (packet.ecef_x_cm() + 0.1 * packet.ecef_x_hp_mm()),
+            y: 10e-2 * (packet.ecef_y_cm() + 0.1 * packet.ecef_y_hp_mm()),
+            z: 10e-2 * (packet.ecef_z_cm() + 0.1 * packet.ecef_z_hp_mm()),
         }
     }
 }
