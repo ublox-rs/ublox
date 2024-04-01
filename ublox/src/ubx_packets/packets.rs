@@ -3642,7 +3642,7 @@ struct NavHpPosEcef {
     ecef_hp_x: i8, // 0.1 mm
     ecef_hp_y: i8, // 0.1 mm
     ecef_hp_z: i8, // 0.1 mm
-    #[ubx(map_type = StdevFlags)]
+    #[ubx(map_type = NavHpPosEcefFlags)]
     flags : u8,
     s_acc: u32, // 0.1 mm
 }
