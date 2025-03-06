@@ -7,6 +7,7 @@ name = "ublox"
 readme = "../README.md"
 repository = "https://github.com/lkolbly/ublox"
 version = "0.4.5"
+rust-version.workspace = true
 
 [features]
 ubx_proto23 = []
