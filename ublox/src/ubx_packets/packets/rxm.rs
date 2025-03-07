@@ -21,12 +21,12 @@ use super::{
 
 #[ubx_packet_recv]
 #[ubx(class = 0x02, id = 0x32, fixed_payload_len = 8)]
-struct RxmRtcm {
-    version: u8,
-    flags: u8,
-    sub_type: u16,
-    ref_station: u16,
-    msg_type: u16,
+pub struct RxmRtcm {
+    pub version: u8,
+    pub flags: u8,
+    pub sub_type: u16,
+    pub ref_station: u16,
+    pub msg_type: u16,
 }
 
 #[ubx_extend_bitflags]
@@ -38,6 +38,69 @@ bitflags! {
         const CP_VALID = 0x02;
         const HALF_CYCLE = 0x04;
         const SUB_HALF_CYCLE = 0x08;
+    }
+}
+
+#[ubx_extend_bitflags]
+#[ubx(from, into_raw, rest_reserved)]
+bitflags! {
+    /// `CfgNavX5Params2` parameters bitmask
+    #[derive(Default, Debug)]
+    pub struct RecStatFlags: u8 {
+        /// Leap seconds have been determined
+        const LEAP_SEC = 0x1;
+        /// Clock reset applied.
+        const CLK_RESET = 0x2;
+    }
+}
+
+#[ubx_packet_recv]
+#[ubx(class = 0x02, id = 0x15, max_payload_len = 8176)] // 16 + 255 * 32
+pub struct RxmRawx {
+    /// Measurement time of week in receiver local time approximately aligned to the GPS time system.
+    pub rcv_tow: f64,
+    /// GPS week number in receiver local time.
+    pub week: u16,
+    /// GPS leap seconds (GPS-UTC)
+    pub leap_s: i8,
+    /// Number of measurements to follow
+    pub num_meas: u8,
+    /// Receiver tracking status bitfield
+    #[ubx(map_type = RecStatFlags)]
+    pub rec_stat: u8,
+    /// Message version
+    pub version: u8,
+    pub reserved1: [u8; 2],
+    /// Extended software information strings
+    #[ubx(
+        map_type = RxmRawxInfoIter,
+        from = RxmRawxInfoIter::new,
+        may_fail,
+        is_valid = RxmRawxInfoIter::is_valid,
+    )]
+    pub measurements: [u8; 0],
+}
+
+#[derive(Debug, Clone)]
+pub struct DwrdIter<'a>(core::slice::ChunksExact<'a, u8>);
+
+impl<'a> DwrdIter<'a> {
+    fn new(bytes: &'a [u8]) -> Self {
+        DwrdIter(bytes.chunks_exact(4))
+    }
+
+    fn is_valid(bytes: &'a [u8]) -> bool {
+        bytes.len() % 4 == 0
+    }
+}
+
+impl<'a> core::iter::Iterator for DwrdIter<'a> {
+    type Item = u32;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.0
+            .next()
+            .map(|bytes| u32::from_le_bytes(bytes.try_into().unwrap()))
     }
 }
 

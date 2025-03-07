@@ -721,16 +721,16 @@ pub enum NavSatOrbitSource {
 
 #[ubx_packet_recv]
 #[ubx(class = 0x01, id = 0x35, fixed_payload_len = 12)]
-struct NavSatSvInfo {
-    gnss_id: u8,
-    sv_id: u8,
-    cno: u8,
-    elev: i8,
-    azim: i16,
-    pr_res: i16,
+pub struct NavSatSvInfo {
+    pub gnss_id: u8,
+    pub sv_id: u8,
+    pub cno: u8,
+    pub elev: i8,
+    pub azim: i16,
+    pub pr_res: i16,
 
     #[ubx(map_type = NavSatSvFlags)]
-    flags: u32,
+    pub flags: u32,
 }
 
 #[derive(Debug, Clone)]
@@ -765,16 +765,16 @@ impl<'a> core::iter::Iterator for NavSatIter<'a> {
 
 #[ubx_packet_recv]
 #[ubx(class = 0x01, id = 0x35, max_payload_len = 1240)]
-struct NavSat {
+pub struct NavSat {
     /// GPS time of week in ms
-    itow: u32,
+    pub itow: u32,
 
     /// Message version, should be 1
-    version: u8,
+    pub version: u8,
 
-    num_svs: u8,
+    pub num_svs: u8,
 
-    reserved: [u8; 2],
+    pub reserved: [u8; 2],
 
     #[ubx(
         map_type = NavSatIter,
@@ -783,19 +783,19 @@ struct NavSat {
         may_fail,
         get_as_ref,
     )]
-    svs: [u8; 0],
+    pub svs: [u8; 0],
 }
 
 /// Odometer solution
 #[ubx_packet_recv]
 #[ubx(class = 0x01, id = 0x09, fixed_payload_len = 20)]
 struct NavOdo {
-    version: u8,
-    reserved: [u8; 3],
-    itow: u32,
-    distance: u32,
-    total_distance: u32,
-    distance_std: u32,
+    pub version: u8,
+    pub reserved: [u8; 3],
+    pub itow: u32,
+    pub distance: u32,
+    pub total_distance: u32,
+    pub distance_std: u32,
 }
 
 /// Reset odometer
@@ -806,63 +806,128 @@ struct NavResetOdo {}
 /// UTC Time Solution
 #[ubx_packet_recv]
 #[ubx(class = 1, id = 0x21, fixed_payload_len = 20)]
-struct NavTimeUTC {
+pub struct NavTimeUTC {
     /// GPS Millisecond Time of Week
-    itow: u32,
-    time_accuracy_estimate_ns: u32,
+    pub itow: u32,
+    pub time_accuracy_estimate_ns: u32,
 
     /// Nanoseconds of second, range -1e9 .. 1e9
-    nanos: i32,
+    pub nanos: i32,
 
     /// Year, range 1999..2099
-    year: u16,
+    pub year: u16,
 
     /// Month, range 1..12
-    month: u8,
+    pub month: u8,
 
     /// Day of Month, range 1..31
-    day: u8,
+    pub day: u8,
 
     /// Hour of Day, range 0..23
-    hour: u8,
+    pub hour: u8,
 
     /// Minute of Hour, range 0..59
-    min: u8,
+    pub min: u8,
 
     /// Seconds of Minute, range 0..59
-    sec: u8,
+    pub sec: u8,
 
     /// Validity Flags
     #[ubx(map_type = NavTimeUtcFlags)]
-    valid: u8,
+    pub valid: u8,
 }
 
 #[ubx_packet_recv]
 #[ubx(class = 0x01, id = 0x05, fixed_payload_len = 32)]
-struct NavAtt {
-    itow: u32,
-    version: u8,
-    reserved1: [u8; 3],
+pub struct NavAtt {
+    pub itow: u32,
+    pub version: u8,
+    pub reserved1: [u8; 3],
     #[ubx(map_type = f64, scale = 1e-5, alias = vehicle_roll)]
-    roll: i32,
+    pub roll: i32,
     #[ubx(map_type = f64, scale = 1e-5, alias = vehicle_pitch)]
-    pitch: i32,
+    pub pitch: i32,
     #[ubx(map_type = f64, scale = 1e-5, alias = vehicle_heading)]
-    heading: i32,
+    pub heading: i32,
     #[ubx(map_type = f64, scale = 1e-5, alias = vehicle_roll_accuracy)]
-    acc_roll: u32,
+    pub acc_roll: u32,
     #[ubx(map_type = f64, scale = 1e-5, alias = vehicle_pitch_accuracy)]
-    acc_pitch: u32,
+    pub acc_pitch: u32,
     #[ubx(map_type = f64, scale = 1e-5, alias = vehicle_heading_accuracy)]
-    acc_heading: u32,
+    pub acc_heading: u32,
 }
 
 #[ubx_packet_recv]
 #[ubx(class = 0x01, id = 0x22, fixed_payload_len = 20)]
-struct NavClock {
-    itow: u32,
-    clk_b: i32,
-    clk_d: i32,
-    t_acc: u32,
-    f_acc: u32,
+pub struct NavClock {
+    pub itow: u32,
+    pub clk_b: i32,
+    pub clk_d: i32,
+    pub t_acc: u32,
+    pub f_acc: u32,
+}
+
+/// Leap second event information
+#[ubx_packet_recv]
+#[ubx(class = 0x01, id = 0x26, fixed_payload_len = 24)]
+pub struct NavTimeLs {
+    /// GPS time of week of the navigation epoch in ms.
+    pub itow: u32,
+    ///Message version (0x00 for this version)
+    pub version: u8,
+    pub reserved_1: [u8; 3],
+    /// Information source for the current number of leap seconds.
+    /// 0: Default (hardcoded in the firmware, can be outdated)
+    /// 1: Derived from time difference between GPS and GLONASS time
+    /// 2: GPS
+    /// 3: SBAS
+    /// 4: BeiDou
+    /// 5: Galileo
+    /// 6: Aided data 7: Configured 8: NavIC
+    /// 255: Unknown
+    pub src_of_curr_ls: u8,
+    /// Current number of leap seconds since start of GPS time (Jan 6, 1980). It reflects how much
+    /// GPS time is ahead of UTC time. Galileo number of leap seconds is the same as GPS. BeiDou
+    /// number of leap seconds is 14 less than GPS. GLONASS follows UTC time, so no leap seconds.
+    pub current_ls: i8,
+    /// Information source for the future leap second event.
+    /// 0: No source
+    /// 2: GPS
+    /// 3: SBAS
+    /// 4: BeiDou
+    /// 5: Galileo
+    /// 6: GLONASS 7: NavIC
+    pub src_of_ls_change: u8,
+    /// Future leap second change if one is scheduled. +1 = positive leap second, -1 = negative
+    /// leap second, 0 = no future leap second event scheduled or no information available.
+    pub ls_change: i8,
+    /// Number of seconds until the next leap second event, or from the last leap second event if
+    /// no future event scheduled. If > 0 event is in the future, = 0 event is now, < 0 event is in
+    /// the past. Valid only if validTimeToLsEvent = 1.
+    pub time_to_ls_event: i32,
+    /// GPS week number (WN) of the next leap second event or the last one if no future event
+    /// scheduled. Valid only if validTimeToLsEvent = 1.
+    pub date_of_ls_gps_wn: u16,
+    /// GPS day of week number (DN) for the next leap second event or the last one if no future
+    /// event scheduled. Valid only if validTimeToLsEvent = 1. (GPS and Galileo DN: from 1 = Sun to
+    /// 7 = Sat. BeiDou DN: from 0 = Sun to 6 = Sat.)
+    pub date_of_ls_gps_dn: u16,
+    pub reserved_2: [u8; 3],
+    /// Validity flags see `NavTimeLsFlags`
+    #[ubx(map_type = NavTimeLsFlags)]
+    pub valid: u8,
+}
+
+#[ubx_extend_bitflags]
+#[ubx(from, rest_reserved)]
+bitflags! {
+    /// Fix status flags for `NavTimeLsFlags`
+    #[derive(Debug)]
+    pub struct NavTimeLsFlags: u8 {
+        /// 1 = Valid current number of leap seconds value.
+        const VALID_CURR_LS = 1;
+        /// Valid time to next leap second event or from the last leap second event if no future
+        /// event scheduled.
+        const VALID_TIME_TO_LS_EVENT = 2;
+    }
 }

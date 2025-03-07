@@ -96,3 +96,82 @@ mod mon_ver {
         core::str::from_utf8(&bytes[0..null_pos]).is_ok()
     }
 }
+
+/// Hardware status
+#[ubx_packet_recv]
+#[ubx(class = 0x0a, id = 0x09, fixed_payload_len = 60)]
+pub struct MonHw {
+    pub pin_sel: u32,
+    pub pin_bank: u32,
+    pub pin_dir: u32,
+    pub pin_val: u32,
+    pub noise_per_ms: u16,
+    pub agc_cnt: u16,
+    #[ubx(map_type = AntennaStatus)]
+    pub a_status: u8,
+    #[ubx(map_type = AntennaPower)]
+    pub a_power: u8,
+    pub flags: u8,
+    pub reserved1: u8,
+    pub used_mask: u32,
+    pub vp: [u8; 17],
+    pub jam_ind: u8,
+    pub reserved2: [u8; 2],
+    pub pin_irq: u32,
+    pub pull_h: u32,
+    pub pull_l: u32,
+}
+
+#[ubx_extend]
+#[ubx(from, rest_reserved)]
+#[repr(u8)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum AntennaStatus {
+    Init = 0,
+    DontKnow = 1,
+    Ok = 2,
+    Short = 3,
+    Open = 4,
+}
+
+#[ubx_extend]
+#[ubx(from, rest_reserved)]
+#[repr(u8)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum AntennaPower {
+    Off = 0,
+    On = 1,
+    DontKnow = 2,
+}
+
+#[derive(Debug, Clone)]
+pub struct MonVerExtensionIter<'a> {
+    data: &'a [u8],
+    offset: usize,
+}
+
+use mon_ver::is_cstr_valid;
+
+impl<'a> MonVerExtensionIter<'a> {
+    fn new(data: &'a [u8]) -> Self {
+        Self { data, offset: 0 }
+    }
+
+    fn is_valid(payload: &[u8]) -> bool {
+        payload.len() % 30 == 0 && payload.chunks(30).all(is_cstr_valid)
+    }
+}
+
+impl<'a> core::iter::Iterator for MonVerExtensionIter<'a> {
+    type Item = &'a str;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.offset < self.data.len() {
+            let data = &self.data[self.offset..self.offset + 30];
+            self.offset += 30;
+            Some(mon_ver::convert_to_str_unchecked(data))
+        } else {
+            None
+        }
+    }
+}

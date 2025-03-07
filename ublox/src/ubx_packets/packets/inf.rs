@@ -26,13 +26,13 @@ use super::{
     max_payload_len = 1240,
     flags = "default_for_builder"
 )]
-struct InfError {
+pub struct InfError {
     #[ubx(map_type = Option<&str>,
         may_fail,
         is_valid = inf::is_valid,
         from = inf::convert_to_str,
         get_as_ref)]
-    message: [u8; 0],
+    pub message: [u8; 0],
 }
 
 #[ubx_packet_recv]
@@ -42,13 +42,13 @@ struct InfError {
     max_payload_len = 1240,
     flags = "default_for_builder"
 )]
-struct InfNotice {
+pub struct InfNotice {
     #[ubx(map_type = Option<&str>,
         may_fail,
         is_valid = inf::is_valid,
         from = inf::convert_to_str,
         get_as_ref)]
-    message: [u8; 0],
+    pub message: [u8; 0],
 }
 
 #[ubx_packet_recv]
@@ -58,13 +58,13 @@ struct InfNotice {
     max_payload_len = 1240,
     flags = "default_for_builder"
 )]
-struct InfTest {
+pub struct InfTest {
     #[ubx(map_type = Option<&str>,
         may_fail,
         is_valid = inf::is_valid,
         from = inf::convert_to_str,
         get_as_ref)]
-    message: [u8; 0],
+    pub message: [u8; 0],
 }
 
 #[ubx_packet_recv]
@@ -74,13 +74,13 @@ struct InfTest {
     max_payload_len = 1240,
     flags = "default_for_builder"
 )]
-struct InfWarning {
+pub struct InfWarning {
     #[ubx(map_type = Option<&str>,
         may_fail,
         is_valid = inf::is_valid,
         from = inf::convert_to_str,
         get_as_ref)]
-    message: [u8; 0],
+    pub message: [u8; 0],
 }
 
 #[ubx_packet_recv]
@@ -90,13 +90,13 @@ struct InfWarning {
     max_payload_len = 1240,
     flags = "default_for_builder"
 )]
-struct InfDebug {
+pub struct InfDebug {
     #[ubx(map_type = Option<&str>,
         may_fail,
         is_valid = inf::is_valid,
         from = inf::convert_to_str,
         get_as_ref)]
-    message: [u8; 0],
+    pub message: [u8; 0],
 }
 
 mod inf {
