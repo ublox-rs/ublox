@@ -197,7 +197,7 @@ pub fn generate_recv_code_for_packet(pack_descr: &PackDesc) -> TokenStream {
     let struct_comment = &pack_descr.comment;
     let validator = if let Some(payload_len) = pack_descr.packet_payload_size() {
         quote! {
-            pub(crate) fn validate(payload: &[u8]) -> Result<(), ParserError> {
+            pub fn validate(payload: &[u8]) -> Result<(), ParserError> {
                 let expect = #payload_len;
                 let got = payload.len();
                 if got ==  expect {
@@ -237,7 +237,7 @@ pub fn generate_recv_code_for_packet(pack_descr: &PackDesc) -> TokenStream {
         };
 
         quote! {
-            pub(crate) fn validate(payload: &[u8]) -> Result<(), ParserError> {
+            pub fn validate(payload: &[u8]) -> Result<(), ParserError> {
                 let got = payload.len();
                 let min = #min_size;
                 if got >= min {
@@ -574,7 +574,7 @@ pub fn generate_code_to_extend_enum(ubx_enum: &UbxExtendEnum) -> TokenStream {
         None => quote! {},
         Some(UbxTypeIntoFn::Raw) => quote! {
             impl #name {
-                const fn into_raw(self) -> #repr_ty {
+                pub(crate) const fn into_raw(self) -> #repr_ty {
                     self as #repr_ty
                 }
             }
@@ -679,7 +679,7 @@ pub fn generate_code_to_extend_bitflags(bitflags: BitFlagsMacro) -> syn::Result<
         None => quote! {},
         Some(UbxTypeIntoFn::Raw) => quote! {
             impl #name {
-                const fn into_raw(self) -> #repr_ty {
+                pub(crate) const fn into_raw(self) -> #repr_ty {
                     self.bits()
                 }
             }

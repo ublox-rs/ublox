@@ -137,7 +137,7 @@ fn test_ubx_packet_recv_simple() {
                     val
                 }
 
-                fn validate(payload: &[u8]) -> Result<(), ParserError> {
+                pub fn validate(payload: &[u8]) -> Result<(), ParserError> {
                     let expect = 16usize;
                     let got = payload.len();
                     if got == expect {
@@ -266,7 +266,7 @@ fn test_ubx_packet_recv_dyn_len() {
                     &self.0[8usize..]
                 }
 
-                fn validate(payload: &[u8]) -> Result<(), ParserError> {
+                pub fn validate(payload: &[u8]) -> Result<(), ParserError> {
                     let got = payload.len();
                     let min = 8usize;
                     if got >= min {

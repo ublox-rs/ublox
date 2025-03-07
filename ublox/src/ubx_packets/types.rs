@@ -3,6 +3,8 @@ use crate::error::DateTimeError;
 use chrono::prelude::*;
 use core::{convert::TryFrom, fmt};
 
+use crate::nav::{NavHpPosEcefRef, NavHpPosLlhRef, NavPvtRef, NavVelNedRef};
+
 /// Represents a world position, can be constructed from NavPosLlh and NavPvt packets.
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, Clone, Copy)]

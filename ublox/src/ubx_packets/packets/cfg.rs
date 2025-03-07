@@ -7,7 +7,7 @@ use bitflags::bitflags;
 
 use super::SerializeUbxPacketFields;
 
-use ublox_derive::{ubx_extend, ubx_packet_send, ubx_extend_bitflags, ubx_packet_recv_send};
+use ublox_derive::{ubx_extend, ubx_extend_bitflags, ubx_packet_recv_send, ubx_packet_send};
 
 use crate::error::{MemWriterError, ParserError};
 
@@ -15,10 +15,8 @@ use crate::error::{MemWriterError, ParserError};
 use crate::serde::ser::SerializeMap;
 
 use super::{
-    ScaleBack,
-    ubx_checksum, MemWriter, UbxChecksumCalc, UbxPacketCreator, UbxPacketMeta, SYNC_CHAR_1,
-    SYNC_CHAR_2,
-    nav::NavBbrMask,
+    nav::NavBbrMask, ubx_checksum, MemWriter, ScaleBack, UbxChecksumCalc, UbxPacketCreator,
+    UbxPacketMeta, SYNC_CHAR_1, SYNC_CHAR_2,
 };
 
 /// Configure odometer
@@ -1051,7 +1049,6 @@ bitflags! {
     }
 }
 
-
 /// Time MODE3 Config Frame (32.10.37.1)
 /// only available on `timing` receivers
 #[ubx_packet_recv_send]
@@ -1198,7 +1195,6 @@ bitflags! {
         const LLA = 0x01;
     }
 }
-
 
 /// Reset Receiver / Clear Backup Data Structures
 #[ubx_packet_recv_send]

@@ -30,7 +30,7 @@ pub use cfg::*;
 
 // NAV- packets definition
 pub mod nav;
-pub use nav::*;
+pub use nav::{NavPosLlh, NavPosLlhRef};
 
 // MGA- packets definition
 pub mod mga;
@@ -130,7 +130,6 @@ pub enum MapMatchingStatus {
     Dr = 3,
 }
 
-
 #[ubx_packet_send]
 #[ubx(
     class = 0x0B,
@@ -227,7 +226,6 @@ impl<'a> AckNakRef<'a> {
         self.class() == T::CLASS && self.msg_id() == T::ID
     }
 }
-
 
 #[derive(Clone, Copy)]
 #[repr(transparent)]
@@ -338,8 +336,8 @@ define_recv_packets!(
         // MgaGpsEph,
         // MgaGloEph,
         // AlpSrv,
-        // AckAck,
-        // AckNak,
+        AckAck,
+        AckNak,
         // CfgItfm,
         // CfgPrtI2c,
         // CfgPrtSpi,
@@ -373,7 +371,7 @@ define_recv_packets!(
         // RxmSfrbx,
         // EsfRaw,
         // TimSvin,
-        // SecUniqId,
+        SecUniqId,
     }
 );
 

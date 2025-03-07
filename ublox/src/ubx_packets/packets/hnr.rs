@@ -7,7 +7,9 @@ use bitflags::bitflags;
 
 use super::SerializeUbxPacketFields;
 
-use ublox_derive::{ubx_extend, ubx_packet_send, ubx_packet_recv, ubx_extend_bitflags, ubx_packet_recv_send};
+use ublox_derive::{
+    ubx_extend, ubx_extend_bitflags, ubx_packet_recv, ubx_packet_recv_send, ubx_packet_send,
+};
 
 use crate::error::{MemWriterError, ParserError};
 
@@ -15,11 +17,8 @@ use crate::error::{MemWriterError, ParserError};
 use crate::serde::ser::SerializeMap;
 
 use super::{
-    ScaleBack,
-    ubx_checksum, MemWriter, UbxChecksumCalc, UbxPacketCreator, UbxPacketMeta, SYNC_CHAR_1,
-    SYNC_CHAR_2,
-    nav::NavBbrMask,
-    GpsFix,
+    nav::NavBbrMask, ubx_checksum, GpsFix, MemWriter, ScaleBack, UbxChecksumCalc, UbxPacketCreator,
+    UbxPacketMeta, SYNC_CHAR_1, SYNC_CHAR_2,
 };
 
 #[ubx_packet_recv]
