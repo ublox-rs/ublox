@@ -197,7 +197,7 @@ pub fn generate_recv_code_for_packet(pack_descr: &PackDesc) -> TokenStream {
     let struct_comment = &pack_descr.comment;
     let validator = if let Some(payload_len) = pack_descr.packet_payload_size() {
         quote! {
-            fn validate(payload: &[u8]) -> Result<(), ParserError> {
+            pub(crate) fn validate(payload: &[u8]) -> Result<(), ParserError> {
                 let expect = #payload_len;
                 let got = payload.len();
                 if got ==  expect {
@@ -237,7 +237,7 @@ pub fn generate_recv_code_for_packet(pack_descr: &PackDesc) -> TokenStream {
         };
 
         quote! {
-            fn validate(payload: &[u8]) -> Result<(), ParserError> {
+            pub(crate) fn validate(payload: &[u8]) -> Result<(), ParserError> {
                 let got = payload.len();
                 let min = #min_size;
                 if got >= min {
