@@ -18,6 +18,7 @@ use crate::error::{MemWriterError, ParserError};
 #[cfg(feature = "serde")]
 use crate::serde::ser::SerializeMap;
 use crate::ubx_packets::packets::mon_ver::is_cstr_valid;
+#[allow(unused_imports, reason = "It's only unused in some feature sets")]
 use crate::FieldIter;
 
 use super::{
