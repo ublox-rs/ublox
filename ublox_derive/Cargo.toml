@@ -19,4 +19,4 @@ syn = { version = "1.0", features = ["extra-traits", "full"] }
 
 [dev-dependencies]
 proc-macro2 = { version = "1.0", features = ["span-locations"] }
-which = { version = "4.4", default-features = false }
+which = { version = "7.0.2", default-features = false }
