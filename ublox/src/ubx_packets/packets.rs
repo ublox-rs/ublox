@@ -11,19 +11,21 @@ use num_traits::cast::{FromPrimitive, ToPrimitive};
 use num_traits::float::FloatCore;
 
 use ublox_derive::{
-    define_recv_packets, ubx_extend, ubx_extend_bitflags, ubx_packet_recv, ubx_packet_recv_send,
-    ubx_packet_send,
+    ubx_extend, ubx_extend_bitflags, ubx_packet_recv, ubx_packet_recv_send, ubx_packet_send,
 };
 
 use crate::error::{MemWriterError, ParserError};
 #[cfg(feature = "serde")]
 use crate::serde::ser::SerializeMap;
 use crate::ubx_packets::packets::mon_ver::is_cstr_valid;
+use crate::FieldIter;
 
 use super::{
     ubx_checksum, MemWriter, Position, UbxChecksumCalc, UbxPacketCreator, UbxPacketMeta,
-    UbxUnknownPacketRef, SYNC_CHAR_1, SYNC_CHAR_2,
+    SYNC_CHAR_1, SYNC_CHAR_2,
 };
+
+pub(crate) mod packetref;
 
 /// Used to help serialize the packet's fields flattened within a struct containing the msg_id and class fields, but
 /// without using the serde FlatMapSerializer which requires alloc.
@@ -3391,6 +3393,7 @@ pub enum TimTm2TimeBase {
     Utc,
 }
 
+#[cfg(feature = "ubx_proto23")]
 /// Time pulse time & frequency data
 #[ubx_packet_recv]
 #[ubx(class = 0x0D, id = 0x12, fixed_payload_len = 56)]
@@ -4824,201 +4827,6 @@ struct SecUniqId {
     unique_id: [u8; 5],
 }
 
-// TODO: how to split this in module while using the proc_macros
-// in my first noob attempt I failed as the proc_macros fail due to visibility issues
-#[cfg(feature = "ubx_proto23")]
-define_recv_packets!(
-    enum PacketRef {
-        _ = UbxUnknownPacketRef,
-        AlpSrv,
-        AckAck,
-        AckNak,
-        CfgAnt,
-        CfgEsfAlg,
-        CfgEsfWt,
-        CfgItfm,
-        CfgNav5,
-        CfgOdo,
-        CfgPrtI2c,
-        CfgPrtSpi,
-        CfgPrtUart,
-        CfgSmgr,
-        CfgTmode2,
-        CfgTmode3,
-        CfgTp5,
-        EsfAlg,
-        EsfIns,
-        EsfMeas,
-        EsfStatus,
-        EsfRaw,
-        InfError,
-        InfWarning,
-        InfNotice,
-        InfTest,
-        InfDebug,
-        HnrAtt,
-        HnrIns,
-        HnrPvt,
-        MonVer,
-        MonGnss,
-        MonHw,
-        MgaAck,
-        MgaGpsIono,
-        MgaGpsEph,
-        MgaGloEph,
-        NavAtt,
-        NavClock,
-        NavDop,
-        NavEoe,
-        NavHpPosLlh,
-        NavHpPosEcef,
-        NavOdo,
-        NavPvt,
-        NavPosLlh,
-        NavRelPosNed,
-        NavSat,
-        NavSolution,
-        NavStatus,
-        NavVelNed,
-        NavTimeUTC,
-        NavTimeLs,
-        NavVelECEF,
-        RxmRawx,
-        RxmRtcm,
-        RxmSfrbx,
-        SecUniqId,
-        TimSvin,
-        TimTp,
-        TimTm2,
-        TimTos,
-    }
-);
-
-#[cfg(feature = "ubx_proto27")]
-define_recv_packets!(
-    enum PacketRef {
-        _ = UbxUnknownPacketRef,
-        AlpSrv,
-        AckAck,
-        AckNak,
-        CfgItfm,
-        CfgPrtI2c,
-        CfgPrtSpi,
-        CfgPrtUart,
-        CfgNav5,
-        CfgAnt,
-        CfgOdo,
-        CfgTmode2,
-        CfgTmode3,
-        CfgTp5,
-        CfgEsfAlg,
-        CfgEsfWt,
-        EsfAlg,
-        EsfIns,
-        EsfMeas,
-        EsfStatus,
-        EsfRaw,
-        InfError,
-        InfWarning,
-        InfNotice,
-        InfTest,
-        InfDebug,
-        MonVer,
-        MonGnss,
-        MonHw,
-        MgaAck,
-        MgaGpsIono,
-        MgaGpsEph,
-        MgaGloEph,
-        NavAtt,
-        NavClock,
-        NavDop,
-        NavEoe,
-        NavHpPosLlh,
-        NavHpPosEcef,
-        NavOdo,
-        NavPvt,
-        NavPosLlh,
-        NavRelPosNed,
-        NavSat,
-        NavSolution,
-        NavStatus,
-        NavVelNed,
-        NavTimeUTC,
-        NavTimeLs,
-        NavVelECEF,
-        RxmRawx,
-        RxmRtcm,
-        RxmSfrbx,
-        SecUniqId,
-        TimSvin,
-        TimTp,
-        TimTm2,
-    }
-);
-
-#[cfg(feature = "ubx_proto31")]
-define_recv_packets!(
-    enum PacketRef {
-        _ = UbxUnknownPacketRef,
-        AlpSrv,
-        AckAck,
-        AckNak,
-        CfgItfm,
-        CfgPrtI2c,
-        CfgPrtSpi,
-        CfgPrtUart,
-        CfgNav5,
-        CfgAnt,
-        CfgOdo,
-        CfgTmode2,
-        CfgTmode3,
-        CfgTp5,
-        CfgEsfAlg,
-        CfgEsfWt,
-        EsfAlg,
-        EsfIns,
-        EsfMeas,
-        EsfStatus,
-        EsfRaw,
-        InfError,
-        InfWarning,
-        InfNotice,
-        InfTest,
-        InfDebug,
-        MonVer,
-        MonGnss,
-        MonHw,
-        MgaAck,
-        MgaGpsIono,
-        MgaGpsEph,
-        MgaGloEph,
-        NavAtt,
-        NavClock,
-        NavDop,
-        NavEoe,
-        NavHpPosLlh,
-        NavHpPosEcef,
-        NavOdo,
-        NavPvt,
-        NavPosLlh,
-        NavRelPosNed,
-        NavSat,
-        NavSolution,
-        NavStatus,
-        NavVelNed,
-        NavTimeUTC,
-        NavTimeLs,
-        NavVelECEF,
-        RxmRawx,
-        RxmRtcm,
-        RxmSfrbx,
-        SecUniqId,
-        TimSvin,
-        TimTp,
-        TimTm2,
-    }
-);
 #[cfg(test)]
 mod test {
     use super::*;

@@ -43,7 +43,7 @@ fn generate_serialize_impl(
             quote! {
                 state.serialize_entry(
                     stringify!(#field_name),
-                    &crate::ubx_packets::FieldIter(self.#field_accessor())
+                    &FieldIter(self.#field_accessor())
                 )?;
             }
         }
