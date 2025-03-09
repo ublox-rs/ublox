@@ -31,11 +31,7 @@ impl KeyId {
             3 => StorageSize::TwoBytes,
             4 => StorageSize::FourBytes,
             5 => StorageSize::EightBytes,
-
-            // TODO: Replace this with unreachable!() when we upgrade to MSRV 1.57
-            // Since it's unreachable we get to pick an arbitrary value
-            //_ => unreachable!(),
-            _ => StorageSize::OneBit,
+            _ => unreachable!(),
         }
     }
 
@@ -261,10 +257,7 @@ macro_rules! cfg_val {
             Self::$cfg_item(value) => {
               let bytes = $cfg_item(*value).into_cfg_kv_bytes();
               let bytes_len = bytes.len();
-              // TODO: extend all the bytes in one extend() call when we bump MSRV
-              for b in bytes.iter() {
-                buf.extend(core::iter::once(*b));
-              }
+              buf.extend(bytes);
               bytes_len
             }
           )*
