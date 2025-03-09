@@ -25,7 +25,8 @@ use super::{
     SYNC_CHAR_1, SYNC_CHAR_2,
 };
 
-pub(crate) mod packetref;
+pub use packetref::PacketRef;
+pub mod packetref;
 
 /// Used to help serialize the packet's fields flattened within a struct containing the msg_id and class fields, but
 /// without using the serde FlatMapSerializer which requires alloc.
