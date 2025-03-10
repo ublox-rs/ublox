@@ -62,7 +62,7 @@ impl UnderlyingBuffer for Vec<u8> {
     }
 
     fn max_capacity(&self) -> usize {
-        core::usize::MAX
+        usize::MAX
     }
 
     fn extend_from_slice(&mut self, other: &[u8]) -> usize {
@@ -93,7 +93,7 @@ impl<'a> FixedLinearBuffer<'a> {
     }
 }
 
-impl<'a> core::ops::Index<core::ops::Range<usize>> for FixedLinearBuffer<'a> {
+impl core::ops::Index<core::ops::Range<usize>> for FixedLinearBuffer<'_> {
     type Output = [u8];
 
     fn index(&self, index: core::ops::Range<usize>) -> &Self::Output {
@@ -104,7 +104,7 @@ impl<'a> core::ops::Index<core::ops::Range<usize>> for FixedLinearBuffer<'a> {
     }
 }
 
-impl<'a> core::ops::Index<usize> for FixedLinearBuffer<'a> {
+impl core::ops::Index<usize> for FixedLinearBuffer<'_> {
     type Output = u8;
 
     fn index(&self, index: usize) -> &Self::Output {
@@ -112,7 +112,7 @@ impl<'a> core::ops::Index<usize> for FixedLinearBuffer<'a> {
     }
 }
 
-impl<'a> UnderlyingBuffer for FixedLinearBuffer<'a> {
+impl UnderlyingBuffer for FixedLinearBuffer<'_> {
     fn clear(&mut self) {
         self.len = 0;
     }
@@ -213,7 +213,7 @@ struct DualBuffer<'a, T: UnderlyingBuffer> {
     new_buf_offset: usize,
 }
 
-impl<'a, T: UnderlyingBuffer> core::ops::Index<usize> for DualBuffer<'a, T> {
+impl<T: UnderlyingBuffer> core::ops::Index<usize> for DualBuffer<'_, T> {
     type Output = u8;
 
     fn index(&self, index: usize) -> &u8 {
@@ -375,7 +375,7 @@ impl<'a, T: UnderlyingBuffer> DualBuffer<'a, T> {
     }
 }
 
-impl<'a, T: UnderlyingBuffer> Drop for DualBuffer<'a, T> {
+impl<T: UnderlyingBuffer> Drop for DualBuffer<'_, T> {
     fn drop(&mut self) {
         self.buf.drain(self.off);
         self.buf
@@ -416,7 +416,7 @@ pub struct ParserIter<'a, T: UnderlyingBuffer> {
     buf: DualBuffer<'a, T>,
 }
 
-impl<'a, T: UnderlyingBuffer> ParserIter<'a, T> {
+impl<T: UnderlyingBuffer> ParserIter<'_, T> {
     fn find_sync(&self) -> Option<usize> {
         (0..self.buf.len()).find(|&i| self.buf[i] == SYNC_CHAR_1)
     }

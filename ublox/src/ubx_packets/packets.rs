@@ -73,35 +73,35 @@ struct NavVelNed {
     /// GPS Millisecond Time of Week
     itow: u32,
 
-    /// north velocity (m/s)
+    /// north velocity [m/s]
     #[ubx(map_type = f64, scale = 1e-2)]
     vel_north: i32,
 
-    /// east velocity (m/s)
+    /// east velocity [m/s]
     #[ubx(map_type = f64, scale = 1e-2)]
     vel_east: i32,
 
-    /// down velocity (m/s)
+    /// down velocity [m/s]
     #[ubx(map_type = f64, scale = 1e-2)]
     vel_down: i32,
 
-    /// Speed 3-D (m/s)
+    /// Speed 3-D [m/s]
     #[ubx(map_type = f64, scale = 1e-2)]
     speed_3d: u32,
 
-    /// Ground speed (m/s)
+    /// Ground speed [m/s]
     #[ubx(map_type = f64, scale = 1e-2)]
     ground_speed: u32,
 
-    /// Heading of motion 2-D (degrees)
+    /// Heading of motion 2-D [deg]
     #[ubx(map_type = f64, scale = 1e-5, alias = heading_degrees)]
     heading: i32,
 
-    /// Speed Accuracy Estimate (m/s)
+    /// Speed Accuracy Estimate [m/s]
     #[ubx(map_type = f64, scale = 1e-2)]
     speed_accuracy_estimate: u32,
 
-    /// Course / Heading Accuracy Estimate (degrees)
+    /// Course / Heading Accuracy Estimate [deg]
     #[ubx(map_type = f64, scale = 1e-5)]
     course_heading_accuracy_estimate: u32,
 }
@@ -126,11 +126,11 @@ struct NavHpPosLlh {
     #[ubx(map_type = f64, scale = 1e-7, alias = lat_degrees)]
     lat: i32,
 
-    /// Height above Ellipsoid (m)
+    /// Height above Ellipsoid [m]
     #[ubx(map_type = f64, scale = 1e-3)]
     height_meters: i32,
 
-    /// Height above mean sea level (m)
+    /// Height above mean sea level [m]
     #[ubx(map_type = f64, scale = 1e-3)]
     height_msl: i32,
 
@@ -233,75 +233,98 @@ struct NavHpPosEcef {
 struct NavPvt {
     /// GPS Millisecond Time of Week
     itow: u32,
+
     year: u16,
     month: u8,
     day: u8,
     hour: u8,
     min: u8,
     sec: u8,
+
     valid: u8,
     time_accuracy: u32,
-    nanosecond: i32,
 
-    /// GNSS fix Type
+    nanosec: i32,
+
+    /// GNSS Fix Type
     #[ubx(map_type = GpsFix)]
     fix_type: u8,
+
     #[ubx(map_type = NavPvtFlags)]
     flags: u8,
+
     #[ubx(map_type = NavPvtFlags2)]
     flags2: u8,
+
     num_satellites: u8,
-    #[ubx(map_type = f64, scale = 1e-7, alias = lon_degrees)]
+
+    /// Longitude in [deg]
+    #[ubx(map_type = f64, scale = 1e-7, alias = longitude)]
     lon: i32,
-    #[ubx(map_type = f64, scale = 1e-7, alias = lat_degrees)]
+
+    /// Latitude in [deg]
+    #[ubx(map_type = f64, scale = 1e-7, alias = latitude)]
     lat: i32,
 
-    /// Height above Ellipsoid
-    #[ubx(map_type = f64, scale = 1e-3)]
-    height_meters: i32,
+    /// Height above reference ellipsoid in [m]
+    #[ubx(map_type = f64, scale = 1e-3, alias = height_above_ellipsoid)]
+    height: i32,
 
-    /// Height above mean sea level
+    /// Height above Mean Sea Level in [m]
     #[ubx(map_type = f64, scale = 1e-3)]
     height_msl: i32,
-    horiz_accuracy: u32,
-    vert_accuracy: u32,
 
-    /// north velocity (m/s)
+    /// Horizontal accuracy in [m]
+    #[ubx(map_type = f64, scale = 1e-3, alias = horizontal_accuracy )]
+    h_acc: u32,
+
+    /// Vertical accuracy in [m]
+    #[ubx(map_type = f64, scale = 1e-3, alias = vertical_accuracy )]
+    v_acc: u32,
+
+    /// Velocity North component [m/s]
     #[ubx(map_type = f64, scale = 1e-3)]
     vel_north: i32,
 
-    /// east velocity (m/s)
+    /// Velocity East component [m/s]
     #[ubx(map_type = f64, scale = 1e-3)]
     vel_east: i32,
 
-    /// down velocity (m/s)
+    /// Velocity Down component [m/s]
     #[ubx(map_type = f64, scale = 1e-3)]
     vel_down: i32,
 
-    /// Ground speed (m/s)
-    #[ubx(map_type = f64, scale = 1e-3)]
-    ground_speed: u32,
+    /// Ground speed [m/s]
+    #[ubx(map_type = f64, scale = 1e-3, alias = ground_speed_2d)]
+    g_speed: u32,
 
-    /// Heading of motion 2-D (degrees)
-    #[ubx(map_type = f64, scale = 1e-5, alias = heading_degrees)]
-    heading: i32,
+    /// Heading of motion 2-D [deg]
+    #[ubx(map_type = f64, scale = 1e-5, alias = heading_motion)]
+    head_motion: i32,
 
-    /// Speed Accuracy Estimate (m/s)
-    #[ubx(map_type = f64, scale = 1e-3)]
-    speed_accuracy_estimate: u32,
+    /// Speed Accuracy Estimate [m/s]
+    #[ubx(map_type = f64, scale = 1e-3, alias = speed_accuracy)]
+    s_acc: u32,
 
-    /// Heading accuracy estimate (both motionand vehicle) (degrees)
-    #[ubx(map_type = f64, scale = 1e-5)]
-    heading_accuracy_estimate: u32,
+    /// Heading accuracy estimate (for both vehicle and motion) [deg]
+    #[ubx(map_type = f64, scale = 1e-5, alias = heading_accuracy)]
+    head_acc: u32,
 
     /// Position DOP
+    #[ubx(map_type = f64, scale = 1e-2)]
     pdop: u16,
-    reserved1: [u8; 6],
-    #[ubx(map_type = f64, scale = 1e-5, alias = heading_of_vehicle_degrees)]
-    heading_of_vehicle: i32,
-    #[ubx(map_type = f64, scale = 1e-2, alias = magnetic_declination_degrees)]
+
+    reserved1: [u8; 5],
+    #[ubx(map_type = NavPvtFlags3)]
+    flags3: u8,
+
+    #[ubx(map_type = f64, scale = 1e-5, alias = heading_vehicle)]
+    head_vehicle: i32,
+
+    #[ubx(map_type = f64, scale = 1e-2, alias = magnetic_declination)]
     magnetic_declination: i16,
-    #[ubx(map_type = f64, scale = 1e-2, alias = magnetic_declination_accuracy_degrees)]
+
+    #[ubx(map_type = f64, scale = 1e-2, alias = magnetic_declination_accuracy)]
     magnetic_declination_accuracy: u16,
 }
 
@@ -338,6 +361,36 @@ bitflags! {
         /// 1 = UTC Time of Day could be confirmed
         /// (confirmed by using an additional independent source)
         const CONFIRMED_TIME = 0x80;
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct NavPvtFlags3 {
+    invalid_llh: bool,
+    age: u8,
+}
+
+impl NavPvtFlags3 {
+    const AGE_MASK: u8 = 0b11110;
+
+    pub fn invalid_llh(&self) -> bool {
+        self.invalid_llh
+    }
+
+    pub fn age(&self) -> u8 {
+        self.age
+    }
+}
+
+impl From<u8> for NavPvtFlags3 {
+    fn from(val: u8) -> Self {
+        let invalid = val & 0x01 == 1;
+        let age = val & Self::AGE_MASK;
+        Self {
+            invalid_llh: invalid,
+            age,
+        }
     }
 }
 
@@ -440,15 +493,15 @@ struct NavSolution {
     #[ubx(map_type = f64, scale = 1e-2)]
     position_accuracy_estimate: u32,
 
-    /// ECEF X velocity (m/s)
+    /// ECEF X velocity [m/s]
     #[ubx(map_type = f64, scale = 1e-2)]
     ecef_vx: i32,
 
-    /// ECEF Y velocity (m/s)
+    /// ECEF Y velocity [m/s]
     #[ubx(map_type = f64, scale = 1e-2)]
     ecef_vy: i32,
 
-    /// ECEF Z velocity (m/s)
+    /// ECEF Z velocity [m/s]
     #[ubx(map_type = f64, scale = 1e-2)]
     ecef_vz: i32,
 
@@ -573,7 +626,7 @@ impl NavSatSvFlags {
             4 => NavSatQualityIndicator::CodeLock,
             5..=7 => NavSatQualityIndicator::CarrierLock,
             _ => {
-                panic!("Unexpected 3-bit bitfield value {}!", bits);
+                panic!("Unexpected 3-bit value {}!", bits);
             },
         }
     }
@@ -857,7 +910,7 @@ pub enum OdoProfile {
     Custom = 4,
 }
 
-/// Configure Jamming interference monitoring
+/// Configure Jamming interference monitoring 
 #[ubx_packet_recv_send]
 #[ubx(class = 0x06, id = 0x39, fixed_payload_len = 8)]
 struct CfgItfm {
@@ -887,7 +940,7 @@ pub struct CfgItfmConfig {
 impl CfgItfmConfig {
     pub fn new(enable: bool, bb_threshold: u32, cw_threshold: u32) -> Self {
         Self {
-            enable,
+            enable, 
             bb_threshold: bb_threshold.into(),
             cw_threshold: cw_threshold.into(),
             algorithm_bits: CfgItfmAlgoBits::default(),
@@ -895,10 +948,10 @@ impl CfgItfmConfig {
     }
 
     const fn into_raw(self) -> u32 {
-        (self.enable as u32) << 31
-            | self.cw_threshold.into_raw()
-            | self.bb_threshold.into_raw()
-            | self.algorithm_bits.into_raw()
+        (self.enable as u32)<<31
+            | self.cw_threshold.into_raw() 
+                | self.bb_threshold.into_raw()
+                    | self.algorithm_bits.into_raw()
     }
 }
 
@@ -924,7 +977,7 @@ pub struct CfgItfmBbThreshold(u32);
 impl CfgItfmBbThreshold {
     const POSITION: u32 = 0;
     const LENGTH: u32 = 4;
-    const MASK: u32 = (1 << Self::LENGTH) - 1;
+    const MASK: u32 = (1<<Self::LENGTH)-1;
     const fn into_raw(self) -> u32 {
         (self.0 & Self::MASK) << Self::POSITION
     }
@@ -949,7 +1002,7 @@ pub struct CfgItfmCwThreshold(u32);
 impl CfgItfmCwThreshold {
     const POSITION: u32 = 4;
     const LENGTH: u32 = 5;
-    const MASK: u32 = (1 << Self::LENGTH) - 1;
+    const MASK: u32 = (1<<Self::LENGTH)-1;
     const fn into_raw(self) -> u32 {
         (self.0 & Self::MASK) << Self::POSITION
     }
@@ -974,7 +1027,7 @@ pub struct CfgItfmAlgoBits(u32);
 impl CfgItfmAlgoBits {
     const POSITION: u32 = 9;
     const LENGTH: u32 = 22;
-    const MASK: u32 = (1 << Self::LENGTH) - 1;
+    const MASK: u32 = (1<<Self::LENGTH)-1;
     const fn into_raw(self) -> u32 {
         (self.0 & Self::MASK) << Self::POSITION
     }
@@ -1015,9 +1068,9 @@ impl CfgItfmConfig2 {
     }
 
     const fn into_raw(self) -> u32 {
-        ((self.scan_aux_bands as u32) << 14)
-            | self.general.into_raw()
-            | self.antenna.into_raw() as u32
+        ((self.scan_aux_bands as u32)<< 14) 
+            | self.general.into_raw() 
+                | self.antenna.into_raw() as u32
     }
 }
 
@@ -1041,7 +1094,7 @@ pub struct CfgItfmGeneralBits(u32);
 impl CfgItfmGeneralBits {
     const POSITION: u32 = 0;
     const LENGTH: u32 = 12;
-    const MASK: u32 = (1 << Self::LENGTH) - 1;
+    const MASK: u32 = (1<<Self::LENGTH)-1;
     const fn into_raw(self) -> u32 {
         (self.0 & Self::MASK) << Self::POSITION
     }
@@ -1071,12 +1124,12 @@ pub enum CfgItfmAntennaSettings {
     /// Type of Antenna is not known
     #[default]
     Unknown = 0,
-    /// Active antenna
+    /// Active antenna 
     Active = 1,
     /// Passive antenna
     Passive = 2,
 }
-
+        
 impl From<u32> for CfgItfmAntennaSettings {
     fn from(cfg: u32) -> Self {
         let cfg = (cfg & 0x3000) >> 12;
@@ -1295,7 +1348,7 @@ struct AckAck {
     msg_id: u8,
 }
 
-impl<'a> AckAckRef<'a> {
+impl AckAckRef<'_> {
     pub fn is_ack_for<T: UbxPacketMeta>(&self) -> bool {
         self.class() == T::CLASS && self.msg_id() == T::ID
     }
@@ -1312,7 +1365,7 @@ struct AckNak {
     msg_id: u8,
 }
 
-impl<'a> AckNakRef<'a> {
+impl AckNakRef<'_> {
     pub fn is_nak_for<T: UbxPacketMeta>(&self) -> bool {
         self.class() == T::CLASS && self.msg_id() == T::ID
     }
@@ -1799,7 +1852,7 @@ impl<'a> CfgValIter<'a> {
     }
 }
 
-impl<'a> core::iter::Iterator for CfgValIter<'a> {
+impl core::iter::Iterator for CfgValIter<'_> {
     type Item = CfgVal;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -2251,7 +2304,7 @@ struct CfgNav5 {
     #[ubx(map_type = CfgNav5FixMode, may_fail)]
     fix_mode: u8,
 
-    /// Fixed altitude (mean sea level) for 2D fixmode (m)
+    /// Fixed altitude (mean sea level) for 2D fixmode [m]
     #[ubx(map_type = f64, scale = 0.01)]
     fixed_alt: i32,
 
@@ -2273,7 +2326,7 @@ struct CfgNav5 {
     #[ubx(map_type = f32, scale = 0.1)]
     tdop: u16,
 
-    /// Position Accuracy Mask (m)
+    /// Position Accuracy Mask [m]
     pacc: u16,
 
     /// Time Accuracy Mask
@@ -2395,10 +2448,10 @@ struct ScaleBack<T: FloatCore + FromPrimitive + ToPrimitive>(T);
 impl<T: FloatCore + FromPrimitive + ToPrimitive> ScaleBack<T> {
     fn as_i8(self, x: T) -> i8 {
         let x = (x * self.0).round();
-        if x < T::from_i8(i8::min_value()).unwrap() {
-            i8::min_value()
-        } else if x > T::from_i8(i8::max_value()).unwrap() {
-            i8::max_value()
+        if x < T::from_i8(i8::MIN).unwrap() {
+            i8::MIN
+        } else if x > T::from_i8(i8::MAX).unwrap() {
+            i8::MAX
         } else {
             x.to_i8().unwrap()
         }
@@ -2406,10 +2459,10 @@ impl<T: FloatCore + FromPrimitive + ToPrimitive> ScaleBack<T> {
 
     fn as_i16(self, x: T) -> i16 {
         let x = (x * self.0).round();
-        if x < T::from_i16(i16::min_value()).unwrap() {
-            i16::min_value()
-        } else if x > T::from_i16(i16::max_value()).unwrap() {
-            i16::max_value()
+        if x < T::from_i16(i16::MIN).unwrap() {
+            i16::MIN
+        } else if x > T::from_i16(i16::MAX).unwrap() {
+            i16::MAX
         } else {
             x.to_i16().unwrap()
         }
@@ -2596,6 +2649,79 @@ struct MgaAck {
 
     /// The first 4 bytes of the acknowledged message's payload
     msg_payload_start: [u8; 4],
+}
+
+/// Get/set IMU-mount misalignment configuration
+/// Only available for ADR products
+#[ubx_packet_recv_send]
+#[ubx(
+    class = 0x06,
+    id = 0x56,
+    fixed_payload_len = 12,
+    flags = "default_for_builder"
+)]
+struct CfgEsfAlg {
+    #[ubx(map_type = CfgEsfAlgFlags)]
+    flags: u32,
+
+    /// IMU mount yaw angle [0, 360]
+    #[ubx(map_type = f64, scale = 1e-2, alias = yaw)]
+    yaw: u32,
+
+    /// IMU mount pitch angle [-90, 90]
+    #[ubx(map_type = f64, scale = 1e-2, alias = pitch)]
+    pitch: i16,
+
+    /// IMU mount roll angle [-180, 180]
+    #[ubx(map_type = f64, scale = 1e-2, alias = roll)]
+    roll: i16,
+}
+
+#[derive(Copy, Clone, Default)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
+pub struct CfgEsfAlgFlags {
+    /// Not writable, only readable
+    version: u8,
+    /// Auto alignment status
+    auto_alignment: bool,
+}
+
+impl From<u32> for CfgEsfAlgFlags {
+    fn from(cfg: u32) -> Self {
+        let version = cfg.to_ne_bytes()[0];
+        let auto_alignment = ((cfg >> 8) & 0x01) == 1;
+        Self {
+            version,
+            auto_alignment,
+        }
+    }
+}
+
+impl CfgEsfAlgFlags {
+    pub fn auto_imu_mount_alg_on(self) -> bool {
+        self.auto_alignment
+    }
+
+    pub fn set_auto_imu_mount_alg(&mut self, enable: bool) {
+        self.auto_alignment = enable
+    }
+
+    pub fn version(self) -> u8 {
+        self.version
+    }
+
+    const fn into_raw(self) -> u32 {
+        (self.auto_alignment as u32) << 8
+    }
+}
+
+impl fmt::Debug for CfgEsfAlgFlags {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("flags")
+            .field("autoMntAlgOn", &self.auto_imu_mount_alg_on())
+            .field("version", &self.version())
+            .finish()
+    }
 }
 
 #[ubx_extend]
@@ -3130,6 +3256,7 @@ struct RxmRtcm {
 #[ubx(class = 0x10, id = 0x02, max_payload_len = 1240)]
 struct EsfMeas {
     time_tag: u32,
+    #[ubx(map_type = EsfMeasFlags, from = EsfMeasFlags)]
     flags: u16,
     id: u16,
     #[ubx(
@@ -3154,13 +3281,13 @@ impl EsfMeas {
     }
 }
 
-impl<'a> EsfMeasRef<'a> {
+impl EsfMeasRef<'_> {
     fn data_len(&self) -> usize {
-        ((self.flags() >> 11 & 0x1f) as usize) * 4
+        self.flags().num_meas() as usize * 4
     }
 
     fn calib_tag_len(&self) -> usize {
-        if self.flags() & 0x8 != 0 {
+        if self.flags().calib_tag_valid() {
             4
         } else {
             0
@@ -3171,8 +3298,58 @@ impl<'a> EsfMeasRef<'a> {
 #[derive(Debug)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct EsfMeasData {
-    pub data_type: u8,
-    pub data_field: u32,
+    pub data_type: EsfSensorType,
+    pub data_field: i32,
+}
+
+#[derive(Debug)]
+pub enum SensorData {
+    Tick(i32),
+    Value(f32),
+}
+
+impl EsfMeasData {
+    pub fn direction(&self) -> i8 {
+        if self.data_field.is_negative() {
+            -1
+        } else {
+            1
+        }
+    }
+
+    pub fn value(&self) -> SensorData {
+        match self.data_type {
+            EsfSensorType::FrontLeftWheelTicks
+            | EsfSensorType::FrontRightWheelTicks
+            | EsfSensorType::RearLeftWheelTicks
+            | EsfSensorType::RearRightWheelTicks
+            | EsfSensorType::SpeedTick => {
+                let tick = (self.data_field & 0x7FFFFF) * (self.direction() as i32);
+                SensorData::Tick(tick)
+            },
+            EsfSensorType::GyroX | EsfSensorType::GyroY | EsfSensorType::GyroZ => {
+                let value = (self.data_field & 0x7FFFFF) as f32
+                    * (self.direction() as f32)
+                    * 2_f32.powi(-12);
+                SensorData::Value(value)
+            },
+            EsfSensorType::AccX | EsfSensorType::AccY | EsfSensorType::AccZ => {
+                let value = (self.data_field & 0x7FFFFF) as f32
+                    * (self.direction() as f32)
+                    * 2_f32.powi(-10);
+                SensorData::Value(value)
+            },
+            EsfSensorType::GyroTemp => {
+                let value = (self.data_field & 0x7FFFFF) as f32 * (self.direction() as f32) * 1e-2;
+                SensorData::Value(value)
+            },
+            EsfSensorType::Speed => {
+                let value = (self.data_field & 0x7FFFFF) as f32 * (self.direction() as f32) * 1e-3;
+                SensorData::Value(value)
+            },
+            _ => SensorData::Value(0f32),
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -3188,15 +3365,57 @@ impl<'a> EsfMeasDataIter<'a> {
     }
 }
 
-impl<'a> core::iter::Iterator for EsfMeasDataIter<'a> {
+impl core::iter::Iterator for EsfMeasDataIter<'_> {
     type Item = EsfMeasData;
 
     fn next(&mut self) -> Option<Self::Item> {
         let data = self.0.next()?.try_into().map(u32::from_le_bytes).unwrap();
+        let mut data_field = (data & 0x7FFFFF) as i32;
+        let signed = ((data >> 23) & 0x01) == 1;
+        if signed {
+            data_field ^= 0x800000;
+            data_field = data_field.wrapping_neg();
+        }
+
         Some(EsfMeasData {
-            data_type: ((data & 0x3F000000) >> 24).try_into().unwrap(),
-            data_field: data & 0xFFFFFF,
+            data_type: (((data & 0x3F000000) >> 24) as u8).into(),
+            data_field,
         })
+    }
+}
+
+/// UBX-ESF-MEAS flags
+#[repr(transparent)]
+#[derive(Copy, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
+pub struct EsfMeasFlags(u16);
+
+impl EsfMeasFlags {
+    pub fn time_mark_sent(self) -> u8 {
+        ((self.0) & 0x2) as u8
+    }
+
+    pub fn time_mark_edge(self) -> bool {
+        (self.0 >> 2) & 0x01 != 0
+    }
+
+    pub fn calib_tag_valid(self) -> bool {
+        (self.0 >> 3) & 0x01 != 0
+    }
+
+    pub fn num_meas(self) -> u8 {
+        ((self.0 >> 11) & 0x1F) as u8
+    }
+}
+
+impl fmt::Debug for EsfMeasFlags {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("flags")
+            .field("timeMarkSent", &self.time_mark_sent())
+            .field("timeMarkEdge", &self.time_mark_edge())
+            .field("calibTagValid", &self.calib_tag_valid())
+            .field("numMeas", &self.num_meas())
+            .finish()
     }
 }
 
@@ -3234,7 +3453,7 @@ impl<'a> EsfRawDataIter<'a> {
     }
 }
 
-impl<'a> core::iter::Iterator for EsfRawDataIter<'a> {
+impl core::iter::Iterator for EsfRawDataIter<'_> {
     type Item = EsfRawData;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -3249,11 +3468,99 @@ impl<'a> core::iter::Iterator for EsfRawDataIter<'a> {
     }
 }
 
+#[repr(u8)]
+#[derive(Copy, Clone, Debug)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub enum EsfAlgStatus {
+    UserDefinedAngles = 0,
+    RollPitchAlignmentOngoing = 1,
+    RollPitchYawAlignmentOngoing = 2,
+    CoarseAlignment = 3,
+    FineAlignment = 4,
+}
+
+#[ubx_packet_recv]
+#[ubx(class = 0x10, id = 0x14, fixed_payload_len = 16)]
+struct EsfAlg {
+    itow: u32,
+    /// Message version: 0x01 for M8L
+    version: u8,
+
+    #[ubx(map_type = EsfAlgFlags, from = EsfAlgFlags)]
+    flags: u8,
+
+    #[ubx(map_type = EsfAlgError)]
+    error: u8,
+
+    reserved1: u8,
+
+    /// IMU mount yaw angle [0, 360]
+    #[ubx(map_type = f64, scale = 1e-2, alias = yaw)]
+    yaw: u32,
+
+    /// IMU mount pitch angle [-90, 90]
+    #[ubx(map_type = f64, scale = 1e-2, alias = pitch)]
+    pitch: i16,
+
+    /// IMU mount roll angle [-90, 90]
+    #[ubx(map_type = f64, scale = 1e-2, alias = roll)]
+    roll: i16,
+}
+
+/// UBX-ESF-ALG flags
+#[repr(transparent)]
+#[derive(Copy, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
+pub struct EsfAlgFlags(u8);
+
+impl EsfAlgFlags {
+    pub fn flags_raw(&self) -> u8 {
+        self.0
+    }
+    pub fn auto_imu_mount_alg_on(self) -> bool {
+        (self.0) & 0x1 != 0
+    }
+
+    pub fn status(self) -> EsfAlgStatus {
+        let bits = (self.0 >> 1) & 0x07;
+        match bits {
+            0 => EsfAlgStatus::UserDefinedAngles,
+            1 => EsfAlgStatus::RollPitchAlignmentOngoing,
+            2 => EsfAlgStatus::RollPitchYawAlignmentOngoing,
+            3 => EsfAlgStatus::CoarseAlignment,
+            4 => EsfAlgStatus::FineAlignment,
+            _ => {
+                panic!("Unexpected 3-bit value {}!", bits);
+            },
+        }
+    }
+}
+
+impl fmt::Debug for EsfAlgFlags {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("flags")
+            .field("autoMntAlgOn", &self.auto_imu_mount_alg_on())
+            .field("status", &self.status())
+            .finish()
+    }
+}
+
+#[ubx_extend_bitflags]
+#[ubx(from, rest_reserved)]
+bitflags! {
+    #[derive(Debug)]
+    pub struct EsfAlgError: u8 {
+        const TILT_ALG_ERROR = 0x01;
+        const YAW_ALG_ERROR = 0x02;
+        const ANGLE_ERROR = 0x04;
+    }
+}
+
 #[ubx_packet_recv]
 #[ubx(class = 0x10, id = 0x15, fixed_payload_len = 36)]
 struct EsfIns {
     #[ubx(map_type = EsfInsBitFlags)]
-    bit_field: u32,
+    bitfield: u32,
     reserved: [u8; 4],
     itow: u32,
 
@@ -3292,6 +3599,410 @@ bitflags! {
 }
 
 #[ubx_packet_recv]
+#[ubx(class = 0x10, id = 0x10, max_payload_len = 1240)]
+struct EsfStatus {
+    itow: u32,
+    /// Version is 2 for M8L spec
+    version: u8,
+
+    #[ubx(map_type = EsfInitStatus1, from = EsfInitStatus1)]
+    init_status1: u8,
+
+    #[ubx(map_type = EsfInitStatus2, from = EsfInitStatus2)]
+    init_status2: u8,
+
+    reserved1: [u8; 5],
+
+    #[ubx(map_type = EsfStatusFusionMode)]
+    fusion_mode: u8,
+
+    reserved2: [u8; 2],
+
+    num_sens: u8,
+
+    #[ubx(
+        map_type = EsfSensorStatusIter,
+        from = EsfSensorStatusIter::new,
+        is_valid = EsfSensorStatusIter::is_valid,
+        may_fail,
+    )]
+    data: [u8; 0],
+}
+
+#[ubx_extend]
+#[ubx(from, rest_reserved)]
+#[repr(u8)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum EsfStatusFusionMode {
+    Initializing = 0,
+    Fusion = 1,
+    Suspended = 2,
+    Disabled = 3,
+}
+
+#[repr(transparent)]
+#[derive(Copy, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
+pub struct EsfInitStatus1(u8);
+
+impl EsfInitStatus1 {
+    const WHEEL_TICK_MASK: u8 = 0x03;
+    const MOUNTING_ANGLE_STATUS_MASK: u8 = 0x07;
+    const INS_STATUS_MASK: u8 = 0x03;
+
+    pub fn wheel_tick_init_status(self) -> EsfStatusWheelTickInit {
+        let bits = (self.0) & Self::WHEEL_TICK_MASK;
+        match bits {
+            0 => EsfStatusWheelTickInit::Off,
+            1 => EsfStatusWheelTickInit::Initializing,
+            2 => EsfStatusWheelTickInit::Initialized,
+            _ => {
+                panic!("Unexpected 2-bit value {}!", bits);
+            },
+        }
+    }
+
+    pub fn wheel_tick_init_status_raw(self) -> u8 {
+        self.wheel_tick_init_status() as u8
+    }
+
+    pub fn mounting_angle_status(self) -> EsfStatusMountAngle {
+        let bits = (self.0 >> 2) & Self::MOUNTING_ANGLE_STATUS_MASK;
+        match bits {
+            0 => EsfStatusMountAngle::Off,
+            1 => EsfStatusMountAngle::Initializing,
+            2 => EsfStatusMountAngle::Initialized,
+            3 => EsfStatusMountAngle::Initialized,
+            _ => {
+                panic!("Unexpected 3-bit value {}!", bits);
+            },
+        }
+    }
+
+    pub fn mount_angle_status_raw(self) -> u8 {
+        self.mounting_angle_status() as u8
+    }
+
+    pub fn ins_initialization_status(self) -> EsfStatusInsInit {
+        let bits = (self.0 >> 5) & Self::INS_STATUS_MASK;
+        match bits {
+            0 => EsfStatusInsInit::Off,
+            1 => EsfStatusInsInit::Initializing,
+            2 => EsfStatusInsInit::Initialized,
+            _ => {
+                panic!("Unexpected 2-bit value {}!", bits);
+            },
+        }
+    }
+
+    pub fn ins_initialization_status_raw(self) -> u8 {
+        self.ins_initialization_status() as u8
+    }
+}
+
+impl fmt::Debug for EsfInitStatus1 {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("initStatus1")
+            .field("wtInitStatus", &self.wheel_tick_init_status())
+            .field("mntAlgStatus", &self.mounting_angle_status())
+            .field("insInitStatus", &self.ins_initialization_status())
+            .finish()
+    }
+}
+
+#[repr(u8)]
+#[derive(Copy, Clone, Debug)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub enum EsfStatusWheelTickInit {
+    Off = 0,
+    Initializing = 1,
+    Initialized = 2,
+}
+
+#[repr(u8)]
+#[derive(Copy, Clone, Debug)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub enum EsfStatusMountAngle {
+    Off = 0,
+    Initializing = 1,
+    Initialized = 2,
+}
+
+#[repr(u8)]
+#[derive(Copy, Clone, Debug)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub enum EsfStatusInsInit {
+    Off = 0,
+    Initializing = 1,
+    Initialized = 2,
+}
+
+#[repr(transparent)]
+#[derive(Copy, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
+pub struct EsfInitStatus2(u8);
+
+impl EsfInitStatus2 {
+    pub fn imu_init_status_raw(self) -> u8 {
+        self.imu_init_status() as u8
+    }
+
+    pub fn imu_init_status(self) -> EsfStatusImuInit {
+        let bits = (self.0) & 0x02;
+        match bits {
+            0 => EsfStatusImuInit::Off,
+            1 => EsfStatusImuInit::Initializing,
+            2 => EsfStatusImuInit::Initialized,
+            _ => {
+                panic!("Unexpected 2-bit value {}!", bits);
+            },
+        }
+    }
+}
+
+impl fmt::Debug for EsfInitStatus2 {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("initStatus2")
+            .field("imuInitStatus", &self.imu_init_status())
+            .finish()
+    }
+}
+
+#[repr(u8)]
+#[derive(Copy, Clone, Debug)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub enum EsfStatusImuInit {
+    Off = 0,
+    Initializing = 1,
+    Initialized = 2,
+}
+
+#[derive(Debug)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
+pub struct EsfSensorStatus {
+    sens_status1: SensorStatus1,
+    sens_status2: SensorStatus2,
+    freq: u16,
+    faults: EsfSensorFaults,
+}
+
+impl EsfSensorStatus {
+    pub fn freq(&self) -> u16 {
+        self.freq
+    }
+
+    pub fn faults(&self) -> EsfSensorFaults {
+        self.faults
+    }
+
+    pub fn faults_raw(&self) -> u8 {
+        self.faults().into_raw()
+    }
+
+    pub fn sensor_type(&self) -> EsfSensorType {
+        self.sens_status1.sensor_type
+    }
+
+    pub fn sensor_type_raw(&self) -> u8 {
+        self.sensor_type() as u8
+    }
+
+    pub fn sensor_used(&self) -> bool {
+        self.sens_status1.used
+    }
+
+    pub fn sensor_ready(&self) -> bool {
+        self.sens_status1.ready
+    }
+
+    pub fn calibration_status(&self) -> EsfSensorStatusCalibration {
+        self.sens_status2.calibration_status
+    }
+
+    pub fn calibration_status_raw(&self) -> u8 {
+        self.calibration_status() as u8
+    }
+
+    pub fn time_status(&self) -> EsfSensorStatusTime {
+        self.sens_status2.time_status
+    }
+
+    pub fn time_status_raw(&self) -> u8 {
+        self.time_status() as u8
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct EsfSensorStatusIter<'a>(core::slice::ChunksExact<'a, u8>);
+
+impl<'a> EsfSensorStatusIter<'a> {
+    fn new(bytes: &'a [u8]) -> Self {
+        Self(bytes.chunks_exact(4))
+    }
+
+    fn is_valid(bytes: &'a [u8]) -> bool {
+        bytes.len() % 4 == 0
+    }
+}
+
+impl core::iter::Iterator for EsfSensorStatusIter<'_> {
+    type Item = EsfSensorStatus;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let chunk = self.0.next()?;
+        let data = u32::from_le_bytes(chunk[0..4].try_into().unwrap());
+        Some(EsfSensorStatus {
+            sens_status1: ((data & 0xFF) as u8).into(),
+            sens_status2: (((data >> 8) & 0xFF) as u8).into(),
+            freq: ((data >> 16) & 0xFF).try_into().unwrap(),
+            faults: (((data >> 24) & 0xFF) as u8).into(),
+        })
+    }
+}
+
+#[derive(Copy, Clone, Debug)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
+pub struct SensorStatus1 {
+    sensor_type: EsfSensorType,
+    used: bool,
+    ready: bool,
+}
+
+impl From<u8> for SensorStatus1 {
+    fn from(s: u8) -> Self {
+        let sensor_type: EsfSensorType = (s & 0x3F).into();
+        Self {
+            sensor_type,
+            used: (s >> 6) != 0,
+            ready: (s >> 7) != 0,
+        }
+    }
+}
+
+#[repr(u8)]
+#[derive(Copy, Clone, Debug)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
+pub enum EsfSensorType {
+    None = 0,
+    GyroZ = 5,
+    FrontLeftWheelTicks = 6,
+    FrontRightWheelTicks = 7,
+    RearLeftWheelTicks = 8,
+    RearRightWheelTicks = 9,
+    SpeedTick = 10,
+    Speed = 11,
+    GyroTemp = 12,
+    GyroY = 13,
+    GyroX = 14,
+    AccX = 16,
+    AccY = 17,
+    AccZ = 18,
+    Unknown = 19,
+}
+
+impl From<u8> for EsfSensorType {
+    fn from(orig: u8) -> Self {
+        match orig {
+            0 => EsfSensorType::None,
+            1 | 2 | 3 | 4 | 15 => EsfSensorType::Unknown,
+            5 => EsfSensorType::GyroZ,
+            6 => EsfSensorType::FrontLeftWheelTicks,
+            7 => EsfSensorType::FrontRightWheelTicks,
+            8 => EsfSensorType::RearLeftWheelTicks,
+            9 => EsfSensorType::RearRightWheelTicks,
+            10 => EsfSensorType::SpeedTick,
+            11 => EsfSensorType::Speed,
+            12 => EsfSensorType::GyroTemp,
+            13 => EsfSensorType::GyroY,
+            14 => EsfSensorType::GyroX,
+            16 => EsfSensorType::AccX,
+            17 => EsfSensorType::AccY,
+            18 => EsfSensorType::AccZ,
+            _ => EsfSensorType::Unknown,
+        }
+    }
+}
+
+#[allow(dead_code)]
+#[derive(Copy, Clone, Debug)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
+pub struct SensorStatus2 {
+    pub(crate) calibration_status: EsfSensorStatusCalibration,
+    pub(crate) time_status: EsfSensorStatusTime,
+}
+
+impl From<u8> for SensorStatus2 {
+    fn from(s: u8) -> Self {
+        let calibration_status: EsfSensorStatusCalibration = (s & 0x03).into();
+        let time_status: EsfSensorStatusTime = ((s >> 2) & 0x03).into();
+        Self {
+            calibration_status,
+            time_status,
+        }
+    }
+}
+
+#[repr(u8)]
+#[derive(Copy, Clone, Debug)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
+pub enum EsfSensorStatusCalibration {
+    NotCalibrated = 0,
+    Calibrating = 1,
+    Calibrated = 2,
+}
+
+impl From<u8> for EsfSensorStatusCalibration {
+    fn from(orig: u8) -> Self {
+        match orig {
+            0 => EsfSensorStatusCalibration::NotCalibrated,
+            1 => EsfSensorStatusCalibration::Calibrating,
+            2 => EsfSensorStatusCalibration::Calibrated,
+            _ => EsfSensorStatusCalibration::Calibrated,
+        }
+    }
+}
+
+#[repr(u8)]
+#[derive(Copy, Clone, Debug)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
+pub enum EsfSensorStatusTime {
+    NoData = 0,
+    OnReceptionFirstByte = 1,
+    OnEventInput = 2,
+    TimeTagFromData = 3,
+}
+
+impl From<u8> for EsfSensorStatusTime {
+    fn from(orig: u8) -> Self {
+        match orig {
+            0 => EsfSensorStatusTime::NoData,
+            1 => EsfSensorStatusTime::OnReceptionFirstByte,
+            2 => EsfSensorStatusTime::OnEventInput,
+            3 => EsfSensorStatusTime::TimeTagFromData,
+            _ => EsfSensorStatusTime::NoData,
+        }
+    }
+}
+
+#[ubx_extend_bitflags]
+#[ubx(from, into_raw, rest_reserved)]
+bitflags! {
+#[derive(Debug, Default, Clone, Copy)]
+pub struct EsfSensorFaults: u8 {
+    const BAD_MEASUREMENT = 1;
+    const BAD_TIME_TAG = 2;
+    const MISSING_MEASUREMENT = 4;
+    const NOISY_MEASUREMENT = 8;
+}
+}
+
+impl From<u8> for EsfSensorFaults {
+    fn from(s: u8) -> Self {
+        Self::from_bits(s).unwrap()
+    }
+}
+
+#[ubx_packet_recv]
 #[ubx(class = 0x28, id = 0x01, fixed_payload_len = 32)]
 struct HnrAtt {
     itow: u32,
@@ -3315,7 +4026,7 @@ struct HnrAtt {
 #[ubx(class = 0x28, id = 0x02, fixed_payload_len = 36)]
 pub struct HnrIns {
     #[ubx(map_type = HnrInsBitFlags)]
-    bit_field: u32,
+    bitfield: u32,
     reserved: [u8; 4],
     itow: u32,
 
@@ -3357,7 +4068,9 @@ bitflags! {
 #[ubx(class = 0x28, id = 0x00, fixed_payload_len = 72)]
 #[derive(Debug)]
 struct HnrPvt {
+    /// GPS Millisecond Time of Week
     itow: u32,
+
     year: u16,
     month: u8,
     day: u8,
@@ -3367,24 +4080,30 @@ struct HnrPvt {
 
     #[ubx(map_type = HnrPvtValidFlags)]
     valid: u8,
-    nano: i32,
+
+    nanosec: i32,
+
     #[ubx(map_type = GpsFix)]
-    gps_fix: u8,
+    fix_type: u8,
 
     #[ubx(map_type = HnrPvtFlags)]
     flags: u8,
 
     reserved1: [u8; 2],
 
+    /// Longitude in [deg]
     #[ubx(map_type = f64, scale = 1e-7, alias = longitude)]
     lon: i32,
 
+    /// Latitude in [deg]
     #[ubx(map_type = f64, scale = 1e-7, alias = latitude)]
     lat: i32,
 
+    /// Height above reference ellipsoid in [m]
     #[ubx(map_type = f64, scale = 1e-3, alias = height_above_ellipsoid)]
     height: i32,
 
+    /// Height above Mean Sea Level in [m]
     #[ubx(map_type = f64, scale = 1e-3, alias = height_msl)]
     height_msl: i32,
 
@@ -3395,15 +4114,24 @@ struct HnrPvt {
     speed: i32,
 
     #[ubx(map_type = f64, scale = 1e-5, alias = heading_motion)]
-    head_mot: i32,
+    head_motion: i32,
 
     #[ubx(map_type = f64, scale = 1e-5, alias = heading_vehicle)]
-    head_veh: i32,
+    head_vehicle: i32,
 
+    /// Horizontal accuracy in [m]
+    #[ubx(map_type = f64, scale = 1e-3, alias = horizontal_accuracy )]
     h_acc: u32,
+
+    /// Vertical accuracy in [m]
+    #[ubx(map_type = f64, scale = 1e-3, alias = vertical_accuracy )]
     v_acc: u32,
+
+    /// Speed accuracy in [m/s]
+    #[ubx(map_type = f64, scale = 1e-3, alias = speed_accuracy )]
     s_acc: u32,
 
+    /// Heading accuracy estimate (for both vehicle and motion) [deg]
     #[ubx(map_type = f64, scale = 1e-5, alias = heading_accurracy)]
     head_acc: u32,
 
@@ -3501,7 +4229,7 @@ impl<'a> DwrdIter<'a> {
     }
 }
 
-impl<'a> core::iter::Iterator for DwrdIter<'a> {
+impl core::iter::Iterator for DwrdIter<'_> {
     type Item = u32;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -3689,6 +4417,7 @@ define_recv_packets!(
         CfgTmode2,
         CfgTmode3,
         CfgTp5,
+        CfgEsfAlg,
         InfError,
         InfWarning,
         InfNotice,
@@ -3701,8 +4430,10 @@ define_recv_packets!(
         MonGnss,
         MonHw,
         RxmRtcm,
-        EsfMeas,
+        EsfAlg,
         EsfIns,
+        EsfMeas,
+        EsfStatus,
         HnrAtt,
         HnrIns,
         HnrPvt,
@@ -3717,16 +4448,19 @@ define_recv_packets!(
     }
 );
 
+#[cfg(test)]
+mod test {
+    use super::*;
 #[test]
-fn test_mon_ver_interpret() {
+    fn mon_ver_rom_interpret() {
     let payload: [u8; 160] = [
-        82, 79, 77, 32, 67, 79, 82, 69, 32, 51, 46, 48, 49, 32, 40, 49, 48, 55, 56, 56, 56, 41, 0,
-        0, 0, 0, 0, 0, 0, 0, 48, 48, 48, 56, 48, 48, 48, 48, 0, 0, 70, 87, 86, 69, 82, 61, 83, 80,
-        71, 32, 51, 46, 48, 49, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 80, 82, 79, 84, 86,
-        69, 82, 61, 49, 56, 46, 48, 48, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 71, 80,
-        83, 59, 71, 76, 79, 59, 71, 65, 76, 59, 66, 68, 83, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 83, 66, 65, 83, 59, 73, 77, 69, 83, 59, 81, 90, 83, 83, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0,
+            82, 79, 77, 32, 67, 79, 82, 69, 32, 51, 46, 48, 49, 32, 40, 49, 48, 55, 56, 56, 56, 41,
+            0, 0, 0, 0, 0, 0, 0, 0, 48, 48, 48, 56, 48, 48, 48, 48, 0, 0, 70, 87, 86, 69, 82, 61,
+            83, 80, 71, 32, 51, 46, 48, 49, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 80, 82,
+            79, 84, 86, 69, 82, 61, 49, 56, 46, 48, 48, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 71, 80, 83, 59, 71, 76, 79, 59, 71, 65, 76, 59, 66, 68, 83, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 83, 66, 65, 83, 59, 73, 77, 69, 83, 59, 81, 90, 83, 83, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     ];
     assert_eq!(Ok(()), <MonVerRef>::validate(&payload));
     let ver = MonVerRef(&payload);
@@ -3738,4 +4472,35 @@ fn test_mon_ver_interpret() {
     assert_eq!("GPS;GLO;GAL;BDS", it.next().unwrap());
     assert_eq!("SBAS;IMES;QZSS", it.next().unwrap());
     assert_eq!(None, it.next());
+    }
+
+    #[test]
+    fn mon_ver_flash_m8l_interpret() {
+        let payload: [u8; 250] = [
+            69, 88, 84, 32, 67, 79, 82, 69, 32, 51, 46, 48, 49, 32, 40, 100, 49, 56, 57, 102, 102,
+            41, 0, 0, 0, 0, 0, 0, 0, 0, 48, 48, 48, 56, 48, 48, 48, 48, 0, 0, 82, 79, 77, 32, 66,
+            65, 83, 69, 32, 51, 46, 48, 49, 32, 40, 49, 48, 55, 56, 56, 56, 41, 0, 0, 0, 0, 0, 0,
+            0, 0, 70, 87, 86, 69, 82, 61, 65, 68, 82, 32, 52, 46, 49, 49, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 80, 82, 79, 84, 86, 69, 82, 61, 49, 57, 46, 49, 48, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 77, 79, 68, 61, 78, 69, 79, 45, 77, 56, 76, 45,
+            48, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 70, 73, 83, 61, 48, 120, 69, 70,
+            52, 48, 49, 53, 32, 40, 49, 48, 48, 49, 49, 49, 41, 0, 0, 0, 0, 0, 0, 0, 0, 0, 71, 80,
+            83, 59, 71, 76, 79, 59, 71, 65, 76, 59, 66, 68, 83, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 83, 66, 65, 83, 59, 73, 77, 69, 83, 59, 81, 90, 83, 83, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0,
+        ];
+        assert_eq!(Ok(()), <MonVerRef>::validate(&payload));
+        let ver = MonVerRef(&payload);
+        assert_eq!("EXT CORE 3.01 (d189ff)", ver.software_version());
+        assert_eq!("00080000", ver.hardware_version());
+        let mut it = ver.extension();
+        assert_eq!("ROM BASE 3.01 (107888)", it.next().unwrap());
+        assert_eq!("FWVER=ADR 4.11", it.next().unwrap());
+        assert_eq!("PROTVER=19.10", it.next().unwrap());
+        assert_eq!("MOD=NEO-M8L-0", it.next().unwrap());
+        assert_eq!("FIS=0xEF4015 (100111)", it.next().unwrap());
+        assert_eq!("GPS;GLO;GAL;BDS", it.next().unwrap());
+        assert_eq!("SBAS;IMES;QZSS", it.next().unwrap());
+        assert_eq!(None, it.next());
+    }
 }
