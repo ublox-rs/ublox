@@ -9,8 +9,12 @@ repository = "https://github.com/lkolbly/ublox"
 version = "0.4.5"
 
 [features]
+ubx_proto23 = []
+ubx_proto27 = []
+ubx_proto31 = []
+default = ["std", "serde", "ubx_proto23"]
+
 alloc = []
-default = ["std", "serde"]
 std = []
 
 [dependencies]
