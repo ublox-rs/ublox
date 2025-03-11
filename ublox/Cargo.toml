@@ -15,16 +15,17 @@ std = []
 
 [dependencies]
 bitflags = "2.3"
-chrono = {version = "0.4", default-features = false, features = []}
-num-traits = {version = "0.2", default-features = false}
-serde = {version = "1.0", optional = true, default-features = false, features = ["derive"]}
-ublox_derive = {path = "../ublox_derive", version = "=0.1.0"}
+chrono = { version = "0.4", default-features = false, features = [] }
+num-traits = { version = "0.2", default-features = false }
+serde = { version = "1.0", optional = true, default-features = false, features = [
+    "derive",
+] }
+ublox_derive = { path = "../ublox_derive", version = "=0.1.0" }
 
 [dev-dependencies]
 cpu-time = "1.0"
 cpuprofiler = "0.0"
-# Latest depends on clap v4 which requires rustc 1.70
-criterion = "0.4"
+criterion = "0.5"
 rand = "0.8"
 serde_json = "1.0"
 

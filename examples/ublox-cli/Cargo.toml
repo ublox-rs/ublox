@@ -1,17 +1,20 @@
 [package]
-authors = ["Lane Kolbly <lane@rscheme.org>", "Andrei Gherghescu <andrei.github.book663@passfwd.com>"]
+authors = [
+    "Lane Kolbly <lane@rscheme.org>",
+    "Andrei Gherghescu <andrei.github.book663@passfwd.com>",
+]
 edition = "2021"
 name = "ublox-cli"
 publish = false
-rust-version = "1.70"
+rust-version = "1.81"
 version = "0.1.0"
 
 [dependencies]
 chrono = "0.4.29"
-clap = {version = "4.2.7", features = ["cargo"]}
+clap = { version = "4.2.7", features = ["cargo"] }
 serde_json = "1.0.105"
 serialport = "4.2.2"
-ublox = {path = "../../ublox"}
+ublox = { path = "../../ublox" }
 
 [features]
 alloc = ["ublox/alloc"]

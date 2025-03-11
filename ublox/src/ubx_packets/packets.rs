@@ -910,7 +910,7 @@ pub enum OdoProfile {
     Custom = 4,
 }
 
-/// Configure Jamming interference monitoring 
+/// Configure Jamming interference monitoring
 #[ubx_packet_recv_send]
 #[ubx(class = 0x06, id = 0x39, fixed_payload_len = 8)]
 struct CfgItfm {
@@ -940,7 +940,7 @@ pub struct CfgItfmConfig {
 impl CfgItfmConfig {
     pub fn new(enable: bool, bb_threshold: u32, cw_threshold: u32) -> Self {
         Self {
-            enable, 
+            enable,
             bb_threshold: bb_threshold.into(),
             cw_threshold: cw_threshold.into(),
             algorithm_bits: CfgItfmAlgoBits::default(),
@@ -948,10 +948,10 @@ impl CfgItfmConfig {
     }
 
     const fn into_raw(self) -> u32 {
-        (self.enable as u32)<<31
-            | self.cw_threshold.into_raw() 
-                | self.bb_threshold.into_raw()
-                    | self.algorithm_bits.into_raw()
+        (self.enable as u32) << 31
+            | self.cw_threshold.into_raw()
+            | self.bb_threshold.into_raw()
+            | self.algorithm_bits.into_raw()
     }
 }
 
@@ -977,7 +977,7 @@ pub struct CfgItfmBbThreshold(u32);
 impl CfgItfmBbThreshold {
     const POSITION: u32 = 0;
     const LENGTH: u32 = 4;
-    const MASK: u32 = (1<<Self::LENGTH)-1;
+    const MASK: u32 = (1 << Self::LENGTH) - 1;
     const fn into_raw(self) -> u32 {
         (self.0 & Self::MASK) << Self::POSITION
     }
@@ -1002,7 +1002,7 @@ pub struct CfgItfmCwThreshold(u32);
 impl CfgItfmCwThreshold {
     const POSITION: u32 = 4;
     const LENGTH: u32 = 5;
-    const MASK: u32 = (1<<Self::LENGTH)-1;
+    const MASK: u32 = (1 << Self::LENGTH) - 1;
     const fn into_raw(self) -> u32 {
         (self.0 & Self::MASK) << Self::POSITION
     }
@@ -1027,7 +1027,7 @@ pub struct CfgItfmAlgoBits(u32);
 impl CfgItfmAlgoBits {
     const POSITION: u32 = 9;
     const LENGTH: u32 = 22;
-    const MASK: u32 = (1<<Self::LENGTH)-1;
+    const MASK: u32 = (1 << Self::LENGTH) - 1;
     const fn into_raw(self) -> u32 {
         (self.0 & Self::MASK) << Self::POSITION
     }
@@ -1068,9 +1068,9 @@ impl CfgItfmConfig2 {
     }
 
     const fn into_raw(self) -> u32 {
-        ((self.scan_aux_bands as u32)<< 14) 
-            | self.general.into_raw() 
-                | self.antenna.into_raw() as u32
+        ((self.scan_aux_bands as u32) << 14)
+            | self.general.into_raw()
+            | self.antenna.into_raw() as u32
     }
 }
 
@@ -1094,7 +1094,7 @@ pub struct CfgItfmGeneralBits(u32);
 impl CfgItfmGeneralBits {
     const POSITION: u32 = 0;
     const LENGTH: u32 = 12;
-    const MASK: u32 = (1<<Self::LENGTH)-1;
+    const MASK: u32 = (1 << Self::LENGTH) - 1;
     const fn into_raw(self) -> u32 {
         (self.0 & Self::MASK) << Self::POSITION
     }
@@ -1124,12 +1124,12 @@ pub enum CfgItfmAntennaSettings {
     /// Type of Antenna is not known
     #[default]
     Unknown = 0,
-    /// Active antenna 
+    /// Active antenna
     Active = 1,
     /// Passive antenna
     Passive = 2,
 }
-        
+
 impl From<u32> for CfgItfmAntennaSettings {
     fn from(cfg: u32) -> Self {
         let cfg = (cfg & 0x3000) >> 12;
@@ -4451,9 +4451,9 @@ define_recv_packets!(
 #[cfg(test)]
 mod test {
     use super::*;
-#[test]
+    #[test]
     fn mon_ver_rom_interpret() {
-    let payload: [u8; 160] = [
+        let payload: [u8; 160] = [
             82, 79, 77, 32, 67, 79, 82, 69, 32, 51, 46, 48, 49, 32, 40, 49, 48, 55, 56, 56, 56, 41,
             0, 0, 0, 0, 0, 0, 0, 0, 48, 48, 48, 56, 48, 48, 48, 48, 0, 0, 70, 87, 86, 69, 82, 61,
             83, 80, 71, 32, 51, 46, 48, 49, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 80, 82,
@@ -4461,17 +4461,17 @@ mod test {
             0, 0, 0, 71, 80, 83, 59, 71, 76, 79, 59, 71, 65, 76, 59, 66, 68, 83, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 83, 66, 65, 83, 59, 73, 77, 69, 83, 59, 81, 90, 83, 83, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    ];
-    assert_eq!(Ok(()), <MonVerRef>::validate(&payload));
-    let ver = MonVerRef(&payload);
-    assert_eq!("ROM CORE 3.01 (107888)", ver.software_version());
-    assert_eq!("00080000", ver.hardware_version());
-    let mut it = ver.extension();
-    assert_eq!("FWVER=SPG 3.01", it.next().unwrap());
-    assert_eq!("PROTVER=18.00", it.next().unwrap());
-    assert_eq!("GPS;GLO;GAL;BDS", it.next().unwrap());
-    assert_eq!("SBAS;IMES;QZSS", it.next().unwrap());
-    assert_eq!(None, it.next());
+        ];
+        assert_eq!(Ok(()), <MonVerRef>::validate(&payload));
+        let ver = MonVerRef(&payload);
+        assert_eq!("ROM CORE 3.01 (107888)", ver.software_version());
+        assert_eq!("00080000", ver.hardware_version());
+        let mut it = ver.extension();
+        assert_eq!("FWVER=SPG 3.01", it.next().unwrap());
+        assert_eq!("PROTVER=18.00", it.next().unwrap());
+        assert_eq!("GPS;GLO;GAL;BDS", it.next().unwrap());
+        assert_eq!("SBAS;IMES;QZSS", it.next().unwrap());
+        assert_eq!(None, it.next());
     }
 
     #[test]
