@@ -1142,7 +1142,13 @@ impl From<u32> for CfgItfmAntennaSettings {
 
 /// Synchronization management configuration frame
 #[ubx_packet_recv_send]
-#[ubx(class = 0x06, id = 0x62, fixed_payload_len = 20, flags = "default_for_builder")]
+#[ubx(
+    class = 0x06,
+    id = 0x62,
+    fixed_payload_len = 20,
+    flags = "default_for_builder"
+)]
+#[derive(Debug)]
 struct CfgSmgr {
     version: u8,
     /// Minimum # of GNSS fixes before we
@@ -1150,28 +1156,28 @@ struct CfgSmgr {
     min_gnss_fix: u8,
     /// Maximum frequency rate change, in ppb/sec,
     /// when disciplining. Must be < 30 ppb/s.
-    #[ubx(map_type = f32, scale = 1.0)] 
+    #[ubx(map_type = f32, scale = 1.0)]
     max_freq_change_rate: u16,
     /// Maximum phase correction rate, in ns/s
     /// in coherent time pulse mode.
     /// Must be < 100 ns/s
     max_phase_corr_rate: u16,
     reserved1: u16,
-    /// Limit possible deviation in ppb, 
+    /// Limit possible deviation in ppb,
     /// before UBX-TIM-TOS indicates that frequency
     /// is out of tolerance
-    #[ubx(map_type = f32, scale = 1.0)] 
+    #[ubx(map_type = f32, scale = 1.0)]
     freq_tolerance: u16,
     /// Limit possible deviation, in ns,
     /// before UBX-TIM-TOS indicates that pulse
     /// is out of tolerance
-    #[ubx(map_type = f32, scale = 1.0)] 
+    #[ubx(map_type = f32, scale = 1.0)]
     time_tolerance: u16,
     /// Message configuration, see [CfgSmgrMsgFlags]
-    #[ubx(map_type = CfgSmgrMsgFlags)] 
+    #[ubx(map_type = CfgSmgrMsgFlags)]
     msg: u16,
     /// Maximum slew rate, in s/s
-    #[ubx(map_type = f32, scale = 1.0E-6)] 
+    #[ubx(map_type = f32, scale = 1.0E-6)]
     max_slew_rate: u16,
     /// Configuration flags, see [CfgSmgrFlags]
     #[ubx(map_type = CfgSmgrFlags)]
@@ -1183,7 +1189,7 @@ struct CfgSmgr {
 #[ubx(from, into_raw, rest_reserved)]
 bitflags! {
     /// Sync manager message flags
-    #[derive(Default)]
+    #[derive(Default, Debug)]
     pub struct CfgSmgrMsgFlags: u16 {
         /// Report internal oscillator offset estimate from oscillator model
         const MEAS_INTERNAL1 = 0x01;
@@ -1200,7 +1206,7 @@ bitflags! {
 #[ubx(from, into_raw, rest_reserved)]
 bitflags! {
     /// Synchronization Manager config flags
-    #[derive(Default)]
+    #[derive(Default, Debug)]
     pub struct CfgSmgrFlags: u32 {
         /// Disable internal Osc. disciplining
         const DISABLE_INTERNAL = 0x01;
@@ -1231,7 +1237,7 @@ bitflags! {
         /// solutions are used
         const USE_ANY_FIX = 0x100;
         /// MaxSlewRate field is discarded when asserted,
-        /// otherwise MaxSlewRate field is used for 
+        /// otherwise MaxSlewRate field is used for
         /// maximum time correction, in corrective fime pulse mode
         const DISABLE_MAX_SLEW_RATE = 0x200;
         /// Issues UBX-TIME-TOS warning when frequency uncertainty
