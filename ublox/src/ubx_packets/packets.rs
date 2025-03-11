@@ -625,9 +625,7 @@ impl NavSatSvFlags {
             3 => NavSatQualityIndicator::SignalDetected,
             4 => NavSatQualityIndicator::CodeLock,
             5..=7 => NavSatQualityIndicator::CarrierLock,
-            _ => {
-                panic!("Unexpected 3-bit value {}!", bits);
-            },
+            _ => NavSatQualityIndicator::Invalid,
         }
     }
 
@@ -749,6 +747,7 @@ pub enum NavSatQualityIndicator {
     SignalDetected,
     CodeLock,
     CarrierLock,
+    Invalid,
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -3477,6 +3476,8 @@ pub enum EsfAlgStatus {
     RollPitchYawAlignmentOngoing = 2,
     CoarseAlignment = 3,
     FineAlignment = 4,
+    /// Only three bits are reserved for this field
+    Invalid = 5,
 }
 
 #[ubx_packet_recv]
@@ -3529,9 +3530,7 @@ impl EsfAlgFlags {
             2 => EsfAlgStatus::RollPitchYawAlignmentOngoing,
             3 => EsfAlgStatus::CoarseAlignment,
             4 => EsfAlgStatus::FineAlignment,
-            _ => {
-                panic!("Unexpected 3-bit value {}!", bits);
-            },
+            _ => EsfAlgStatus::Invalid,
         }
     }
 }
@@ -3656,9 +3655,7 @@ impl EsfInitStatus1 {
             0 => EsfStatusWheelTickInit::Off,
             1 => EsfStatusWheelTickInit::Initializing,
             2 => EsfStatusWheelTickInit::Initialized,
-            _ => {
-                panic!("Unexpected 2-bit value {}!", bits);
-            },
+            _ => EsfStatusWheelTickInit::Invalid,
         }
     }
 
@@ -3671,11 +3668,8 @@ impl EsfInitStatus1 {
         match bits {
             0 => EsfStatusMountAngle::Off,
             1 => EsfStatusMountAngle::Initializing,
-            2 => EsfStatusMountAngle::Initialized,
-            3 => EsfStatusMountAngle::Initialized,
-            _ => {
-                panic!("Unexpected 3-bit value {}!", bits);
-            },
+            2 | 3 => EsfStatusMountAngle::Initialized,
+            _ => EsfStatusMountAngle::Invalid,
         }
     }
 
@@ -3689,9 +3683,7 @@ impl EsfInitStatus1 {
             0 => EsfStatusInsInit::Off,
             1 => EsfStatusInsInit::Initializing,
             2 => EsfStatusInsInit::Initialized,
-            _ => {
-                panic!("Unexpected 2-bit value {}!", bits);
-            },
+            _ => EsfStatusInsInit::Invalid,
         }
     }
 
@@ -3717,6 +3709,8 @@ pub enum EsfStatusWheelTickInit {
     Off = 0,
     Initializing = 1,
     Initialized = 2,
+    /// Only two bits are reserved for the init status
+    Invalid = 3,
 }
 
 #[repr(u8)]
@@ -3726,6 +3720,8 @@ pub enum EsfStatusMountAngle {
     Off = 0,
     Initializing = 1,
     Initialized = 2,
+    /// Only two bits are reserved for the init status
+    Invalid = 3,
 }
 
 #[repr(u8)]
@@ -3735,6 +3731,8 @@ pub enum EsfStatusInsInit {
     Off = 0,
     Initializing = 1,
     Initialized = 2,
+    /// Only two bits are reserved for the init status
+    Invalid = 3,
 }
 
 #[repr(transparent)]
@@ -3753,9 +3751,7 @@ impl EsfInitStatus2 {
             0 => EsfStatusImuInit::Off,
             1 => EsfStatusImuInit::Initializing,
             2 => EsfStatusImuInit::Initialized,
-            _ => {
-                panic!("Unexpected 2-bit value {}!", bits);
-            },
+            _ => EsfStatusImuInit::Invalid,
         }
     }
 }
@@ -3775,6 +3771,8 @@ pub enum EsfStatusImuInit {
     Off = 0,
     Initializing = 1,
     Initialized = 2,
+    /// Only two bits are reserved for the init status
+    Invalid = 3,
 }
 
 #[derive(Debug)]
@@ -3850,11 +3848,11 @@ impl core::iter::Iterator for EsfSensorStatusIter<'_> {
 
     fn next(&mut self) -> Option<Self::Item> {
         let chunk = self.0.next()?;
-        let data = u32::from_le_bytes(chunk[0..4].try_into().unwrap());
+        let data = u32::from_le_bytes(chunk[0..4].try_into().unwrap_or_default());
         Some(EsfSensorStatus {
             sens_status1: ((data & 0xFF) as u8).into(),
             sens_status2: (((data >> 8) & 0xFF) as u8).into(),
-            freq: ((data >> 16) & 0xFF).try_into().unwrap(),
+            freq: ((data >> 16) & 0xFF).try_into().unwrap_or(0),
             faults: (((data >> 24) & 0xFF) as u8).into(),
         })
     }
@@ -3897,14 +3895,13 @@ pub enum EsfSensorType {
     AccX = 16,
     AccY = 17,
     AccZ = 18,
-    Unknown = 19,
+    Invalid = 19,
 }
 
 impl From<u8> for EsfSensorType {
     fn from(orig: u8) -> Self {
         match orig {
             0 => EsfSensorType::None,
-            1 | 2 | 3 | 4 | 15 => EsfSensorType::Unknown,
             5 => EsfSensorType::GyroZ,
             6 => EsfSensorType::FrontLeftWheelTicks,
             7 => EsfSensorType::FrontRightWheelTicks,
@@ -3918,7 +3915,7 @@ impl From<u8> for EsfSensorType {
             16 => EsfSensorType::AccX,
             17 => EsfSensorType::AccY,
             18 => EsfSensorType::AccZ,
-            _ => EsfSensorType::Unknown,
+            _ => EsfSensorType::Invalid,
         }
     }
 }
@@ -3949,6 +3946,7 @@ pub enum EsfSensorStatusCalibration {
     NotCalibrated = 0,
     Calibrating = 1,
     Calibrated = 2,
+    Invalid = 4,
 }
 
 impl From<u8> for EsfSensorStatusCalibration {
@@ -3956,8 +3954,8 @@ impl From<u8> for EsfSensorStatusCalibration {
         match orig {
             0 => EsfSensorStatusCalibration::NotCalibrated,
             1 => EsfSensorStatusCalibration::Calibrating,
-            2 => EsfSensorStatusCalibration::Calibrated,
-            _ => EsfSensorStatusCalibration::Calibrated,
+            2 | 3 => EsfSensorStatusCalibration::Calibrated,
+            _ => EsfSensorStatusCalibration::Invalid,
         }
     }
 }
@@ -3970,6 +3968,7 @@ pub enum EsfSensorStatusTime {
     OnReceptionFirstByte = 1,
     OnEventInput = 2,
     TimeTagFromData = 3,
+    Invalid = 4,
 }
 
 impl From<u8> for EsfSensorStatusTime {
@@ -3979,7 +3978,7 @@ impl From<u8> for EsfSensorStatusTime {
             1 => EsfSensorStatusTime::OnReceptionFirstByte,
             2 => EsfSensorStatusTime::OnEventInput,
             3 => EsfSensorStatusTime::TimeTagFromData,
-            _ => EsfSensorStatusTime::NoData,
+            _ => EsfSensorStatusTime::Invalid,
         }
     }
 }
@@ -3998,7 +3997,7 @@ pub struct EsfSensorFaults: u8 {
 
 impl From<u8> for EsfSensorFaults {
     fn from(s: u8) -> Self {
-        Self::from_bits(s).unwrap()
+        Self::from_bits(s).unwrap_or(EsfSensorFaults::empty())
     }
 }
 
