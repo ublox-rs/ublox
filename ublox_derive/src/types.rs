@@ -77,7 +77,7 @@ impl PackField {
         self.map
             .map_type
             .as_ref()
-            .map_or(false, |m| crate::type_is_option(&m.ty))
+            .is_some_and(|m| crate::type_is_option(&m.ty))
     }
 }
 

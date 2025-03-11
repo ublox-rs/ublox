@@ -505,7 +505,7 @@ pub fn generate_code_to_extend_enum(ubx_enum: &UbxExtendEnum) -> TokenStream {
     let attrs = &ubx_enum.attrs;
     if let Some(UbxEnumRestHandling::Reserved) = ubx_enum.rest_handling {
         let defined: HashSet<u8> = ubx_enum.variants.iter().map(|x| x.1).collect();
-        for i in 0..=u8::max_value() {
+        for i in 0..=u8::MAX {
             if !defined.contains(&i) {
                 let name = format_ident!("Reserved{}", i);
                 variants.push((name, i));

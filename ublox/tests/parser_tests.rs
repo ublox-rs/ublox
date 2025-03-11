@@ -210,6 +210,7 @@ fn test_esf_meas_serialize() {
     while let Some(pack) = it.next() {
         match pack {
             Ok(pack) => {
+                // Match full packet including class & msg id
                 let expected = serde_json::json! {
                     {
                       "class": 16,
@@ -219,7 +220,7 @@ fn test_esf_meas_serialize() {
                       "id": 0,
                       "data": [
                         {
-                          "data_type": 11,
+                          "data_type": "Speed",
                           "data_field": 25677
                         }
                       ],
@@ -236,7 +237,7 @@ fn test_esf_meas_serialize() {
                           "id": 0,
                           "data": [
                             {
-                              "data_type": 11,
+                              "data_type": "Speed",
                               "data_field": 25677
                             }
                           ],

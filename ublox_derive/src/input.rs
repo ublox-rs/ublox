@@ -546,6 +546,7 @@ impl Parse for PackFieldMap {
     }
 }
 
+#[allow(dead_code)]
 struct Comment(String);
 
 impl Parse for Comment {

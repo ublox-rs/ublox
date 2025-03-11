@@ -14,8 +14,8 @@ proc-macro2 = "1.0"
 quote = "1.0"
 # cannot be bumped to major relese:
 # see API changes at https://github.com/dtolnay/syn/releases/tag/2.0.0
-syn = {version = "1.0.109", features = ["extra-traits", "full"]}
+syn = { version = "1.0", features = ["extra-traits", "full"] }
 
 [dev-dependencies]
-proc-macro2 = {version = "1.0", features = ["span-locations"]}
-which = {version = "4.4.0", default-features = false}
+proc-macro2 = { version = "1.0", features = ["span-locations"] }
+which = { version = "4.4", default-features = false }
