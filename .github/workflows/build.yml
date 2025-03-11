@@ -13,10 +13,11 @@ jobs:
     strategy:
       matrix:
         feature-args:
-          - ''
-          - --no-default-features --features alloc
-          - --no-default-features --features serde
-          - --no-default-features
+          - --features "alloc std ubx_proto23" # - --all-features
+          - --no-default-features --features "alloc ubx_proto23" 
+          - --no-default-features --features ubx_proto23
+          - --no-default-features --features ubx_proto27
+          - --no-default-features --features ubx_proto31
     steps:
     - uses: actions/checkout@v4
     - name: Install libudev
@@ -34,7 +35,7 @@ jobs:
     - name: Coding style
       run: |
         cargo fmt --all -- --check
-        cargo clippy --all-features --all-targets -- -D warnings
+        cargo clippy --all-targets -- -D warnings
 
   build_embedded:
     runs-on: ubuntu-latest
@@ -48,11 +49,11 @@ jobs:
     - name: Install embedded targets
       run: rustup target add thumbv6m-none-eabi thumbv7m-none-eabi thumbv7em-none-eabihf
     - name: Build
-      run: cargo build --verbose --no-default-features --target thumbv6m-none-eabi --target thumbv7m-none-eabi --target thumbv7em-none-eabihf
+      run: cargo build --verbose --no-default-features --target thumbv6m-none-eabi --target thumbv7m-none-eabi --target thumbv7em-none-eabihf --features ubx_proto23 
     - name: Build (alloc)
-      run: cargo build --verbose --no-default-features --target thumbv6m-none-eabi --target thumbv7m-none-eabi --target thumbv7em-none-eabihf --features alloc
+      run: cargo build --verbose --no-default-features --target thumbv6m-none-eabi --target thumbv7m-none-eabi --target thumbv7em-none-eabihf --features alloc,ubx_proto23
     - name: Build (serde)
-      run: cargo build --verbose --no-default-features --target thumbv6m-none-eabi --target thumbv7m-none-eabi --target thumbv7em-none-eabihf --features serde
+      run: cargo build --verbose --no-default-features --target thumbv6m-none-eabi --target thumbv7m-none-eabi --target thumbv7em-none-eabihf --features serde,ubx_proto23
 
   build_examples:
     runs-on: ubuntu-latest
@@ -71,4 +72,4 @@ jobs:
     - name: Coding style
       run: |
         cd ${{ github.workspace }}/examples && cargo fmt --all -- --check
-        cd ${{ github.workspace }}/examples && cargo clippy --all-features --all-targets -- -D warnings
+        cd ${{ github.workspace }}/examples && cargo clippy -- -D warnings
