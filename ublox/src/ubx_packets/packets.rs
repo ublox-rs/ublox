@@ -3193,6 +3193,7 @@ pub enum TimTm2TimeBase {
 /// Time pulse time & frequency data
 #[ubx_packet_recv]
 #[ubx(class = 0x0D, id = 0x12, fixed_payload_len = 56)]
+#[derive(Debug)]
 struct TimTos {
     version: u8,
     /// GNSS system used for reporting GNSS time
@@ -3240,7 +3241,7 @@ struct TimTos {
 #[ubx_extend_bitflags]
 #[ubx(from, into_raw, rest_reserved)]
 bitflags! {
-    #[derive(Default)]
+    #[derive(Default, Debug)]
     pub struct TimTosFlags: u32 {
         /// Currently in a leap second
         const LEAP_NOW = 0x01;
@@ -4386,16 +4387,6 @@ struct NavAtt {
     acc_heading: u32,
 }
 
-#[ubx_packet_recv]
-#[ubx(class = 0x01, id = 0x22, fixed_payload_len = 20)]
-struct NavClock {
-    itow: u32,
-    clk_b: i32,
-    clk_d: i32,
-    t_acc: u32,
-    f_acc: u32,
-}
-
 #[ubx_extend_bitflags]
 #[ubx(from, rest_reserved)]
 bitflags! {
@@ -4625,7 +4616,6 @@ define_recv_packets!(
         NavHpPosEcef,
         NavTimeUTC,
         NavTimeLs,
-        NavClock,
         NavSat,
         NavEoe,
         NavOdo,
