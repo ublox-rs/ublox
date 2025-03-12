@@ -4,14 +4,14 @@ uBlox for Rust
 [![Rust](https://github.com/ublox-rs/ublox/actions/workflows/build.yml/badge.svg)](https://github.com/ublox-rs/ublox/actions/workflows/build.yml)
 [![ublox on docs.rs][docs-badge]][docs-url]
 [![MIT licensed][mit-badge]][mit-url]
-[![rustc v1.65][mrvs-badge]][mrvs-url]
+[![rustc v1.81][mrvs-badge]][mrvs-url]
 
 [docs-badge]: https://docs.rs/ublox/badge.svg
 [docs-url]: https://docs.rs/ublox
 [mit-badge]: https://img.shields.io/badge/license-MIT-blue.svg
 [mit-url]: https://github.com/lkolbly/ublox/blob/master/LICENSE.md
 [mrvs-url]: https://www.whatrustisit.com
-[mrvs-badge]: https://img.shields.io/badge/minimum%20rustc-1.65-blue?logo=rust
+[mrvs-badge]: https://img.shields.io/badge/minimum%20rustc-1.81-blue?logo=rust
 
 This project aims to build a pure-rust I/O library for uBlox GPS devices, specifically using the UBX protocol.
 

@@ -3,7 +3,7 @@ before_install:
 language: rust
 rust:
   # If the MSRV is updated, update the readme
-  - 1.65.0
+  - 1.81.0
   - stable
   - beta
   - nightly
