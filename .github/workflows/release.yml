@@ -1,0 +1,65 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - '*'
+
+permissions:
+  contents: write
+
+jobs:
+  publish_derive:
+    name: Publish
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    if: github.ref_type == 'tag'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install stable
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+
+      - name: Publish
+        env:
+          TOKEN: ${{ secrets.CRATES_IO_TOKEN }}
+        run: |
+          cargo login $TOKEN
+          cargo publish --allow-dirty -p ublox_derive
+
+  publish_ublox:
+    name: Publish
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    if: github.ref_type == 'tag'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install stable
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+
+      - name: Publish
+        env:
+          TOKEN: ${{ secrets.CRATES_IO_TOKEN }}
+        run: |
+          cargo login $TOKEN
+          cargo publish --allow-dirty -p ublox
+  
+  release:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Create Release
+      id: create_release
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      uses: actions/create-release@v1
+      with:
+        draft: true
+        tag_name: ${{ github.ref_name }}
+        release_name: ${{ github.ref_name }}
