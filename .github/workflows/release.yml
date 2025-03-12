@@ -41,11 +41,7 @@ jobs:
           toolchain: stable
 
       - name: Publish
-        env:
-          TOKEN: ${{ secrets.CRATES_IO_TOKEN }}
-        run: |
-          cargo login $TOKEN
-          cargo publish --allow-dirty -p ublox
+        run: cargo publish --token ${{ secrets.CRATES_IO_TOKEN }}  --allow-dirty -p ublox
   
   release:
     runs-on: ubuntu-latest
