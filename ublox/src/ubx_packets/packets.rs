@@ -356,11 +356,11 @@ bitflags! {
     /// Fix status flags for `NavPvt`
     #[derive(Debug)]
     pub struct NavPvtFlags: u8 {
-        /// position and velocity valid and within DOP and ACC Masks
+        /// Position and velocity valid and within DOP and ACC Masks
         const GPS_FIX_OK = 1;
-        /// DGPS used
+        /// Differential corrections were applied; DGPS used
         const DIFF_SOLN = 2;
-        /// 1 = heading of vehicle is valid
+        /// Heading of vehicle is valid
         const HEAD_VEH_VALID = 0x20;
         const CARR_SOLN_FLOAT = 0x40;
         const CARR_SOLN_FIXED = 0x80;
@@ -390,28 +390,41 @@ bitflags! {
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct NavPvtFlags3 {
     invalid_llh: bool,
-    age: u8,
+    #[cfg(feature = "ubx_proto23")]
+    age_differential_correction: u8,
 }
 
 impl NavPvtFlags3 {
-    const AGE_MASK: u8 = 0b11110;
-
     pub fn invalid_llh(&self) -> bool {
         self.invalid_llh
     }
 
-    pub fn age(&self) -> u8 {
-        self.age
+    /// F9R interface descritpion document specifies that this byte is unused
+    #[cfg(feature = "ubx_proto23")]
+    pub fn age_differential_correction(&self) -> u8 {
+        self.age_differential_correction
     }
 }
 
 impl From<u8> for NavPvtFlags3 {
+    #[cfg(feature = "ubx_proto23")]
     fn from(val: u8) -> Self {
+        const AGE_DIFFERENTIAL_CORRECTION_MASK: u8 = 0b11110;
         let invalid = val & 0x01 == 1;
-        let age = val & Self::AGE_MASK;
+        // F9R interface descritpion document specifies that this byte is unused
+        // We can read it ... but we don't expose it
+        let age_differential_correction = val & AGE_DIFFERENTIAL_CORRECTION_MASK;
         Self {
             invalid_llh: invalid,
-            age,
+            age_differential_correction,
+        }
+    }
+
+    #[cfg(not(feature = "ubx_proto23"))]
+    fn from(val: u8) -> Self {
+        let invalid = val & 0x01 == 1;
+        Self {
+            invalid_llh: invalid,
         }
     }
 }
@@ -446,6 +459,147 @@ struct NavStatus {
 
     /// Milliseconds since Startup / Reset
     uptime_ms: u32,
+}
+
+#[cfg(feature = "ubx_proto23")]
+#[ubx_packet_recv]
+#[ubx(class = 0x01, id = 0x3c, fixed_payload_len = 40)]
+struct NavRelPosNed {
+    version: u8,
+    reserved1: u8,
+    ref_station_id: u16,
+    /// GPS Millisecond Time of Week
+    itow: u32,
+    rel_pos_n: i32,
+    rel_pos_e: i32,
+    rel_pos_d: i32,
+    rel_pos_hpn: i8,
+    rel_pos_hpe: i8,
+    rel_pos_hpd: i8,
+    reserved2: u8,
+    acc_n: u32,
+    acc_e: u32,
+    acc_d: u32,
+
+    #[ubx(map_type = NavRelPosNedFlags)]
+    flags: u32,
+}
+
+#[cfg(any(feature = "ubx_proto27", feature = "ubx_proto31"))]
+#[ubx_packet_recv]
+#[ubx(class = 0x01, id = 0x3c, fixed_payload_len = 64)]
+struct NavRelPosNed {
+    version: u8,
+    _reserved0: u8,
+    ref_station_id: u16,
+
+    /// GPS Millisecond Time of Week
+    itow: u32,
+
+    rel_pos_n: i32,
+    rel_pos_e: i32,
+    rel_pos_d: i32,
+    rel_pos_length: i32,
+    rel_pos_heading: i32,
+    _reserved1: u32,
+    rel_pos_hpn: i8,
+    rel_pos_hpe: i8,
+    rel_pos_hpd: i8,
+    rel_pos_hp_length: i8,
+    acc_n: u32,
+    acc_e: u32,
+    acc_d: u32,
+    acc_length: u32,
+    acc_heading: u32,
+    _reserved2: u32,
+
+    #[ubx(map_type = NavRelPosNedFlags)]
+    flags: u32,
+}
+
+#[derive(Clone, Copy, Debug)]
+pub enum CarrierPhaseRangeSolutionStatus {
+    /// No carrier phase range solution
+    NoSolution,
+    /// Carrier phase range solution with floating ambiguities
+    SolutionWithFloatingAmbiguities,
+    /// Carrier phase range solution with fixed ambiguities
+    SolutionWithFixedAmbiguities,
+}
+
+#[repr(transparent)]
+#[derive(Copy, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct NavRelPosNedFlags(u32);
+
+impl NavRelPosNedFlags {
+    pub fn gnss_fix_ok(&self) -> bool {
+        self.0 & 0x1 != 0
+    }
+
+    pub fn diff_soln(&self) -> bool {
+        (self.0 >> 1) & 0x1 != 0
+    }
+
+    pub fn rel_pos_valid(&self) -> bool {
+        (self.0 >> 2) & 0x1 != 0
+    }
+
+    pub fn carr_soln(&self) -> CarrierPhaseRangeSolutionStatus {
+        match (self.0 >> 3) & 0x3 {
+            0 => CarrierPhaseRangeSolutionStatus::NoSolution,
+            1 => CarrierPhaseRangeSolutionStatus::SolutionWithFloatingAmbiguities,
+            2 => CarrierPhaseRangeSolutionStatus::SolutionWithFixedAmbiguities,
+            unknown => panic!("Unexpected 2-bit bitfield value {}!", unknown),
+        }
+    }
+
+    pub fn is_moving(&self) -> bool {
+        (self.0 >> 5) & 0x1 != 0
+    }
+
+    pub fn ref_pos_miss(&self) -> bool {
+        (self.0 >> 6) & 0x1 != 0
+    }
+
+    pub fn ref_obs_miss(&self) -> bool {
+        (self.0 >> 7) & 0x1 != 0
+    }
+
+    #[cfg(feature = "ubx_proto27")]
+    pub fn rel_pos_heading_valid(&self) -> bool {
+        (self.0 >> 8) & 0x1 != 0
+    }
+
+    #[cfg(feature = "ubx_proto27")]
+    pub fn rel_pos_normalized(&self) -> bool {
+        (self.0 >> 9) & 0x1 != 0
+    }
+
+    pub const fn from(x: u32) -> Self {
+        Self(x)
+    }
+}
+
+impl fmt::Debug for NavRelPosNedFlags {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut dbg_struct = f.debug_struct("NavRelPosNedFlags");
+        dbg_struct
+            .field("gnss_fix_ok", &self.gnss_fix_ok())
+            .field("diff_soln", &self.diff_soln())
+            .field("rel_pos_valid", &self.rel_pos_valid())
+            .field("carr_soln", &self.carr_soln())
+            .field("is_moving", &self.is_moving())
+            .field("ref_pos_miss", &self.ref_pos_miss())
+            .field("ref_obs_miss", &self.ref_obs_miss());
+
+        #[cfg(feature = "ubx_proto27")]
+        dbg_struct
+            .field("rel_pos_heading_valid", &self.rel_pos_heading_valid())
+            .field("rel_pos_normalized", &self.rel_pos_normalized());
+
+        dbg_struct.finish()
+    }
 }
 
 /// Dilution of precision
@@ -630,112 +784,6 @@ enum NavStatusFlags2 {
     Tracking = 1,
     PowerOptimizedTracking = 2,
     Inactive = 3,
-}
-
-#[derive(Clone, Copy, Debug)]
-pub enum CarrierPhaseRangeSolutionStatus {
-    /// No carrier phase range solution
-    NoSolution,
-    /// Carrier phase range solution with floating ambiguities
-    SolutionWithFloatingAmbiguities,
-    /// Carrier phase range solution with fixed ambiguities
-    SolutionWithFixedAmbiguities,
-}
-
-#[repr(transparent)]
-#[derive(Copy, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize))]
-pub struct NavRelPosNedFlags(u32);
-
-impl NavRelPosNedFlags {
-    pub fn gnss_fix_ok(&self) -> bool {
-        self.0 & 0x1 != 0
-    }
-
-    pub fn diff_soln(&self) -> bool {
-        (self.0 >> 1) & 0x1 != 0
-    }
-
-    pub fn rel_pos_valid(&self) -> bool {
-        (self.0 >> 2) & 0x1 != 0
-    }
-
-    pub fn carr_soln(&self) -> CarrierPhaseRangeSolutionStatus {
-        match (self.0 >> 3) & 0x3 {
-            0 => CarrierPhaseRangeSolutionStatus::NoSolution,
-            1 => CarrierPhaseRangeSolutionStatus::SolutionWithFloatingAmbiguities,
-            2 => CarrierPhaseRangeSolutionStatus::SolutionWithFixedAmbiguities,
-            unknown => panic!("Unexpected 2-bit bitfield value {}!", unknown),
-        }
-    }
-
-    pub fn is_moving(&self) -> bool {
-        (self.0 >> 5) & 0x1 != 0
-    }
-
-    pub fn ref_pos_miss(&self) -> bool {
-        (self.0 >> 6) & 0x1 != 0
-    }
-
-    pub fn ref_obs_miss(&self) -> bool {
-        (self.0 >> 7) & 0x1 != 0
-    }
-
-    pub fn rel_pos_heading_valid(&self) -> bool {
-        (self.0 >> 8) & 0x1 != 0
-    }
-
-    pub fn rel_pos_normalized(&self) -> bool {
-        (self.0 >> 9) & 0x1 != 0
-    }
-
-    pub const fn from(x: u32) -> Self {
-        Self(x)
-    }
-}
-
-impl fmt::Debug for NavRelPosNedFlags {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("NavRelPosNedFlags")
-            .field("gnss_fix_ok", &self.gnss_fix_ok())
-            .field("diff_soln", &self.diff_soln())
-            .field("rel_pos_valid", &self.rel_pos_valid())
-            .field("carr_soln", &self.carr_soln())
-            .field("is_moving", &self.is_moving())
-            .field("ref_pos_miss", &self.ref_pos_miss())
-            .field("ref_obs_miss", &self.ref_obs_miss())
-            .field("rel_pos_heading_valid", &self.rel_pos_heading_valid())
-            .field("rel_pos_normalized", &self.rel_pos_normalized())
-            .finish()
-    }
-}
-
-#[ubx_packet_recv]
-#[ubx(class = 0x01, id = 0x3c, fixed_payload_len = 64)]
-struct NavRelPosNed {
-    version: u8,
-    _reserved0: u8,
-    ref_station_id: u16,
-    itow: u32,
-    rel_pos_n: i32,
-    rel_pos_e: i32,
-    rel_pos_d: i32,
-    rel_pos_length: i32,
-    rel_pos_heading: i32,
-    _reserved1: u32,
-    rel_pos_hpn: i8,
-    rel_pos_hpe: i8,
-    rel_pos_hpd: i8,
-    rel_pos_hp_length: i8,
-    acc_n: u32,
-    acc_e: u32,
-    acc_d: u32,
-    acc_length: u32,
-    acc_heading: u32,
-    _reserved2: u32,
-
-    #[ubx(map_type = NavRelPosNedFlags)]
-    flags: u32,
 }
 
 #[repr(transparent)]
@@ -1390,7 +1438,7 @@ bitflags! {
     }
 }
 
-/// Information message conifg
+/// Information message config
 #[ubx_packet_recv_send]
 #[ubx(
     class = 0x06,
@@ -2937,7 +2985,7 @@ pub struct CfgEsfAlgFlags {
 
 impl From<u32> for CfgEsfAlgFlags {
     fn from(cfg: u32) -> Self {
-        let version = cfg.to_ne_bytes()[0];
+        let version = cfg.to_le_bytes()[0];
         let auto_alignment = ((cfg >> 8) & 0x01) == 1;
         Self {
             version,
@@ -2970,6 +3018,89 @@ impl fmt::Debug for CfgEsfAlgFlags {
             .field("autoMntAlgOn", &self.auto_imu_mount_alg_on())
             .field("version", &self.version())
             .finish()
+    }
+}
+
+/// Get/set wheel-tick configuration
+/// Only available for ADR products
+#[ubx_packet_recv_send]
+#[ubx(
+    class = 0x06,
+    id = 0x82,
+    fixed_payload_len = 32,
+    flags = "default_for_builder"
+)]
+struct CfgEsfWt {
+    version: u8,
+
+    #[ubx(map_type = CfgEsfWtFlags1)]
+    flags1: u8,
+
+    #[ubx(map_type = CfgEsfWtFlags2)]
+    flags2: u8,
+    reserved1: u8,
+
+    /// Wheel tick scaling factor
+    #[ubx(map_type = f64, scale = 1e-6)]
+    wt_factor: u32,
+
+    /// Wheel tick quantization
+    #[ubx(map_type = f64, scale = 1e-6)]
+    wt_quant_error: u32,
+
+    /// Wheel tick counter maximum value
+    wt_count_max: u32,
+
+    /// Wheel tick latency due to e.g. CAN bus
+    wt_latency: u16,
+
+    /// Nominal wheel tick data frequency
+    wt_frequency: u8,
+
+    #[ubx(map_type = CfgEsfWtFlags3)]
+    flags3: u8,
+
+    /// Speed sensor dead band
+    speed_dead_band: u16,
+
+    reserved2: [u8; 10],
+}
+
+#[ubx_extend_bitflags]
+#[ubx(from, into_raw, rest_reserved)]
+bitflags! {
+    #[derive(Default, Debug)]
+    pub struct CfgEsfWtFlags1 : u8 {
+        /// Use combined rear wheel-ticks
+        const COMBINED_TICKS = 0x01;
+        /// Low-speed COG filter enabled flag
+        const USE_WHEEL_TICK_SPEED = 0x10;
+        /// Direction pin polarity
+        const DIR_PIN_POLARITY = 0x20;
+        /// Use wheel tick pin for speed measurement
+        const USE_WT_PIN = 0x40;
+    }
+}
+
+#[ubx_extend_bitflags]
+#[ubx(from, into_raw, rest_reserved)]
+bitflags! {
+    #[derive(Default, Debug)]
+    pub struct CfgEsfWtFlags2 : u8 {
+        const AUTO_WT_COUNT_MAX_OFF = 0x01;
+        const AUTO_DIR_PIN_POL_OFF = 0x02;
+        const AUTO_SOFTWARE_WT_OFF = 0x04;
+        const AUTO_USE_WT_SPEED_OFF = 0x08;
+    }
+}
+
+#[ubx_extend_bitflags]
+#[ubx(from, into_raw, rest_reserved)]
+bitflags! {
+    #[derive(Default, Debug)]
+    pub struct CfgEsfWtFlags3 : u8 {
+        /// Count both rising and falling edges of wheel-tick
+        const CNT_BOTH_EDGES = 0x01;
     }
 }
 
@@ -3048,42 +3179,6 @@ struct MgaGpsIono {
     #[ubx(map_type = f64, scale = 1.0)] // 2^-16
     beta3: i8,
     reserved2: [u8; 4],
-}
-
-#[ubx_packet_recv]
-#[ubx(class = 0x13, id = 0x00, fixed_payload_len = 68)]
-struct MgaGpsEph {
-    msg_type: u8,
-    version: u8,
-    sv_id: u8,
-    reserved1: u8,
-    fit_interval: u8,
-    ura_index: u8,
-    sv_health: u8,
-    tgd: i8,
-    iodc: u16,
-    toc: u16,
-    reserved2: u8,
-    af2: i8,
-    af1: i16,
-    af0: i32,
-    crs: i16,
-    delta_n: i16,
-    m0: i32,
-    cuc: i16,
-    cus: i16,
-    e: u32,
-    sqrt_a: u32,
-    toe: u16,
-    cic: i16,
-    omega0: i32,
-    cis: i16,
-    crc: i16,
-    i0: i32,
-    omega: i32,
-    omega_dot: i32,
-    idot: i16,
-    reserved3: [u8; 2],
 }
 
 /// Time pulse time data
@@ -3590,7 +3685,7 @@ struct RxmRtcm {
 #[ubx_packet_recv]
 #[ubx(class = 0x10, id = 0x02, max_payload_len = 1240)]
 struct EsfMeas {
-    time_tag: u32,
+    itow: u32,
     #[ubx(map_type = EsfMeasFlags, from = EsfMeasFlags)]
     flags: u16,
     id: u16,
@@ -3662,24 +3757,20 @@ impl EsfMeasData {
                 let tick = (self.data_field & 0x7FFFFF) * (self.direction() as i32);
                 SensorData::Tick(tick)
             },
+            EsfSensorType::Speed => {
+                let value = (self.data_field & 0x7FFFFF) as f32 * (self.direction() as f32) * 1e-3;
+                SensorData::Value(value)
+            },
             EsfSensorType::GyroX | EsfSensorType::GyroY | EsfSensorType::GyroZ => {
-                let value = (self.data_field & 0x7FFFFF) as f32
-                    * (self.direction() as f32)
-                    * 2_f32.powi(-12);
+                let value = (self.data_field & 0x7FFFFF) as f32 * 2_f32.powi(-12);
                 SensorData::Value(value)
             },
             EsfSensorType::AccX | EsfSensorType::AccY | EsfSensorType::AccZ => {
-                let value = (self.data_field & 0x7FFFFF) as f32
-                    * (self.direction() as f32)
-                    * 2_f32.powi(-10);
+                let value = (self.data_field & 0x7FFFFF) as f32 * 2_f32.powi(-10);
                 SensorData::Value(value)
             },
             EsfSensorType::GyroTemp => {
-                let value = (self.data_field & 0x7FFFFF) as f32 * (self.direction() as f32) * 1e-2;
-                SensorData::Value(value)
-            },
-            EsfSensorType::Speed => {
-                let value = (self.data_field & 0x7FFFFF) as f32 * (self.direction() as f32) * 1e-3;
+                let value = (self.data_field & 0x7FFFFF) as f32 * 1e-2;
                 SensorData::Value(value)
             },
             _ => SensorData::Value(0f32),
@@ -3691,12 +3782,14 @@ impl EsfMeasData {
 pub struct EsfMeasDataIter<'a>(core::slice::ChunksExact<'a, u8>);
 
 impl<'a> EsfMeasDataIter<'a> {
+    const BLOCK_SIZE: usize = 4;
+    const DIRECTION_INDICATOR_BIT: usize = 23;
     fn new(bytes: &'a [u8]) -> Self {
-        Self(bytes.chunks_exact(4))
+        Self(bytes.chunks_exact(Self::BLOCK_SIZE))
     }
 
     fn is_valid(bytes: &'a [u8]) -> bool {
-        bytes.len() % 4 == 0
+        bytes.len() % Self::BLOCK_SIZE == 0
     }
 }
 
@@ -3704,16 +3797,18 @@ impl core::iter::Iterator for EsfMeasDataIter<'_> {
     type Item = EsfMeasData;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let data = self.0.next()?.try_into().map(u32::from_le_bytes).unwrap();
+        let chunk = self.0.next()?;
+        let data = u32::from_le_bytes(chunk[0..Self::BLOCK_SIZE].try_into().unwrap());
         let mut data_field = (data & 0x7FFFFF) as i32;
-        let signed = ((data >> 23) & 0x01) == 1;
-        if signed {
+        let backward = ((data >> Self::DIRECTION_INDICATOR_BIT) & 0x01) == 1;
+        // Turn value into valid negative integer representation
+        if backward {
             data_field ^= 0x800000;
             data_field = data_field.wrapping_neg();
         }
 
         Some(EsfMeasData {
-            data_type: (((data & 0x3F000000) >> 24) as u8).into(),
+            data_type: (((data >> 24) & 0x3F) as u8).into(),
             data_field,
         })
     }
@@ -3779,12 +3874,13 @@ pub struct EsfRawData {
 pub struct EsfRawDataIter<'a>(core::slice::ChunksExact<'a, u8>);
 
 impl<'a> EsfRawDataIter<'a> {
+    const BLOCK_SIZE: usize = 8;
     fn new(bytes: &'a [u8]) -> Self {
-        Self(bytes.chunks_exact(8))
+        Self(bytes.chunks_exact(Self::BLOCK_SIZE))
     }
 
     fn is_valid(bytes: &'a [u8]) -> bool {
-        bytes.len() % 8 == 0
+        bytes.len() % Self::BLOCK_SIZE == 0
     }
 }
 
@@ -3792,9 +3888,11 @@ impl core::iter::Iterator for EsfRawDataIter<'_> {
     type Item = EsfRawData;
 
     fn next(&mut self) -> Option<Self::Item> {
+        const HALF_BLOCK: usize = 4;
         let chunk = self.0.next()?;
-        let data = u32::from_le_bytes(chunk[0..4].try_into().unwrap());
-        let sensor_time_tag = u32::from_le_bytes(chunk[4..8].try_into().unwrap());
+        let data = u32::from_le_bytes(chunk[0..HALF_BLOCK].try_into().unwrap());
+        let sensor_time_tag =
+            u32::from_le_bytes(chunk[HALF_BLOCK..Self::BLOCK_SIZE].try_into().unwrap());
         Some(EsfRawData {
             data_type: ((data >> 24) & 0xFF).try_into().unwrap(),
             data_field: data & 0xFFFFFF,
@@ -4170,12 +4268,13 @@ impl EsfSensorStatus {
 pub struct EsfSensorStatusIter<'a>(core::slice::ChunksExact<'a, u8>);
 
 impl<'a> EsfSensorStatusIter<'a> {
+    const BLOCK_SIZE: usize = 4;
     fn new(bytes: &'a [u8]) -> Self {
-        Self(bytes.chunks_exact(4))
+        Self(bytes.chunks_exact(Self::BLOCK_SIZE))
     }
 
     fn is_valid(bytes: &'a [u8]) -> bool {
-        bytes.len() % 4 == 0
+        bytes.len() % Self::BLOCK_SIZE == 0
     }
 }
 
@@ -4184,11 +4283,11 @@ impl core::iter::Iterator for EsfSensorStatusIter<'_> {
 
     fn next(&mut self) -> Option<Self::Item> {
         let chunk = self.0.next()?;
-        let data = u32::from_le_bytes(chunk[0..4].try_into().unwrap_or_default());
+        let data = u32::from_le_bytes(chunk[0..Self::BLOCK_SIZE].try_into().unwrap());
         Some(EsfSensorStatus {
             sens_status1: ((data & 0xFF) as u8).into(),
             sens_status2: (((data >> 8) & 0xFF) as u8).into(),
-            freq: ((data >> 16) & 0xFF).try_into().unwrap_or(0),
+            freq: ((data >> 16) & 0xFF).try_into().unwrap(),
             faults: (((data >> 24) & 0xFF) as u8).into(),
         })
     }
@@ -4218,18 +4317,31 @@ impl From<u8> for SensorStatus1 {
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum EsfSensorType {
     None = 0,
+    /// Angular acceleration in [deg/s]
     GyroZ = 5,
+    /// Unitless (counter)
     FrontLeftWheelTicks = 6,
+    /// Unitless (counter)
     FrontRightWheelTicks = 7,
+    /// Unitless (counter)
     RearLeftWheelTicks = 8,
+    /// Unitless (counter)
     RearRightWheelTicks = 9,
+    /// Unitless (counter)
     SpeedTick = 10,
+    /// Speed in [m/s]
     Speed = 11,
+    /// Temperature Celsius [deg]
     GyroTemp = 12,
+    /// Angular acceleration in [deg/s]
     GyroY = 13,
+    /// Angular acceleration in [deg/s]
     GyroX = 14,
+    /// Specific force in [m/s^2]
     AccX = 16,
+    /// Specific force in [m/s^2]
     AccY = 17,
+    /// Specific force in [m/s^2]
     AccZ = 18,
     Invalid = 19,
 }
@@ -4337,6 +4449,7 @@ impl From<u8> for EsfSensorFaults {
     }
 }
 
+#[cfg(feature = "ubx_proto23")]
 #[ubx_packet_recv]
 #[ubx(class = 0x28, id = 0x01, fixed_payload_len = 32)]
 struct HnrAtt {
@@ -4357,9 +4470,10 @@ struct HnrAtt {
     acc_heading: u32,
 }
 
+#[cfg(feature = "ubx_proto23")]
 #[ubx_packet_recv]
 #[ubx(class = 0x28, id = 0x02, fixed_payload_len = 36)]
-pub struct HnrIns {
+struct HnrIns {
     #[ubx(map_type = HnrInsBitFlags)]
     bitfield: u32,
     reserved: [u8; 4],
@@ -4399,6 +4513,7 @@ bitflags! {
     }
 }
 
+#[cfg(feature = "ubx_proto23")]
 #[ubx_packet_recv]
 #[ubx(class = 0x28, id = 0x00, fixed_payload_len = 72)]
 #[derive(Debug)]
@@ -4576,7 +4691,7 @@ struct NavVelECEF {
 
 #[ubx_packet_recv]
 #[ubx(class = 0x13, id = 0x00, fixed_payload_len = 68)]
-struct MgaGpsEPH {
+struct MgaGpsEph {
     msg_type: u8,
     version: u8,
     sv_id: u8,
@@ -4709,28 +4824,80 @@ struct SecUniqId {
     unique_id: [u8; 5],
 }
 
+// TODO: how to split this in module while using the proc_macros
+// in my first noob attempt I failed as the proc_macros fail due to visibility issues
+#[cfg(feature = "ubx_proto23")]
 define_recv_packets!(
     enum PacketRef {
         _ = UbxUnknownPacketRef,
-        NavPosLlh,
-        NavStatus,
-        NavDop,
-        NavPvt,
-        NavSolution,
-        NavVelNed,
-        NavRelPosNed,
-        NavHpPosLlh,
-        NavHpPosEcef,
-        NavTimeUTC,
-        NavTimeLs,
-        NavSat,
-        NavEoe,
-        NavOdo,
+        AlpSrv,
+        AckAck,
+        AckNak,
+        CfgAnt,
+        CfgEsfAlg,
+        CfgEsfWt,
+        CfgItfm,
+        CfgNav5,
         CfgOdo,
+        CfgPrtI2c,
+        CfgPrtSpi,
+        CfgPrtUart,
+        CfgSmgr,
+        CfgTmode2,
+        CfgTmode3,
+        CfgTp5,
+        EsfAlg,
+        EsfIns,
+        EsfMeas,
+        EsfStatus,
+        EsfRaw,
+        InfError,
+        InfWarning,
+        InfNotice,
+        InfTest,
+        InfDebug,
+        HnrAtt,
+        HnrIns,
+        HnrPvt,
+        MonVer,
+        MonGnss,
+        MonHw,
         MgaAck,
         MgaGpsIono,
         MgaGpsEph,
         MgaGloEph,
+        NavAtt,
+        NavClock,
+        NavDop,
+        NavEoe,
+        NavHpPosLlh,
+        NavHpPosEcef,
+        NavOdo,
+        NavPvt,
+        NavPosLlh,
+        NavRelPosNed,
+        NavSat,
+        NavSolution,
+        NavStatus,
+        NavVelNed,
+        NavTimeUTC,
+        NavTimeLs,
+        NavVelECEF,
+        RxmRawx,
+        RxmRtcm,
+        RxmSfrbx,
+        SecUniqId,
+        TimSvin,
+        TimTp,
+        TimTm2,
+        TimTos,
+    }
+);
+
+#[cfg(feature = "ubx_proto27")]
+define_recv_packets!(
+    enum PacketRef {
+        _ = UbxUnknownPacketRef,
         AlpSrv,
         AckAck,
         AckNak,
@@ -4740,42 +4907,118 @@ define_recv_packets!(
         CfgPrtUart,
         CfgNav5,
         CfgAnt,
-        CfgSmgr,
+        CfgOdo,
         CfgTmode2,
         CfgTmode3,
         CfgTp5,
         CfgEsfAlg,
+        CfgEsfWt,
+        EsfAlg,
+        EsfIns,
+        EsfMeas,
+        EsfStatus,
+        EsfRaw,
         InfError,
         InfWarning,
         InfNotice,
         InfTest,
         InfDebug,
-        RxmRawx,
-        TimTp,
-        TimTm2,
         MonVer,
         MonGnss,
         MonHw,
+        MgaAck,
+        MgaGpsIono,
+        MgaGpsEph,
+        MgaGloEph,
+        NavAtt,
+        NavClock,
+        NavDop,
+        NavEoe,
+        NavHpPosLlh,
+        NavHpPosEcef,
+        NavOdo,
+        NavPvt,
+        NavPosLlh,
+        NavRelPosNed,
+        NavSat,
+        NavSolution,
+        NavStatus,
+        NavVelNed,
+        NavTimeUTC,
+        NavTimeLs,
+        NavVelECEF,
+        RxmRawx,
         RxmRtcm,
+        RxmSfrbx,
+        SecUniqId,
+        TimSvin,
+        TimTp,
+        TimTm2,
+    }
+);
+
+#[cfg(feature = "ubx_proto31")]
+define_recv_packets!(
+    enum PacketRef {
+        _ = UbxUnknownPacketRef,
+        AlpSrv,
+        AckAck,
+        AckNak,
+        CfgItfm,
+        CfgPrtI2c,
+        CfgPrtSpi,
+        CfgPrtUart,
+        CfgNav5,
+        CfgAnt,
+        CfgOdo,
+        CfgTmode2,
+        CfgTmode3,
+        CfgTp5,
+        CfgEsfAlg,
+        CfgEsfWt,
         EsfAlg,
         EsfIns,
         EsfMeas,
         EsfStatus,
-        HnrAtt,
-        HnrIns,
-        HnrPvt,
+        EsfRaw,
+        InfError,
+        InfWarning,
+        InfNotice,
+        InfTest,
+        InfDebug,
+        MonVer,
+        MonGnss,
+        MonHw,
+        MgaAck,
+        MgaGpsIono,
+        MgaGpsEph,
+        MgaGloEph,
         NavAtt,
         NavClock,
+        NavDop,
+        NavEoe,
+        NavHpPosLlh,
+        NavHpPosEcef,
+        NavOdo,
+        NavPvt,
+        NavPosLlh,
+        NavRelPosNed,
+        NavSat,
+        NavSolution,
+        NavStatus,
+        NavVelNed,
+        NavTimeUTC,
+        NavTimeLs,
         NavVelECEF,
-        MgaGpsEPH,
+        RxmRawx,
+        RxmRtcm,
         RxmSfrbx,
-        EsfRaw,
-        TimSvin,
-        TimTos,
         SecUniqId,
+        TimSvin,
+        TimTp,
+        TimTm2,
     }
 );
-
 #[cfg(test)]
 mod test {
     use super::*;

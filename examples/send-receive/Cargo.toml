@@ -1,0 +1,21 @@
+[package]
+authors = ["Andrei Gherghescu <gandrein@pm.me>"]
+edition = "2021"
+name = "send-receive"
+publish = false
+version = "0.1.0"
+
+[dependencies]
+chrono = "0.4"
+clap = { version = "4.2", features = ["cargo"] }
+serde_json = "1.0"
+serialport = "4.2"
+ublox = { path = "../../ublox", default-features = false, optional = true }
+ublox_device = { path = "../ublox_device", default-features = false, optional = true }
+
+[features]
+default = ["alloc", "ubx_proto23"]
+alloc = ["ublox/alloc"]
+ubx_proto23 = ["ublox/ubx_proto23", "ublox_device/ubx_proto23"]
+ubx_proto27 = ["ublox/ubx_proto27", "ublox_device/ubx_proto27"]
+ubx_proto31 = ["ublox/ubx_proto31", "ublox_device/ubx_proto31"]

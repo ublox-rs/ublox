@@ -215,7 +215,7 @@ fn test_esf_meas_serialize() {
                     {
                       "class": 16,
                       "msg_id": 2,
-                      "time_tag": 25262579,
+                      "itow": 25262579,
                       "flags": 2072,
                       "id": 0,
                       "data": [
@@ -232,7 +232,7 @@ fn test_esf_meas_serialize() {
                 if let PacketRef::EsfMeas(pack) = pack {
                     let expected = serde_json::json! {
                         {
-                          "time_tag": 25262579,
+                          "itow": 25262579,
                           "flags": 2072,
                           "id": 0,
                           "data": [

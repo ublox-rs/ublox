@@ -1,0 +1,36 @@
+[package]
+authors = ["Andrei Gherghescu <andrei-ng@protonmail.com>"]
+edition = "2021"
+name = "ublox-tui"
+publish = false
+rust-version = "1.70"
+version = "0.1.0"
+
+[dependencies]
+anyhow = "1.0"
+chrono = "0.4"
+clap = { version = "4.5.23", features = ["derive", "cargo"] }
+crossterm = { version = "0.28", features = ["event-stream"] }
+env_logger = "0.11"
+indoc = "2"
+log = "0.4"
+ratatui = "0.29"
+serialport = "4.2"
+strum = { version = "0.26", features = ["derive"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+unicode-width = "0.2"
+lazy_static = "1.5"
+tracing-error = "0.2"
+tui-logger = { version = "0.14", features = ["crossterm", "tracing-support"] }
+directories = "0.10"
+
+ublox = { path = "../../ublox", default-features = false, optional = true }
+ublox_device = { path = "../ublox_device", default-features = false, optional = true }
+
+[features]
+default = ["alloc", "ubx_proto23"]
+alloc = ["ublox/alloc"]
+ubx_proto23 = ["ublox/ubx_proto23", "ublox_device/ubx_proto23"]
+ubx_proto27 = ["ublox/ubx_proto27", "ublox_device/ubx_proto27"]
+ubx_proto31 = ["ublox/ubx_proto31", "ublox_device/ubx_proto31"]
