@@ -21,7 +21,8 @@ Constructing Packets
 ====================
 
 Constructing packets happens using the `Builder` variant of the packet, for example:
-```
+
+```rust
 use ublox::{CfgPrtUartBuilder, UartPortId, UartMode, DataBits, Parity, StopBits, InProtoMask, OutProtoMask};
 let packet: [u8; 28] = CfgPrtUartBuilder {
    portid: UartPortId::Uart1,
@@ -36,8 +37,9 @@ let packet: [u8; 28] = CfgPrtUartBuilder {
 }.into_packet_bytes();
 ```
 
-For variable-size packet like `CfgValSet`, you can construct it into a new `Vec<u8>`:
-```
+For variable-size packets like `CfgValSet`, you can construct it into a new `Vec<u8>`:
+
+```rust
 use ublox::{cfg_val::CfgVal::*, CfgLayer, CfgValSetBuilder};
 let packet_vec: Vec<u8> = CfgValSetBuilder {
     version: 1,
@@ -48,8 +50,10 @@ let packet_vec: Vec<u8> = CfgValSetBuilder {
 .into_packet_vec();
 let packet: &[u8] = packet_vec.as_slice();
 ```
+
 Or by extending to an existing one:
-```
+
+```rust
 let mut packet_vec = Vec::new();
 CfgValSetBuilder {
     version: 1,
@@ -66,7 +70,8 @@ Parsing Packets
 ===============
 
 Parsing packets happens by instantiating a `Parser` object and then adding data into it using its `consume()` method. The parser contains an internal buffer of data, and when `consume()` is called that data is copied into the internal buffer and an iterator-like object is returned to access the packets. For example:
-```
+
+```rust
 use ublox::Parser;
 let mut parser = Parser::default();
 let my_raw_data = vec![1, 2, 3, 4]; // From your serial port
@@ -95,4 +100,4 @@ This library supports no_std environments with a deterministic-size `Parser`. Se
 Minimum Supported Rust Version
 ==============================
 
-The library crate will support at least the previous year's worth of Rust compilers. Currently, the MSRV is `1.81.0`. Note that, as we are pre-1.0, breaking the MSRV will not force a minor update - the MSRV can change in a patch update.
+The library crate will support at least the previous year's Rust compilers. Currently, the MSRV is `1.81.0`. Note that, as we are pre-1.0, breaking the MSRV will not force a minor update - the MSRV can change in a patch update.
