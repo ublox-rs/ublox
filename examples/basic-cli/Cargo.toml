@@ -6,7 +6,7 @@ authors = [
 edition = "2021"
 name = "basic-cli"
 publish = false
-rust-version = "1.70"
+rust-version.workspace = true
 version = "0.1.0"
 
 [dependencies]

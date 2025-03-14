@@ -298,7 +298,7 @@ fn test_ubx_packet_recv_dyn_len() {
                     state.serialize_entry(stringify!(f1), &self.f1())?;
                     state.serialize_entry(
                         stringify!(rest),
-                        &crate::ubx_packets::FieldIter(self.rest()),
+                        &FieldIter(self.rest()),
                     )?;
                     Ok(())
                 }
@@ -604,13 +604,13 @@ fn test_define_recv_packets() {
                     S: serde::Serializer,
                 {
                     match *self {
-                        PacketRef::Pack1(ref msg) => crate::ubx_packets::PacketSerializer {
+                        PacketRef::Pack1(ref msg) => PacketSerializer {
                             class: Pack1::CLASS,
                             msg_id: Pack1::ID,
                             msg,
                         }
                         .serialize(serializer),
-                        PacketRef::Pack2(ref msg) => crate::ubx_packets::PacketSerializer {
+                        PacketRef::Pack2(ref msg) => PacketSerializer {
                             class: Pack2::CLASS,
                             msg_id: Pack2::ID,
                             msg,

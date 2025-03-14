@@ -3,7 +3,10 @@ use alloc::vec::Vec;
 
 use crate::{
     error::ParserError,
-    ubx_packets::{match_packet, PacketRef, MAX_PAYLOAD_LEN, SYNC_CHAR_1, SYNC_CHAR_2},
+    ubx_packets::{
+        packetref::{match_packet, PacketRef, MAX_PAYLOAD_LEN},
+        SYNC_CHAR_1, SYNC_CHAR_2,
+    },
 };
 
 /// This trait represents an underlying buffer used for the Parser. We provide

@@ -43,7 +43,7 @@ fn generate_serialize_impl(
             quote! {
                 state.serialize_entry(
                     stringify!(#field_name),
-                    &crate::ubx_packets::FieldIter(self.#field_accessor())
+                    &FieldIter(self.#field_accessor())
                 )?;
             }
         }
@@ -363,11 +363,7 @@ pub fn generate_send_code_for_packet(pack_descr: &PackDesc) -> TokenStream {
         extend_fields.push(pack_fields.last().unwrap().clone());
         extend_fields.push(quote! {
             len_bytes += bytes.len();
-            // TODO: Extend all at once when we bump MSRV
-            //out.extend(bytes.into_iter().cloned());
-            for b in bytes.iter() {
-                out.extend(core::iter::once(*b));
-            }
+            out.extend(bytes);
         });
 
         for i in 0..size_bytes {
@@ -470,14 +466,12 @@ pub fn generate_send_code_for_packet(pack_descr: &PackDesc) -> TokenStream {
                     core::ops::DerefMut<Target = [u8]>
               {
                   // TODO: Enable when `extend_one` feature is stable.
+                  // Tracking issue: https://github.com/rust-lang/rust/issues/72631
                   // out.extend_reserve(6);
                   let mut len_bytes = 0;
                   let header = [SYNC_CHAR_1, SYNC_CHAR_2, #main_name::CLASS, #main_name::ID, 0, 0];
-                  // TODO: Extend all at once when we bump MSRV
-                  //out.extend(header);
-                  for b in header.iter() {
-                      out.extend(core::iter::once(*b));
-                  }
+                  out.extend(header);
+
                   #(#extend_fields);*;
 
                   let len_bytes = len_bytes.to_le_bytes();
@@ -737,7 +731,7 @@ pub fn generate_code_for_parse(recv_packs: &RecvPackets) -> TokenStream {
         });
 
         serializers.push(quote! {
-            #union_enum_name::#name(ref msg) => crate::ubx_packets::PacketSerializer {
+            #union_enum_name::#name(ref msg) => PacketSerializer {
                 class: #name::CLASS,
                 msg_id: #name::ID,
                 msg,

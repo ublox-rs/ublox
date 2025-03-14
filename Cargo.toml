@@ -1,3 +1,6 @@
 [workspace]
 members = ["ublox", "ublox_derive"]
 resolver = "2"
+
+[workspace.package]
+rust-version = "1.81.0"

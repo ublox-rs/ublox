@@ -3,6 +3,7 @@ authors = ["Andrei Gherghescu <gandrein@pm.me>"]
 edition = "2021"
 name = "send-receive"
 publish = false
+rust-version.workspace = true
 version = "0.1.0"
 
 [dependencies]

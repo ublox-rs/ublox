@@ -126,7 +126,7 @@ impl<'a> TryFrom<&NavPvtRef<'a>> for DateTime<Utc> {
     }
 }
 
-#[allow(dead_code)]
+#[allow(dead_code, reason = "It is only dead code in some feature sets")]
 pub(crate) struct FieldIter<I>(pub(crate) I);
 
 impl<I> fmt::Debug for FieldIter<I>
