@@ -15,15 +15,23 @@ uBlox for Rust
 
 # Table of Contents
 
-* [Introduction](#introduction)
-* [Basic Usage](#basic-usage)
-    * [Constructing Packets](#constructing-packets)
-    * [Parsing Packets](#parsing-packets)
-* [Examples](#examples)
-* [Feature Flags](#feature-flags)
-* [Minimum Supported Rust Version](#minimum-supported-rust-version)
-* [Contributing](#contributing)
-* [License](#license)
+- [uBlox for Rust](#ublox-for-rust)
+- [Table of Contents](#table-of-contents)
+- [Introduction](#introduction)
+- [Basic Usage](#basic-usage)
+  - [Constructing Packets](#constructing-packets)
+  - [Parsing Packets](#parsing-packets)
+- [Examples](#examples)
+- [Feature Flags](#feature-flags)
+    - [`alloc`](#alloc)
+    - [`serde`](#serde)
+    - [`std`](#std)
+    - [`ubx_proto23`](#ubx_proto23)
+    - [`ubx_proto27`](#ubx_proto27)
+    - [`ubx_proto31`](#ubx_proto31)
+- [Minimum Supported Rust Version](#minimum-supported-rust-version)
+- [Contributing](#contributing)
+- [License](#license)
 
 # Introduction
 
