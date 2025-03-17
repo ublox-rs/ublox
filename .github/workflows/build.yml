@@ -7,13 +7,18 @@ on:
 env:
   CARGO_TERM_COLOR: always
 
+concurrency:
+  group: ublox-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         feature-args:
-          - --features "alloc std ubx_proto23" # - --all-features
+          - --features "alloc std ubx_proto23" 
           - --no-default-features --features "alloc ubx_proto23" 
           - --no-default-features --features ubx_proto23
           - --no-default-features --features ubx_proto27
@@ -94,3 +99,30 @@ jobs:
       - name: Check MSRV for examples
         working-directory: examples
         run: cargo hack check --rust-version --workspace
+
+  semver:
+    name: semver
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        feature-group: [default-features]
+        include:
+          - feature-group: default-features
+            feature: alloc
+          - feature-group: only-explicit-features
+            feature: ubx_proto23 
+          - feature-group: only-explicit-features
+            feature: ubx_proto27 
+          - feature-group: only-explicit-features
+            feature: ubx_proto31 
+    steps:
+      - uses: actions/checkout@v4
+      - name: SemVer Check 
+        uses: obi1kenobi/cargo-semver-checks-action@v2
+        with:
+          package: ublox
+          feature-group: ${{matrix.feature-group}}
+          features: ${{ matrix.feature }}
+          rust-toolchain: stable
+          release-type: minor
