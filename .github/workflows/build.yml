@@ -2,11 +2,9 @@ name: Build & Test
 
 on:
   push: 
-    branches:
-    - master
-  pull_request: 
-    branches:
-    - master
+    branches: master
+  pull_request:
+    branches: master
   workflow_dispatch:
 
 env:
@@ -49,6 +47,13 @@ jobs:
 
   build_embedded:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        features:
+          - ubx_proto23
+          - alloc,ubx_proto23
+          - serde,ubx_proto23
     steps:
     - uses: actions/checkout@v4
     - name: Install MSRV
@@ -58,12 +63,8 @@ jobs:
         override: true
     - name: Install embedded targets
       run: rustup target add thumbv6m-none-eabi thumbv7m-none-eabi thumbv7em-none-eabihf
-    - name: Build
-      run: cargo build --verbose --no-default-features --target thumbv6m-none-eabi --target thumbv7m-none-eabi --target thumbv7em-none-eabihf --features ubx_proto23 
-    - name: Build (alloc)
-      run: cargo build --verbose --no-default-features --target thumbv6m-none-eabi --target thumbv7m-none-eabi --target thumbv7em-none-eabihf --features alloc,ubx_proto23
-    - name: Build (serde)
-      run: cargo build --verbose --no-default-features --target thumbv6m-none-eabi --target thumbv7m-none-eabi --target thumbv7em-none-eabihf --features serde,ubx_proto23
+    - name: Build ${{ matrix.features }}
+      run: cargo build --verbose --no-default-features --target thumbv6m-none-eabi --target thumbv7m-none-eabi --target thumbv7em-none-eabihf --features ${{ matrix.features }}
 
   build_examples:
     runs-on: ubuntu-latest
