@@ -1,37 +1,27 @@
-uBlox for Rust
-==============
+<div align=right>Table of Contents↗️</div>
 
-[![Rust](https://github.com/ublox-rs/ublox/actions/workflows/build.yml/badge.svg)](https://github.com/ublox-rs/ublox/actions/workflows/build.yml)
-[![ublox on docs.rs][docs-badge]][docs-url]
-[![MIT licensed][mit-badge]][mit-url]
-[![rustc v1.81][mrvs-badge]][mrvs-url]
+<h1 align=center>uBlox for Rust
 
-[docs-badge]: https://docs.rs/ublox/badge.svg
-[docs-url]: https://docs.rs/ublox
-[mit-badge]: https://img.shields.io/badge/license-MIT-blue.svg
-[mit-url]: https://github.com/lkolbly/ublox/blob/master/LICENSE.md
-[mrvs-url]: https://www.whatrustisit.com
-[mrvs-badge]: https://img.shields.io/badge/minimum%20rustc-1.81-blue?logo=rust
+<code>ublox</code>
+</h1>
 
-# Table of Contents
-
-- [uBlox for Rust](#ublox-for-rust)
-- [Table of Contents](#table-of-contents)
-- [Introduction](#introduction)
-- [Basic Usage](#basic-usage)
-  - [Constructing Packets](#constructing-packets)
-  - [Parsing Packets](#parsing-packets)
-- [Examples](#examples)
-- [Feature Flags](#feature-flags)
-    - [`alloc`](#alloc)
-    - [`serde`](#serde)
-    - [`std`](#std)
-    - [`ubx_proto23`](#ubx_proto23)
-    - [`ubx_proto27`](#ubx_proto27)
-    - [`ubx_proto31`](#ubx_proto31)
-- [Minimum Supported Rust Version](#minimum-supported-rust-version)
-- [Contributing](#contributing)
-- [License](#license)
+<div align="center">
+    <a href=https://crates.io/crates/ublox>
+        <img src=https://img.shields.io/crates/v/ublox.svg alt="crates.io version">
+    </a>
+    <a href=https://github.com/ublox-rs/ublox/actions/workflows/build.yml>
+        <img src=https://github.com/ublox-rs/ublox/actions/workflows/build.yml/badge.svg alt="build status">
+    </a>
+    <a href=https://docs.rs/ublox/badge.svg>
+        <img src=https://docs.rs/ublox/badge.svg alt="docs status">
+    </a>
+    <a href=https://github.com/lkolbly/ublox/blob/master/LICENSE.md>
+        <img src=https://img.shields.io/badge/license-MIT-blue.svg alt="MIT License">
+    </a>
+    <a href=https://www.whatrustisit.com>
+        <img src=https://img.shields.io/badge/minimum%20rustc-1.81-blue?logo=rust alt="MSRV">
+    </a>
+</div>
 
 # Introduction
 
@@ -123,6 +113,7 @@ For a list of examples and their description see the [examples/](./examples/READ
 The following feature flags are available:
 
 ### `alloc`
+
 Enable usage of heap allocated Vectors from `core::vec`. 
 
 ### `serde`
@@ -136,12 +127,15 @@ Enable `std` support.
 This library supports no_std environments with a deterministic-size `Parser`. See the documentation for more information.
 
 ### `ubx_proto23`
+
 Enable support for uBlox protocol 23 messages (default).
 
 ### `ubx_proto27`
+
 Enable support for uBlox protocol 27 messages. 
 
 ### `ubx_proto31`
+
 Enable support for uBlox protocol 31 messages. 
 
 # Minimum Supported Rust Version
