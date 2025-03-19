@@ -1,4 +1,6 @@
-//! # ublox
+#![doc = include_str!("../../README.md")]
+#![cfg_attr(docsrs, feature(doc_cfg))]
+
 //!
 //! This project aims to build a pure-rust I/O library for ublox GPS devices, specifically using the UBX protocol.
 //!
