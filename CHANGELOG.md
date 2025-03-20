@@ -33,6 +33,6 @@ All notable changes to this project will be documented in this file.
   - implemented decoding of sensor measurement for ESF-MEAS
   - bump MSRV to 1.81
 - Packets.rs: introduce NavClock and TimTos ([#45](https://github.com/ublox-rs/ublox/pull/45))
-- Packet.rs: introduce CfgSmgr synchronization core configuration frame ([#46](https://github.com/ublox-rs/ublox/pull/46))
+- Packets.rs: introduce CfgSmgr synchronization core configuration frame ([#46](https://github.com/ublox-rs/ublox/pull/46))
 - Add NavRelPosNed ([#24](https://github.com/ublox-rs/ublox/pull/24))
 - Add undocumented L5 command ([#79](https://github.com/ublox-rs/ublox/pull/79))
