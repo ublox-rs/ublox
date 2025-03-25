@@ -4942,7 +4942,7 @@ struct MgaGpsEph {
     #[ubx(map_type = f64, scale = 2e-55)]
     af2: i8,
     #[ubx(map_type = f64, scale = 2e-43)]
-    afl: i16,
+    af1: i16,
     #[ubx(map_type = f64, scale = 2e-31)]
     af0: i32,
     #[ubx(map_type = f64, scale = 2e-5)]

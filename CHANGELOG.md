@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 ## [0.5.0] - 2025-03-17
 
-### 💼 Changed
+### 💼 What's Changed
 
 - Prepare for next release ([#95](https://github.com/ublox-rs/ublox/pull/95))
   - remove duplicate CI file
@@ -36,3 +36,17 @@ All notable changes to this project will be documented in this file.
 - Packets.rs: introduce CfgSmgr synchronization core configuration frame ([#46](https://github.com/ublox-rs/ublox/pull/46))
 - Add NavRelPosNed ([#24](https://github.com/ublox-rs/ublox/pull/24))
 - Add undocumented L5 command ([#79](https://github.com/ublox-rs/ublox/pull/79))
+
+### Breaking Changes
+
+---
+
+ - `NavPvt` packet: the majority of getters & aliases have been renamed (check the new packet definition for the complete list)
+ - `HnrPvt` packet: renamed getters & aliases to align them with the similar `NavPvt` packet 
+ - `NavSatSvInfo` packet: added extra `Invalid` enum variant to the `NavSatQualityIndicator` 
+ - `EsfMeas` packet: renamed `time_tag` field & getter to `itow` to align with other packets and introduced `EsfSensorType` for sensor data type
+ - `EsfIns` packet: renamed field & getter `bit_field` to `bitfield`
+ - `HnrIns` packet: renamed field & getter `bit_field` to `bitfield`
+ - `NavClock` packet: renamed fields & getters
+
+
