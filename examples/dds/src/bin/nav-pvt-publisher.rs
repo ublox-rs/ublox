@@ -149,7 +149,7 @@ impl UbxPacketHandler for PkgHandler {
                     warn!("failed to write PVT message: {e} ");
                 } else {
                     info!(
-                        "Published new NavPvt message on DDS at: {} [sec] since start",
+                        "Published new NavPvt message on DDS at: {:.6} [sec] since start",
                         time::Instant::now()
                             .duration_since(self.last_published)
                             .as_secs_f64()

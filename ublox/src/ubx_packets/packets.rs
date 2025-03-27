@@ -1098,6 +1098,153 @@ struct NavSat {
     svs: [u8; 0],
 }
 
+#[cfg(any(feature = "ubx_proto27", feature = "ubx_proto31"))]
+#[repr(transparent)]
+#[derive(Copy, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
+pub struct NavSigFlags(u16);
+
+#[cfg(any(feature = "ubx_proto27", feature = "ubx_proto31"))]
+impl NavSigFlags {
+    /* Re-use the NavSatHealth enum for the signal health */
+    pub fn health(self) -> NavSatSvHealth {
+        let bits = self.0 & 0x3;
+        match bits {
+            1 => NavSatSvHealth::Healthy,
+            2 => NavSatSvHealth::Unhealthy,
+            x => NavSatSvHealth::Unknown(x as u8),
+        }
+    }
+
+    pub fn pr_smoothed(self) -> bool {
+        (self.0 >> 2) & 0x1 != 0
+    }
+
+    pub fn pr_used(self) -> bool {
+        (self.0 >> 3) & 0x1 != 0
+    }
+
+    pub fn cr_used(self) -> bool {
+        (self.0 >> 4) & 0x1 != 0
+    }
+
+    pub fn do_used(self) -> bool {
+        (self.0 >> 5) & 0x1 != 0
+    }
+
+    pub fn pr_corr_used(self) -> bool {
+        (self.0 >> 6) & 0x1 != 0
+    }
+
+    pub fn cr_corr_used(self) -> bool {
+        (self.0 >> 7) & 0x1 != 0
+    }
+
+    pub fn do_corr_used(self) -> bool {
+        (self.0 >> 8) & 0x1 != 0
+    }
+
+    pub const fn from(x: u16) -> Self {
+        Self(x)
+    }
+}
+
+#[cfg(any(feature = "ubx_proto27", feature = "ubx_proto31"))]
+impl fmt::Debug for NavSigFlags {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("NavSatSvFlags")
+            .field("health", &self.health())
+            .field("pr_smoothed", &self.pr_smoothed())
+            .field("pr__used", &self.pr_used())
+            .field("cr__used", &self.cr_used())
+            .field("do__used", &self.do_used())
+            .field("pr_corr_used", &self.pr_corr_used())
+            .field("cr_corr_used", &self.cr_corr_used())
+            .field("do_corr_used", &self.do_corr_used())
+            .finish()
+    }
+}
+
+#[cfg(any(feature = "ubx_proto27", feature = "ubx_proto31"))]
+#[ubx_packet_recv]
+#[ubx(class = 0x01, id = 0x35, fixed_payload_len = 16)]
+struct NavSigInfo {
+    gnss_id: u8,
+    sv_id: u8,
+    sig_id: u8,
+    freq_id: u8,
+    pr_res: i16,
+    cno: u8,
+    quality_ind: u8,
+    corr_source: u8,
+    ion_model: u8,
+    #[ubx(map_type = NavSigFlags)]
+    flags: u16,
+    reserved: [u8; 4],
+}
+
+#[cfg(any(feature = "ubx_proto27", feature = "ubx_proto31"))]
+#[derive(Clone)]
+pub struct NavSigIter<'a> {
+    data: &'a [u8],
+    offset: usize,
+}
+
+#[cfg(any(feature = "ubx_proto27", feature = "ubx_proto31"))]
+impl<'a> NavSigIter<'a> {
+    fn new(data: &'a [u8]) -> Self {
+        Self { data, offset: 0 }
+    }
+
+    fn is_valid(bytes: &[u8]) -> bool {
+        bytes.len() % 16 == 0
+    }
+}
+
+#[cfg(any(feature = "ubx_proto27", feature = "ubx_proto31"))]
+impl<'a> core::iter::Iterator for NavSigIter<'a> {
+    type Item = NavSigInfoRef<'a>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.offset < self.data.len() {
+            let data = &self.data[self.offset..self.offset + 16];
+            self.offset += 16;
+            Some(NavSigInfoRef(data))
+        } else {
+            None
+        }
+    }
+}
+
+#[cfg(any(feature = "ubx_proto27", feature = "ubx_proto31"))]
+impl fmt::Debug for NavSigIter<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("NavSigIter").finish()
+    }
+}
+
+#[cfg(any(feature = "ubx_proto27", feature = "ubx_proto31"))]
+#[ubx_packet_recv]
+#[ubx(class = 0x01, id = 0x43, max_payload_len = 1240)]
+struct NavSig {
+    /// GPS time of week in ms
+    itow: u32,
+
+    /// Message version, should be 0
+    version: u8,
+
+    num_sigs: u8,
+
+    reserved: u16,
+
+    #[ubx(map_type = NavSigIter,
+        may_fail,
+        is_valid = NavSigIter::is_valid,
+        from = NavSigIter::new,
+        get_as_ref)]
+    sigs: [u8; 0],
+}
+
 /// Odometer solution
 #[ubx_packet_recv]
 #[ubx(class = 0x01, id = 0x09, fixed_payload_len = 20)]
@@ -4795,7 +4942,7 @@ struct MgaGpsEph {
     #[ubx(map_type = f64, scale = 2e-55)]
     af2: i8,
     #[ubx(map_type = f64, scale = 2e-43)]
-    afl: i16,
+    af1: i16,
     #[ubx(map_type = f64, scale = 2e-31)]
     af0: i32,
     #[ubx(map_type = f64, scale = 2e-5)]
