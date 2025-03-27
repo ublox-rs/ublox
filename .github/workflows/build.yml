@@ -103,13 +103,13 @@ jobs:
         run: |
             cd ublox_derive
             RUSTDOCFLAGS="--cfg docrs" \
-                cargo +nightly doc --no-deps --all-features
+                cargo +nightly doc --no-deps
       
       - name: ublox
         run: |
             cd ublox
             RUSTDOCFLAGS="--cfg docrs" \
-                cargo +nightly doc --no-deps --all-features
+                cargo +nightly doc --no-deps
 
   msrv:
     runs-on: ubuntu-latest
