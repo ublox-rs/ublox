@@ -28,6 +28,7 @@ jobs:
 
   publish_ublox:
     name: Publish
+    needs: ['publish_derive']
     runs-on: ubuntu-latest
     continue-on-error: true
     if: github.ref_type == 'tag'
