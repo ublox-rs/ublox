@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   publish_derive:
-    name: Publish
+    name: Publish derive
     runs-on: ubuntu-latest
     continue-on-error: true
     if: github.ref_type == 'tag'
@@ -27,7 +27,7 @@ jobs:
         run: cargo publish --token ${{ secrets.CRATES_IO_TOKEN }} -p ublox_derive
 
   publish_ublox:
-    name: Publish
+    name: Publish ublox
     needs: ['publish_derive']
     runs-on: ubuntu-latest
     continue-on-error: true
@@ -41,7 +41,7 @@ jobs:
         with:
           toolchain: stable
 
-      - name: Publish
+      - name: Publish 
         run: cargo publish --token ${{ secrets.CRATES_IO_TOKEN }} -p ublox
   
   release:
