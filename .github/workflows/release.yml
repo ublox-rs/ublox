@@ -24,7 +24,7 @@ jobs:
           toolchain: stable
 
       - name: Publish
-        run: cargo publish --token ${{ secrets.CRATES_IO_TOKEN }} --allow-dirty -p ublox_derive
+        run: cargo publish --token ${{ secrets.CRATES_IO_TOKEN }} -p ublox_derive
 
   publish_ublox:
     name: Publish
@@ -42,7 +42,7 @@ jobs:
           toolchain: stable
 
       - name: Publish
-        run: cargo publish --token ${{ secrets.CRATES_IO_TOKEN }} --allow-dirty -p ublox
+        run: cargo publish --token ${{ secrets.CRATES_IO_TOKEN }} -p ublox
   
   release:
     runs-on: ubuntu-latest
