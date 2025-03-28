@@ -86,6 +86,30 @@ jobs:
       run: |
           cargo fmt --all -- --check
           cargo clippy --all-targets -- -D warnings
+  
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+    
+      - name: Install nightly
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly
+          override: true
+
+      - name: ublox_derive
+        run: |
+            cd ublox_derive
+            RUSTDOCFLAGS="--cfg docrs" \
+                cargo +nightly doc --no-deps
+      
+      - name: ublox
+        run: |
+            cd ublox
+            RUSTDOCFLAGS="--cfg docrs" \
+                cargo +nightly doc --no-deps
 
   msrv:
     runs-on: ubuntu-latest

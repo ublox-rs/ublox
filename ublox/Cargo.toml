@@ -18,6 +18,10 @@ default = ["std", "serde", "ubx_proto23"]
 alloc = []
 std = []
 
+[package.metadata.docs.rs]
+all-features = false
+rustdoc-args = ["--cfg", "docrs", "--generate-link-to-definition"]
+
 [dependencies]
 bitflags = "2.3"
 chrono = { version = "0.4", default-features = false, features = [] }
