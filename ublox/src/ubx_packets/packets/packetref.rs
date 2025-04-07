@@ -1,11 +1,11 @@
 use super::*;
-use crate::UbxUnknownPacketRef;
+use crate::{UbxUnknownPacketOwned, UbxUnknownPacketRef};
 use ublox_derive::define_recv_packets;
 
 #[cfg(feature = "ubx_proto23")]
 define_recv_packets!(
-    enum PacketRef {
-        _ = UbxUnknownPacketRef,
+    enum Packet {
+        _ = UbxUnknownPacket,
         AlpSrv,
         AckAck,
         AckNak,
@@ -72,8 +72,8 @@ define_recv_packets!(
 
 #[cfg(feature = "ubx_proto27")]
 define_recv_packets!(
-    enum PacketRef {
-        _ = UbxUnknownPacketRef,
+    enum Packet {
+        _ = UbxUnknownPacket,
         AlpSrv,
         AckAck,
         AckNak,
@@ -136,8 +136,8 @@ define_recv_packets!(
 
 #[cfg(feature = "ubx_proto31")]
 define_recv_packets!(
-    enum PacketRef {
-        _ = UbxUnknownPacketRef,
+    enum Packet {
+        _ = UbxUnknownPacket,
         AlpSrv,
         AckAck,
         AckNak,

@@ -515,8 +515,8 @@ fn test_upgrade_enum() {
 #[test]
 fn test_define_recv_packets() {
     let src_code = quote! {
-        enum PacketRef {
-            _ = UnknownPacketRef,
+        enum Packet {
+            _ = UnknownPacket,
             Pack1,
             Pack2
         }
@@ -536,13 +536,31 @@ fn test_define_recv_packets() {
                 Pack2(Pack2Ref<'a>),
                 Unknown(UnknownPacketRef<'a>),
             }
-
+            #[doc = "All possible packets enum, owning the underlying data"]
+            #[derive(Debug)]
+            pub enum PacketOwned {
+                Pack1(Pack1Owned),
+                Pack2(Pack2Owned),
+                Unknown(UnknownPacketOwned),
+            }
             impl<'a> PacketRef<'a> {
                 pub fn class_and_msg_id(&self) -> (u8, u8) {
                     match *self {
                         PacketRef::Pack1(_) => (Pack1::CLASS, Pack1::ID),
                         PacketRef::Pack2(_) => (Pack2::CLASS, Pack2::ID),
                         PacketRef::Unknown(ref pack) => (pack.class, pack.msg_id),
+                    }
+                }
+                pub fn to_owned(&self) -> PacketOwned {
+                    self.into()
+                }
+            }
+            impl PacketOwned {
+                pub fn class_and_msg_id(&self) -> (u8, u8) {
+                    match *self {
+                        PacketOwned::Pack1(_) => (Pack1::CLASS, Pack1::ID),
+                        PacketOwned::Pack2(_) => (Pack2::CLASS, Pack2::ID),
+                        PacketOwned::Unknown(ref pack) => (pack.class, pack.msg_id),
                     }
                 }
             }
@@ -555,15 +573,55 @@ fn test_define_recv_packets() {
                 match (class, msg_id) {
                     (Pack1::CLASS, Pack1::ID) if <Pack1Ref>::validate(payload).is_ok() => {
                         Ok(PacketRef::Pack1(Pack1Ref(payload)))
-                    }
+                    },
                     (Pack2::CLASS, Pack2::ID) if <Pack2Ref>::validate(payload).is_ok() => {
                         Ok(PacketRef::Pack2(Pack2Ref(payload)))
-                    }
+                    },
                     _ => Ok(PacketRef::Unknown(UnknownPacketRef {
                         payload,
                         class,
                         msg_id,
                     })),
+                }
+            }
+            pub(crate) fn match_packet_owned(
+                class: u8,
+                msg_id: u8,
+                payload: &[u8],
+            ) -> Result<PacketOwned, ParserError> {
+                match (class, msg_id) {
+                    (Pack1::CLASS, Pack1::ID) if <Pack1Owned>::validate(payload).is_ok() => {
+                        let mut bytes = [0u8; Pack1Owned::PACKET_SIZE];
+                        bytes.clone_from_slice(payload);
+                        Ok(PacketOwned::Pack1(Pack1Owned(bytes)))
+                    },
+                    (Pack2::CLASS, Pack2::ID) if <Pack2Owned>::validate(payload).is_ok() => {
+                        let mut bytes = [0u8; Pack2Owned::PACKET_SIZE];
+                        bytes.clone_from_slice(payload);
+                        Ok(PacketOwned::Pack2(Pack2Owned(bytes)))
+                    },
+                    _ => Ok(PacketOwned::Unknown(UnknownPacketOwned {
+                        payload: payload.into(),
+                        class,
+                        msg_id,
+                    })),
+                }
+            }
+            impl<'a> From<&PacketRef<'a>> for PacketOwned {
+                fn from(packet: &PacketRef<'a>) -> Self {
+                    match packet {
+                        PacketRef::Pack1(packet) => PacketOwned::Pack1(packet.into()),
+                        PacketRef::Pack2(packet) => PacketOwned::Pack2(packet.into()),
+                        PacketRef::Unknown(UnknownPacketRef {
+                            payload,
+                            class,
+                            msg_id,
+                        }) => PacketOwned::Unknown(UnknownPacketOwned {
+                            payload: payload.to_vec(),
+                            class: *class,
+                            msg_id: *msg_id,
+                        }),
+                    }
                 }
             }
 
