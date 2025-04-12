@@ -4,7 +4,7 @@ use alloc::vec::Vec;
 use crate::{
     error::ParserError,
     ubx_packets::{
-        packetref::{match_packet, Packet, MAX_PAYLOAD_LEN},
+        packetref::{match_packet, PacketRef, MAX_PAYLOAD_LEN},
         SYNC_CHAR_1, SYNC_CHAR_2,
     },
 };
@@ -424,7 +424,7 @@ impl<T: UnderlyingBuffer> ParserIter<'_, T> {
         (0..self.buf.len()).find(|&i| self.buf[i] == SYNC_CHAR_1)
     }
 
-    fn extract_packet(&mut self, pack_len: usize) -> Option<Result<Packet, ParserError>> {
+    fn extract_packet(&mut self, pack_len: usize) -> Option<Result<PacketRef, ParserError>> {
         if !self.buf.can_drain_and_take(6, pack_len + 2) {
             if self.buf.potential_lost_bytes() > 0 {
                 // We ran out of space, drop this packet and move on
@@ -468,7 +468,7 @@ impl<T: UnderlyingBuffer> ParserIter<'_, T> {
     #[allow(clippy::should_implement_trait)]
     /// Analog of `core::iter::Iterator::next`, should be switched to
     /// trait implementation after merge of `<https://github.com/rust-lang/rust/issues/44265>`
-    pub fn next(&mut self) -> Option<Result<Packet, ParserError>> {
+    pub fn next(&mut self) -> Option<Result<PacketRef, ParserError>> {
         while self.buf.len() > 0 {
             let pos = match self.find_sync() {
                 Some(x) => x,

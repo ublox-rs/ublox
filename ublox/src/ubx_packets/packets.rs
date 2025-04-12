@@ -26,7 +26,6 @@ use super::{
     SYNC_CHAR_1, SYNC_CHAR_2,
 };
 
-pub use packetref::Packet;
 pub mod packetref;
 
 /// Used to help serialize the packet's fields flattened within a struct containing the msg_id and class fields, but
@@ -3946,6 +3945,20 @@ impl EsfMeas {
 }
 
 impl EsfMeasRef<'_> {
+    fn data_len(&self) -> usize {
+        self.flags().num_meas() as usize * 4
+    }
+
+    fn calib_tag_len(&self) -> usize {
+        if self.flags().calib_tag_valid() {
+            4
+        } else {
+            0
+        }
+    }
+}
+
+impl EsfMeasOwned {
     fn data_len(&self) -> usize {
         self.flags().num_meas() as usize * 4
     }
