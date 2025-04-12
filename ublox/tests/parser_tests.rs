@@ -322,3 +322,22 @@ fn test_double_start_at_end() {
     }
     assert!(it.next().is_none());
 }
+
+#[test]
+fn test_ack_ack_to_owned_can_be_moved() {
+    let ack_ack = [0xb5, 0x62, 0x5, 0x1, 0x2, 0x0, 0x4, 0x5, 0x11, 0x38];
+
+    let mut parser = ublox::Parser::default();
+    let mut it = parser.consume(&ack_ack);
+    match it.next() {
+        Some(Ok(PacketRef::AckAck(ack_packet))) => {
+            assert_eq!(ack_packet.class(), 4); // Why is this 4 ???
+            let owned = ack_packet.to_owned();
+            let thread = std::thread::spawn(move || {
+                std::dbg!(owned);
+            });
+            thread.join().unwrap();
+        },
+        _ => panic!(),
+    };
+}
