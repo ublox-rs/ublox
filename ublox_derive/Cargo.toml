@@ -20,3 +20,4 @@ syn = { version = "1.0", features = ["extra-traits", "full"] }
 [dev-dependencies]
 proc-macro2 = { version = "1.0", features = ["span-locations"] }
 which = { version = "7.0.2", default-features = false }
+pretty_assertions = "1.4.1"
