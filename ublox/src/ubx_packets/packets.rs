@@ -1355,7 +1355,7 @@ impl CfgItfmConfig {
     }
 
     const fn into_raw(self) -> u32 {
-        (self.enable as u32) << 31
+        ((self.enable as u32) << 31)
             | self.cw_threshold.into_raw()
             | self.bb_threshold.into_raw()
             | self.algorithm_bits.into_raw()
