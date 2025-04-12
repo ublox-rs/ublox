@@ -833,6 +833,41 @@ pub fn generate_code_for_parse(recv_packs: &RecvPackets) -> TokenStream {
             quote! { max_u16(#name::MAX_PAYLOAD_LEN, #prev) }
         });
 
+    let unknown_conversion = quote! {
+        #union_enum_name_ref::Unknown(#unknown_var_ref {payload, class, msg_id}) => {
+            let mut fixed_payload = [0u8; MAX_PAYLOAD_LEN as usize];
+            let len = core::cmp::min(payload.len(), MAX_PAYLOAD_LEN as usize);
+            fixed_payload[..len].copy_from_slice(&payload[..len]);
+
+            #union_enum_name_owned::Unknown(#unknown_var_owned {
+                payload: fixed_payload,
+                payload_len: len,
+                class: *class,
+                msg_id: *msg_id
+            })
+        }
+    };
+
+    let match_packet_owned = quote! {
+        pub(crate) fn match_packet_owned(class: u8, msg_id: u8, payload: &[u8]) -> Result<#union_enum_name_owned, ParserError> {
+            match (class, msg_id) {
+                #(#matches_owned)*
+                _ => {
+                    let mut fixed_payload = [0u8; MAX_PAYLOAD_LEN as usize];
+                    let len = core::cmp::min(payload.len(), MAX_PAYLOAD_LEN as usize);
+                    fixed_payload[..len].copy_from_slice(&payload[..len]);
+
+                    Ok(#union_enum_name_owned::Unknown(#unknown_var_owned {
+                        payload: fixed_payload,
+                        payload_len: len,
+                        class,
+                        msg_id
+                    }))
+                }
+            }
+        }
+    };
+
     quote! {
         #[doc = "All possible packets enum"]
         #[derive(Debug)]
@@ -878,24 +913,13 @@ pub fn generate_code_for_parse(recv_packs: &RecvPackets) -> TokenStream {
                 })),
             }
         }
-        pub(crate) fn match_packet_owned(class: u8, msg_id: u8, payload: &[u8]) -> Result<#union_enum_name_owned, ParserError> {
-            match (class, msg_id) {
-                #(#matches_owned)*
-                _ => Ok(#union_enum_name_owned::Unknown(#unknown_var_owned {
-                    payload: payload.into(),
-                    class,
-                    msg_id
-                })),
-            }
-        }
+        #match_packet_owned
 
         impl<'a> From<&#union_enum_name_ref<'a>> for #union_enum_name_owned {
             fn from(packet: &#union_enum_name_ref<'a>) -> Self {
                 match packet {
                     #(#matches_ref_to_owned)*
-                    #union_enum_name_ref::Unknown(#unknown_var_ref {payload, class, msg_id}) => {
-                        PacketOwned::Unknown(#unknown_var_owned { payload: payload.to_vec(), class: *class, msg_id: *msg_id })
-                    },
+                    #unknown_conversion
                 }
             }
         }

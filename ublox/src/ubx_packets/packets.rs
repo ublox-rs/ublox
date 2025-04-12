@@ -26,6 +26,7 @@ use super::{
     SYNC_CHAR_1, SYNC_CHAR_2,
 };
 
+pub use packetref::PacketRef;
 pub mod packetref;
 
 /// Used to help serialize the packet's fields flattened within a struct containing the msg_id and class fields, but

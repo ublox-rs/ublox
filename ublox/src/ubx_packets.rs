@@ -93,7 +93,8 @@ pub struct UbxUnknownPacketRef<'a> {
 
 #[derive(Debug, Clone)]
 pub struct UbxUnknownPacketOwned {
-    pub payload: Vec<u8>,
+    pub payload: [u8; packetref::MAX_PAYLOAD_LEN as usize],
+    pub payload_len: usize,
     pub class: u8,
     pub msg_id: u8,
 }

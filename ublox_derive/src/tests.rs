@@ -793,11 +793,17 @@ fn test_define_recv_packets() {
                         bytes.clone_from_slice(payload);
                         Ok(PacketOwned::Pack2(Pack2Owned(bytes)))
                     },
-                    _ => Ok(PacketOwned::Unknown(UnknownPacketOwned {
-                        payload: payload.into(),
-                        class,
-                        msg_id,
-                    })),
+                    _ => {
+                        let mut fixed_payload = [0u8; MAX_PAYLOAD_LEN as usize];
+                        let len = core::cmp::min(payload.len(), MAX_PAYLOAD_LEN as usize);
+                        fixed_payload[..len].copy_from_slice(&payload[..len]);
+                        Ok(PacketOwned::Unknown(UnknownPacketOwned {
+                            payload: fixed_payload,
+                            payload_len: len,
+                            class,
+                            msg_id,
+                        }))
+                    },
                 }
             }
             impl<'a> From<&PacketRef<'a>> for PacketOwned {
@@ -809,11 +815,17 @@ fn test_define_recv_packets() {
                             payload,
                             class,
                             msg_id,
-                        }) => PacketOwned::Unknown(UnknownPacketOwned {
-                            payload: payload.to_vec(),
-                            class: *class,
-                            msg_id: *msg_id,
-                        }),
+                        }) => {
+                            let mut fixed_payload = [0u8; MAX_PAYLOAD_LEN as usize];
+                            let len = core::cmp::min(payload.len(), MAX_PAYLOAD_LEN as usize);
+                            fixed_payload[..len].copy_from_slice(&payload[..len]);
+                            PacketOwned::Unknown(UnknownPacketOwned {
+                                payload: fixed_payload,
+                                payload_len: len,
+                                class: *class,
+                                msg_id: *msg_id,
+                            })
+                        },
                     }
                 }
             }
