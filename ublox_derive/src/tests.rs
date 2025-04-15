@@ -794,11 +794,11 @@ fn test_define_recv_packets() {
                         Ok(PacketOwned::Pack2(Pack2Owned(bytes)))
                     },
                     _ => {
-                        let mut copied_payload = [0u8; MAX_PAYLOAD_LEN as usize];
+                        let mut payload_copy = [0u8; MAX_PAYLOAD_LEN as usize];
                         let payload_len = core::cmp::min(payload.len(), MAX_PAYLOAD_LEN as usize);
-                        copied_payload[..payload_len].copy_from_slice(&payload[..payload_len]);
+                        payload_copy[..payload_len].copy_from_slice(&payload[..payload_len]);
                         Ok(PacketOwned::Unknown(UnknownPacketOwned {
-                            payload: copied_payload,
+                            payload: payload_copy,
                             payload_len,
                             class,
                             msg_id,
@@ -816,12 +816,12 @@ fn test_define_recv_packets() {
                             class,
                             msg_id,
                         }) => {
-                            let mut fixed_payload = [0u8; MAX_PAYLOAD_LEN as usize];
-                            let len = core::cmp::min(payload.len(), MAX_PAYLOAD_LEN as usize);
-                            fixed_payload[..len].copy_from_slice(&payload[..len]);
+                            let mut payload_copy = [0u8; MAX_PAYLOAD_LEN as usize];
+                            let payload_len = core::cmp::min(payload.len(), MAX_PAYLOAD_LEN as usize);
+                            payload_copy[..payload_len].copy_from_slice(&payload[..payload_len]);
                             PacketOwned::Unknown(UnknownPacketOwned {
-                                payload: fixed_payload,
-                                payload_len: len,
+                                payload: payload_copy,
+                                payload_len,
                                 class: *class,
                                 msg_id: *msg_id,
                             })

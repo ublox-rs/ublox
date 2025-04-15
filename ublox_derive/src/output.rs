@@ -837,13 +837,13 @@ pub fn generate_code_for_parse(recv_packs: &RecvPackets) -> TokenStream {
 
     let unknown_conversion = quote! {
         #union_enum_name_ref::Unknown(#unknown_var_ref {payload, class, msg_id}) => {
-            let mut fixed_payload = [0u8; MAX_PAYLOAD_LEN as usize];
-            let len = core::cmp::min(payload.len(), MAX_PAYLOAD_LEN as usize);
-            fixed_payload[..len].copy_from_slice(&payload[..len]);
+            let mut payload_copy = [0u8; MAX_PAYLOAD_LEN as usize];
+            let payload_len = core::cmp::min(payload.len(), MAX_PAYLOAD_LEN as usize);
+            payload_copy[..payload_len].copy_from_slice(&payload[..payload_len]);
 
             #union_enum_name_owned::Unknown(#unknown_var_owned {
-                payload: fixed_payload,
-                payload_len: len,
+                payload: payload_copy,
+                payload_len,
                 class: *class,
                 msg_id: *msg_id
             })
