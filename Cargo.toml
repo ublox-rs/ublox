@@ -1,6 +1,14 @@
 [workspace]
-members = ["ublox", "ublox_derive"]
+members = ["ublox", "ublox_derive", "examples/*"]
+default-members = ["ublox", "ublox_derive"]
 resolver = "2"
 
 [workspace.package]
 rust-version = "1.81.0"
+edition = "2021"
+license = "MIT"
+documentation = "https://docs.rs/ublox/latest/ublox/"
+repository = "https://github.com/ublox-rs/ublox"
+keywords = ["u-blox", "gnss", "gps"]
+readme = "README.md"
+exclude = [".github", "CONTRIBUTING.md"]

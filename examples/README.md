@@ -13,35 +13,36 @@ The device configuration and the reading of packets as well as some common CLI a
 
 # basic-cli
 
-To build the example with the default features (uBlox protocol 23) run
+To run the example with the default features (uBlox protocol 23) run
 ```shell
-cargo build -p basic-cli 
+cargo run -p basic-cli -- -p /dev/ttyACM0 
 ```
-To build it for other protocol versions, first disable the default features and then enable the specific features needed, e.g.,
+To run it for other protocol versions, first disable the default features and then enable the specific features needed, e.g.,
 ```shell
-cargo build -p basic-cli --no-default-features --features alloc,ubx_proto27 
+cargo run -p basic-cli --no-default-features --features alloc,ubx_proto27 -- -p /dev/ttyACM0 
+
 ```
 
 The example shows how to interact with an uBlox device. In this example the `NAV-PVT` message is enabled to be sent periodically on all UART and USB ports. It also makes a single request for the `MON-VER` message. The main loop parses incoming packets and outputs the result on `stdout`. 
 
 # send-receive 
 
-To build the example with the default features (uBlox protocol 23) run
+To run the example with the default features (uBlox protocol 23) run
 ```shell
-cargo build -p send-receive
+cargo run -p send-receive -- -p /dev/ttyACM0 
 ```
-To build it for other protocol versions, first disable the default features and then enable the specific features needed, e.g.,
+To run it for other protocol versions, first disable the default features and then enable the specific features needed, e.g.,
 ```shell
-cargo build -p send-receive --no-default-features --features alloc,ubx_proto27 
+cargo run -p send-receive --no-default-features --features alloc,ubx_proto27 -- -p /dev/ttyACM0 
 ```
 
 This example builds upon the `basic-cli` example. It shows how to clone the `serialport` device and use two separate threads, one for reading incoming packets and one for sending configuration and request packets.
 
 # ublox-tui
 
-To build the example with the default features (uBlox protocol 23) run
+To run the example with the default features (uBlox protocol 23) run
 ```shell
-cargo build -p ublox-tui
+cargo run -p ublox-tui -- -p /dev/ttyACM0
 ```
 
 This TUI is based on the [Ratatui demo app](https://github.com/ratatui/ratatui/tree/main/examples/apps/demo). It is implemented only for the `crossterm` backend.
@@ -61,7 +62,7 @@ You should see a TUI with multiple tabs similar to the below image. You can use 
 
 [Data Distribution Service (DDS)](https://www.dds-foundation.org/) is a pub/sub communication middleware. The DDS example shows how to expose certain UBX messages, like the NAV-PVT message to other hosts on the same LAN network as the publishing node. 
 
-To build the example with the default features (uBlox protocol 23) run
+To build the binaries for this example with the default features (uBlox protocol 23) run
 ```shell
 cargo build -p dds 
 ```

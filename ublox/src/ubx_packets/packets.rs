@@ -1792,10 +1792,7 @@ struct InfDebug {
 
 mod inf {
     pub(crate) fn convert_to_str(bytes: &[u8]) -> Option<&str> {
-        match core::str::from_utf8(bytes) {
-            Ok(msg) => Some(msg),
-            Err(_) => None,
-        }
+        core::str::from_utf8(bytes).ok()
     }
 
     pub(crate) fn is_valid(_bytes: &[u8]) -> bool {
