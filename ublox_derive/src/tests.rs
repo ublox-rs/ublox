@@ -794,11 +794,11 @@ fn test_define_recv_packets() {
                         Ok(PacketOwned::Pack2(Pack2Owned(bytes)))
                     },
                     _ => {
-                        let mut payload = [0u8; MAX_PAYLOAD_LEN as usize];
+                        let mut copied_payload = [0u8; MAX_PAYLOAD_LEN as usize];
                         let payload_len = core::cmp::min(payload.len(), MAX_PAYLOAD_LEN as usize);
-                        payload[..payload_len].copy_from_slice(&payload[..payload_len]);
+                        copied_payload[..payload_len].copy_from_slice(&payload[..payload_len]);
                         Ok(PacketOwned::Unknown(UnknownPacketOwned {
-                            payload,
+                            payload: copied_payload,
                             payload_len,
                             class,
                             msg_id,

@@ -33,12 +33,12 @@ pub(super) fn generate_fn_match_packet_owned(
             match (class, msg_id) {
                 #(#matches_owned)*
                 _ => {
-                    let mut payload = [0u8; MAX_PAYLOAD_LEN as usize];
+                    let mut copied_payload = [0u8; MAX_PAYLOAD_LEN as usize];
                     let payload_len = core::cmp::min(payload.len(), MAX_PAYLOAD_LEN as usize);
-                    payload[..payload_len].copy_from_slice(&payload[..payload_len]);
+                    copied_payload[..payload_len].copy_from_slice(&payload[..payload_len]);
 
                     Ok(#union_enum_name_owned::Unknown(#unknown_var_owned {
-                        payload,
+                        payload: copied_payload,
                         payload_len,
                         class,
                         msg_id
