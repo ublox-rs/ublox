@@ -334,12 +334,11 @@ fn test_ack_ack_to_owned_can_be_moved() {
     match it.next() {
         Some(Ok(PacketRef::AckAck(ack_packet))) => {
             assert_eq!(ack_packet.class(), expect_ack_payload_class_id);
-            let owned = ack_packet.to_owned();
-            assert_eq!(
-                owned,
-                ack_ack,
-                "Owned packet is not the same as borrowed packet",
-            );
+            let borrowed: ublox::AckAckRef = ack_packet;
+            let owned: ublox::AckAckOwned = borrowed.to_owned();
+
+            assert_eq!(borrowed.class(), owned.class());
+            assert_eq!(borrowed.msg_id(), owned.msg_id());
 
             let thread = std::thread::spawn(move || {
                 // This won't compile if the owned packet is not moveable.
