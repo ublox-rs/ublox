@@ -51,8 +51,28 @@ impl<'a> From<&NavPosLlhRef<'a>> for Position {
     }
 }
 
+impl From<&NavPosLlhOwned> for Position {
+    fn from(packet: &NavPosLlhOwned) -> Self {
+        Position {
+            lon: packet.lon_degrees(),
+            lat: packet.lat_degrees(),
+            alt: packet.height_msl(),
+        }
+    }
+}
+
 impl<'a> From<&NavHpPosLlhRef<'a>> for Position {
     fn from(packet: &NavHpPosLlhRef<'a>) -> Self {
+        Position {
+            lon: packet.lon_degrees() + packet.lon_hp_degrees(),
+            lat: packet.lat_degrees() + packet.lat_hp_degrees(),
+            alt: packet.height_msl() + packet.height_hp_msl(),
+        }
+    }
+}
+
+impl From<&NavHpPosLlhOwned> for Position {
+    fn from(packet: &NavHpPosLlhOwned) -> Self {
         Position {
             lon: packet.lon_degrees() + packet.lon_hp_degrees(),
             lat: packet.lat_degrees() + packet.lat_hp_degrees(),
@@ -71,8 +91,27 @@ impl<'a> From<&NavHpPosEcefRef<'a>> for PositionECEF {
     }
 }
 
+impl From<&NavHpPosEcefOwned> for PositionECEF {
+    fn from(packet: &NavHpPosEcefOwned) -> Self {
+        PositionECEF {
+            x: 10e-2 * (packet.ecef_x_cm() + 0.1 * packet.ecef_x_hp_mm()),
+            y: 10e-2 * (packet.ecef_y_cm() + 0.1 * packet.ecef_y_hp_mm()),
+            z: 10e-2 * (packet.ecef_z_cm() + 0.1 * packet.ecef_z_hp_mm()),
+        }
+    }
+}
+
 impl<'a> From<&NavVelNedRef<'a>> for Velocity {
     fn from(packet: &NavVelNedRef<'a>) -> Self {
+        Velocity {
+            speed: packet.ground_speed(),
+            heading: packet.heading_degrees(),
+        }
+    }
+}
+
+impl From<&NavVelNedOwned> for Velocity {
+    fn from(packet: &NavVelNedOwned) -> Self {
         Velocity {
             speed: packet.ground_speed(),
             heading: packet.heading_degrees(),
@@ -90,8 +129,27 @@ impl<'a> From<&NavPvtRef<'a>> for Position {
     }
 }
 
+impl From<&NavPvtOwned> for Position {
+    fn from(packet: &NavPvtOwned) -> Self {
+        Position {
+            lon: packet.longitude(),
+            lat: packet.latitude(),
+            alt: packet.height_msl(),
+        }
+    }
+}
+
 impl<'a> From<&NavPvtRef<'a>> for Velocity {
     fn from(packet: &NavPvtRef<'a>) -> Self {
+        Velocity {
+            speed: packet.ground_speed_2d(),
+            heading: packet.heading_motion(),
+        }
+    }
+}
+
+impl From<&NavPvtOwned> for Velocity {
+    fn from(packet: &NavPvtOwned) -> Self {
         Velocity {
             speed: packet.ground_speed_2d(),
             heading: packet.heading_motion(),
@@ -102,6 +160,33 @@ impl<'a> From<&NavPvtRef<'a>> for Velocity {
 impl<'a> TryFrom<&NavPvtRef<'a>> for DateTime<Utc> {
     type Error = DateTimeError;
     fn try_from(sol: &NavPvtRef<'a>) -> Result<Self, Self::Error> {
+        let date = NaiveDate::from_ymd_opt(
+            i32::from(sol.year()),
+            u32::from(sol.month()),
+            u32::from(sol.day()),
+        )
+        .ok_or(DateTimeError::InvalidDate)?;
+        let time = NaiveTime::from_hms_opt(
+            u32::from(sol.hour()),
+            u32::from(sol.min()),
+            u32::from(sol.sec()),
+        )
+        .ok_or(DateTimeError::InvalidTime)?;
+        const NANOS_LIM: u32 = 1_000_000_000;
+        if (sol.nanosec().wrapping_abs() as u32) >= NANOS_LIM {
+            return Err(DateTimeError::InvalidNanoseconds);
+        }
+
+        let dt = NaiveDateTime::new(date, time)
+            + chrono::Duration::nanoseconds(i64::from(sol.nanosec()));
+
+        Ok(DateTime::from_naive_utc_and_offset(dt, Utc))
+    }
+}
+
+impl TryFrom<&NavPvtOwned> for DateTime<Utc> {
+    type Error = DateTimeError;
+    fn try_from(sol: &NavPvtOwned) -> Result<Self, Self::Error> {
         let date = NaiveDate::from_ymd_opt(
             i32::from(sol.year()),
             u32::from(sol.month()),
