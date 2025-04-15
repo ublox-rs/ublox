@@ -81,22 +81,26 @@ impl From<&NavHpPosLlhOwned> for Position {
     }
 }
 
+fn ecef_from_cm_hp(cm: f64, hp_mm: f64) -> f64 {
+    10e-2 * (cm + 0.1 * hp_mm)
+}
+
 impl<'a> From<&NavHpPosEcefRef<'a>> for PositionECEF {
-    fn from(packet: &NavHpPosEcefRef<'a>) -> Self {
+    fn from(p: &NavHpPosEcefRef<'a>) -> Self {
         PositionECEF {
-            x: 10e-2 * (packet.ecef_x_cm() + 0.1 * packet.ecef_x_hp_mm()),
-            y: 10e-2 * (packet.ecef_y_cm() + 0.1 * packet.ecef_y_hp_mm()),
-            z: 10e-2 * (packet.ecef_z_cm() + 0.1 * packet.ecef_z_hp_mm()),
+            x: ecef_from_cm_hp(p.ecef_x_cm(), p.ecef_x_hp_mm()),
+            y: ecef_from_cm_hp(p.ecef_y_cm(), p.ecef_y_hp_mm()),
+            z: ecef_from_cm_hp(p.ecef_z_cm(), p.ecef_z_hp_mm()),
         }
     }
 }
 
 impl From<&NavHpPosEcefOwned> for PositionECEF {
-    fn from(packet: &NavHpPosEcefOwned) -> Self {
+    fn from(p: &NavHpPosEcefOwned) -> Self {
         PositionECEF {
-            x: 10e-2 * (packet.ecef_x_cm() + 0.1 * packet.ecef_x_hp_mm()),
-            y: 10e-2 * (packet.ecef_y_cm() + 0.1 * packet.ecef_y_hp_mm()),
-            z: 10e-2 * (packet.ecef_z_cm() + 0.1 * packet.ecef_z_hp_mm()),
+            x: ecef_from_cm_hp(p.ecef_x_cm(), p.ecef_x_hp_mm()),
+            y: ecef_from_cm_hp(p.ecef_y_cm(), p.ecef_y_hp_mm()),
+            z: ecef_from_cm_hp(p.ecef_z_cm(), p.ecef_z_hp_mm()),
         }
     }
 }
@@ -157,57 +161,57 @@ impl From<&NavPvtOwned> for Velocity {
     }
 }
 
+fn datetime_from_nav_pvt(
+    year: u16,
+    month: u8,
+    day: u8,
+    hour: u8,
+    min: u8,
+    sec: u8,
+    nanos: i32,
+) -> Result<DateTime<Utc>, DateTimeError> {
+    let date = NaiveDate::from_ymd_opt(i32::from(year), u32::from(month), u32::from(day))
+        .ok_or(DateTimeError::InvalidDate)?;
+
+    let time = NaiveTime::from_hms_opt(u32::from(hour), u32::from(min), u32::from(sec))
+        .ok_or(DateTimeError::InvalidTime)?;
+
+    const NANOS_LIM: u32 = 1_000_000_000;
+    if (nanos.wrapping_abs() as u32) >= NANOS_LIM {
+        return Err(DateTimeError::InvalidNanoseconds);
+    }
+
+    let dt = NaiveDateTime::new(date, time) + chrono::Duration::nanoseconds(i64::from(nanos));
+    Ok(DateTime::from_naive_utc_and_offset(dt, Utc))
+}
+
 impl<'a> TryFrom<&NavPvtRef<'a>> for DateTime<Utc> {
     type Error = DateTimeError;
     fn try_from(sol: &NavPvtRef<'a>) -> Result<Self, Self::Error> {
-        let date = NaiveDate::from_ymd_opt(
-            i32::from(sol.year()),
-            u32::from(sol.month()),
-            u32::from(sol.day()),
+        datetime_from_nav_pvt(
+            sol.year(),
+            sol.month(),
+            sol.day(),
+            sol.hour(),
+            sol.min(),
+            sol.sec(),
+            sol.nanosec(),
         )
-        .ok_or(DateTimeError::InvalidDate)?;
-        let time = NaiveTime::from_hms_opt(
-            u32::from(sol.hour()),
-            u32::from(sol.min()),
-            u32::from(sol.sec()),
-        )
-        .ok_or(DateTimeError::InvalidTime)?;
-        const NANOS_LIM: u32 = 1_000_000_000;
-        if (sol.nanosec().wrapping_abs() as u32) >= NANOS_LIM {
-            return Err(DateTimeError::InvalidNanoseconds);
-        }
-
-        let dt = NaiveDateTime::new(date, time)
-            + chrono::Duration::nanoseconds(i64::from(sol.nanosec()));
-
-        Ok(DateTime::from_naive_utc_and_offset(dt, Utc))
     }
 }
 
 impl TryFrom<&NavPvtOwned> for DateTime<Utc> {
     type Error = DateTimeError;
     fn try_from(sol: &NavPvtOwned) -> Result<Self, Self::Error> {
-        let date = NaiveDate::from_ymd_opt(
-            i32::from(sol.year()),
-            u32::from(sol.month()),
-            u32::from(sol.day()),
+        datetime_from_nav_pvt(
+            sol.year(),
+            sol.month(),
+            sol.day(),
+            sol.hour(),
+            sol.min(),
+            sol.sec(),
+            sol.nanosec(),
         )
-        .ok_or(DateTimeError::InvalidDate)?;
-        let time = NaiveTime::from_hms_opt(
-            u32::from(sol.hour()),
-            u32::from(sol.min()),
-            u32::from(sol.sec()),
-        )
-        .ok_or(DateTimeError::InvalidTime)?;
-        const NANOS_LIM: u32 = 1_000_000_000;
-        if (sol.nanosec().wrapping_abs() as u32) >= NANOS_LIM {
-            return Err(DateTimeError::InvalidNanoseconds);
-        }
-
-        let dt = NaiveDateTime::new(date, time)
-            + chrono::Duration::nanoseconds(i64::from(sol.nanosec()));
-
-        Ok(DateTime::from_naive_utc_and_offset(dt, Utc))
     }
 }
 
