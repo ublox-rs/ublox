@@ -850,11 +850,17 @@ pub fn generate_code_for_parse(recv_packs: &RecvPackets) -> TokenStream {
         }
     };
 
-    let fn_match_packet =
-        match_packet::generate_fn_match_packet(&union_enum_name_ref, &matches_ref, &unknown_var_ref);
+    let fn_match_packet = match_packet::generate_fn_match_packet(
+        &union_enum_name_ref,
+        &matches_ref,
+        &unknown_var_ref,
+    );
 
-    let fn_match_packet_owned =
-    match_packet::generate_fn_match_packet_owned(&union_enum_name_owned, &matches_owned, &unknown_var_owned);
+    let fn_match_packet_owned = match_packet::generate_fn_match_packet_owned(
+        &union_enum_name_owned,
+        &matches_owned,
+        &unknown_var_owned,
+    );
 
     quote! {
         #[doc = "All possible packets enum"]
