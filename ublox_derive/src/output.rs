@@ -8,6 +8,8 @@ use quote::{format_ident, quote, ToTokens};
 use std::{collections::HashSet, convert::TryFrom};
 use syn::{parse_quote, Ident, Type};
 
+mod match_packet;
+
 fn generate_debug_impl(
     pack_name: &str,
     ref_name: &Ident,
@@ -763,51 +765,6 @@ pub fn generate_code_to_extend_bitflags(bitflags: BitFlagsMacro) -> syn::Result<
     })
 }
 
-fn generate_fn_match_packet(
-    union_enum_name_ref: &Ident,
-    matches_ref: &[TokenStream],
-    unknown_var_ref: &Ident,
-) -> TokenStream {
-    quote! {
-        pub(crate) fn match_packet(class: u8, msg_id: u8, payload: &[u8]) -> Result<#union_enum_name_ref, ParserError> {
-            match (class, msg_id) {
-                #(#matches_ref)*
-                _ => Ok(#union_enum_name_ref::Unknown(#unknown_var_ref {
-                    payload,
-                    class,
-                    msg_id
-                })),
-            }
-        }
-    }
-}
-
-fn generate_fn_match_packet_owned(
-    union_enum_name_owned: &Ident,
-    matches_owned: &[TokenStream],
-    unknown_var_owned: &Ident,
-) -> TokenStream {
-    quote! {
-        pub(crate) fn match_packet_owned(class: u8, msg_id: u8, payload: &[u8]) -> Result<#union_enum_name_owned, ParserError> {
-            match (class, msg_id) {
-                #(#matches_owned)*
-                _ => {
-                    let mut payload = [0u8; MAX_PAYLOAD_LEN as usize];
-                    let payload_len = core::cmp::min(payload.len(), MAX_PAYLOAD_LEN as usize);
-                    payload[..payload_len].copy_from_slice(&payload[..payload_len]);
-
-                    Ok(#union_enum_name_owned::Unknown(#unknown_var_owned {
-                        payload,
-                        payload_len,
-                        class,
-                        msg_id
-                    }))
-                }
-            }
-        }
-    }
-}
-
 pub fn generate_code_for_parse(recv_packs: &RecvPackets) -> TokenStream {
     let union_enum_name_ref = format_ident!("{}Ref", &recv_packs.union_enum_name);
     let union_enum_name_owned = format_ident!("{}Owned", &recv_packs.union_enum_name);
@@ -894,10 +851,10 @@ pub fn generate_code_for_parse(recv_packs: &RecvPackets) -> TokenStream {
     };
 
     let fn_match_packet =
-        generate_fn_match_packet(&union_enum_name_ref, &matches_ref, &unknown_var_ref);
+        match_packet::generate_fn_match_packet(&union_enum_name_ref, &matches_ref, &unknown_var_ref);
 
     let fn_match_packet_owned =
-        generate_fn_match_packet_owned(&union_enum_name_owned, &matches_owned, &unknown_var_owned);
+    match_packet::generate_fn_match_packet_owned(&union_enum_name_owned, &matches_owned, &unknown_var_owned);
 
     quote! {
         #[doc = "All possible packets enum"]
