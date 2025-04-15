@@ -335,7 +335,7 @@ fn test_ack_ack_to_owned_can_be_moved() {
         Some(Ok(PacketRef::AckAck(ack_packet))) => {
             assert_eq!(ack_packet.class(), expect_ack_payload_class_id);
             let owned = ack_packet.to_owned();
-            assert_eq(
+            assert_eq!(
                 owned,
                 ack_ack,
                 "Owned packet is not the same as borrowed packet",
