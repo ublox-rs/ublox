@@ -4579,7 +4579,7 @@ pub enum EsfSensorType {
     SpeedTick = 10,
     /// Speed in [m/s]
     Speed = 11,
-    /// Temperature Celsius [deg]
+    /// Temperature Celsius \[deg\]
     GyroTemp = 12,
     /// Angular acceleration in [deg/s]
     GyroY = 13,
