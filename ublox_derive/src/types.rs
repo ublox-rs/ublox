@@ -50,6 +50,7 @@ pub enum PayloadLen {
 }
 
 impl PayloadLen {
+    /// If the payload length is fixed, returns `Some(len)` else `None`
     pub fn fixed(&self) -> Option<u16> {
         if let PayloadLen::Fixed(len) = self {
             Some(*len)

@@ -322,3 +322,30 @@ fn test_double_start_at_end() {
     }
     assert!(it.next().is_none());
 }
+
+#[test]
+fn test_ack_ack_to_owned_can_be_moved() {
+    let ack_ack = [0xb5, 0x62, 0x5, 0x1, 0x2, 0x0, 0x4, 0x5, 0x11, 0x38];
+    // 4 is the class id of the acknowledged packet from the payload of UbxAckAck
+    let expect_ack_payload_class_id = 4;
+
+    let mut parser = ublox::Parser::default();
+    let mut it = parser.consume(&ack_ack);
+    match it.next() {
+        Some(Ok(PacketRef::AckAck(ack_packet))) => {
+            assert_eq!(ack_packet.class(), expect_ack_payload_class_id);
+            let borrowed: ublox::AckAckRef = ack_packet;
+            let owned: ublox::AckAckOwned = borrowed.to_owned();
+
+            assert_eq!(borrowed.class(), owned.class());
+            assert_eq!(borrowed.msg_id(), owned.msg_id());
+
+            let thread = std::thread::spawn(move || {
+                // This won't compile if the owned packet is not moveable.
+                std::dbg!(owned);
+            });
+            thread.join().unwrap();
+        },
+        _ => panic!(),
+    };
+}

@@ -1088,7 +1088,7 @@ cfg_val! {
   SignalGLoL2Ena,        0x1031001a, bool,
 
   /// "Undocumented" L5 Health Bit Ignore (see
-  /// https://content.u-blox.com/sites/default/files/documents/GPS-L5-configuration_AppNote_UBX-21038688.pdf)
+  /// <https://content.u-blox.com/sites/default/files/documents/GPS-L5-configuration_AppNote_UBX-21038688.pdf>)
   UndocumentedL5Enable,  0x10320001, bool,
 
   // CFG-TP-*

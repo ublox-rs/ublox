@@ -1356,7 +1356,7 @@ impl CfgItfmConfig {
     }
 
     const fn into_raw(self) -> u32 {
-        (self.enable as u32) << 31
+        ((self.enable as u32) << 31)
             | self.cw_threshold.into_raw()
             | self.bb_threshold.into_raw()
             | self.algorithm_bits.into_raw()
@@ -3959,6 +3959,20 @@ impl EsfMeasRef<'_> {
     }
 }
 
+impl EsfMeasOwned {
+    fn data_len(&self) -> usize {
+        self.flags().num_meas() as usize * 4
+    }
+
+    fn calib_tag_len(&self) -> usize {
+        if self.flags().calib_tag_valid() {
+            4
+        } else {
+            0
+        }
+    }
+}
+
 #[derive(Debug)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct EsfMeasData {
@@ -4565,7 +4579,7 @@ pub enum EsfSensorType {
     SpeedTick = 10,
     /// Speed in [m/s]
     Speed = 11,
-    /// Temperature Celsius [deg]
+    /// Temperature Celsius \[deg\]
     GyroTemp = 12,
     /// Angular acceleration in [deg/s]
     GyroY = 13,

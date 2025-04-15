@@ -83,10 +83,18 @@ pub trait UbxPacketCreator {
 }
 
 /// Packet not supported yet by this crate
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct UbxUnknownPacketRef<'a> {
     pub payload: &'a [u8],
+    pub class: u8,
+    pub msg_id: u8,
+}
+
+#[derive(Debug, Clone)]
+pub struct UbxUnknownPacketOwned {
+    pub payload: [u8; packetref::MAX_PAYLOAD_LEN as usize],
+    pub payload_len: usize,
     pub class: u8,
     pub msg_id: u8,
 }

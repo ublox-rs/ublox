@@ -56,6 +56,9 @@ fn test_ubx_packet_recv_simple() {
                 pub fn as_bytes(&self) -> &[u8] {
                     self.0
                 }
+                pub fn to_owned(&self) -> TestOwned {
+                    self.into()
+                }
 
                 #[doc = ""]
                 #[inline]
@@ -158,9 +161,135 @@ fn test_ubx_packet_recv_simple() {
                     }
                 }
             }
+            #[doc = "Some comment"]
+            #[doc = "Owns the underlying buffer of data, contains accessor methods to retrieve data."]
+            pub struct TestOwned([u8; 16usize]);
+            impl TestOwned {
+                const PACKET_SIZE: usize = 16usize;
+                #[inline]
+                pub fn as_bytes(&self) -> &[u8] {
+                    &self.0
+                }
+                #[doc = ""]
+                #[inline]
+                pub fn itow(&self) -> u32 {
+                    let val = <u32>::from_le_bytes([
+                        self.0[0usize],
+                        self.0[1usize],
+                        self.0[2usize],
+                        self.0[3usize],
+                    ]);
+                    val
+                }
+                #[doc = "this is lat"]
+                #[inline]
+                pub fn lat_degrees_raw(&self) -> i32 {
+                    let val = <i32>::from_le_bytes([
+                        self.0[4usize],
+                        self.0[5usize],
+                        self.0[6usize],
+                        self.0[7usize],
+                    ]);
+                    val
+                }
+                #[doc = "this is lat"]
+                #[inline]
+                pub fn lat_degrees(&self) -> f64 {
+                    let val = <i32>::from_le_bytes([
+                        self.0[4usize],
+                        self.0[5usize],
+                        self.0[6usize],
+                        self.0[7usize],
+                    ]);
+                    let val = <f64>::from(val);
+                    let val = val * 1e-7;
+                    val
+                }
+                #[doc = "this is a"]
+                #[inline]
+                pub fn a(&self) -> u8 {
+                    let val = self.0[8usize];
+                    val
+                }
+                #[doc = ""]
+                #[inline]
+                pub fn reserved1(&self) -> [u8; 5] {
+                    let val = [
+                        self.0[9usize],
+                        self.0[10usize],
+                        self.0[11usize],
+                        self.0[12usize],
+                        self.0[13usize],
+                    ];
+                    val
+                }
+                #[doc = ""]
+                #[inline]
+                pub fn flags_raw(&self) -> u8 {
+                    let val = self.0[14usize];
+                    val
+                }
+                #[doc = ""]
+                #[inline]
+                pub fn flags(&self) -> Flags {
+                    let val = self.0[14usize];
+                    let val = <Flags>::from_unchecked(val);
+                    val
+                }
+                #[doc = ""]
+                #[inline]
+                pub fn b(&self) -> i8 {
+                    let val = <i8>::from_le_bytes([self.0[15usize]]);
+                    val
+                }
+                fn validate(payload: &[u8]) -> Result<(), ParserError> {
+                    let expect = 16usize;
+                    let got = payload.len();
+                    if got == expect {
+                        let val = payload[14usize];
+                        if !<Flags>::is_valid(val) {
+                            return Err(ParserError::InvalidField {
+                                packet: "Test",
+                                field: stringify!(flags),
+                            });
+                        }
+                        Ok(())
+                    } else {
+                        Err(ParserError::InvalidPacketLen {
+                            packet: "Test",
+                            expect,
+                            got,
+                        })
+                    }
+                }
+            }
+            impl<'a> From<&TestRef<'a>> for TestOwned {
+                fn from(packet: &TestRef<'a>) -> Self {
+                    let mut bytes = [0u8; 16usize];
+                    bytes.clone_from_slice(packet.as_bytes());
+                    Self(bytes)
+                }
+            }
+            impl<'a> From<TestRef<'a>> for TestOwned {
+                fn from(packet: TestRef<'a>) -> Self {
+                    (&packet).into()
+                }
+            }
 
             impl core::fmt::Debug for TestRef<'_> {
                 fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+                    f.debug_struct("Test")
+                        .field(stringify!(itow), &self.itow())
+                        .field(stringify!(lat), &self.lat_degrees())
+                        .field(stringify!(a), &self.a())
+                        .field(stringify!(reserved1), &self.reserved1())
+                        .field(stringify!(flags), &self.flags())
+                        .field(stringify!(b), &self.b())
+                        .finish()
+                }
+            }
+            impl core::fmt::Debug for TestOwned {
+                fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
                     f.debug_struct("Test")
                         .field(stringify!(itow), &self.itow())
                         .field(stringify!(lat), &self.lat_degrees())
@@ -244,7 +373,9 @@ fn test_ubx_packet_recv_dyn_len() {
                 pub fn as_bytes(&self) -> &[u8] {
                     self.0
                 }
-
+                pub fn to_owned(&self) -> TestOwned {
+                    self.into()
+                }
                 #[doc = ""]
                 #[inline]
                 pub fn f1_raw(&self) -> &[u8] {
@@ -280,9 +411,71 @@ fn test_ubx_packet_recv_dyn_len() {
                     }
                 }
             }
+            #[doc = ""]
+            #[doc = "Owns the underlying buffer of data, contains accessor methods to retrieve data."]
+            pub struct TestOwned([u8; 38usize]);
+            impl TestOwned {
+                const PACKET_SIZE: usize = 38usize;
+                #[inline]
+                pub fn as_bytes(&self) -> &[u8] {
+                    &self.0
+                }
+                #[doc = ""]
+                #[inline]
+                pub fn f1_raw(&self) -> &[u8] {
+                    let val = &self.0[0usize..(0usize + 8usize)];
+                    val
+                }
+                #[doc = ""]
+                #[inline]
+                pub fn f1(&self) -> &str {
+                    let val = &self.0[0usize..(0usize + 8usize)];
+                    let val = unpack_str(val);
+                    val
+                }
+                #[doc = ""]
+                #[inline]
+                pub fn rest(&self) -> &[u8] {
+                    &self.0[8usize..]
+                }
+                fn validate(payload: &[u8]) -> Result<(), ParserError> {
+                    let got = payload.len();
+                    let min = 8usize;
+                    if got >= min {
+                        Ok(())
+                    } else {
+                        Err(ParserError::InvalidPacketLen {
+                            packet: "Test",
+                            expect: min,
+                            got,
+                        })
+                    }
+                }
+            }
+            impl<'a> From<&TestRef<'a>> for TestOwned {
+                fn from(packet: &TestRef<'a>) -> Self {
+                    let mut bytes = [0u8; 38usize];
+                    bytes.clone_from_slice(packet.as_bytes());
+                    Self(bytes)
+                }
+            }
+            impl<'a> From<TestRef<'a>> for TestOwned {
+                fn from(packet: TestRef<'a>) -> Self {
+                    (&packet).into()
+                }
+            }
 
             impl core::fmt::Debug for TestRef<'_> {
                 fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+                    f.debug_struct("Test")
+                        .field(stringify!(f1), &self.f1())
+                        .field(stringify!(rest), &self.rest())
+                        .finish()
+                }
+            }
+            impl core::fmt::Debug for TestOwned {
+                fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+
                     f.debug_struct("Test")
                         .field(stringify!(f1), &self.f1())
                         .field(stringify!(rest), &self.rest())
@@ -515,8 +708,8 @@ fn test_upgrade_enum() {
 #[test]
 fn test_define_recv_packets() {
     let src_code = quote! {
-        enum PacketRef {
-            _ = UnknownPacketRef,
+        enum Packet {
+            _ = UnknownPacket,
             Pack1,
             Pack2
         }
@@ -536,13 +729,31 @@ fn test_define_recv_packets() {
                 Pack2(Pack2Ref<'a>),
                 Unknown(UnknownPacketRef<'a>),
             }
-
+            #[doc = "All possible packets enum, owning the underlying data"]
+            #[derive(Debug)]
+            pub enum PacketOwned {
+                Pack1(Pack1Owned),
+                Pack2(Pack2Owned),
+                Unknown(UnknownPacketOwned),
+            }
             impl<'a> PacketRef<'a> {
                 pub fn class_and_msg_id(&self) -> (u8, u8) {
                     match *self {
                         PacketRef::Pack1(_) => (Pack1::CLASS, Pack1::ID),
                         PacketRef::Pack2(_) => (Pack2::CLASS, Pack2::ID),
                         PacketRef::Unknown(ref pack) => (pack.class, pack.msg_id),
+                    }
+                }
+                pub fn to_owned(&self) -> PacketOwned {
+                    self.into()
+                }
+            }
+            impl PacketOwned {
+                pub fn class_and_msg_id(&self) -> (u8, u8) {
+                    match *self {
+                        PacketOwned::Pack1(_) => (Pack1::CLASS, Pack1::ID),
+                        PacketOwned::Pack2(_) => (Pack2::CLASS, Pack2::ID),
+                        PacketOwned::Unknown(ref pack) => (pack.class, pack.msg_id),
                     }
                 }
             }
@@ -555,15 +766,67 @@ fn test_define_recv_packets() {
                 match (class, msg_id) {
                     (Pack1::CLASS, Pack1::ID) if <Pack1Ref>::validate(payload).is_ok() => {
                         Ok(PacketRef::Pack1(Pack1Ref(payload)))
-                    }
+                    },
                     (Pack2::CLASS, Pack2::ID) if <Pack2Ref>::validate(payload).is_ok() => {
                         Ok(PacketRef::Pack2(Pack2Ref(payload)))
-                    }
+                    },
                     _ => Ok(PacketRef::Unknown(UnknownPacketRef {
                         payload,
                         class,
                         msg_id,
                     })),
+                }
+            }
+            pub(crate) fn match_packet_owned(
+                class: u8,
+                msg_id: u8,
+                payload: &[u8],
+            ) -> Result<PacketOwned, ParserError> {
+                match (class, msg_id) {
+                    (Pack1::CLASS, Pack1::ID) if <Pack1Owned>::validate(payload).is_ok() => {
+                        let mut bytes = [0u8; Pack1Owned::PACKET_SIZE];
+                        bytes.clone_from_slice(payload);
+                        Ok(PacketOwned::Pack1(Pack1Owned(bytes)))
+                    },
+                    (Pack2::CLASS, Pack2::ID) if <Pack2Owned>::validate(payload).is_ok() => {
+                        let mut bytes = [0u8; Pack2Owned::PACKET_SIZE];
+                        bytes.clone_from_slice(payload);
+                        Ok(PacketOwned::Pack2(Pack2Owned(bytes)))
+                    },
+                    _ => {
+                        let mut payload_copy = [0u8; MAX_PAYLOAD_LEN as usize];
+                        let payload_len = core::cmp::min(payload.len(), MAX_PAYLOAD_LEN as usize);
+                        payload_copy[..payload_len].copy_from_slice(&payload[..payload_len]);
+                        Ok(PacketOwned::Unknown(UnknownPacketOwned {
+                            payload: payload_copy,
+                            payload_len,
+                            class,
+                            msg_id,
+                        }))
+                    },
+                }
+            }
+            impl<'a> From<&PacketRef<'a>> for PacketOwned {
+                fn from(packet: &PacketRef<'a>) -> Self {
+                    match packet {
+                        PacketRef::Pack1(packet) => PacketOwned::Pack1(packet.into()),
+                        PacketRef::Pack2(packet) => PacketOwned::Pack2(packet.into()),
+                        PacketRef::Unknown(UnknownPacketRef {
+                            payload,
+                            class,
+                            msg_id,
+                        }) => {
+                            let mut payload_copy = [0u8; MAX_PAYLOAD_LEN as usize];
+                            let payload_len = core::cmp::min(payload.len(), MAX_PAYLOAD_LEN as usize);
+                            payload_copy[..payload_len].copy_from_slice(&payload[..payload_len]);
+                            PacketOwned::Unknown(UnknownPacketOwned {
+                                payload: payload_copy,
+                                payload_len,
+                                class: *class,
+                                msg_id: *msg_id,
+                            })
+                        },
+                    }
                 }
             }
 
@@ -696,13 +959,13 @@ fn run_compare_test(output: TokenStream, expect_output: TokenStream) {
         String::from_utf8(rustfmt_cnt(expect_output.into_bytes()).unwrap()).unwrap();
 
     if expect_output != output {
-        for (e, g) in expect_output.lines().zip(output.lines()) {
-            if e != g {
-                println!("first mismatch:\ne {}\ng {}", e, g);
+        for (e_line, g_line) in expect_output.lines().zip(output.lines()) {
+            if e_line != g_line {
+                println!("first mismatch:\nexpected:\n{e_line}\ngot:\n{g_line}");
                 break;
             }
         }
-        panic!("Expect:\n{}\nGot:\n{}\n", expect_output, output);
+        pretty_assertions::assert_str_eq!(expect_output, output);
     }
 }
 

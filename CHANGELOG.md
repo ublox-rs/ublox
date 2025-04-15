@@ -2,13 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+### Added
+
+- Add owned variants of `PacketRef` ([#103](https://github.com/ublox-rs/ublox/pull/103))
+
 ## [0.5.0] - 2025-03-17
 
 ### 💼 What's Changed
 
 - Prepare for next release ([#95](https://github.com/ublox-rs/ublox/pull/95))
   - remove duplicate CI file
-  - cherry-picked NavSig from PR [#73](https://github.com/ublox-rs/ublox/pull/73)
+  - cherry-picked NavSig from PR ([#73](https://github.com/ublox-rs/ublox/pull/73))
   - add semver to CI
 - Added comments and scaling for NavRelPosNed packets ([#93](https://github.com/ublox-rs/ublox/pull/93))
 - Separate PacketRef enum into own file and CI improvements ([#94](https://github.com/ublox-rs/ublox/pull/94))

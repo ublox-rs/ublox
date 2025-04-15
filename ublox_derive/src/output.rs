@@ -8,17 +8,36 @@ use quote::{format_ident, quote, ToTokens};
 use std::{collections::HashSet, convert::TryFrom};
 use syn::{parse_quote, Ident, Type};
 
-fn generate_debug_impl(pack_name: &str, ref_name: &Ident, pack_descr: &PackDesc) -> TokenStream {
-    let fields = pack_descr.fields.iter().map(|field| {
-        let field_name = &field.name;
-        let field_accessor = field.intermediate_field_name();
-        quote! {
-            .field(stringify!(#field_name), &self.#field_accessor())
-        }
-    });
+mod match_packet;
+
+fn generate_debug_impl(
+    pack_name: &str,
+    ref_name: &Ident,
+    owned_name: &Ident,
+    pack_descr: &PackDesc,
+) -> TokenStream {
+    let fields: Vec<TokenStream> = pack_descr
+        .fields
+        .iter()
+        .map(|field| {
+            let field_name = &field.name;
+            let field_accessor = field.intermediate_field_name();
+            quote! {
+                .field(stringify!(#field_name), &self.#field_accessor())
+            }
+        })
+        .collect();
+
     quote! {
         impl core::fmt::Debug for #ref_name<'_> {
             fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+                f.debug_struct(#pack_name)
+                    #(#fields)*
+                    .finish()
+            }
+        }
+        impl core::fmt::Debug for #owned_name {
+            fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
                 f.debug_struct(#pack_name)
                     #(#fields)*
                     .finish()
@@ -77,6 +96,11 @@ fn generate_serialize_impl(
 pub fn generate_recv_code_for_packet(pack_descr: &PackDesc) -> TokenStream {
     let pack_name = &pack_descr.name;
     let ref_name = format_ident!("{}Ref", pack_descr.name);
+    let owned_name = format_ident!("{}Owned", pack_descr.name);
+    let packet_size = match pack_descr.header.payload_len {
+        PayloadLen::Fixed(value) => value,
+        PayloadLen::Max(value) => value,
+    } as usize;
 
     let mut getters = Vec::with_capacity(pack_descr.fields.len());
     let mut field_validators = Vec::new();
@@ -250,7 +274,7 @@ pub fn generate_recv_code_for_packet(pack_descr: &PackDesc) -> TokenStream {
         }
     };
 
-    let debug_impl = generate_debug_impl(pack_name, &ref_name, pack_descr);
+    let debug_impl = generate_debug_impl(pack_name, &ref_name, &owned_name, pack_descr);
     let serialize_impl = generate_serialize_impl(pack_name, &ref_name, pack_descr);
 
     quote! {
@@ -263,9 +287,44 @@ pub fn generate_recv_code_for_packet(pack_descr: &PackDesc) -> TokenStream {
                 self.0
             }
 
+            pub fn to_owned(&self) -> #owned_name {
+                self.into()
+            }
+
             #(#getters)*
 
             #validator
+        }
+
+        #[doc = #struct_comment]
+        #[doc = "Owns the underlying buffer of data, contains accessor methods to retrieve data."]
+        pub struct #owned_name([u8; #packet_size]);
+
+        impl #owned_name {
+            const PACKET_SIZE: usize = #packet_size;
+
+            #[inline]
+            pub fn as_bytes(&self) -> &[u8] {
+                &self.0
+            }
+
+            #(#getters)*
+
+            #validator
+        }
+
+        impl<'a> From<&#ref_name<'a>> for #owned_name {
+            fn from(packet: &#ref_name<'a>) -> Self {
+                let mut bytes = [0u8; #packet_size];
+                bytes.clone_from_slice(packet.as_bytes());
+                Self(bytes)
+            }
+        }
+
+        impl<'a> From<#ref_name<'a>> for #owned_name {
+            fn from(packet: #ref_name<'a>) -> Self {
+                (&packet).into()
+            }
         }
 
         #debug_impl
@@ -707,31 +766,57 @@ pub fn generate_code_to_extend_bitflags(bitflags: BitFlagsMacro) -> syn::Result<
 }
 
 pub fn generate_code_for_parse(recv_packs: &RecvPackets) -> TokenStream {
-    let union_enum_name = &recv_packs.union_enum_name;
+    let union_enum_name_ref = format_ident!("{}Ref", &recv_packs.union_enum_name);
+    let union_enum_name_owned = format_ident!("{}Owned", &recv_packs.union_enum_name);
 
-    let mut pack_enum_variants = Vec::with_capacity(recv_packs.all_packets.len());
-    let mut matches = Vec::with_capacity(recv_packs.all_packets.len());
-    let mut class_id_matches = Vec::with_capacity(recv_packs.all_packets.len());
+    let mut pack_enum_variants_ref = Vec::with_capacity(recv_packs.all_packets.len());
+    let mut pack_enum_variants_owned = Vec::with_capacity(recv_packs.all_packets.len());
+
+    let mut matches_ref = Vec::with_capacity(recv_packs.all_packets.len());
+    let mut matches_owned = Vec::with_capacity(recv_packs.all_packets.len());
+    let mut matches_ref_to_owned = Vec::with_capacity(recv_packs.all_packets.len());
+
+    let mut class_id_matches_ref = Vec::with_capacity(recv_packs.all_packets.len());
+    let mut class_id_matches_owned = Vec::with_capacity(recv_packs.all_packets.len());
+
     let mut serializers = Vec::with_capacity(recv_packs.all_packets.len());
 
     for name in &recv_packs.all_packets {
         let ref_name = format_ident!("{}Ref", name);
-        pack_enum_variants.push(quote! {
+        let owned_name = format_ident!("{}Owned", name);
+        pack_enum_variants_ref.push(quote! {
             #name(#ref_name <'a>)
         });
+        pack_enum_variants_owned.push(quote! {
+            #name(#owned_name)
+        });
 
-        matches.push(quote! {
+        matches_ref.push(quote! {
             (#name::CLASS, #name::ID) if <#ref_name>::validate(payload).is_ok()  => {
-                Ok(#union_enum_name::#name(#ref_name(payload)))
+                Ok(#union_enum_name_ref::#name(#ref_name(payload)))
             }
         });
 
-        class_id_matches.push(quote! {
-            #union_enum_name::#name(_) => (#name::CLASS, #name::ID)
+        matches_owned.push(quote! {
+            (#name::CLASS, #name::ID) if <#owned_name>::validate(payload).is_ok()  => {
+                let mut bytes = [0u8; #owned_name::PACKET_SIZE];
+                bytes.clone_from_slice(payload);
+                Ok(#union_enum_name_owned::#name(#owned_name(bytes)))
+            }
+        });
+        matches_ref_to_owned.push(quote! {
+            #union_enum_name_ref::#name(packet) => #union_enum_name_owned::#name(packet.into()),
+        });
+
+        class_id_matches_ref.push(quote! {
+            #union_enum_name_ref::#name(_) => (#name::CLASS, #name::ID)
+        });
+        class_id_matches_owned.push(quote! {
+            #union_enum_name_owned::#name(_) => (#name::CLASS, #name::ID)
         });
 
         serializers.push(quote! {
-            #union_enum_name::#name(ref msg) => PacketSerializer {
+            #union_enum_name_ref::#name(ref msg) => PacketSerializer {
                 class: #name::CLASS,
                 msg_id: #name::ID,
                 msg,
@@ -740,7 +825,8 @@ pub fn generate_code_for_parse(recv_packs: &RecvPackets) -> TokenStream {
         });
     }
 
-    let unknown_var = &recv_packs.unknown_ty;
+    let unknown_var_ref = format_ident!("{}Ref", &recv_packs.unknown_ty);
+    let unknown_var_owned = format_ident!("{}Owned", &recv_packs.unknown_ty);
 
     let max_payload_len_calc = recv_packs
         .all_packets
@@ -749,31 +835,78 @@ pub fn generate_code_for_parse(recv_packs: &RecvPackets) -> TokenStream {
             quote! { max_u16(#name::MAX_PAYLOAD_LEN, #prev) }
         });
 
+    let unknown_conversion = quote! {
+        #union_enum_name_ref::Unknown(#unknown_var_ref {payload, class, msg_id}) => {
+            let mut payload_copy = [0u8; MAX_PAYLOAD_LEN as usize];
+            let payload_len = core::cmp::min(payload.len(), MAX_PAYLOAD_LEN as usize);
+            payload_copy[..payload_len].copy_from_slice(&payload[..payload_len]);
+
+            #union_enum_name_owned::Unknown(#unknown_var_owned {
+                payload: payload_copy,
+                payload_len,
+                class: *class,
+                msg_id: *msg_id
+            })
+        }
+    };
+
+    let fn_match_packet = match_packet::generate_fn_match_packet(
+        &union_enum_name_ref,
+        &matches_ref,
+        &unknown_var_ref,
+    );
+
+    let fn_match_packet_owned = match_packet::generate_fn_match_packet_owned(
+        &union_enum_name_owned,
+        &matches_owned,
+        &unknown_var_owned,
+    );
+
     quote! {
         #[doc = "All possible packets enum"]
         #[derive(Debug)]
-        pub enum #union_enum_name<'a> {
-            #(#pack_enum_variants),*,
-            Unknown(#unknown_var<'a>)
+        pub enum #union_enum_name_ref<'a> {
+            #(#pack_enum_variants_ref),*,
+            Unknown(#unknown_var_ref<'a>)
+        }
+        #[doc = "All possible packets enum, owning the underlying data"]
+        #[derive(Debug)]
+        pub enum #union_enum_name_owned {
+            #(#pack_enum_variants_owned),*,
+            Unknown(#unknown_var_owned)
         }
 
-        impl<'a> #union_enum_name<'a> {
+        impl<'a> #union_enum_name_ref<'a> {
             pub fn class_and_msg_id(&self) -> (u8, u8) {
                 match *self {
-                    #(#class_id_matches),*,
-                    #union_enum_name::Unknown(ref pack) => (pack.class, pack.msg_id),
+                    #(#class_id_matches_ref),*,
+                    #union_enum_name_ref::Unknown(ref pack) => (pack.class, pack.msg_id),
+                }
+            }
+
+            pub fn to_owned(&self) -> #union_enum_name_owned {
+                self.into()
+            }
+        }
+        impl #union_enum_name_owned {
+            pub fn class_and_msg_id(&self) -> (u8, u8) {
+                match *self {
+                    #(#class_id_matches_owned),*,
+                    #union_enum_name_owned::Unknown(ref pack) => (pack.class, pack.msg_id),
                 }
             }
         }
 
-        pub(crate) fn match_packet(class: u8, msg_id: u8, payload: &[u8]) -> Result<#union_enum_name, ParserError> {
-            match (class, msg_id) {
-                #(#matches)*
-                _ => Ok(#union_enum_name::Unknown(#unknown_var {
-                    payload,
-                    class,
-                    msg_id
-                })),
+        #fn_match_packet
+        #fn_match_packet_owned
+
+
+        impl<'a> From<&#union_enum_name_ref<'a>> for #union_enum_name_owned {
+            fn from(packet: &#union_enum_name_ref<'a>) -> Self {
+                match packet {
+                    #(#matches_ref_to_owned)*
+                    #unknown_conversion
+                }
             }
         }
 
@@ -803,14 +936,14 @@ pub fn generate_code_for_parse(recv_packs: &RecvPackets) -> TokenStream {
         }
 
         #[cfg(feature = "serde")]
-        impl serde::Serialize for #union_enum_name<'_> {
+        impl serde::Serialize for #union_enum_name_ref<'_> {
             fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
             where
                 S: serde::Serializer,
             {
                 match *self {
                     #(#serializers),*,
-                    #union_enum_name::Unknown(ref pack) => pack.serialize(serializer),
+                    #union_enum_name_ref::Unknown(ref pack) => pack.serialize(serializer),
                 }
             }
         }
