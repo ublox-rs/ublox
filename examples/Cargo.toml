@@ -1,7 +1,0 @@
-[workspace]
-exclude = ["target"]
-members = ["*"]
-resolver = "2"
-
-[workspace.package]
-rust-version = "1.81.0"

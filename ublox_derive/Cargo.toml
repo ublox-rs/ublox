@@ -1,11 +1,11 @@
 [package]
 authors = ["Lane Kolbly <lane@rscheme.org>"]
 description = "Utility macros for the ublox crate"
-edition = "2021"
-license = "MIT"
 name = "ublox_derive"
 version = "0.2.0"
 rust-version.workspace = true
+license.workspace = true
+edition.workspace = true
 
 [lib]
 proc-macro = true

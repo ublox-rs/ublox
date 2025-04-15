@@ -3,19 +3,12 @@ authors = [
     "Lane Kolbly <lane@rscheme.org>",
     "Andrei Gherghescu <andrei-ng@protonmail.com>",
 ]
-edition = "2021"
 name = "basic-cli"
-publish = false
-rust-version.workspace = true
 version = "0.1.0"
-
-[dependencies]
-chrono = "0.4"
-clap = { version = "4.2", features = ["cargo"] }
-serde_json = "1.0"
-serialport = "4.2"
-ublox = { path = "../../ublox", default-features = false, optional = true }
-ublox_device = { path = "../ublox_device", default-features = false, optional = true }
+publish = false
+license.workspace = true
+edition.workspace = true
+rust-version.workspace = true
 
 [features]
 default = ["alloc", "ubx_proto23"]
@@ -23,3 +16,11 @@ alloc = ["ublox/alloc"]
 ubx_proto23 = ["ublox/ubx_proto23", "ublox_device/ubx_proto23"]
 ubx_proto27 = ["ublox/ubx_proto27", "ublox_device/ubx_proto27"]
 ubx_proto31 = ["ublox/ubx_proto31", "ublox_device/ubx_proto31"]
+
+[dependencies]
+chrono = "0.4"
+clap = { version = "4.2", features = ["cargo"] }
+serde_json = "1.0"
+serialport = "4.2"
+ublox = { path = "../../ublox", default-features = false, optional = true }
+ublox_device = { path = "../ublox-device", default-features = false, optional = true }

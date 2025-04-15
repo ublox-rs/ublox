@@ -79,13 +79,11 @@ jobs:
         override: true
         components: rustfmt, clippy
     - name: Build
-      working-directory: examples
-      run: cargo build --release
+      run: cargo build --release --all
     - name: Coding style
-      working-directory: examples
       run: |
           cargo fmt --all -- --check
-          cargo clippy --all-targets -- -D warnings
+          cargo clippy --all-targets --all -- -D warnings
   
   docs:
     runs-on: ubuntu-latest
@@ -116,18 +114,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: taiki-e/install-action@cargo-hack
-      - name: Check MSRV
-        run: cargo hack check --rust-version --workspace
-
-  msrv_examples:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: taiki-e/install-action@cargo-hack
       - name: Install libudev
         run: sudo apt-get update && sudo apt-get install -y libudev-dev
       - name: Check MSRV for examples
-        working-directory: examples
         run: cargo hack check --rust-version --workspace
 
   semver:
