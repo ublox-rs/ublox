@@ -1,9 +1,11 @@
 [package]
 name = "ublox_device"
 authors = ["Andrei Gherghescu <andrei-ng@protonmail.com>"]
-edition = "2021"
+description = "An uBlox device implementation for reuse in examples"
 publish = false
+edition.workspace = true
 rust-version.workspace = true
+license.workspace = true
 version = "0.1.0"
 
 [features]
@@ -15,9 +17,7 @@ ubx_proto31 = ["ublox/ubx_proto31"]
 
 [dependencies]
 anyhow = "1.0"
-chrono = "0.4"
 clap = { version = "4.2", features = ["cargo"] }
-serde_json = "1.0"
 serialport = "4.2"
 
 ublox = { path = "../../ublox", default-features = false }
