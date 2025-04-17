@@ -1,9 +1,11 @@
 [package]
 authors = ["Andrei Gherghescu <andrei-ng@protonmail.com>"]
-edition = "2021"
+description = "A TUI for visualizing PVT and other UBX messages"
 name = "ublox-tui"
 publish = false
 rust-version.workspace = true
+edition.workspace = true
+license.workspace = true
 version = "0.1.0"
 
 [features]
@@ -22,7 +24,6 @@ env_logger = "0.11"
 indoc = "2"
 log = "0.4"
 ratatui = "0.29"
-serialport = "4.2"
 strum = { version = "0.26", features = ["derive"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
