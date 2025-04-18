@@ -45,11 +45,11 @@ impl KeyId {
 
     pub fn extend_to<T>(&self, buf: &mut T) -> usize
     where
-        T: core::iter::Extend<u8>
+        T: core::iter::Extend<u8>,
     {
         let bytes = self.0.to_le_bytes();
         assert_eq!(bytes.len(), Self::SIZE);
-	    buf.extend(bytes);
+        buf.extend(bytes);
         Self::SIZE
     }
 }
@@ -63,10 +63,10 @@ macro_rules! from_cfg_v_bytes {
         }
     };
     ($buf:expr, u8) => {
-      $buf[0]
+        $buf[0]
     };
     ($buf:expr, i8) => {
-      $buf[0] as i8
+        $buf[0] as i8
     };
     ($buf:expr, u16) => {
         u16::from_le_bytes([$buf[0], $buf[1]])
@@ -75,10 +75,10 @@ macro_rules! from_cfg_v_bytes {
         i16::from_le_bytes([$buf[0], $buf[1]])
     };
     ($buf:expr, u32) => {
-      u32::from_le_bytes([$buf[0], $buf[1], $buf[2], $buf[3]])
+        u32::from_le_bytes([$buf[0], $buf[1], $buf[2], $buf[3]])
     };
     ($buf:expr, i32) => {
-      i32::from_le_bytes([$buf[0], $buf[1], $buf[2], $buf[3]])
+        i32::from_le_bytes([$buf[0], $buf[1], $buf[2], $buf[3]])
     };
     ($buf:expr, u64) => {
         u64::from_le_bytes([
@@ -137,19 +137,19 @@ macro_rules! from_cfg_v_bytes {
         }
     };
     ($buf:expr, TModeMode) => {
-      match $buf[0] {
-          0 => TModeMode::Disabled,
-          1 => TModeMode::SurveyIn,
-          2 => TModeMode::FixedMode,
-          _ => unreachable!(),
-      }
+        match $buf[0] {
+            0 => TModeMode::Disabled,
+            1 => TModeMode::SurveyIn,
+            2 => TModeMode::FixedMode,
+            _ => unreachable!(),
+        }
     };
     ($buf:expr, TModePosType) => {
-      match $buf[0] {
-          0 => TModePosType::ECEF,
-          1 => TModePosType::LLH,
-          _ => unreachable!(),
-      }
+        match $buf[0] {
+            0 => TModePosType::ECEF,
+            1 => TModePosType::LLH,
+            _ => unreachable!(),
+        }
     };
 }
 
@@ -259,7 +259,7 @@ macro_rules! cfg_val {
       $cfg_item:ident, $cfg_key_id:expr, $cfg_value_type:ident,
     )*
   ) => {
-    #[derive(Debug, Clone)]
+    #[derive(Debug, Clone, Copy)]
     #[non_exhaustive]
     pub enum CfgKey {
       WildcardAll = 0xffffffff,
@@ -351,15 +351,15 @@ macro_rules! cfg_val {
 }
 
 impl CfgKey {
-  pub fn extend_to<T>(&self, buf: &mut T) -> usize
-  where
-      T: core::iter::Extend<u8>
-  {
-      let bytes = (*self as u32).to_le_bytes();
-      let bytes_len = bytes.len();
-	  buf.extend(bytes);
-      bytes_len
-  }
+    pub fn extend_to<T>(&self, buf: &mut T) -> usize
+    where
+        T: core::iter::Extend<u8>,
+    {
+        let bytes = (*self as u32).to_le_bytes();
+        let bytes_len = bytes.len();
+        buf.extend(bytes);
+        bytes_len
+    }
 }
 
 cfg_val! {
@@ -1247,16 +1247,16 @@ pub enum TpPulseLength {
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum TModeMode {
-  Disabled = 0,
-  SurveyIn = 1,
-  // true ARP position information required
-  FixedMode = 2
+    Disabled = 0,
+    SurveyIn = 1,
+    // true ARP position information required
+    FixedMode = 2,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum TModePosType {
-  /// ECEF position
-  ECEF = 0,
-  /// Lat/Lon/Height position
-  LLH = 1,
+    /// ECEF position
+    ECEF = 0,
+    /// Lat/Lon/Height position
+    LLH = 1,
 }
