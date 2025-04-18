@@ -24,7 +24,7 @@ env_logger = "0.11"
 indoc = "2"
 log = "0.4"
 ratatui = "0.29"
-strum = { version = "0.26", features = ["derive"] }
+strum = { version = "0.27", features = ["derive"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 unicode-width = "0.2"
