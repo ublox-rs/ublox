@@ -1,0 +1,35 @@
+name: Check Links
+
+on:
+  repository_dispatch:
+  workflow_dispatch:
+  schedule:
+    # Runs every Thursday at 20:24 GMT to avoid bit rot
+    - cron: "24 20 * * 4"
+  pull_request:
+    paths:
+      - ".github/workflows/check_links.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write # required for peter-evans/create-issue-from-file
+    steps:
+      - uses: actions/checkout@v4
+      - name: Link Checker
+        id: lychee
+        uses: lycheeverse/lychee-action@v2
+        with:
+          fail: false
+
+      - name: Create Issue From File
+        if: steps.lychee.outputs.exit_code != 0
+        uses: peter-evans/create-issue-from-file@v5
+        with:
+          title: Link Checker Report
+          content-filepath: ./lychee/out.md
+          labels: report, automated issue
