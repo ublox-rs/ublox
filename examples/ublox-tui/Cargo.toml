@@ -30,7 +30,7 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 unicode-width = "0.2"
 lazy_static = "1.5"
 tracing-error = "0.2"
-tui-logger = { version = "0.14", features = ["crossterm", "tracing-support"] }
+tui-logger = { version = "0.17", features = ["crossterm", "tracing-support"] }
 directories = "6.0"
 
 ublox = { path = "../../ublox", default-features = false, optional = true }
