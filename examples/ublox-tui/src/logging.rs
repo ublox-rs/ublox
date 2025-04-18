@@ -21,7 +21,7 @@ lazy_static! {
 }
 
 fn project_directory() -> Option<ProjectDirs> {
-    Some(ProjectDirs::from("com", "ublox", env!("CARGO_PKG_NAME")))
+    ProjectDirs::from("com", "ublox", env!("CARGO_PKG_NAME"))
 }
 
 pub fn get_data_dir() -> PathBuf {
