@@ -1,7 +1,7 @@
 #![cfg(feature = "alloc")]
 
 use cpu_time::ProcessTime;
-use rand::{thread_rng, Rng};
+use rand::Rng;
 use std::{env, ffi::OsString, fs, path::Path};
 use ublox::{PacketRef, Parser, ParserError};
 
@@ -41,10 +41,10 @@ fn test_parse_big_dump() {
     let biglog = fs::read(ubx_big_log_path).unwrap();
     const MAX_SIZE: usize = 100;
     let mut read_sizes = Vec::with_capacity(biglog.len() / MAX_SIZE / 2);
-    let mut rng = thread_rng();
+    let mut rng = rand::rng();
     let mut i = 0;
     while i < biglog.len() {
-        let chunk: usize = rng.gen_range(1..MAX_SIZE);
+        let chunk: usize = rng.random_range(1..MAX_SIZE);
         let chunk = (biglog.len() - i).min(chunk);
         read_sizes.push(chunk);
         i += chunk;
