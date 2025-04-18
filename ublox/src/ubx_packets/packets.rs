@@ -2366,6 +2366,7 @@ pub const MAX_CFG_KEYS: u16 = 64;
   id = 0x8b,
   max_payload_len = 260, // 4 + sizeof(u32) * MAX_CFG_KEYS
 )]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 struct CfgValGet<'a> {
     /// Message version
     version: u8,
@@ -2442,7 +2443,7 @@ impl<'a> core::iter::Iterator for CfgValReadIter<'a> {
                 return Some(cfg_val);
             }
             // TODO: Is there some logging mechanism?
-            eprintln!("Failure parsing key in (key,value) list, {:?}", self.data);
+            // eprintln!("Failure parsing key in (key,value) list, {:?}", self.data);
         }
         None
     }
@@ -2841,6 +2842,7 @@ struct CfgRate {
 /// Alignment to reference time
 #[repr(u16)]
 #[derive(Clone, Copy, Debug)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum AlignmentToReferenceTime {
     Utc = 0,
     Gps = 1,

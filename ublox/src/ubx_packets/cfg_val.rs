@@ -270,6 +270,7 @@ macro_rules! cfg_val {
     }
 
     #[derive(Debug, Clone, Copy)]
+    #[cfg_attr(feature = "serde", derive(serde::Serialize))]
     #[non_exhaustive]
     pub enum CfgVal {
       $(
@@ -303,7 +304,8 @@ macro_rules! cfg_val {
             },
           )*
           _ => {
-            eprintln!("unknown key ID: 0x{:8X}", key_id);
+            // TODO: add a mechanism to log such messages that supports also no_std
+            // eprintln!("unknown key ID: 0x{:8X}", key_id);
             None
            },
         }
@@ -336,10 +338,6 @@ macro_rules! cfg_val {
           )*
         }
       }
-    }
-
-    impl serde::Serialize for CfgVal {
-      fn serialize<S>(&self, _: S) -> Result<<S>::Ok, <S>::Error> where S: serde::Serializer { todo!() }
     }
 
     $(
@@ -1237,6 +1235,7 @@ cfg_val! {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum TpPulse {
     /// Time pulse period
     Period = 0,
@@ -1245,6 +1244,7 @@ pub enum TpPulse {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum TpPulseLength {
     /// Time pulse ratio
     Ratio = 0,
@@ -1253,6 +1253,7 @@ pub enum TpPulseLength {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum TModeMode {
     Disabled = 0,
     SurveyIn = 1,
@@ -1261,6 +1262,7 @@ pub enum TModeMode {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum TModePosType {
     /// ECEF position
     ECEF = 0,
