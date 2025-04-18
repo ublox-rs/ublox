@@ -1,11 +1,11 @@
-<div style="text-align: right;">Table of Contents↗️</div>
+<div align=right>Table of Contents↗️</div>
 
-<h1 style="text-align: center;">uBlox for Rust
+<h1 align=center>uBlox for Rust
 
 <code>ublox</code>
 </h1>
 
-<div style="text-align: center;">
+<div align="center">
     <a href=https://crates.io/crates/ublox>
         <img src=https://img.shields.io/crates/v/ublox.svg alt="crates.io version">
     </a>
