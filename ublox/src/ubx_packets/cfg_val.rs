@@ -262,7 +262,7 @@ macro_rules! cfg_val {
     #[derive(Debug, Clone, Copy)]
     #[non_exhaustive]
     pub enum CfgKey {
-      WildcardAll = 0xffffffff,
+      WildcardAll = 0x7fffffff,
       $(
         $(#[$class_comment])*
         $cfg_item = $cfg_key_id,
