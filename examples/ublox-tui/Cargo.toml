@@ -31,7 +31,7 @@ unicode-width = "0.2"
 lazy_static = "1.5"
 tracing-error = "0.2"
 tui-logger = { version = "0.14", features = ["crossterm", "tracing-support"] }
-directories = "0.10"
+directories = "6.0"
 
 ublox = { path = "../../ublox", default-features = false, optional = true }
 ublox_device = { path = "../ublox-device", default-features = false, optional = true }
