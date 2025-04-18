@@ -15,7 +15,7 @@
     <a href=https://docs.rs/ublox/badge.svg>
         <img src=https://docs.rs/ublox/badge.svg alt="docs status">
     </a>
-    <a href=https://github.com/lkolbly/ublox/blob/master/LICENSE.md>
+    <a href=https://github.com/ublox-rs/ublox/tree/master/LICENSE>
         <img src=https://img.shields.io/badge/license-MIT-blue.svg alt="MIT License">
     </a>
     <a href=https://www.whatrustisit.com>
