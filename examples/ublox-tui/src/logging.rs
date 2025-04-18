@@ -60,14 +60,14 @@ pub fn initialize(cli: &clap::Command) -> Result<PathBuf> {
         tracing_subscriber::registry()
             .with(file_subscriber)
             .with(ErrorLayer::default())
-            .with(tui_logger::tracing_subscriber_layer())
+            .with(tui_logger::TuiTracingSubscriberLayer)
             .init();
         info!("Full log available in: {}", directory.to_string_lossy());
         directory
     } else {
         tracing_subscriber::registry()
             .with(ErrorLayer::default())
-            .with(tui_logger::tracing_subscriber_layer())
+            .with(tui_logger::TuiTracingSubscriberLayer)
             .init();
         PathBuf::new()
     };
