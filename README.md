@@ -1,11 +1,11 @@
-<div align=right>Table of Contents↗️</div>
+<div style="text-align: right;">Table of Contents↗️</div>
 
-<h1 align=center>uBlox for Rust
+<h1 style="text-align: center;">uBlox for Rust
 
 <code>ublox</code>
 </h1>
 
-<div align="center">
+<div style="text-align: center;">
     <a href=https://crates.io/crates/ublox>
         <img src=https://img.shields.io/crates/v/ublox.svg alt="crates.io version">
     </a>
@@ -15,7 +15,7 @@
     <a href=https://docs.rs/ublox/badge.svg>
         <img src=https://docs.rs/ublox/badge.svg alt="docs status">
     </a>
-    <a href=https://github.com/lkolbly/ublox/blob/master/LICENSE.md>
+    <a href=https://github.com/ublox-rs/ublox/tree/master/LICENSE>
         <img src=https://img.shields.io/badge/license-MIT-blue.svg alt="MIT License">
     </a>
     <a href=https://www.whatrustisit.com>
