@@ -829,7 +829,7 @@ impl FixStatusInfo {
             1 => MapMatchingStatus::Valid,
             2 => MapMatchingStatus::Used,
             3 => MapMatchingStatus::Dr,
-            _ => unreachable!(),
+            _ => unreachable!("MapMatching Status value not supported by protocol specification"),
         }
     }
     pub const fn from(x: u8) -> Self {
@@ -2008,8 +2008,8 @@ pub enum CfgTp5TimePulseMode {
     flags = "default_for_builder"
 )]
 struct CfgTmode2 {
-    /// Time transfer modes, see [CfgTmode2TimeXferModes] for details
-    #[ubx(map_type = CfgTmode2TimeXferModes, may_fail)]
+    /// Time transfer modes, see [CfgTModeModes] for details
+    #[ubx(map_type = CfgTModeModes, may_fail)]
     time_transfer_mode: u8,
     reserved1: u8,
     #[ubx(map_type = CfgTmode2Flags)]
@@ -2042,13 +2042,14 @@ struct CfgTmode2 {
 #[ubx(from_unchecked, into_raw, rest_error)]
 #[repr(u8)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub enum CfgTmode2TimeXferModes {
+#[cfg_attr(feature = "serde", derive(serde::Deserialize))]
+pub enum CfgTModeModes {
     #[default]
     Disabled = 0,
     SurveyIn = 1,
-    /// True position information required
-    /// when using `fixed mode`
-    FixedMode = 2,
+    /// True Antenna Reference Point (ARP) position information required
+    /// when using `Fixed`
+    Fixed = 2,
 }
 
 #[ubx_extend_bitflags]
@@ -2216,7 +2217,7 @@ bitflags! {
     pub struct CfgTmode3RcvrMode: u8 {
         const DISABLED = 0x01;
         const SURVEY_IN = 0x02;
-        /// True ARP position is required in `FixedMode`
+        /// True Antenna Reference Point (ARP) position information required
         const FIXED_MODE = 0x04;
     }
 }
@@ -2352,12 +2353,13 @@ struct CfgValSet<'a> {
     /// Message version
     version: u8,
     /// The layers from which the configuration items should be retrieved
-    #[ubx(map_type = CfgLayer)]
+    #[ubx(map_type = CfgLayerSet)]
     layers: u8,
     reserved1: u16,
     cfg_data: &'a [CfgVal],
 }
 
+/// The CfgValGet message is limited to requesting a maximum of 64 key-value pairs.
 pub const MAX_CFG_KEYS: u16 = 64;
 
 #[ubx_packet_send]
@@ -2367,11 +2369,16 @@ pub const MAX_CFG_KEYS: u16 = 64;
   max_payload_len = 260, // 4 + sizeof(u32) * MAX_CFG_KEYS
 )]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-struct CfgValGet<'a> {
+/// This message is limited to containing a maximum of 64 key IDs.
+/// This message returns a UBX-ACK-NAK
+///  - if any key is unknown to the receiver FW
+///  - if the layer field speciﬁes an invalid layer to get the value from
+///  - if the keys array speciﬁes more than 64 key IDs.
+struct CfgValGetSend<'a> {
     /// Message version
     version: u8,
     /// The layers from which the configuration items should be retrieved
-    #[ubx(map_type = CfgReadLayer)]
+    #[ubx(map_type = CfgLayerGet)]
     layers: u8,
     position: u16,
     cfg_keys: &'a [CfgKey],
@@ -2383,32 +2390,32 @@ struct CfgValGet<'a> {
   id = 0x8b,
   max_payload_len = 772, // 4 + (sizeof(u32) + sizeof(largest val)) * MAX_CFG_KEYS
 )]
-struct CfgValGetResponse {
+struct CfgValGetRecv {
     /// Message version
     version: u8,
-    #[ubx(map_type = CfgReadLayer)]
+    #[ubx(map_type = CfgLayerGet)]
     layers: u8,
     position: u16,
     #[ubx(
-        map_type = CfgValReadIter,
-        from = CfgValReadIter::new,
+        map_type = CfgValIter,
+        from = CfgValIter::new,
         may_fail,
-        is_valid = CfgValReadIter::is_valid,
+        is_valid = CfgValIter::is_valid,
     )]
     cfg_data: [u8; 0],
 }
 
-/// The `CfgReadLayer` enum is used to specify the configuration layer to read from.
+/// The [CfgLayerGet] enum is used to specify the configuration layer to read from.
 /// The configuration system in the ublox device is stacked, so a property
 /// may be empty for a particular layer and you will receive a NAK.
 #[ubx_extend]
 #[ubx(from, into_raw, rest_reserved)]
 #[repr(u8)]
 #[derive(Debug, Copy, Clone)]
-pub enum CfgReadLayer {
+pub enum CfgLayerGet {
     /// Read from RAM
     Ram = 0,
-    /// Read from Bbr (battery backed RAM)
+    /// Read from BBR (battery backed RAM)
     Bbr = 1,
     /// Read from Flash, if available
     Flash = 2,
@@ -2417,23 +2424,22 @@ pub enum CfgReadLayer {
 }
 
 #[derive(Debug, Clone)]
-pub struct CfgValReadIter<'a> {
+pub struct CfgValIter<'a> {
     data: &'a [u8],
 }
 
-impl<'a> CfgValReadIter<'a> {
+impl<'a> CfgValIter<'a> {
     fn new(data: &'a [u8]) -> Self {
-        // todo!("stolen from RxmRawxInfoIter. Reimplement.");
         Self { data }
     }
 
-    fn is_valid(bytes: &'a [u8]) -> bool {
+    fn is_valid(bytes: &[u8]) -> bool {
         // we need at least 5 bytes for a key id (4) + val (1)
         bytes.len() >= 5
     }
 }
 
-impl<'a> core::iter::Iterator for CfgValReadIter<'a> {
+impl core::iter::Iterator for CfgValIter<'_> {
     type Item = CfgVal;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -2449,53 +2455,21 @@ impl<'a> core::iter::Iterator for CfgValReadIter<'a> {
     }
 }
 
-#[derive(Debug, Clone)]
-pub struct CfgValIter<'a> {
-    pub(crate) data: &'a [u8],
-    pub(crate) offset: usize,
-}
-
-impl<'a> CfgValIter<'a> {
-    pub fn new(data: &'a mut [u8], values: &[CfgVal]) -> Self {
-        let mut offset = 0;
-
-        for value in values {
-            offset += value.write_to(&mut data[offset..]);
-        }
-
-        Self {
-            data: &data[..offset],
-            offset: 0,
-        }
-    }
-}
-
-impl<'a> core::iter::Iterator for CfgValIter<'a> {
-    type Item = CfgVal;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.offset < self.data.len() {
-            if let Some(cfg_val) = CfgVal::parse(&self.data[self.offset..]) {
-                self.offset += cfg_val.len();
-                return Some(cfg_val);
-            }
-        }
-        None
-    }
-}
-
+/// The `CfgLayerSet` defines the configuration layer used to set configuration values to.
+/// The definition of the Layers for updating the configuration values is different than
+/// the definition of the Layers for reading values, see [CfgLayerGet]
 #[ubx_extend_bitflags]
 #[ubx(from, into_raw, rest_reserved)]
 bitflags! {
     /// A mask describing where configuration is applied.
-    pub struct CfgLayer: u8 {
+    pub struct CfgLayerSet: u8 {
         const RAM = 0b001;
         const BBR = 0b010;
         const FLASH = 0b100;
     }
 }
 
-impl Default for CfgLayer {
+impl Default for CfgLayerSet {
     fn default() -> Self {
         Self::RAM | Self::BBR | Self::FLASH
     }
@@ -2625,11 +2599,11 @@ impl DataBits {
 impl From<u32> for DataBits {
     fn from(mode: u32) -> Self {
         match (mode >> Self::POSITION) & Self::MASK {
-            0b00 => unimplemented!("five data bits"),
-            0b01 => unimplemented!("six data bits"),
+            0b00 => unimplemented!("five data bits not supported by u-blox protocol specification"),
+            0b01 => unimplemented!("six data bits not supported by u-blox protocol specification"),
             0b10 => Self::Seven,
             0b11 => Self::Eight,
-            _ => unreachable!(),
+            _ => unreachable!("DataBits value not supported by protocol specification"),
         }
     }
 }
@@ -2662,7 +2636,7 @@ impl From<u32> for Parity {
             0b001 => Self::Odd,
             0b100 | 0b101 => Self::None,
             0b010 | 0b011 | 0b110 | 0b111 => unimplemented!("reserved"),
-            _ => unreachable!(),
+            _ => unreachable!("Parity value not supported by protocol specification"),
         }
     }
 }
@@ -2697,7 +2671,7 @@ impl From<u32> for StopBits {
             0b01 => Self::OneHalf,
             0b10 => Self::Two,
             0b11 => Self::Half,
-            _ => unreachable!(),
+            _ => unreachable!("StopBits value not supported by protocol specification"),
         }
     }
 }
@@ -3681,7 +3655,7 @@ impl TimTm2Flags {
             0 => TimTm2TimeBase::Receiver,
             1 => TimTm2TimeBase::Gnss,
             2 => TimTm2TimeBase::Utc,
-            _ => unreachable!(),
+            _ => unreachable!("TimeBase value not supported by protocol specification"),
         }
     }
 
@@ -4123,7 +4097,7 @@ impl<'a> EsfMeasDataIter<'a> {
         Self(bytes.chunks_exact(Self::BLOCK_SIZE))
     }
 
-    fn is_valid(bytes: &'a [u8]) -> bool {
+    fn is_valid(bytes: &[u8]) -> bool {
         bytes.len() % Self::BLOCK_SIZE == 0
     }
 }
@@ -4608,7 +4582,7 @@ impl<'a> EsfSensorStatusIter<'a> {
         Self(bytes.chunks_exact(Self::BLOCK_SIZE))
     }
 
-    fn is_valid(bytes: &'a [u8]) -> bool {
+    fn is_valid(bytes: &[u8]) -> bool {
         bytes.len() % Self::BLOCK_SIZE == 0
     }
 }
@@ -4999,7 +4973,7 @@ impl<'a> DwrdIter<'a> {
         DwrdIter(bytes.chunks_exact(4))
     }
 
-    fn is_valid(bytes: &'a [u8]) -> bool {
+    fn is_valid(bytes: &[u8]) -> bool {
         bytes.len() % 4 == 0
     }
 }
@@ -5020,7 +4994,7 @@ struct NavVelECEF {
     itow: u32,
     ecef_vx: i32,
     ecef_vy: i32,
-    ecef_vz: u32,
+    ecef_vz: i32,
     s_acc: u32,
 }
 
@@ -5137,7 +5111,7 @@ impl<'a> RxmRawxInfoIter<'a> {
         Self(data.chunks_exact(32))
     }
 
-    fn is_valid(bytes: &'a [u8]) -> bool {
+    fn is_valid(bytes: &[u8]) -> bool {
         bytes.len() % 32 == 0
     }
 }

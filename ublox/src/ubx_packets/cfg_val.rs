@@ -1,7 +1,6 @@
-use super::{AlignmentToReferenceTime, CfgInfMask, DataBits, Parity, StopBits};
+use super::{AlignmentToReferenceTime, CfgInfMask, CfgTModeModes, DataBits, Parity, StopBits};
 
-pub struct KeyId(u32);
-
+/// Supported storage size identiﬁers for the Configuration Value
 pub enum StorageSize {
     OneBit,
     OneByte,
@@ -21,9 +20,13 @@ impl StorageSize {
     }
 }
 
+/// Configuration Key ID for the uBlox Conﬁguration Interface
+pub struct KeyId(u32);
+
 impl KeyId {
     pub(crate) const SIZE: usize = 4;
 
+    /// Retrieve the storage size of the Configuration Value
     pub const fn value_size(&self) -> StorageSize {
         match (self.0 >> 28) & 0b111 {
             1 => StorageSize::OneBit,
@@ -35,20 +38,22 @@ impl KeyId {
         }
     }
 
+    /// Group ID portion of the Key ID
     pub const fn group_id(&self) -> u8 {
         (self.0 >> 16) as u8
     }
 
+    /// Item ID portion of the Key ID
     pub const fn item_id(&self) -> u8 {
         self.0 as u8
     }
 
+    /// Extend a buffer with the contents of [KeyId].
     pub fn extend_to<T>(&self, buf: &mut T) -> usize
     where
         T: core::iter::Extend<u8>,
     {
         let bytes = self.0.to_le_bytes();
-        assert_eq!(bytes.len(), Self::SIZE);
         buf.extend(bytes);
         Self::SIZE
     }
@@ -92,7 +97,7 @@ macro_rules! from_cfg_v_bytes {
         match $buf[0] {
             0 => DataBits::Eight,
             1 => DataBits::Seven,
-            _ => unreachable!(),
+            _ => unreachable!("DataBits value not supported by protocol specification"),
         }
     };
     ($buf:expr, Parity) => {
@@ -100,7 +105,7 @@ macro_rules! from_cfg_v_bytes {
             0 => Parity::None,
             1 => Parity::Odd,
             2 => Parity::Even,
-            _ => unreachable!(),
+            _ => unreachable!("Parity value not supported by protocol specification"),
         }
     };
     ($buf:expr, StopBits) => {
@@ -109,7 +114,7 @@ macro_rules! from_cfg_v_bytes {
             1 => StopBits::One,
             2 => StopBits::OneHalf,
             3 => StopBits::Two,
-            _ => unreachable!(),
+            _ => unreachable!("StopBits value not supported by protocol specification"),
         }
     };
     ($buf:expr, AlignmentToReferenceTime) => {
@@ -119,36 +124,38 @@ macro_rules! from_cfg_v_bytes {
             2 => AlignmentToReferenceTime::Glo,
             3 => AlignmentToReferenceTime::Bds,
             4 => AlignmentToReferenceTime::Gal,
-            _ => unreachable!(),
+            _ => unreachable!("CFG-RATE-TIMEREF value not supported by protocol specification"),
         }
     };
     ($buf:expr, TpPulse) => {
         match $buf[0] {
             0 => TpPulse::Period,
             1 => TpPulse::Freq,
-            _ => unreachable!(),
+            _ => unreachable!("CFG-TP-PULSE_DEF value not supported by protocol specification"),
         }
     };
     ($buf:expr, TpPulseLength) => {
         match $buf[0] {
             0 => TpPulseLength::Ratio,
             1 => TpPulseLength::Length,
-            _ => unreachable!(),
+            _ => unreachable!(
+                "CFG-TP-PULSE_LENGTH_DEF value not supported by protocol specification"
+            ),
         }
     };
-    ($buf:expr, TModeMode) => {
+    ($buf:expr, CfgTModeModes) => {
         match $buf[0] {
-            0 => TModeMode::Disabled,
-            1 => TModeMode::SurveyIn,
-            2 => TModeMode::FixedMode,
-            _ => unreachable!(),
+            0 => CfgTModeModes::Disabled,
+            1 => CfgTModeModes::SurveyIn,
+            2 => CfgTModeModes::Fixed,
+            _ => unreachable!("CFG-TMODE-MODE value not supported by protocol specification"),
         }
     };
     ($buf:expr, TModePosType) => {
         match $buf[0] {
             0 => TModePosType::ECEF,
             1 => TModePosType::LLH,
-            _ => unreachable!(),
+            _ => unreachable!("CFG-TMODE-POS_TYPE value not supported by protocol specification"),
         }
     };
 }
@@ -240,7 +247,7 @@ macro_rules! into_cfg_kv_bytes {
           $this.0 as u8
       ])
     };
-    ($this:expr, TModeMode) => {
+    ($this:expr, CfgTModeModes) => {
       into_cfg_kv_bytes!(@inner [
           $this.0 as u8
       ])
@@ -1204,54 +1211,54 @@ cfg_val! {
   TpPolTp1,              0x1005000b, bool,
   TpTimegridTp1,         0x2005000c, AlignmentToReferenceTime,
 
-  // CFG-TMode* (Time-only mode settings - position fixed)
+  /// CFG-TMode* (Time-only mode settings - position fixed)
   /// Receiver mode
-  TModeModeDef, 0x20030001,  TModeMode,
-  /// Determines whether the ARP position is given in ECEF or LAT/LON/HEIGHT?
+  TModeModeDef, 0x20030001,  CfgTModeModes,
+  /// Determines whether the Antenna Reference Point (ARP) position is given in ECEF or LAT/LON/HEIGHT?
   TModePosTypeDef, 0x20030002,  TModePosType,
-  /// cm ECEF X coordinate of the ARP position.
-  /// This will only be used if TModeMODE=FIXED and TModePOS_TYPE=ECEF.
+  /// ECEF X coordinate of the ARP position in [cm].
+  /// This will only be used if CfgTModeModes=Fixed and TModePOS_TYPE=ECEF.
   TModeEcefX, 0x40030003,  i32,
-  /// cm ECEF Y coordinate of the ARP position.
-  /// This will only be used if TModeMODE=FIXED and TModePOS_TYPE=ECEF.
+  /// ECEF Y coordinate of the ARP position in [cm].
+  /// This will only be used if CfgTModeModes=Fixed and TModePOS_TYPE=ECEF.
   TModeEcefY, 0x40030004,  i32,
-  /// cm ECEF Z coordinate of the ARP position.
-  /// This will only be used if TModeMODE=FIXED and TModePOS_TYPE=ECEF.
+  /// ECEF Z coordinate of the ARP position in [cm] .
+  /// This will only be used if CfgTModeModes=Fixed and TModePOS_TYPE=ECEF.
   TModeEcefZ, 0x40030005,  i32,
-  /// 0.1 mm High-precision ECEF X coordinate of the ARP position, [-99 to +99].
-  /// This will only be used if TModeMODE=FIXED and TModePOS_TYPE=ECEF.
+  /// High-precision ECEF X coordinate of the ARP position, [-99 to +99] in [mm].
+  /// This will only be used if CfgTModeModes=Fixed and TModePOS_TYPE=ECEF.
   TModeEcefXHp, 0x20030006,  i8,
-  /// 0.1 mm High-precision ECEF Y coordinate of the ARP position [-99 to +99].
-  /// This will only be used if TModeMODE=FIXED and TModePOS_TYPE=ECEF.
+  /// High-precision ECEF Y coordinate of the ARP position [-99 to +99] in [mm].
+  /// This will only be used if CfgTModeModes=Fixed and TModePOS_TYPE=ECEF.
   TModeEcefYHp, 0x20030007,  i8,
-  /// 0.1 mm High-precision ECEF Z coordinate of the ARP position [-99 to +99].
-  /// This will only be used if TModeMODE=FIXED and TModePOS_TYPE=ECEF.
+  /// High-precision ECEF Z coordinate of the ARP position [-99 to +99] in [mm].
+  /// This will only be used if CfgTModeModes=Fixed and TModePOS_TYPE=ECEF.
   TModeEcefZHp, 0x20030008,  i8,
-  /// 1e-7 deg Latitude of the ARP position.
-  /// This will only be used if TModeMODE=FIXED and TModePOS_TYPE=LLH.
+  /// Latitude of the ARP position in [deg].
+  /// This will only be used if CfgTModeModes=Fixed and TModePOS_TYPE=LLH.
   TModeLat, 0x40030009,  i32,
-  /// 1e-7 deg Longitude of the ARP position.
-  /// This will only be used if TModeMODE=FIXED and TModePOS_TYPE=LLH.
+  /// Longitude of the ARP position in [deg].
+  /// This will only be used if CfgTModeModes=Fixed and TModePOS_TYPE=LLH.
   TModeLon, 0x4003000a,  i32,
-  /// cm Height of the ARP position.
-  /// This will only be used if TModeMODE=FIXED and TModePOS_TYPE=LLH.
+  /// Height of the ARP position in [cm].
+  /// This will only be used if CfgTModeModes=Fixed and TModePOS_TYPE=LLH.
   TModeHeight, 0x4003000b,  i32,
-  /// 1e-9 deg High-precision latitude of the ARP position [-99 to +99].
-  /// This will only be used if TModeMODE=FIXED and TModePOS_TYPE=LLH.
+  /// High-precision latitude of the ARP position [-99 to +99] in [deg].
+  /// This will only be used if CfgTModeModes=Fixed and TModePOS_TYPE=LLH.
   TModeLatHp, 0x2003000c,  i8,
-  /// 1e-9 deg High-precision longitude of the ARP position [-99 to +99].
-  /// This will only be used if TModeMODE=FIXED and TModePOS_TYPE=LLH.
+  /// High-precision longitude of the ARP position [-99 to +99] in [deg].
+  /// This will only be used if CfgTModeModes=Fixed and TModePOS_TYPE=LLH.
   TModeLonHp, 0x2003000d,  i8,
-  /// 0.1 mm High-precision height of the ARP position [-99 to +99].
-  /// This will only be used if TModeMODE=FIXED and TModePOS_TYPE=LLH.
+  /// High-precision height of the ARP position [-99 to +99] in [mm].
+  /// This will only be used if CfgTModeModes=Fixed and TModePOS_TYPE=LLH.
   TModeHeightHp, 0x2003000e,  i8,
-  /// 0.1 mm Fixed position 3D accuracy
+  /// Fixed position 3D accuracy in [mm]
   TModeFixedPosAcc, 0x4003000f,  u32,
-  /// Survey-in minimum duration.
-  /// This will only be used if TModeMODE=SURVEY_IN.
+  /// Survey-in minimum duration in [sec].
+  /// This will only be used if CfgTModeModes=SurveyIn.
   TModeSvInMinDur, 0x40030010,  u32,
-  /// 0.1 mm Survey-in position accuracy limit
-  /// This will only be used if TModeMODE=SURVEY_IN.
+  /// Survey-in position accuracy limit in [mm]
+  /// This will only be used if CfgTModeModes=SurveyIn.
   TModeSvInAccLimit, 0x40030011,  u32,
 }
 
@@ -1271,15 +1278,6 @@ pub enum TpPulseLength {
     Ratio = 0,
     /// Time pulse length
     Length = 1,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub enum TModeMode {
-    Disabled = 0,
-    SurveyIn = 1,
-    // true ARP position information required
-    FixedMode = 2,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]

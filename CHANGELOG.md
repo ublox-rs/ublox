@@ -17,6 +17,9 @@ All notable changes to this project will be documented in this file.
 - Fixed typo: `HnrPvtRef::heading_accurracy` to `HnrPvtRef::heading_accuracy` ([#118](https://github.com/ublox-rs/ublox/pull/118))
 - Fixed typo: `CfgTmode2Builder.survery_in_accur_limit` to `CfgTmode2Builder.survey_in_accur_limit` ([#118](https://github.com/ublox-rs/ublox/pull/118))
 
+- Almost all `CfgVal` enum variants have been renamed to have a consistent CamelCase representation ([#106](https://github.com/ublox-rs/ublox/pull/106))
+- Added new Packet variant `CfgValGetRecv` for UBX Proto 27 and UBX Proto 31 ([#106](https://github.com/ublox-rs/ublox/pull/106))
+
 ### CI
 
 - Add typo checking workflow ([#122](https://github.com/ublox-rs/ublox/pull/122))
