@@ -7,7 +7,7 @@ use core::{convert::TryFrom, fmt};
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, Clone, Copy)]
 pub struct Position {
-    /// Logitude in degrees
+    /// Longitude in degrees
     pub lon: f64,
 
     /// Latitude in degrees

@@ -1009,7 +1009,7 @@ fn rustfmt_cnt(source: Vec<u8>) -> io::Result<Vec<u8>> {
     );
     let stderr = stderr_handle.join().unwrap();
     let src =
-        Arc::try_unwrap(src).expect("Internal error: rusftfmt_cnt should only one Arc refernce");
+        Arc::try_unwrap(src).expect("Internal error: rusftfmt_cnt should only one Arc reference");
     match status.code() {
         Some(0) => Ok(output),
         Some(2) => Err(io::Error::new(
@@ -1060,7 +1060,7 @@ fn panic_on_parse_error(name: &str, src_cnt: &str, err: &Error) -> ! {
         } else {
             end.column
         };
-        writeln!(&mut code_problem, "{:^^1$}", '^', code_problem_len).expect("Not enought memory");
+        writeln!(&mut code_problem, "{:^^1$}", '^', code_problem_len).expect("Not enough memory");
         if i == end.line {
             break;
         }
