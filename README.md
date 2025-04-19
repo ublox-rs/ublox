@@ -53,12 +53,12 @@ let packet: [u8; 28] = CfgPrtUartBuilder {
 For variable-size packets like `CfgValSet`, you can construct it into a new `Vec<u8>`:
 
 ```rust
-use ublox::{cfg_val::CfgVal::*, CfgLayer, CfgValSetBuilder};
+use ublox::{cfg_val::CfgVal::*, CfgLayerSet, CfgValSetBuilder};
 let mut buffer = Vec::new();
 
 CfgValSetBuilder {
     version: 1,
-    layers: CfgLayer::RAM,
+    layers: CfgLayerSet::RAM,
     reserved1: 0,
     cfg_data: &[UsbOutProtNmea(true), UsbOutProtRtcm3x(true), UsbOutProtUbx(true)],
 }
@@ -68,12 +68,12 @@ CfgValSetBuilder {
 Or by extending to an existing one:
 
 ```rust
-use ublox::{cfg_val::CfgVal::*, CfgLayer, CfgValSetBuilder};
+use ublox::{cfg_val::CfgVal::*, CfgLayerSet, CfgValSetBuilder};
 
 let mut packet_vec = Vec::new();
 CfgValSetBuilder {
     version: 1,
-    layers: CfgLayer::RAM,
+    layers: CfgLayerSet::RAM,
     reserved1: 0,
     cfg_data: &[UsbOutProtNmea(true), UsbOutProtRtcm3x(true), UsbOutProtUbx(true)],
 }
