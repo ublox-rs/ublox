@@ -19,7 +19,7 @@ ubx_proto31 = ["ublox/ubx_proto31", "ublox_device/ubx_proto31"]
 anyhow = "1.0"
 chrono = "0.4"
 clap = { version = "4.5.23", features = ["derive", "cargo"] }
-crossterm = { version = "0.28", features = ["event-stream"] }
+crossterm = { version = "0.29", features = ["event-stream"] }
 env_logger = "0.11"
 indoc = "2"
 log = "0.4"
