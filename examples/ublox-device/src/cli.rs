@@ -165,7 +165,7 @@ impl CommandBuilder {
                         .long("out-rtcm3")
                         .action(clap::ArgAction::SetTrue)
                         .help(
-                            "Toggle seding RTCM3 protocol on port. Not supported on uBlox protocol versions below 20",
+                            "Toggle sending RTCM3 protocol on port. Not supported on uBlox protocol versions below 20",
                         ),
                 ),
         );
@@ -188,7 +188,7 @@ impl Command {
 
         let port = cli
             .get_one::<String>("port")
-            .expect("Expected required 'port' cli argumnet");
+            .expect("Expected required 'port' cli argument");
 
         let baud = cli.get_one::<u32>("baud").cloned().unwrap_or(9600);
         let stop_bits = match cli.get_one::<String>("stop-bits").map(|s| s.as_str()) {
