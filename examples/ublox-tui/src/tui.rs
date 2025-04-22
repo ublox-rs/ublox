@@ -28,6 +28,7 @@ use crate::{
 };
 
 pub fn run(cli: &clap::Command, log_file: PathBuf) -> Result<(), Box<dyn Error>> {
+    ratatui::init();
     let tick_rate: u64 = cli::tui_rate(cli);
     let tick_rate = Duration::from_millis(tick_rate);
 
@@ -42,7 +43,13 @@ pub fn run(cli: &clap::Command, log_file: PathBuf) -> Result<(), Box<dyn Error>>
 
     let (ubx_msg_tx, ubx_msg_rs) = channel();
 
-    let serialport = ublox_device::cli::Command::serialport(cli.clone());
+    let serialport = match ublox_device::cli::Command::serialport(cli.clone()) {
+        Err(e) => {
+            ratatui::restore();
+            return Err(e.into());
+        },
+        Ok(s) => s,
+    };
     let device = ublox_device::Device::new(serialport);
     let mut backend_device = backend::UbxDevice::from(device);
     backend_device.configure();

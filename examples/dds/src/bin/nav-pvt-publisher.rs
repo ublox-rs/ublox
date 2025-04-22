@@ -24,7 +24,8 @@ fn main() -> Result<()> {
         .about("Demonstrate how to use DDS to publish uBlox data across devices on same LAN")
         .name("dds_publisher");
 
-    let serialport = ublox_device::cli::Command::serialport(cli.clone());
+    let serialport = ublox_device::cli::Command::serialport(cli.clone())
+        .expect("Could not connect to serialport");
     let mut device = ublox_device::Device::new(serialport);
     let port_config = ublox_device::cli::Command::ubx_port_configuration_builder(cli.clone());
     device.configure_port(port_config).unwrap();
