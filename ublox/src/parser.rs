@@ -5,11 +5,9 @@ use crate::{
     error::ParserError,
     ubx_packets::{
         packetref::{match_packet, PacketRef, MAX_PAYLOAD_LEN},
-        SYNC_CHAR_1, SYNC_CHAR_2,
+        RTCM_SYNC_CHAR, SYNC_CHAR_1, SYNC_CHAR_2,
     },
 };
-
-pub(crate) const RTCM_SYNC_CHAR: u8 = 0xd3;
 
 /// This trait represents an underlying buffer used for the Parser. We provide
 /// implementations for `Vec<u8>` and for `FixedLinearBuffer`, if you want to
@@ -210,7 +208,6 @@ impl<T: UnderlyingBuffer> Parser<T> {
         let mut buf = DualBuffer::new(&mut self.buf, new_data);
 
         for i in 0..buf.len() {
-
             if buf[i] == SYNC_CHAR_1 || buf[i] == RTCM_SYNC_CHAR {
                 buf.drain(i);
                 break;
@@ -430,60 +427,71 @@ impl UbxChecksumCalc {
     }
 }
 
+#[derive(Debug, PartialEq, Eq)]
+enum NextSync {
+    Ubx(usize),
+    Rtcm(usize),
+    None,
+}
+
+#[derive(Debug)]
+pub enum AnyPacketRef<'a> {
+    Ubx(PacketRef<'a>),
+    Rtcm(RtcmPacketRef<'a>),
+}
+
 /// Iterator over data stored in `Parser` buffer
 pub struct UbxParserIter<'a, T: UnderlyingBuffer> {
     buf: DualBuffer<'a, T>,
 }
 
-fn extract_packet_ubx<'a, 'b, T: UnderlyingBuffer>(buf : &'b mut DualBuffer<'a, T>, pack_len: usize) -> Option<Result<PacketRef<'b>, ParserError>> {
+fn extract_packet_ubx<'b, T: UnderlyingBuffer>(
+    buf: &'b mut DualBuffer<'_, T>,
+    pack_len: usize,
+) -> Option<Result<PacketRef<'b>, ParserError>> {
     if !buf.can_drain_and_take(6, pack_len + 2) {
         if buf.potential_lost_bytes() > 0 {
-                // We ran out of space, drop this packet and move on
-                self.buf.drain(2);
-                return Some(Err(ParserError::OutOfMemory {
-                    required_size: pack_len + 2,
-                }));
-            }
-            return None;
-        }
-        let mut checksummer = UbxChecksumCalc::new();
-        let (a, b) = self.buf.peek_raw(2..(4 + pack_len + 2));
-        checksummer.update(a);
-        checksummer.update(b);
-        let (ck_a, ck_b) = checksummer.result();
-
-        let (expect_ck_a, expect_ck_b) = (self.buf[6 + pack_len], self.buf[6 + pack_len + 1]);
-        if (ck_a, ck_b) != (expect_ck_a, expect_ck_b) {
-            self.buf.drain(2);
-            return Some(Err(ParserError::InvalidChecksum {
-                expect: u16::from_le_bytes([expect_ck_a, expect_ck_b]),
-                got: u16::from_le_bytes([ck_a, ck_b]),
+            // We ran out of space, drop this packet and move on
+            buf.drain(2);
+            return Some(Err(ParserError::OutOfMemory {
+                required_size: pack_len + 2,
             }));
         }
-        let class_id = self.buf[2];
-        let msg_id = self.buf[3];
-        self.buf.drain(6);
-        let msg_data = match self.buf.take(pack_len + 2) {
-            Ok(x) => x,
-            Err(e) => {
-                return Some(Err(e));
-            }
-        };
-        return Some(match_packet(
-            class_id,
-            msg_id,
-            &msg_data[..msg_data.len() - 2], // Exclude the checksum
-        ));
+        return None;
+    }
+    let mut checksummer = UbxChecksumCalc::new();
+    let (a, b) = buf.peek_raw(2..(4 + pack_len + 2));
+    checksummer.update(a);
+    checksummer.update(b);
+    let (ck_a, ck_b) = checksummer.result();
+
+    let (expect_ck_a, expect_ck_b) = (buf[6 + pack_len], buf[6 + pack_len + 1]);
+    if (ck_a, ck_b) != (expect_ck_a, expect_ck_b) {
+        buf.drain(2);
+        return Some(Err(ParserError::InvalidChecksum {
+            expect: u16::from_le_bytes([expect_ck_a, expect_ck_b]),
+            got: u16::from_le_bytes([ck_a, ck_b]),
+        }));
+    }
+    let class_id = buf[2];
+    let msg_id = buf[3];
+    buf.drain(6);
+    let msg_data = match buf.take(pack_len + 2) {
+        Ok(x) => x,
+        Err(e) => {
+            return Some(Err(e));
+        },
+    };
+    return Some(match_packet(
+        class_id,
+        msg_id,
+        &msg_data[..msg_data.len() - 2], // Exclude the checksum
+    ));
 }
 
-impl<'a, T: UnderlyingBuffer> UbxParserIter<'a, T> {
+impl<T: UnderlyingBuffer> UbxParserIter<'_, T> {
     fn find_sync(&self) -> Option<usize> {
-        for i in 0..self.buf.len() {
-            if self.buf[i] == SYNC_CHAR_1 {
-                return Some(i);
-            }
-        }
-        None
+        (0..self.buf.len()).find(|&i| self.buf[i] == SYNC_CHAR_1)
     }
 
     #[allow(clippy::should_implement_trait)]
@@ -528,25 +536,15 @@ pub struct UbxRtcmParserIter<'a, T: UnderlyingBuffer> {
     buf: DualBuffer<'a, T>,
 }
 
-#[derive(Debug, PartialEq, Eq)]
-enum NextSync {
-    Ubx(usize),
-    Rtcm(usize),
-    None,
-}
-
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct RtcmPacketRef<'a> {
-    pub data : &'a [u8],
+    pub data: &'a [u8],
 }
 
-#[derive(Debug)]
-pub enum AnyPacketRef<'a> {
-    Ubx(PacketRef<'a>),
-    Rtcm(RtcmPacketRef<'a>),
-}
-
-fn extract_packet_rtcm<'a, 'b, T: UnderlyingBuffer>(buf : &'b mut DualBuffer<'a, T>, pack_len: usize) -> Option<Result<AnyPacketRef<'b>, ParserError>> {
+fn extract_packet_rtcm<'a, 'b, T: UnderlyingBuffer>(
+    buf: &'b mut DualBuffer<'a, T>,
+    pack_len: usize,
+) -> Option<Result<AnyPacketRef<'b>, ParserError>> {
     if !buf.can_drain_and_take(0, pack_len + 3) {
         if buf.potential_lost_bytes() > 0 {
             // We ran out of space, drop this packet and move on
@@ -561,12 +559,12 @@ fn extract_packet_rtcm<'a, 'b, T: UnderlyingBuffer>(buf : &'b mut DualBuffer<'a,
 
     let maybe_data = buf.take(pack_len + 3);
     match maybe_data {
-        Ok(data) => Some(Ok(AnyPacketRef::Rtcm(RtcmPacketRef::<'b> {data: data}))),
+        Ok(data) => Some(Ok(AnyPacketRef::Rtcm(RtcmPacketRef::<'b> { data }))),
         Err(e) => Some(Err(e)),
     }
 }
 
-impl<'a, T: UnderlyingBuffer> UbxRtcmParserIter<'a, T> {
+impl<T: UnderlyingBuffer> UbxRtcmParserIter<'_, T> {
     fn find_sync(&self) -> NextSync {
         for i in 0..self.buf.len() {
             if self.buf[i] == SYNC_CHAR_1 {
@@ -579,11 +577,10 @@ impl<'a, T: UnderlyingBuffer> UbxRtcmParserIter<'a, T> {
         NextSync::None
     }
 
-
     #[allow(clippy::should_implement_trait)]
     /// Analog of `core::iter::Iterator::next`, should be switched to
     /// trait implementation after merge of https://github.com/rust-lang/rust/issues/44265
-    pub fn next<'b>(&'b mut self) -> Option<Result<AnyPacketRef<'b>, ParserError>> {
+    pub fn next(&mut self) -> Option<Result<AnyPacketRef<'_>, ParserError>> {
         while self.buf.len() > 0 {
             match self.find_sync() {
                 NextSync::Ubx(pos) => {
@@ -621,14 +618,15 @@ impl<'a, T: UnderlyingBuffer> UbxRtcmParserIter<'a, T> {
                         return None;
                     }
                     // next 2 bytes contain 6 bits reserved + 10 bits length, big endian
-                    let pack_len: usize = (u16::from_be_bytes([self.buf[1], self.buf[2]]) & 0x03ff).into();
+                    let pack_len: usize =
+                        (u16::from_be_bytes([self.buf[1], self.buf[2]]) & 0x03ff).into();
 
                     return extract_packet_rtcm(&mut self.buf, pack_len);
-                }
+                },
                 NextSync::None => {
                     self.buf.clear();
                     return None;
-                }
+                },
             };
         }
         None
@@ -897,7 +895,7 @@ mod test {
         let buffer = FixedLinearBuffer::new(&mut buffer);
         let mut parser = Parser::new(buffer);
 
-        let mut it = parser.consume(&bytes);
+        let mut it = parser.consume_ubx(&bytes);
         for _ in 0..5 {
             assert!(matches!(it.next(), Some(Ok(PacketRef::AckAck(_)))));
         }

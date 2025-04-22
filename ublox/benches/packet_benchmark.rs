@@ -26,7 +26,7 @@ fn profiled() -> Criterion {
 fn parse_all<T: UnderlyingBuffer>(mut parser: Parser<T>, data: &[u8], chunk_size: usize) -> usize {
     let mut count = 0;
     for chunk in data.chunks(chunk_size) {
-        let mut it = parser.consume(chunk);
+        let mut it = parser.consume_ubx(chunk);
         loop {
             match it.next() {
                 Some(Ok(_packet)) => {

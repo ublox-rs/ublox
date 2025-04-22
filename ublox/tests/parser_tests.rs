@@ -2,7 +2,7 @@
 
 use ublox::{
     CfgNav5Builder, CfgNav5DynModel, CfgNav5FixMode, CfgNav5Params, CfgNav5UtcStandard, PacketRef,
-    Parser, ParserError, ParserIter,
+    Parser, ParserError, UbxParserIter,
 };
 
 macro_rules! my_vec {
@@ -13,7 +13,7 @@ macro_rules! my_vec {
     }
 
 fn extract_only_ack_ack<T: ublox::UnderlyingBuffer>(
-    mut it: ParserIter<T>,
+    mut it: UbxParserIter<T>,
 ) -> Vec<Result<(u8, u8), ParserError>> {
     let mut ret = vec![];
     while let Some(pack) = it.next() {
@@ -34,7 +34,7 @@ static FULL_ACK_ACK_PACK: [u8; 10] = [0xb5, 0x62, 0x5, 0x1, 0x2, 0x0, 0x6, 0x1, 
 fn test_parse_empty_buffer() {
     let mut parser = Parser::default();
     assert!(parser.is_buffer_empty());
-    assert_eq!(my_vec![], extract_only_ack_ack(parser.consume(&[])));
+    assert_eq!(my_vec![], extract_only_ack_ack(parser.consume_ubx(&[])));
     assert!(parser.is_buffer_empty());
 }
 
@@ -42,13 +42,13 @@ fn test_parse_empty_buffer() {
 fn test_parse_ack_ack_byte_by_byte() {
     let mut parser = Parser::default();
     for b in FULL_ACK_ACK_PACK.iter().take(FULL_ACK_ACK_PACK.len() - 1) {
-        assert_eq!(my_vec![], extract_only_ack_ack(parser.consume(&[*b])));
+        assert_eq!(my_vec![], extract_only_ack_ack(parser.consume_ubx(&[*b])));
         assert!(!parser.is_buffer_empty());
     }
     let last_byte = FULL_ACK_ACK_PACK[FULL_ACK_ACK_PACK.len() - 1];
     assert_eq!(
         my_vec![Ok((6, 1))],
-        extract_only_ack_ack(parser.consume(&[last_byte])),
+        extract_only_ack_ack(parser.consume_ubx(&[last_byte])),
     );
     assert!(parser.is_buffer_empty());
 }
@@ -58,7 +58,7 @@ fn test_parse_ack_ack_in_one_go() {
     let mut parser = Parser::default();
     assert_eq!(
         my_vec![Ok((6, 1))],
-        extract_only_ack_ack(parser.consume(&FULL_ACK_ACK_PACK)),
+        extract_only_ack_ack(parser.consume_ubx(&FULL_ACK_ACK_PACK)),
     );
     assert!(parser.is_buffer_empty());
 }
@@ -73,7 +73,7 @@ fn test_parse_ack_ack_bad_checksum() {
             expect: 0x380f,
             got: 0x3c13
         })],
-        extract_only_ack_ack(parser.consume(&bad_pack)),
+        extract_only_ack_ack(parser.consume_ubx(&bad_pack)),
     );
     assert_eq!(0, parser.buffer_len());
 
@@ -81,7 +81,7 @@ fn test_parse_ack_ack_bad_checksum() {
     two_packs.extend_from_slice(&FULL_ACK_ACK_PACK);
     assert_eq!(
         my_vec![Ok((6, 1)), Ok((6, 1))],
-        extract_only_ack_ack(parser.consume(&two_packs)),
+        extract_only_ack_ack(parser.consume_ubx(&two_packs)),
     );
     assert!(parser.is_buffer_empty());
 }
@@ -91,14 +91,14 @@ fn test_parse_ack_ack_parted_two_packets() {
     let mut parser = Parser::default();
     assert_eq!(
         my_vec![],
-        extract_only_ack_ack(parser.consume(&FULL_ACK_ACK_PACK[0..5])),
+        extract_only_ack_ack(parser.consume_ubx(&FULL_ACK_ACK_PACK[0..5])),
     );
     assert_eq!(5, parser.buffer_len());
     let mut rest_and_next = (FULL_ACK_ACK_PACK[5..]).to_vec();
     rest_and_next.extend_from_slice(&FULL_ACK_ACK_PACK);
     assert_eq!(
         my_vec![Ok((6, 1)), Ok((6, 1))],
-        extract_only_ack_ack(parser.consume(&rest_and_next)),
+        extract_only_ack_ack(parser.consume_ubx(&rest_and_next)),
     );
     assert!(parser.is_buffer_empty());
 }
@@ -110,7 +110,7 @@ fn test_parse_ack_ack_two_in_one_go() {
     two_packs.extend_from_slice(&FULL_ACK_ACK_PACK);
     assert_eq!(
         my_vec![Ok((6, 1)), Ok((6, 1))],
-        extract_only_ack_ack(parser.consume(&two_packs))
+        extract_only_ack_ack(parser.consume_ubx(&two_packs))
     );
     assert!(parser.is_buffer_empty());
 }
@@ -122,7 +122,7 @@ fn test_parse_ack_ack_garbage_before() {
     garbage_before.extend_from_slice(&FULL_ACK_ACK_PACK);
     assert_eq!(
         my_vec![Ok((6, 1))],
-        extract_only_ack_ack(parser.consume(&garbage_before)),
+        extract_only_ack_ack(parser.consume_ubx(&garbage_before)),
         "garbage before1"
     );
     assert!(parser.is_buffer_empty());
@@ -131,7 +131,7 @@ fn test_parse_ack_ack_garbage_before() {
     garbage_before.extend_from_slice(&FULL_ACK_ACK_PACK);
     assert_eq!(
         my_vec![Ok((6, 1))],
-        extract_only_ack_ack(parser.consume(&garbage_before)),
+        extract_only_ack_ack(parser.consume_ubx(&garbage_before)),
         "garbage before2"
     );
     assert!(parser.is_buffer_empty());
@@ -162,7 +162,7 @@ fn test_parse_cfg_nav5() {
 
     let mut parser = Parser::default();
     let mut found = false;
-    let mut it = parser.consume(&bytes);
+    let mut it = parser.consume_ubx(&bytes);
     while let Some(pack) = it.next() {
         match pack {
             Ok(PacketRef::CfgNav5(pack)) => {
@@ -205,7 +205,7 @@ fn test_esf_meas_serialize() {
 
     let mut parser = Parser::default();
     let mut found = false;
-    let mut it = parser.consume(&ret);
+    let mut it = parser.consume_ubx(&ret);
 
     while let Some(pack) = it.next() {
         match pack {
@@ -261,7 +261,7 @@ fn test_esf_meas_serialize() {
 fn test_zero_sized_ackack() {
     let ack_ack = [0xb5, 0x62, 0x05, 0x01, 0x00, 0x00, 0x06, 0x17];
     let mut parser = Parser::default();
-    let mut it = parser.consume(&ack_ack);
+    let mut it = parser.consume_ubx(&ack_ack);
     match it.next() {
         Some(Ok(PacketRef::Unknown(_))) => {
             // This is expected
@@ -284,12 +284,12 @@ fn test_double_start_at_end() {
     let mut parser = ublox::Parser::new(buf);
 
     for byte in bytes.iter() {
-        parser.consume(&[*byte]);
+        parser.consume_ubx(&[*byte]);
     }
 
     let ack_ack = [0xb5, 0x62, 0x5, 0x1, 0x2, 0x0, 0x4, 0x5, 0x11, 0x38];
     {
-        let mut it = parser.consume(&ack_ack);
+        let mut it = parser.consume_ubx(&ack_ack);
         match it.next() {
             Some(Err(_)) => {
                 // First, a buffer-too-small error
@@ -310,7 +310,7 @@ fn test_double_start_at_end() {
         }
         assert!(it.next().is_none());
     }
-    let mut it = parser.consume(&ack_ack);
+    let mut it = parser.consume_ubx(&ack_ack);
     match it.next() {
         Some(Ok(ublox::PacketRef::AckAck { .. })) => {
             // This is what we expect
@@ -330,7 +330,7 @@ fn test_ack_ack_to_owned_can_be_moved() {
     let expect_ack_payload_class_id = 4;
 
     let mut parser = ublox::Parser::default();
-    let mut it = parser.consume(&ack_ack);
+    let mut it = parser.consume_ubx(&ack_ack);
     match it.next() {
         Some(Ok(PacketRef::AckAck(ack_packet))) => {
             assert_eq!(ack_packet.class(), expect_ack_payload_class_id);
