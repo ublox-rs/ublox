@@ -335,7 +335,7 @@ fn render_esf_alg_status(frame: &mut Frame, area: Rect, app: &mut App) {
 
 fn render_esf_imu_alignment_status(frame: &mut Frame, area: Rect, app: &mut App) {
     let time_tag = format!("{:.3}", app.esf_alg_imu_alignment_state.time_tag);
-    let aligment_status = match app.esf_alg_imu_alignment_state.alignment_status {
+    let alignment_status = match app.esf_alg_imu_alignment_state.alignment_status {
         EsfAlgStatus::CoarseAlignment => "COARSE",
         EsfAlgStatus::FineAlignment => "FINE",
         EsfAlgStatus::UserDefinedAngles => "---",
@@ -354,7 +354,7 @@ fn render_esf_imu_alignment_status(frame: &mut Frame, area: Rect, app: &mut App)
                 "OFF"
             },
         ]),
-        Row::new(["Alignment Status", aligment_status]),
+        Row::new(["Alignment Status", alignment_status]),
         Row::new([
             "Angle Singularity",
             if app.esf_alg_imu_alignment_state.angle_singularity {
