@@ -8,6 +8,15 @@ All notable changes to this project will be documented in this file.
 
 - Add owned variants of `PacketRef` ([#103](https://github.com/ublox-rs/ublox/pull/103))
 
+### Breaking
+
+- Fixed typo: `NavBbrMask::OSCILATOR_PARAMETER` to `NavBbrMask::OSCILLATOR_PARAMETER`
+- Fixed typo: `CfgTmode2Ref::survery_in_accur_limit_raw` to `CfgTmode2Ref::survey_in_accur_limit_raw`
+- Fixed typo: `CfgTmode2Ref::survery_in_accur_limit` to `CfgTmode2Ref::survey_in_accur_limit`
+- Fixed typo: `HnrPvtRef::heading_accurracy_raw` to `HnrPvtRef::heading_accuracy_raw`
+- Fixed typo: `HnrPvtRef::heading_accurracy` to `HnrPvtRef::heading_accuracy`
+- Fixed typo: `CfgTmode2Builder.survery_in_accur_limit` to `CfgTmode2Builder.survey_in_accur_limit`
+
 ## [0.5.0] - 2025-03-17
 
 ### 💼 What's Changed

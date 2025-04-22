@@ -403,7 +403,7 @@ impl NavPvtFlags3 {
         self.invalid_llh
     }
 
-    /// F9R interface descritpion document specifies that this byte is unused
+    /// F9R interface description document specifies that this byte is unused
     #[cfg(feature = "ubx_proto23")]
     pub fn age_differential_correction(&self) -> u8 {
         self.age_differential_correction
@@ -415,7 +415,7 @@ impl From<u8> for NavPvtFlags3 {
     fn from(val: u8) -> Self {
         const AGE_DIFFERENTIAL_CORRECTION_MASK: u8 = 0b11110;
         let invalid = val & 0x01 == 1;
-        // F9R interface descritpion document specifies that this byte is unused
+        // F9R interface description document specifies that this byte is unused
         // We can read it ... but we don't expose it
         let age_differential_correction = val & AGE_DIFFERENTIAL_CORRECTION_MASK;
         Self {
@@ -1461,7 +1461,7 @@ pub struct CfgItfmConfig2 {
     general: CfgItfmGeneralBits,
     /// antenna settings
     antenna: CfgItfmAntennaSettings,
-    /// Set to true to scan auxillary bands on ublox-M8,
+    /// Set to true to scan auxiliary bands on ublox-M8,
     /// ignored otherwise
     scan_aux_bands: bool,
 }
@@ -1647,7 +1647,7 @@ bitflags! {
         const USE_ANY_FIX = 0x100;
         /// MaxSlewRate field is discarded when asserted,
         /// otherwise MaxSlewRate field is used for
-        /// maximum time correction, in corrective fime pulse mode
+        /// maximum time correction, in corrective time pulse mode
         const DISABLE_MAX_SLEW_RATE = 0x200;
         /// Issues UBX-TIME-TOS warning when frequency uncertainty
         /// exceeds `freq_tolerance`
@@ -2033,7 +2033,7 @@ struct CfgTmode2 {
     survey_in_min_duration: u32,
     /// Survey in position accuracy limit in [m]
     #[ubx(map_type = f64, scale = 1e-3)]
-    survery_in_accur_limit: u32,
+    survey_in_accur_limit: u32,
 }
 
 /// Time transfer modes (32.10.36)
@@ -2237,9 +2237,9 @@ bitflags! {
         /// `freq_period` and `pulse_len_ratio` when GPS time is invalid.
         const LOCKED_OTHER_SET = 0x04;
         /// `freq_period` and `pulse_len_ratio` fields
-        /// are interprated as frequency when this bit is set
+        /// are interpreted as frequency when this bit is set
         const IS_FREQ = 0x08;
-        /// Interprate pulse lengths instead of duty cycle
+        /// Interpret pulse lengths instead of duty cycle
         const IS_LENGTH = 0x10;
         /// Align pulse to top of second
         /// Period time must be integer fraction of `1sec`
@@ -2294,7 +2294,7 @@ bitflags! {
         const KLOBUCHARD = 8;
         const POSITION = 16;
         const CLOCK_DRIFT = 32;
-        const OSCILATOR_PARAMETER = 64;
+        const OSCILLATOR_PARAMETER = 64;
         const UTC_CORRECTION_PARAMETERS = 0x80;
         const RTC = 0x100;
         const SFDR_PARAMETERS = 0x800;
@@ -3534,7 +3534,7 @@ pub enum TimTpRefInfoUtcStandard {
 #[ubx_packet_recv]
 #[ubx(class = 0x0d, id = 0x03, fixed_payload_len = 28)]
 struct TimTm2 {
-    /// Channel (i.e. EXTINT) upon which the pulse was measured
+    /// Channel (e.g. EXTINT) upon which the pulse was measured
     ch: u8,
     /// Flags
     #[ubx(map_type = TimTm2Flags, from = TimTm2Flags)]
@@ -3685,7 +3685,7 @@ bitflags! {
         const TIME_IN_LIMIT = 0x08;
         /// Internal oscillator is within tolerance limit (Ubx-CfgSmgr)
         const INT_OSC_IN_LIMIT = 0x10;
-        /// Exteranl oscillator is within tolerance limit (Ubx-CfgSmgr)
+        /// External oscillator is within tolerance limit (Ubx-CfgSmgr)
         const EXT_OSC_IN_LIMIT = 0x20;
         /// GNSS Time is valid
         const GNSS_TIME_IS_VALID = 0x40;
@@ -3801,7 +3801,7 @@ struct MonGnss {
     /// Currently enabled major constellations bit mask
     #[ubx(map_type = MonGnssConstellMask)]
     enabled: u8,
-    /// Maximum number of concurent Major GNSS
+    /// Maximum number of concurrent Major GNSS
     /// that can be supported by this receiver
     simultaneous: u8,
     reserved1: [u8; 3],
@@ -4827,7 +4827,7 @@ struct HnrPvt {
     s_acc: u32,
 
     /// Heading accuracy estimate (for both vehicle and motion) [deg]
-    #[ubx(map_type = f64, scale = 1e-5, alias = heading_accurracy)]
+    #[ubx(map_type = f64, scale = 1e-5, alias = heading_accuracy)]
     head_acc: u32,
 
     reserved2: [u8; 4],
