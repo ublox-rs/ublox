@@ -1,3 +1,4 @@
+use anyhow::Result;
 use std::{error::Error, sync::mpsc::channel};
 
 mod app;
@@ -12,7 +13,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let cli = cli::parse_args();
 
     if cli::tui_debug_mode(&cli) {
-        device_debug_mode(&cli);
+        device_debug_mode(&cli)?;
     } else {
         let log_file = logging::initialize(&cli)?;
         crate::tui::run(&cli, log_file)?;
@@ -20,7 +21,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-fn device_debug_mode(cli: &clap::Command) {
+fn device_debug_mode(cli: &clap::Command) -> Result<()> {
     use log::error;
     env_logger::Builder::new()
         .filter_level(log::LevelFilter::Info)
@@ -29,7 +30,7 @@ fn device_debug_mode(cli: &clap::Command) {
 
     let (ubx_msg_tx, ubx_msg_rs) = channel();
 
-    let serialport = ublox_device::cli::Command::serialport(cli.clone());
+    let serialport = ublox_device::cli::Command::serialport(cli.clone())?;
     let device = ublox_device::Device::new(serialport);
 
     let mut backend_device = backend::UbxDevice::from(device);

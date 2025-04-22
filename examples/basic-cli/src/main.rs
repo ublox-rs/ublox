@@ -9,7 +9,8 @@ fn main() {
         .name("basic_cli")
         .author(clap::crate_authors!());
 
-    let serialport = ublox_device::cli::Command::serialport(cli.clone());
+    let serialport = ublox_device::cli::Command::serialport(cli.clone())
+        .expect("Could not connect to serialport");
 
     let mut device = ublox_device::Device::new(serialport);
     let port_config = ublox_device::cli::Command::ubx_port_configuration_builder(cli);

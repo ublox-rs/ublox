@@ -1,3 +1,4 @@
+use anyhow::{Context, Result};
 use clap::{value_parser, Arg};
 use serialport::{FlowControl as SerialFlowControl, SerialPort};
 use std::time::Duration;
@@ -182,7 +183,7 @@ impl Command {
         args.get_one::<u32>("baud").cloned().unwrap_or(9600)
     }
 
-    pub fn serialport(command: clap::Command) -> Box<dyn SerialPort> {
+    pub fn serialport(command: clap::Command) -> Result<Box<dyn SerialPort>> {
         let cli = command.get_matches();
 
         let port = cli
@@ -217,10 +218,9 @@ impl Command {
             .flow_control(SerialFlowControl::None);
 
         println!("{:?}", &builder);
-        builder.open().unwrap_or_else(|e| {
-            eprintln!("Failed to open \"{}\". Error: {}", port, e);
-            ::std::process::exit(1);
-        })
+        builder
+            .open()
+            .with_context(|| format!("Failed to open port: {}", port))
     }
 
     pub fn ubx_port_configuration_builder(command: clap::Command) -> Option<UbxPortConfiguration> {

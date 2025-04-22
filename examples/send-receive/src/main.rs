@@ -12,7 +12,8 @@ fn main() {
         .name("Demonstrate usage of the uBlox package for ESF+ADR mode with one thread for receiving and one for sending UBX messages.")
         .author(clap::crate_authors!());
 
-    let serialport = ublox_device::cli::Command::serialport(cli.clone());
+    let serialport = ublox_device::cli::Command::serialport(cli.clone())
+        .expect("Could not connect to serialport");
     // Clone the port for the sending side
     let serialport_clone = serialport.try_clone().expect("Failed to clone serialport");
 
