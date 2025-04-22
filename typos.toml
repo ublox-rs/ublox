@@ -1,0 +1,24 @@
+[default.extend-identifiers]
+NavRelPosNed = "NavRelPosNed"
+NavRelPosNedFlags = "NavRelPosNedFlags"
+MsgoutUbxNavVelNedUsb = "MsgoutUbxNavVelNedUsb"
+MsgoutUbxNavVelNedUart2 = "MsgoutUbxNavVelNedUart2"
+MsgoutUbxNavVelNedUart1 = "MsgoutUbxNavVelNedUart1"
+MsgoutUbxNavVelNedSpi = "MsgoutUbxNavVelNedSpi"
+MsgoutUbxNavVelNedI2c = "MsgoutUbxNavVelNedI2c"
+NavVelNed = "NavVelNed"
+NavVelNedOwned = "NavVelNedOwned"
+rel_pos_hpe = "rel_pos_hpe"
+vel_ned = "vel_ned"
+
+[default.extend-words]
+ratatui = "ratatui"
+EXTINT = "EXTINT"
+NED = "NED"
+
+[type.md]
+# In markdown files, ignore content in the backticks between "Fixed typo:" and "to `"
+# ensures that the fixed typo is not recognized as a typo, but the word it was corrected to IS checked.
+extend-ignore-re = [
+    " Fixed typo: `.+` to `",
+]
