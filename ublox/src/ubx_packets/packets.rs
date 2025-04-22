@@ -403,7 +403,7 @@ impl NavPvtFlags3 {
         self.invalid_llh
     }
 
-    /// F9R interface descriptions document specifies that this byte is unused
+    /// F9R interface description document specifies that this byte is unused
     #[cfg(feature = "ubx_proto23")]
     pub fn age_differential_correction(&self) -> u8 {
         self.age_differential_correction
@@ -415,7 +415,7 @@ impl From<u8> for NavPvtFlags3 {
     fn from(val: u8) -> Self {
         const AGE_DIFFERENTIAL_CORRECTION_MASK: u8 = 0b11110;
         let invalid = val & 0x01 == 1;
-        // F9R interface descriptions document specifies that this byte is unused
+        // F9R interface description document specifies that this byte is unused
         // We can read it ... but we don't expose it
         let age_differential_correction = val & AGE_DIFFERENTIAL_CORRECTION_MASK;
         Self {
