@@ -1,4 +1,6 @@
 [default.extend-identifiers]
+NavVelNed = "NavVelNed"
+NavVelNedOwned = "NavVelNedOwned"
 NavRelPosNed = "NavRelPosNed"
 NavRelPosNedFlags = "NavRelPosNedFlags"
 MsgoutUbxNavVelNedUsb = "MsgoutUbxNavVelNedUsb"
@@ -6,8 +8,6 @@ MsgoutUbxNavVelNedUart2 = "MsgoutUbxNavVelNedUart2"
 MsgoutUbxNavVelNedUart1 = "MsgoutUbxNavVelNedUart1"
 MsgoutUbxNavVelNedSpi = "MsgoutUbxNavVelNedSpi"
 MsgoutUbxNavVelNedI2c = "MsgoutUbxNavVelNedI2c"
-NavVelNed = "NavVelNed"
-NavVelNedOwned = "NavVelNedOwned"
 rel_pos_hpe = "rel_pos_hpe"
 vel_ned = "vel_ned"
 
