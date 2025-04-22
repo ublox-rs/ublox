@@ -84,14 +84,14 @@ See the documentation for the individual `Builder` structs for information on th
 
 ## Parsing Packets
 
-Parsing packets happens by instantiating a `Parser` object and then adding data into it using its `consume()` method. The parser contains an internal buffer of data, and when `consume()` is called that data is copied into the internal buffer and an iterator-like object is returned to access the packets. For example:
+Parsing packets happens by instantiating a `Parser` object and then adding data into it using its `consume_ubx()` method. The parser contains an internal buffer of data, and when `consume_ubx()` is called that data is copied into the internal buffer and an iterator-like object is returned to access the packets. For example:
 
 ```rust
 # #[cfg(any(feature = "alloc", feature = "std"))] {
     use ublox::Parser;
     let mut parser = Parser::default();
     let my_raw_data = vec![1, 2, 3, 4]; // From your serial port
-    let mut it = parser.consume(&my_raw_data);
+    let mut it = parser.consume_ubx(&my_raw_data);
     loop {
         match it.next() {
             Some(Ok(packet)) => {
