@@ -383,10 +383,13 @@ impl<'a, T: UnderlyingBuffer> DualBuffer<'a, T> {
         // Last case: We have to move the data in underlying, then extend it
         self.buf.drain(self.off);
         self.off = 0;
+
         self.buf
             .extend_from_slice(&self.new_buf[self.new_buf_offset..self.new_buf_offset + new_bytes]);
+
         self.new_buf_offset += new_bytes;
         self.off += count;
+
         Ok(&self.buf[0..count])
     }
 }
@@ -466,6 +469,7 @@ fn extract_packet_ubx<'b, T: UnderlyingBuffer>(
     let (ck_a, ck_b) = checksummer.result();
 
     let (expect_ck_a, expect_ck_b) = (buf[6 + pack_len], buf[6 + pack_len + 1]);
+
     if (ck_a, ck_b) != (expect_ck_a, expect_ck_b) {
         buf.drain(2);
         return Some(Err(ParserError::InvalidChecksum {
@@ -473,6 +477,7 @@ fn extract_packet_ubx<'b, T: UnderlyingBuffer>(
             got: u16::from_le_bytes([ck_a, ck_b]),
         }));
     }
+
     let class_id = buf[2];
     let msg_id = buf[3];
     buf.drain(6);
@@ -516,15 +521,23 @@ impl<T: UnderlyingBuffer> UbxParserIter<'_, T> {
                 continue;
             }
 
-            if self.buf.len() < 6 {
+            if self.buf.len() < UbxConstants::HEADER_SIZE {
+                // Not a valid UBX header
                 return None;
             }
 
-            let pack_len: usize = u16::from_le_bytes([self.buf[4], self.buf[5]]).into();
+            // Payload length identification
+            let offset = UbxConstants::SYNC_SIZE + 2; //+CLASS +ID
+
+            let pack_len: usize =
+                u16::from_le_bytes([self.buf[offset], self.buf[offset + 1]]).into();
+
             if pack_len > usize::from(MAX_PAYLOAD_LEN) {
-                self.buf.drain(2);
+                self.buf.drain(UbxConstants::PAYLOAD_ENCODING_SIZE);
                 continue;
             }
+
+            // Extract following frame
             return extract_packet_ubx(&mut self.buf, pack_len);
         }
         None

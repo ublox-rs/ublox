@@ -18,6 +18,15 @@ pub trait UbxPacketMeta {
 pub(crate) struct UbxConstants;
 
 impl UbxConstants {
+    /// Size of the UBX header frame markers (in bytes)
+    pub const SYNC_SIZE: usize = 2;
+
+    /// Size of the Payload length encoding (in bytes)
+    pub const PAYLOAD_ENCODING_SIZE: usize = 2;
+
+    /// Total size of the UBX header (SYNC +CLASS +ID +LENGTH)
+    pub const HEADER_SIZE: usize = Self::SYNC_SIZE + Self::PAYLOAD_ENCODING_SIZE + 2;
+
     /// Header first byte, marking beginning of UBX frame.
     pub const SYNC_CHAR_1: u8 = 0xb5;
 
