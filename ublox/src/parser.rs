@@ -563,6 +563,7 @@ fn extract_packet_rtcm<'a, 'b, T: UnderlyingBuffer>(
             // We ran out of space, drop this packet and move on
             // TODO: shouldn't we drain pack_len + 3?
             buf.drain(2);
+
             return Some(Err(ParserError::OutOfMemory {
                 required_size: pack_len + 2,
             }));
@@ -599,24 +600,35 @@ impl<T: UnderlyingBuffer> UbxRtcmParserIter<'_, T> {
                 NextSync::Ubx(pos) => {
                     self.buf.drain(pos);
 
-                    if self.buf.len() < 2 {
+                    if self.buf.len() < UbxConstants::SYNC_SIZE {
+                        // Can't extract SYNC_1 + SYNC_2
                         return None;
                     }
+
                     if self.buf[1] != UbxConstants::SYNC_CHAR_2 {
                         self.buf.drain(1);
                         continue;
                     }
 
-                    if self.buf.len() < 6 {
+                    if self.buf.len() < UbxConstants::HEADER_SIZE {
+                        // Not a valid UBX header
                         return None;
                     }
 
-                    let pack_len: usize = u16::from_le_bytes([self.buf[4], self.buf[5]]).into();
+                    // Payload length identification
+                    let offset = UbxConstants::SYNC_SIZE + 2; // CLASS + ID
+
+                    let pack_len: usize =
+                        u16::from_le_bytes([self.buf[offset], self.buf[offset + 1]]).into();
+
                     if pack_len > usize::from(MAX_PAYLOAD_LEN) {
                         self.buf.drain(2);
                         continue;
                     }
+
+                    // Frame parsing
                     let maybe_packet = extract_packet_ubx(&mut self.buf, pack_len);
+
                     match maybe_packet {
                         Some(Ok(packet)) => return Some(Ok(AnyPacketRef::Ubx(packet))),
                         Some(Err(e)) => return Some(Err(e)),
