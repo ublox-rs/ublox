@@ -14,9 +14,19 @@ pub trait UbxPacketMeta {
     const MAX_PAYLOAD_LEN: u16;
 }
 
-pub(crate) const SYNC_CHAR_1: u8 = 0xb5;
-pub(crate) const SYNC_CHAR_2: u8 = 0x62;
-pub(crate) const RTCM_SYNC_CHAR: u8 = 0xd3;
+/// Constants used when parsing UBX protocol.
+pub(crate) struct UbxConstants;
+
+impl UbxConstants {
+    /// Header first byte, marking beginning of UBX frame.
+    pub const SYNC_CHAR_1: u8 = 0xb5;
+
+    /// Header second byte, marking beginning of UBX frame.
+    pub const SYNC_CHAR_2: u8 = 0x62;
+
+    /// TODO
+    pub const RTCM_SYNC_CHAR: u8 = 0xd3;
+}
 
 /// The checksum is calculated over the packet, starting and including
 /// the CLASS field, up until, but excluding, the checksum field.
@@ -124,8 +134,8 @@ impl UbxPacketRequest {
     #[inline]
     pub fn into_packet_bytes(self) -> [u8; Self::PACKET_LEN] {
         let mut ret = [
-            SYNC_CHAR_1,
-            SYNC_CHAR_2,
+            UbxConstants::SYNC_CHAR_1,
+            UbxConstants::SYNC_CHAR_2,
             self.req_class,
             self.req_id,
             0,

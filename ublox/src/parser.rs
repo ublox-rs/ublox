@@ -5,7 +5,7 @@ use crate::{
     error::ParserError,
     ubx_packets::{
         packetref::{match_packet, PacketRef, MAX_PAYLOAD_LEN},
-        RTCM_SYNC_CHAR, SYNC_CHAR_1, SYNC_CHAR_2,
+        UbxConstants,
     },
 };
 
@@ -195,7 +195,7 @@ impl<T: UnderlyingBuffer> Parser<T> {
         let mut buf = DualBuffer::new(&mut self.buf, new_data);
 
         for i in 0..buf.len() {
-            if buf[i] == SYNC_CHAR_1 {
+            if buf[i] == UbxConstants::SYNC_CHAR_1 {
                 buf.drain(i);
                 break;
             }
@@ -208,7 +208,7 @@ impl<T: UnderlyingBuffer> Parser<T> {
         let mut buf = DualBuffer::new(&mut self.buf, new_data);
 
         for i in 0..buf.len() {
-            if buf[i] == SYNC_CHAR_1 || buf[i] == RTCM_SYNC_CHAR {
+            if buf[i] == UbxConstants::SYNC_CHAR_1 || buf[i] == UbxConstants::RTCM_SYNC_CHAR {
                 buf.drain(i);
                 break;
             }
@@ -491,7 +491,7 @@ fn extract_packet_ubx<'b, T: UnderlyingBuffer>(
 
 impl<T: UnderlyingBuffer> UbxParserIter<'_, T> {
     fn find_sync(&self) -> Option<usize> {
-        (0..self.buf.len()).find(|&i| self.buf[i] == SYNC_CHAR_1)
+        (0..self.buf.len()).find(|&i| self.buf[i] == UbxConstants::SYNC_CHAR_1)
     }
 
     #[allow(clippy::should_implement_trait)]
@@ -511,7 +511,7 @@ impl<T: UnderlyingBuffer> UbxParserIter<'_, T> {
             if self.buf.len() < 2 {
                 return None;
             }
-            if self.buf[1] != SYNC_CHAR_2 {
+            if self.buf[1] != UbxConstants::SYNC_CHAR_2 {
                 self.buf.drain(1);
                 continue;
             }
@@ -567,10 +567,10 @@ fn extract_packet_rtcm<'a, 'b, T: UnderlyingBuffer>(
 impl<T: UnderlyingBuffer> UbxRtcmParserIter<'_, T> {
     fn find_sync(&self) -> NextSync {
         for i in 0..self.buf.len() {
-            if self.buf[i] == SYNC_CHAR_1 {
+            if self.buf[i] == UbxConstants::SYNC_CHAR_1 {
                 return NextSync::Ubx(i);
             }
-            if self.buf[i] == RTCM_SYNC_CHAR {
+            if self.buf[i] == UbxConstants::RTCM_SYNC_CHAR {
                 return NextSync::Rtcm(i);
             }
         }
@@ -589,7 +589,7 @@ impl<T: UnderlyingBuffer> UbxRtcmParserIter<'_, T> {
                     if self.buf.len() < 2 {
                         return None;
                     }
-                    if self.buf[1] != SYNC_CHAR_2 {
+                    if self.buf[1] != UbxConstants::SYNC_CHAR_2 {
                         self.buf.drain(1);
                         continue;
                     }

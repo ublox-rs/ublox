@@ -563,8 +563,8 @@ fn test_ubx_packet_send() {
                 #[inline]
                 pub fn into_packet_bytes(self) -> [u8; Self::PACKET_LEN] {
                     let mut ret = [0u8; Self::PACKET_LEN];
-                    ret[0] = SYNC_CHAR_1;
-                    ret[1] = SYNC_CHAR_2;
+                    ret[0] = UbxConstants::SYNC_CHAR_1;
+                    ret[1] = UbxConstants::SYNC_CHAR_2;
                     ret[2] = Test::CLASS;
                     ret[3] = Test::ID;
                     let pack_len_bytes = 9u16.to_le_bytes();
@@ -601,8 +601,8 @@ fn test_ubx_packet_send() {
                     out.reserve_allocate(17usize)?;
                     let len_bytes = 9u16.to_le_bytes();
                     let header = [
-                        SYNC_CHAR_1,
-                        SYNC_CHAR_2,
+                        UbxConstants::SYNC_CHAR_1,
+                        UbxConstants::SYNC_CHAR_2,
                         Test::CLASS,
                         Test::ID,
                         len_bytes[0],
