@@ -110,11 +110,6 @@ pub fn generate_send_code_for_packet(dbg_ctx: DebugContext, pack_descr: &PackDes
         }
     };
 
-    dbg_ctx.print_at(
-        file!(),
-        line!(),
-        format_args!("initial payload struct: {}", &ret),
-    );
     if let Some(packet_payload_size) = pack_descr.packet_payload_size() {
         let packet_size = packet_payload_size + 8;
         let packet_payload_size_u16 = u16::try_from(packet_payload_size).unwrap();
@@ -199,10 +194,5 @@ pub fn generate_send_code_for_packet(dbg_ctx: DebugContext, pack_descr: &PackDes
         })
     }
 
-    dbg_ctx.print_at(
-        file!(),
-        line!(),
-        format_args!("final payload struct: {}", &ret),
-    );
     ret
 }
