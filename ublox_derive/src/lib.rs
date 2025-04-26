@@ -5,6 +5,7 @@ mod output;
 #[cfg(test)]
 mod tests;
 mod types;
+pub(crate) mod util;
 
 use proc_macro2::TokenStream;
 use quote::ToTokens;
@@ -13,6 +14,15 @@ use syn::{
     parse_macro_input, punctuated::Punctuated, spanned::Spanned, Attribute, Data, DeriveInput,
     Fields, Generics, Ident, Type, Variant,
 };
+use util::DebugContext;
+
+#[proc_macro_attribute]
+pub fn debug_this(
+    _attr: proc_macro::TokenStream,
+    input: proc_macro::TokenStream,
+) -> proc_macro::TokenStream {
+    input
+}
 
 #[proc_macro_attribute]
 pub fn ubx_packet_recv(
@@ -115,10 +125,11 @@ fn generate_code_for_recv_packet(
     fields: Fields,
     generics: Generics,
 ) -> syn::Result<TokenStream> {
+    let dbg_ctx = DebugContext::from_attrs(&attrs);
     let pack_desc = input::parse_packet_description(pack_name, attrs, fields, generics)?;
 
-    let mut code = output::generate_types_for_packet(&pack_desc);
-    let recv_code = output::generate_recv_code_for_packet(&pack_desc);
+    let mut code = output::generate_types_for_packet(dbg_ctx, &pack_desc);
+    let recv_code = output::generate_recv_code_for_packet(dbg_ctx, &pack_desc);
     code.extend(recv_code);
     Ok(code)
 }
@@ -129,10 +140,11 @@ fn generate_code_for_send_packet(
     fields: Fields,
     generics: Generics,
 ) -> syn::Result<TokenStream> {
+    let dbg_ctx = DebugContext::from_attrs(&attrs);
     let pack_desc = input::parse_packet_description(pack_name, attrs, fields, generics)?;
 
-    let mut code = output::generate_types_for_packet(&pack_desc);
-    let send_code = output::generate_send_code_for_packet(&pack_desc);
+    let mut code = output::generate_types_for_packet(dbg_ctx, &pack_desc);
+    let send_code = output::gen_send_code::generate_send_code_for_packet(dbg_ctx, &pack_desc);
     code.extend(send_code);
     Ok(code)
 }
@@ -143,12 +155,13 @@ fn generate_code_for_recv_send_packet(
     fields: Fields,
     generics: Generics,
 ) -> syn::Result<TokenStream> {
+    let dbg_ctx = DebugContext::from_attrs(&attrs);
     let pack_desc = input::parse_packet_description(pack_name, attrs, fields, generics)?;
 
-    let mut code = output::generate_types_for_packet(&pack_desc);
-    let send_code = output::generate_send_code_for_packet(&pack_desc);
+    let mut code = output::generate_types_for_packet(dbg_ctx, &pack_desc);
+    let send_code = output::gen_send_code::generate_send_code_for_packet(dbg_ctx, &pack_desc);
     code.extend(send_code);
-    let recv_code = output::generate_recv_code_for_packet(&pack_desc);
+    let recv_code = output::generate_recv_code_for_packet(dbg_ctx, &pack_desc);
     code.extend(recv_code);
     Ok(code)
 }
