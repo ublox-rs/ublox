@@ -6,9 +6,11 @@ use syn::{
     Type,
 };
 
+use super::util;
+
 pub fn parse_bitflags(mac: syn::ItemMacro) -> syn::Result<BitFlagsMacro> {
     let (from_fn, into_fn, rest_handling) =
-        super::parse_ubx_extend_attrs("#[ubx_extend_bitflags]", mac.span(), &mac.attrs)?;
+        util::parse_ubx_extend_attrs("#[ubx_extend_bitflags]", mac.span(), &mac.attrs)?;
 
     let ast: BitFlagsAst = syn::parse2(mac.mac.tokens)?;
 
