@@ -287,7 +287,7 @@ fn field_size_bytes(ty: &Type) -> syn::Result<Option<NonZeroUsize>> {
         } else {
             Err(Error::new(
                 fixed_array.len.span(),
-                "Can not interpret array length",
+                "Cannot interpret array length",
             ))
         }
     } else if let syn::Type::Reference(_) = ty {
@@ -302,7 +302,7 @@ fn field_size_bytes(ty: &Type) -> syn::Result<Option<NonZeroUsize>> {
         }
         Err(Error::new(
             ty.span(),
-            format!("Not supported type, expect one of {:?}", valid_type_names),
+            format!("Unsupported type, expected one of {:?}", valid_type_names),
         ))
     }
 }
