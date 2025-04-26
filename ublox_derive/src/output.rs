@@ -1,6 +1,6 @@
+use crate::debug::DebugContext;
 use crate::types::BitFlagsMacro;
 use crate::types::{PackDesc, PayloadLen, UbxEnumRestHandling, UbxTypeFromFn, UbxTypeIntoFn};
-use crate::util::DebugContext;
 use proc_macro2::{Span, TokenStream};
 use quote::{format_ident, quote, ToTokens};
 use std::{collections::HashSet, convert::TryFrom};
