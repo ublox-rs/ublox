@@ -214,8 +214,9 @@ fn process_fields<'a>(
     }
 }
 
-fn process_fixed_size_field<'a>(
-    f: &'a PackField,
+#[allow(clippy::too_many_arguments, reason = "Yes we need to refactor...")]
+fn process_fixed_size_field(
+    f: &PackField,
     pack_name: &String,
     field_comment: &str,
     get_name: &syn::Ident,
@@ -278,6 +279,7 @@ fn process_fixed_size_field<'a>(
     });
 }
 
+#[allow(clippy::too_many_arguments, reason = "Yes we need to refactor...")]
 fn process_variable_size_field<'a>(
     dbg_ctx: DebugContext,
     f: &'a PackField,
