@@ -1,12 +1,12 @@
 use crate::types::BitFlagsMacro;
 use crate::types::{
-    packfield::PackField, PackDesc, PacketFlag, PayloadLen, RecvPackets, UbxEnumRestHandling,
-    UbxExtendEnum, UbxTypeFromFn, UbxTypeIntoFn,
+    PackDesc, PacketFlag, PayloadLen, RecvPackets, UbxEnumRestHandling, UbxTypeFromFn,
+    UbxTypeIntoFn,
 };
 use proc_macro2::{Span, TokenStream};
 use quote::{format_ident, quote, ToTokens};
 use std::{collections::HashSet, convert::TryFrom};
-use syn::{parse_quote, Ident, Lifetime, Type};
+use syn::{parse_quote, Ident};
 
 pub(crate) mod extend_enum;
 mod match_packet;
