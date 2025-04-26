@@ -21,7 +21,7 @@ impl DebugContext {
     /// ```
 
     pub fn print_at(&self, file: &str, line: u32, args: std::fmt::Arguments) {
-        #[cfg(test)]
+        #[cfg(debug_assertions)]
         if self.enabled {
             println!("[{}:{}] {}", file, line, args);
         }
@@ -29,7 +29,7 @@ impl DebugContext {
 
     /// Prints as is
     pub fn print(&self, msg: impl std::fmt::Display) {
-        #[cfg(test)]
+        #[cfg(debug_assertions)]
         if self.enabled {
             println!("{msg}");
         }
@@ -37,33 +37,26 @@ impl DebugContext {
 
     /// Prints formatted code or an error if the code couldn't be formatted
     pub fn print_code(&self, code: impl std::fmt::Display) {
-        #[cfg(test)]
+        #[cfg(debug_assertions)]
         if self.enabled {
-            match format_rust_code(&code) {
-                Ok(formatted_code) => print_highlighted(&formatted_code),
+            match debug_only::format_rust_code(&code) {
+                Ok(formatted_code) => debug_only::print_highlighted(&formatted_code),
                 Err(e) => println!("Failed to format code '{code}': {e:?}"),
             }
         }
     }
 }
 
-#[cfg(test)]
+#[cfg(debug_assertions)]
 mod debug_only {
-    use std::{
-        io::Write as _,
-        process::{Command, Stdio},
-    };
-    use syntect::{
-        easy::HighlightLines,
-        highlighting::{Style, ThemeSet},
-        parsing::SyntaxSet,
-        util::{as_24_bit_terminal_escaped, LinesWithEndings},
-    };
-
     // Spawns rustfmt, runs code through it and returns the formatted code
-    fn format_rust_code(
+    pub(super) fn format_rust_code(
         code: impl std::fmt::Display,
     ) -> Result<String, Box<dyn std::error::Error>> {
+        use std::{
+            io::Write as _,
+            process::{Command, Stdio},
+        };
         let mut child = Command::new("rustfmt")
             .arg("--emit")
             .arg("stdout")
@@ -89,7 +82,7 @@ mod debug_only {
         }
     }
 
-    fn print_highlighted(code: &str) {
+    pub(super) fn print_highlighted(code: &str) {
         use syntect::{
             easy::HighlightLines,
             highlighting::{Style, ThemeSet},
