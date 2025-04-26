@@ -1,97 +1,16 @@
 use crate::types::BitFlagsMacro;
 use crate::types::{
-    PackDesc, PackField, PacketFlag, PayloadLen, RecvPackets, UbxEnumRestHandling, UbxExtendEnum,
-    UbxTypeFromFn, UbxTypeIntoFn,
+    packfield::PackField, PackDesc, PacketFlag, PayloadLen, RecvPackets, UbxEnumRestHandling,
+    UbxExtendEnum, UbxTypeFromFn, UbxTypeIntoFn,
 };
 use proc_macro2::{Span, TokenStream};
 use quote::{format_ident, quote, ToTokens};
 use std::{collections::HashSet, convert::TryFrom};
-use syn::{parse_quote, Ident, Type};
+use syn::{parse_quote, Ident, Lifetime, Type};
 
+pub(crate) mod extend_enum;
 mod match_packet;
-
-fn generate_debug_impl(
-    pack_name: &str,
-    ref_name: &Ident,
-    owned_name: &Ident,
-    pack_descr: &PackDesc,
-) -> TokenStream {
-    let fields: Vec<TokenStream> = pack_descr
-        .fields
-        .iter()
-        .map(|field| {
-            let field_name = &field.name;
-            let field_accessor = field.intermediate_field_name();
-            quote! {
-                .field(stringify!(#field_name), &self.#field_accessor())
-            }
-        })
-        .collect();
-
-    quote! {
-        impl core::fmt::Debug for #ref_name<'_> {
-            fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-                f.debug_struct(#pack_name)
-                    #(#fields)*
-                    .finish()
-            }
-        }
-        impl core::fmt::Debug for #owned_name {
-            fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
-                f.debug_struct(#pack_name)
-                    #(#fields)*
-                    .finish()
-            }
-        }
-    }
-}
-
-fn generate_serialize_impl(
-    _pack_name: &str,
-    ref_name: &Ident,
-    pack_descr: &PackDesc,
-) -> TokenStream {
-    let fields = pack_descr.fields.iter().map(|field| {
-        let field_name = &field.name;
-        let field_accessor = field.intermediate_field_name();
-        if field.size_bytes.is_some() || field.is_optional() {
-            quote! {
-                state.serialize_entry(stringify!(#field_name), &self.#field_accessor())?;
-            }
-        } else {
-            quote! {
-                state.serialize_entry(
-                    stringify!(#field_name),
-                    &FieldIter(self.#field_accessor())
-                )?;
-            }
-        }
-    });
-    quote! {
-        #[cfg(feature = "serde")]
-        impl SerializeUbxPacketFields for #ref_name<'_> {
-            fn serialize_fields<S>(&self, state: &mut S) -> Result<(), S::Error>
-            where
-                S: serde::ser::SerializeMap,
-            {
-                #(#fields)*
-                Ok(())
-            }
-        }
-
-        #[cfg(feature = "serde")]
-        impl serde::Serialize for #ref_name<'_> {
-            fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-            where
-                S: serde::Serializer,
-            {
-                let mut state = serializer.serialize_map(None)?;
-                self.serialize_fields(&mut state)?;
-                state.end()
-            }
-        }
-    }
-}
+mod util;
 
 pub fn generate_recv_code_for_packet(pack_descr: &PackDesc) -> TokenStream {
     let pack_name = &pack_descr.name;
@@ -113,7 +32,7 @@ pub fn generate_recv_code_for_packet(pack_descr: &PackDesc) -> TokenStream {
         let field_comment = &f.comment;
 
         if let Some(size_bytes) = f.size_bytes.map(|x| x.get()) {
-            let get_raw = get_raw_field_code(f, off, quote! {self.0});
+            let get_raw = util::get_raw_field_code(f, off, quote! {self.0});
             let new_line = quote! { let val = #get_raw;  };
             let mut get_value_lines = vec![new_line];
 
@@ -135,7 +54,7 @@ pub fn generate_recv_code_for_packet(pack_descr: &PackDesc) -> TokenStream {
                 });
 
                 if f.map.convert_may_fail {
-                    let get_val = get_raw_field_code(f, off, quote! { payload });
+                    let get_val = util::get_raw_field_code(f, off, quote! { payload });
                     let is_valid_fn = &out_ty.is_valid_fn;
                     field_validators.push(quote! {
                         let val = #get_val;
@@ -274,8 +193,8 @@ pub fn generate_recv_code_for_packet(pack_descr: &PackDesc) -> TokenStream {
         }
     };
 
-    let debug_impl = generate_debug_impl(pack_name, &ref_name, &owned_name, pack_descr);
-    let serialize_impl = generate_serialize_impl(pack_name, &ref_name, pack_descr);
+    let debug_impl = util::generate_debug_impl(pack_name, &ref_name, &owned_name, pack_descr);
+    let serialize_impl = util::generate_serialize_impl(pack_name, &ref_name, pack_descr);
 
     quote! {
         #[doc = #struct_comment]
@@ -447,7 +366,7 @@ pub fn generate_send_code_for_packet(pack_descr: &PackDesc) -> TokenStream {
     let struct_comment = &pack_descr.comment;
 
     let payload_struct_lifetime = if builder_needs_lifetime {
-        quote! { <'a> }
+        pack_descr.lifetime_tokens().unwrap()
     } else {
         quote! {}
     };
@@ -546,119 +465,6 @@ pub fn generate_send_code_for_packet(pack_descr: &PackDesc) -> TokenStream {
     }
 
     ret
-}
-
-pub fn generate_code_to_extend_enum(ubx_enum: &UbxExtendEnum) -> TokenStream {
-    assert_eq!(ubx_enum.repr, {
-        let ty: Type = parse_quote! { u8 };
-        ty
-    });
-    let name = &ubx_enum.name;
-    let mut variants = ubx_enum.variants.clone();
-    let attrs = &ubx_enum.attrs;
-    if let Some(UbxEnumRestHandling::Reserved) = ubx_enum.rest_handling {
-        let defined: HashSet<u8> = ubx_enum.variants.iter().map(|x| x.1).collect();
-        for i in 0..=u8::MAX {
-            if !defined.contains(&i) {
-                let name = format_ident!("Reserved{}", i);
-                variants.push((name, i));
-            }
-        }
-    }
-    let repr_ty = &ubx_enum.repr;
-    let from_code = match ubx_enum.from_fn {
-        Some(UbxTypeFromFn::From) => {
-            assert_ne!(
-                Some(UbxEnumRestHandling::ErrorProne),
-                ubx_enum.rest_handling
-            );
-            let mut match_branches = Vec::with_capacity(variants.len());
-            for (id, val) in &variants {
-                match_branches.push(quote! { #val => #name :: #id });
-            }
-
-            quote! {
-                impl #name {
-                    fn from(x: #repr_ty) -> Self {
-                        match x {
-                            #(#match_branches),*
-                        }
-                    }
-                }
-            }
-        },
-        Some(UbxTypeFromFn::FromUnchecked) => {
-            assert_ne!(Some(UbxEnumRestHandling::Reserved), ubx_enum.rest_handling);
-            let mut match_branches = Vec::with_capacity(variants.len());
-            for (id, val) in &variants {
-                match_branches.push(quote! { #val => #name :: #id });
-            }
-
-            let mut values = Vec::with_capacity(variants.len());
-            for (i, (_, val)) in variants.iter().enumerate() {
-                if i != 0 {
-                    values.push(quote! { | #val });
-                } else {
-                    values.push(quote! { #val });
-                }
-            }
-
-            quote! {
-                impl #name {
-                    fn from_unchecked(x: #repr_ty) -> Self {
-                        match x {
-                            #(#match_branches),*,
-                            _ => unreachable!(),
-                        }
-                    }
-                    fn is_valid(x: #repr_ty) -> bool {
-                        match x {
-                            #(#values)* => true,
-                            _ => false,
-                        }
-                    }
-                }
-            }
-        },
-        None => quote! {},
-    };
-
-    let to_code = match ubx_enum.into_fn {
-        None => quote! {},
-        Some(UbxTypeIntoFn::Raw) => quote! {
-            impl #name {
-                const fn into_raw(self) -> #repr_ty {
-                    self as #repr_ty
-                }
-            }
-        },
-    };
-
-    let mut enum_variants = Vec::with_capacity(variants.len());
-    for (id, val) in &variants {
-        enum_variants.push(quote! { #id = #val });
-    }
-
-    let code = quote! {
-        #(#attrs)*
-        pub enum #name {
-            #(#enum_variants),*
-        }
-
-        #from_code
-        #to_code
-
-        #[cfg(feature = "serde")]
-        impl serde::Serialize for #name {
-            fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-            where
-                S: serde::Serializer,
-            {
-                serializer.serialize_u8(*self as u8)
-            }
-        }
-    };
-    code
 }
 
 pub fn generate_code_to_extend_bitflags(bitflags: BitFlagsMacro) -> syn::Result<TokenStream> {
@@ -947,32 +753,5 @@ pub fn generate_code_for_parse(recv_packs: &RecvPackets) -> TokenStream {
                 }
             }
         }
-    }
-}
-
-fn get_raw_field_code(field: &PackField, cur_off: usize, data: TokenStream) -> TokenStream {
-    let size_bytes = match field.size_bytes {
-        Some(x) => x,
-        None => unimplemented!(),
-    };
-
-    let mut bytes = Vec::with_capacity(size_bytes.get());
-    for i in 0..size_bytes.get() {
-        let byte_off = cur_off.checked_add(i).unwrap();
-        bytes.push(quote! { #data[#byte_off] });
-    }
-    let raw_ty = &field.ty;
-
-    let signed_byte: Type = parse_quote! { i8 };
-
-    if field.map.get_as_ref {
-        let size_bytes: usize = size_bytes.into();
-        quote! { &#data[#cur_off .. (#cur_off + #size_bytes)] }
-    } else if field.is_field_raw_ty_byte_array() {
-        quote! { [#(#bytes),*] }
-    } else if size_bytes.get() != 1 || *raw_ty == signed_byte {
-        quote! { <#raw_ty>::from_le_bytes([#(#bytes),*]) }
-    } else {
-        quote! { #data[#cur_off] }
     }
 }
