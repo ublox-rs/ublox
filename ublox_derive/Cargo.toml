@@ -16,9 +16,9 @@ quote = "1.0"
 # cannot be bumped to major relese:
 # see API changes at https://github.com/dtolnay/syn/releases/tag/2.0.0
 syn = { version = "1.0", features = ["extra-traits", "full"] }
+syntect = "5.2.0"                                              # For syntax highlighting of printed code
 
 [dev-dependencies]
 proc-macro2 = { version = "1.0", features = ["span-locations"] }
 which = { version = "7.0.2", default-features = false }
 pretty_assertions = "1.4.1"
-syntect = "5.2.0"
