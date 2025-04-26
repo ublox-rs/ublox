@@ -1,0 +1,10 @@
+syn::custom_keyword!(map_type);
+syn::custom_keyword!(scale);
+syn::custom_keyword!(alias);
+syn::custom_keyword!(default_for_builder);
+syn::custom_keyword!(may_fail);
+syn::custom_keyword!(from);
+syn::custom_keyword!(is_valid);
+syn::custom_keyword!(get_as_ref);
+syn::custom_keyword!(into);
+syn::custom_keyword!(size_fn);
