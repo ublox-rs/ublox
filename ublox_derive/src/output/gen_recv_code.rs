@@ -3,8 +3,8 @@ use crate::types::packfield::PackField;
 use crate::types::{PackDesc, PayloadLen};
 use crate::util::DebugContext;
 use proc_macro2::TokenStream;
-use quote::{format_ident, quote};
-use syn::{parse_quote, Field};
+use quote::{format_ident, quote, ToTokens};
+use syn::parse_quote;
 
 pub fn generate_recv_code_for_packet(dbg_ctx: DebugContext, pack_descr: &PackDesc) -> TokenStream {
     let pack_name: &String = &pack_descr.name;
@@ -32,6 +32,59 @@ pub fn generate_recv_code_for_packet(dbg_ctx: DebugContext, pack_descr: &PackDes
     );
 
     let struct_comment = &pack_descr.comment;
+    let validator = generate_validator(pack_descr, pack_name, &ref_name, field_validators);
+    let debug_impl = util::generate_debug_impl(pack_name, &ref_name, &owned_name, pack_descr);
+    let serialize_impl = util::generate_serialize_impl(pack_name, &ref_name, pack_descr);
+    let from_ref_impl = generate_from_ref_impl(&ref_name, &owned_name, packet_size);
+
+    quote! {
+        #[doc = #struct_comment]
+        #[doc = "Contains a reference to an underlying buffer, contains accessor methods to retrieve data."]
+        pub struct #ref_name<'a>(&'a [u8]);
+        impl<'a> #ref_name<'a> {
+            #[inline]
+            pub fn as_bytes(&self) -> &[u8] {
+                self.0
+            }
+
+            pub fn to_owned(&self) -> #owned_name {
+                self.into()
+            }
+
+            #(#getters)*
+
+            #validator
+        }
+
+        #[doc = #struct_comment]
+        #[doc = "Owns the underlying buffer of data, contains accessor methods to retrieve data."]
+        pub struct #owned_name([u8; #packet_size]);
+
+        impl #owned_name {
+            const PACKET_SIZE: usize = #packet_size;
+
+            #[inline]
+            pub fn as_bytes(&self) -> &[u8] {
+                &self.0
+            }
+
+            #(#getters)*
+
+            #validator
+        }
+
+        #from_ref_impl
+        #debug_impl
+        #serialize_impl
+    }
+}
+
+fn generate_validator(
+    pack_descr: &PackDesc,
+    pack_name: &String,
+    ref_name: &syn::Ident,
+    field_validators: Vec<TokenStream>,
+) -> TokenStream {
     let validator = if let Some(payload_len) = pack_descr.packet_payload_size() {
         quote! {
             fn validate(payload: &[u8]) -> Result<(), ParserError> {
@@ -86,46 +139,15 @@ pub fn generate_recv_code_for_packet(dbg_ctx: DebugContext, pack_descr: &PackDes
             }
         }
     };
+    validator
+}
 
-    let debug_impl = util::generate_debug_impl(pack_name, &ref_name, &owned_name, pack_descr);
-    let serialize_impl = util::generate_serialize_impl(pack_name, &ref_name, pack_descr);
-
+fn generate_from_ref_impl(
+    ref_name: &syn::Ident,
+    owned_name: &syn::Ident,
+    packet_size: usize,
+) -> TokenStream {
     quote! {
-        #[doc = #struct_comment]
-        #[doc = "Contains a reference to an underlying buffer, contains accessor methods to retrieve data."]
-        pub struct #ref_name<'a>(&'a [u8]);
-        impl<'a> #ref_name<'a> {
-            #[inline]
-            pub fn as_bytes(&self) -> &[u8] {
-                self.0
-            }
-
-            pub fn to_owned(&self) -> #owned_name {
-                self.into()
-            }
-
-            #(#getters)*
-
-            #validator
-        }
-
-        #[doc = #struct_comment]
-        #[doc = "Owns the underlying buffer of data, contains accessor methods to retrieve data."]
-        pub struct #owned_name([u8; #packet_size]);
-
-        impl #owned_name {
-            const PACKET_SIZE: usize = #packet_size;
-
-            #[inline]
-            pub fn as_bytes(&self) -> &[u8] {
-                &self.0
-            }
-
-            #(#getters)*
-
-            #validator
-        }
-
         impl<'a> From<&#ref_name<'a>> for #owned_name {
             fn from(packet: &#ref_name<'a>) -> Self {
                 let mut bytes = [0u8; #packet_size];
@@ -139,9 +161,6 @@ pub fn generate_recv_code_for_packet(dbg_ctx: DebugContext, pack_descr: &PackDes
                 (&packet).into()
             }
         }
-
-        #debug_impl
-        #serialize_impl
     }
 }
 
@@ -156,11 +175,7 @@ fn process_fields<'a>(
 ) {
     for (field_index, f) in pack_descr.fields.iter().enumerate() {
         let ty: &syn::Type = f.intermediate_type();
-        dbg_ctx.print_at(
-            file!(),
-            line!(),
-            format_args!("field_index={field_index}, ty={ty:?}"),
-        );
+
         let get_name = f.intermediate_field_name();
         let field_comment = &f.comment;
 
@@ -177,11 +192,16 @@ fn process_fields<'a>(
             );
             *off += size_bytes;
         } else {
+            assert!(field_index == pack_descr.fields.len() - 1 || f.size_fn().is_some());
+            dbg_ctx.print_at(
+                file!(),
+                line!(),
+                format_args!("variable_size_field: field_index={field_index}, ty={ty:?}"),
+            );
             process_variable_size_field(
+                dbg_ctx,
                 f,
-                pack_descr,
                 pack_name,
-                field_index,
                 field_comment,
                 get_name,
                 ty,
@@ -259,10 +279,9 @@ fn process_fixed_size_field<'a>(
 }
 
 fn process_variable_size_field<'a>(
+    dbg_ctx: DebugContext,
     f: &'a PackField,
-    pack_descr: &'a PackDesc,
     pack_name: &String,
-    field_index: usize,
     field_comment: &str,
     get_name: &syn::Ident,
     ty: &syn::Type,
@@ -271,8 +290,6 @@ fn process_variable_size_field<'a>(
     field_validators: &mut Vec<TokenStream>,
     size_fns: &mut Vec<&'a TokenStream>,
 ) {
-    assert!(field_index == pack_descr.fields.len() - 1 || f.size_fn().is_some());
-
     let range = if let Some(size_fn) = f.size_fn() {
         let range = quote! {
             {
@@ -314,11 +331,50 @@ fn process_variable_size_field<'a>(
     } else {
         parse_quote! { &[u8] }
     };
-    getters.push(quote! {
+    let getter_out_ty = remove_lifetimes(out_ty.clone());
+
+    dbg_ctx.print_at(
+        file!(),
+        line!(),
+        format_args!("variable_size_field: out_ty:\n{:?}", out_ty),
+    );
+    let getter_def = quote! {
         #[doc = #field_comment]
         #[inline]
-        pub fn #get_name(&self) -> #out_ty {
+        pub fn #get_name(&self) -> #getter_out_ty {
             #(#get_value_lines)*
         }
-    });
+    };
+    dbg_ctx.print_at(
+        file!(),
+        line!(),
+        format_args!(
+            "variable_size_field: getter_def:\n{}",
+            getter_def.to_token_stream()
+        ),
+    );
+    getters.push(getter_def);
+}
+
+fn remove_lifetimes(mut ty: syn::Type) -> syn::Type {
+    if let syn::Type::Path(type_path) = &mut ty {
+        for segment in &mut type_path.path.segments {
+            // Only process angle-bracketed args
+            if let syn::PathArguments::AngleBracketed(args) = &mut segment.arguments {
+                // Filter out lifetimes
+                args.args = args
+                    .args
+                    .clone()
+                    .into_iter()
+                    .filter(|arg| !matches!(arg, syn::GenericArgument::Lifetime(_)))
+                    .collect();
+
+                // If no args remain, clear the arguments entirely
+                if args.args.is_empty() {
+                    segment.arguments = syn::PathArguments::None;
+                }
+            }
+        }
+    }
+    ty
 }

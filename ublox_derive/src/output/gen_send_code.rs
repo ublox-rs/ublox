@@ -5,7 +5,7 @@ use proc_macro2::{Span, TokenStream};
 use quote::{format_ident, quote};
 use syn::Ident;
 
-pub fn generate_send_code_for_packet(dbg_ctx: DebugContext, pack_descr: &PackDesc) -> TokenStream {
+pub fn generate_send_code_for_packet(_dbg_ctx: DebugContext, pack_descr: &PackDesc) -> TokenStream {
     let main_name = Ident::new(&pack_descr.name, Span::call_site());
     let payload_struct = format_ident!("{}Builder", pack_descr.name);
 
