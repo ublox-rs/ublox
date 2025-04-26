@@ -21,7 +21,12 @@ pub fn debug_this(
     _attr: proc_macro::TokenStream,
     input: proc_macro::TokenStream,
 ) -> proc_macro::TokenStream {
-    input
+    let mut input = parse_macro_input!(input as DeriveInput);
+    let debug_attr: syn::Attribute = syn::parse_quote! {
+        #[debug_this]
+    };
+    input.attrs.push(debug_attr);
+    input.to_token_stream().into()
 }
 
 #[proc_macro_attribute]
@@ -159,10 +164,30 @@ fn generate_code_for_recv_send_packet(
     let pack_desc = input::parse_packet_description(pack_name, attrs, fields, generics)?;
 
     let mut code = output::generate_types_for_packet(dbg_ctx, &pack_desc);
+    dbg_ctx.print_at(
+        file!(),
+        line!(),
+        format_args!("=========== CODE ===========\n{code}\n======== END OF CODE ========"),
+    );
     let send_code = output::gen_send_code::generate_send_code_for_packet(dbg_ctx, &pack_desc);
+    dbg_ctx.print_at(
+        file!(),
+        line!(),
+        format_args!(
+            "=========== SEND CODE ===========\n{send_code}\n======== END OF SEND CODE ========"
+        ),
+    );
     code.extend(send_code);
     let recv_code = output::gen_recv_code::generate_recv_code_for_packet(dbg_ctx, &pack_desc);
+    dbg_ctx.print_at(
+        file!(),
+        line!(),
+        format_args!(
+            "=========== RECV CODE ===========\n{recv_code}\n======== END OF RECV CODE ========"
+        ),
+    );
     code.extend(recv_code);
+
     Ok(code)
 }
 
