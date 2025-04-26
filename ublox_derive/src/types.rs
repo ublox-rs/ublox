@@ -1,13 +1,16 @@
+use packfield::PackField;
 use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
-use std::num::NonZeroUsize;
-use syn::{Attribute, Ident, Type};
+use syn::{Attribute, Generics, Ident, Lifetime, Type};
+
+pub(crate) mod packfield;
 
 pub struct PackDesc {
     pub name: String,
     pub header: PackHeader,
     pub comment: String,
     pub fields: Vec<PackField>,
+    pub generics: Generics,
 }
 
 impl PackDesc {
@@ -34,6 +37,23 @@ impl PackDesc {
         }
         Some(ret)
     }
+
+    /// Returns lifetimes if the packet has any on the form `<'a, 'b, 'c>`
+    pub(crate) fn lifetime_tokens(&self) -> Option<TokenStream> {
+        let lifetimes: Vec<Lifetime> = self
+            .generics
+            .lifetimes()
+            .map(|ldef| ldef.lifetime.clone())
+            .collect();
+
+        if lifetimes.is_empty() {
+            None
+        } else {
+            // Create a TokenStream with the lifetimes in angle brackets
+            let tokens = quote! { <#(#lifetimes),*> };
+            Some(tokens)
+        }
+    }
 }
 
 pub struct PackHeader {
@@ -57,28 +77,6 @@ impl PayloadLen {
         } else {
             None
         }
-    }
-}
-
-#[derive(Debug)]
-pub struct PackField {
-    pub name: Ident,
-    pub ty: Type,
-    pub map: PackFieldMapDesc,
-    pub comment: String,
-    pub size_bytes: Option<NonZeroUsize>,
-}
-
-impl PackField {
-    pub fn size_fn(&self) -> Option<&TokenStream> {
-        self.map.map_type.as_ref().and_then(|m| m.size_fn.as_ref())
-    }
-
-    pub fn is_optional(&self) -> bool {
-        self.map
-            .map_type
-            .as_ref()
-            .is_some_and(|m| crate::type_is_option(&m.ty))
     }
 }
 
@@ -147,29 +145,6 @@ impl PackFieldMapDesc {
             alias: x.alias,
             convert_may_fail: x.convert_may_fail,
             get_as_ref: x.get_as_ref,
-        }
-    }
-}
-
-impl PackField {
-    pub fn has_intermediate_type(&self) -> bool {
-        self.map.map_type.is_some()
-    }
-    pub fn intermediate_type(&self) -> &Type {
-        self.map
-            .map_type
-            .as_ref()
-            .map(|x| &x.ty)
-            .unwrap_or(&self.ty)
-    }
-    pub fn intermediate_field_name(&self) -> &Ident {
-        self.map.alias.as_ref().unwrap_or(&self.name)
-    }
-    pub fn is_field_raw_ty_byte_array(&self) -> bool {
-        if let syn::Type::Array(ref fixed_array) = self.ty {
-            *fixed_array.elem == syn::parse_quote!(u8)
-        } else {
-            false
         }
     }
 }

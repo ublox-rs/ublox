@@ -1,5 +1,5 @@
 use crate::types::{
-    BitFlagsMacro, BitFlagsMacroItem, PackDesc, PackField, PackFieldMapDesc, PackHeader,
+    packfield::PackField, BitFlagsMacro, BitFlagsMacroItem, PackDesc, PackFieldMapDesc, PackHeader,
     PacketFlag, PayloadLen, RecvPackets, UbxEnumRestHandling, UbxExtendEnum, UbxTypeFromFn,
     UbxTypeIntoFn,
 };
@@ -9,13 +9,14 @@ use quote::ToTokens;
 use std::num::NonZeroUsize;
 use syn::{
     braced, parse::Parse, punctuated::Punctuated, spanned::Spanned, Attribute, Error, Fields,
-    Ident, Token, Type,
+    Generics, Ident, Token, Type,
 };
 
 pub fn parse_packet_description(
     struct_name: Ident,
     attrs: Vec<Attribute>,
     fields: Fields,
+    generics: Generics,
 ) -> syn::Result<PackDesc> {
     let main_sp = struct_name.span();
 
@@ -42,6 +43,7 @@ pub fn parse_packet_description(
         header,
         comment: struct_comment,
         fields,
+        generics,
     };
 
     if ret.header.payload_len.fixed().map(usize::from) == ret.packet_payload_size() {

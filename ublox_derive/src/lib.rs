@@ -11,7 +11,7 @@ use quote::ToTokens;
 
 use syn::{
     parse_macro_input, punctuated::Punctuated, spanned::Spanned, Attribute, Data, DeriveInput,
-    Fields, Ident, Type, Variant,
+    Fields, Generics, Ident, Type, Variant,
 };
 
 #[proc_macro_attribute]
@@ -21,7 +21,7 @@ pub fn ubx_packet_recv(
 ) -> proc_macro::TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let ret = if let Data::Struct(data) = input.data {
-        generate_code_for_recv_packet(input.ident, input.attrs, data.fields)
+        generate_code_for_recv_packet(input.ident, input.attrs, data.fields, input.generics)
     } else {
         Err(syn::Error::new(
             input.ident.span(),
@@ -40,7 +40,7 @@ pub fn ubx_packet_send(
 ) -> proc_macro::TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let ret = if let Data::Struct(data) = input.data {
-        generate_code_for_send_packet(input.ident, input.attrs, data.fields)
+        generate_code_for_send_packet(input.ident, input.attrs, data.fields, input.generics)
     } else {
         Err(syn::Error::new(
             input.ident.span(),
@@ -59,7 +59,7 @@ pub fn ubx_packet_recv_send(
 ) -> proc_macro::TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let ret = if let Data::Struct(data) = input.data {
-        generate_code_for_recv_send_packet(input.ident, input.attrs, data.fields)
+        generate_code_for_recv_send_packet(input.ident, input.attrs, data.fields, input.generics)
     } else {
         Err(syn::Error::new(
             input.ident.span(),
@@ -113,8 +113,9 @@ fn generate_code_for_recv_packet(
     pack_name: Ident,
     attrs: Vec<Attribute>,
     fields: Fields,
+    generics: Generics,
 ) -> syn::Result<TokenStream> {
-    let pack_desc = input::parse_packet_description(pack_name, attrs, fields)?;
+    let pack_desc = input::parse_packet_description(pack_name, attrs, fields, generics)?;
 
     let mut code = output::generate_types_for_packet(&pack_desc);
     let recv_code = output::generate_recv_code_for_packet(&pack_desc);
@@ -126,8 +127,9 @@ fn generate_code_for_send_packet(
     pack_name: Ident,
     attrs: Vec<Attribute>,
     fields: Fields,
+    generics: Generics,
 ) -> syn::Result<TokenStream> {
-    let pack_desc = input::parse_packet_description(pack_name, attrs, fields)?;
+    let pack_desc = input::parse_packet_description(pack_name, attrs, fields, generics)?;
 
     let mut code = output::generate_types_for_packet(&pack_desc);
     let send_code = output::generate_send_code_for_packet(&pack_desc);
@@ -139,8 +141,9 @@ fn generate_code_for_recv_send_packet(
     pack_name: Ident,
     attrs: Vec<Attribute>,
     fields: Fields,
+    generics: Generics,
 ) -> syn::Result<TokenStream> {
-    let pack_desc = input::parse_packet_description(pack_name, attrs, fields)?;
+    let pack_desc = input::parse_packet_description(pack_name, attrs, fields, generics)?;
 
     let mut code = output::generate_types_for_packet(&pack_desc);
     let send_code = output::generate_send_code_for_packet(&pack_desc);
@@ -156,7 +159,7 @@ fn extend_enum(
     variants: Punctuated<Variant, syn::token::Comma>,
 ) -> syn::Result<TokenStream> {
     let ext_enum = input::parse_ubx_enum_type(name, attrs, variants)?;
-    let code = output::generate_code_to_extend_enum(&ext_enum);
+    let code = output::extend_enum::generate_code_to_extend_enum(&ext_enum);
     Ok(code)
 }
 

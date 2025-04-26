@@ -31,7 +31,7 @@ fn test_ubx_packet_recv_simple() {
 
     let code: syn::ItemStruct = syn::parse_str(&src_code)
         .unwrap_or_else(|err| panic_on_parse_error("test_ubx_packet_recv", &src_code, &err));
-    let tokens = generate_code_for_recv_packet(code.ident, code.attrs, code.fields)
+    let tokens = generate_code_for_recv_packet(code.ident, code.attrs, code.fields, code.generics)
         .unwrap_or_else(|err| panic_on_parse_error("test_ubx_packet_recv", &src_code, &err));
 
     run_compare_test(
@@ -346,8 +346,8 @@ fn test_ubx_packet_recv_dyn_len() {
     let code: syn::ItemStruct = syn::parse_str(&src_code).unwrap_or_else(|err| {
         panic_on_parse_error("test_ubx_packet_recv_dyn_len", &src_code, &err)
     });
-    let tokens =
-        generate_code_for_recv_packet(code.ident, code.attrs, code.fields).unwrap_or_else(|err| {
+    let tokens = generate_code_for_recv_packet(code.ident, code.attrs, code.fields, code.generics)
+        .unwrap_or_else(|err| {
             panic_on_parse_error("test_ubx_packet_recv_dyn_len", &src_code, &err)
         });
 
@@ -530,7 +530,7 @@ fn test_ubx_packet_send() {
 
     let code: syn::ItemStruct = syn::parse_str(&src_code)
         .unwrap_or_else(|err| panic_on_parse_error("test_ubx_packet_send", &src_code, &err));
-    let tokens = generate_code_for_send_packet(code.ident, code.attrs, code.fields)
+    let tokens = generate_code_for_send_packet(code.ident, code.attrs, code.fields, code.generics)
         .unwrap_or_else(|err| panic_on_parse_error("test_ubx_packet_send", &src_code, &err));
 
     run_compare_test(
