@@ -1,10 +1,13 @@
+use packetflag::PacketFlag;
 use packfield::PackField;
 use proc_macro2::TokenStream;
 use quote::quote;
 use syn::{Attribute, Generics, Ident, Lifetime, Type};
 
+pub(crate) mod packetflag;
 pub(crate) mod packfield;
 pub(crate) mod packfieldmapdesc;
+pub(crate) mod recvpackets;
 
 pub struct PackDesc {
     pub name: String,
@@ -124,15 +127,4 @@ pub struct BitFlagsMacroItem {
     pub attrs: Vec<Attribute>,
     pub name: Ident,
     pub value: u64,
-}
-
-#[derive(PartialEq, Eq, Clone, Copy)]
-pub enum PacketFlag {
-    DefaultForBuilder,
-}
-
-pub struct RecvPackets {
-    pub union_enum_name: Ident,
-    pub unknown_ty: Ident,
-    pub all_packets: Vec<Ident>,
 }

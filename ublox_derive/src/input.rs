@@ -1,6 +1,8 @@
+use crate::types::packetflag::PacketFlag;
+use crate::types::recvpackets::RecvPackets;
 use crate::types::{
-    packfield::PackField, packfieldmapdesc::PackFieldMapDesc, PackDesc, PackHeader, PacketFlag,
-    PayloadLen, RecvPackets, UbxEnumRestHandling, UbxExtendEnum, UbxTypeFromFn, UbxTypeIntoFn,
+    packfield::PackField, packfieldmapdesc::PackFieldMapDesc, PackDesc, PackHeader, PayloadLen,
+    UbxEnumRestHandling, UbxExtendEnum, UbxTypeFromFn, UbxTypeIntoFn,
 };
 use packfieldmap::PackFieldMap;
 use proc_macro2::{Span, TokenStream};
@@ -469,43 +471,11 @@ fn field_size_bytes(ty: &Type) -> syn::Result<Option<NonZeroUsize>> {
     }
 }
 
-impl Parse for PacketFlag {
-    fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
-        let lookahead = input.lookahead1();
-
-        if lookahead.peek(keyword::default_for_builder) {
-            input.parse::<keyword::default_for_builder>()?;
-            Ok(PacketFlag::DefaultForBuilder)
-        } else {
-            Err(lookahead.error())
-        }
-    }
-}
-
 struct StructFlags(Punctuated<PacketFlag, Token![,]>);
 
 impl Parse for StructFlags {
     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
         let flags = input.parse_terminated(PacketFlag::parse)?;
         Ok(Self(flags))
-    }
-}
-
-impl Parse for RecvPackets {
-    fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
-        input.parse::<Token![enum]>()?;
-        let union_enum_name: Ident = input.parse()?;
-        let content;
-        let _brace_token: syn::token::Brace = braced!(content in input);
-        content.parse::<Token![_]>()?;
-        content.parse::<Token![=]>()?;
-        let unknown_ty: Ident = content.parse()?;
-        content.parse::<Token![,]>()?;
-        let packs: Punctuated<Ident, Token![,]> = content.parse_terminated(Ident::parse)?;
-        Ok(Self {
-            union_enum_name,
-            unknown_ty,
-            all_packets: packs.into_iter().collect(),
-        })
     }
 }
