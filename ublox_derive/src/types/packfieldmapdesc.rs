@@ -2,6 +2,8 @@ use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
 use syn::{Ident, Type};
 
+use crate::input::packfieldmap::PackFieldMap;
+
 #[derive(Debug)]
 pub struct PackFieldMapDesc {
     pub map_type: Option<MapTypeDesc>,
@@ -21,7 +23,7 @@ pub struct MapTypeDesc {
 }
 
 impl PackFieldMapDesc {
-    pub fn new(x: crate::input::PackFieldMap, raw_ty: &Type) -> Self {
+    pub fn new(x: PackFieldMap, raw_ty: &Type) -> Self {
         let convert_may_fail = x.convert_may_fail;
         let scale_back = x.scale.as_ref().map(|x| quote! { 1. / #x });
         let map_type = x.map_type.map(|map_type| {

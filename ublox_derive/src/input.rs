@@ -2,6 +2,7 @@ use crate::types::{
     packfield::PackField, packfieldmapdesc::PackFieldMapDesc, PackDesc, PackHeader, PacketFlag,
     PayloadLen, RecvPackets, UbxEnumRestHandling, UbxExtendEnum, UbxTypeFromFn, UbxTypeIntoFn,
 };
+use packfieldmap::PackFieldMap;
 use proc_macro2::{Span, TokenStream};
 use quote::ToTokens;
 
@@ -12,6 +13,8 @@ use syn::{
 };
 
 pub(crate) mod bitflags;
+pub(crate) mod keyword;
+pub(crate) mod packfieldmap;
 
 pub fn parse_packet_description(
     struct_name: Ident,
@@ -396,108 +399,12 @@ fn parse_fields(fields: Fields) -> syn::Result<Vec<PackField>> {
     Ok(ret)
 }
 
-mod kw {
-    syn::custom_keyword!(map_type);
-    syn::custom_keyword!(scale);
-    syn::custom_keyword!(alias);
-    syn::custom_keyword!(default_for_builder);
-    syn::custom_keyword!(may_fail);
-    syn::custom_keyword!(from);
-    syn::custom_keyword!(is_valid);
-    syn::custom_keyword!(get_as_ref);
-    syn::custom_keyword!(into);
-    syn::custom_keyword!(size_fn);
-}
-
-#[derive(Default)]
-pub struct PackFieldMap {
-    pub map_type: Option<MapType>,
-    pub scale: Option<syn::LitFloat>,
-    pub alias: Option<Ident>,
-    pub convert_may_fail: bool,
-    pub get_as_ref: bool,
-}
-
-impl PackFieldMap {
-    fn is_none(&self) -> bool {
-        self.map_type.is_none() && self.scale.is_none() && self.alias.is_none()
-    }
-}
-
 pub struct MapType {
     pub ty: Type,
     pub from_fn: Option<TokenStream>,
     pub is_valid_fn: Option<TokenStream>,
     pub into_fn: Option<TokenStream>,
     pub size_fn: Option<TokenStream>,
-}
-
-impl Parse for PackFieldMap {
-    fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
-        let mut map = PackFieldMap::default();
-        let mut map_ty = None;
-        let mut custom_from_fn: Option<syn::Path> = None;
-        let mut custom_into_fn: Option<syn::Expr> = None;
-        let mut custom_is_valid_fn: Option<syn::Path> = None;
-        let mut custom_size_fn: Option<syn::Path> = None;
-        while !input.is_empty() {
-            let lookahead = input.lookahead1();
-
-            if lookahead.peek(kw::map_type) {
-                input.parse::<kw::map_type>()?;
-                input.parse::<Token![=]>()?;
-                map_ty = Some(input.parse()?);
-            } else if lookahead.peek(kw::scale) {
-                input.parse::<kw::scale>()?;
-                input.parse::<Token![=]>()?;
-                map.scale = Some(input.parse()?);
-            } else if lookahead.peek(kw::alias) {
-                input.parse::<kw::alias>()?;
-                input.parse::<Token![=]>()?;
-                map.alias = Some(input.parse()?);
-            } else if lookahead.peek(kw::may_fail) {
-                input.parse::<kw::may_fail>()?;
-                map.convert_may_fail = true;
-            } else if lookahead.peek(kw::from) {
-                input.parse::<kw::from>()?;
-                input.parse::<Token![=]>()?;
-                custom_from_fn = Some(input.parse()?);
-            } else if lookahead.peek(kw::is_valid) {
-                input.parse::<kw::is_valid>()?;
-                input.parse::<Token![=]>()?;
-                custom_is_valid_fn = Some(input.parse()?);
-            } else if lookahead.peek(kw::size_fn) {
-                input.parse::<kw::size_fn>()?;
-                input.parse::<Token![=]>()?;
-                custom_size_fn = Some(input.parse()?);
-            } else if lookahead.peek(kw::get_as_ref) {
-                input.parse::<kw::get_as_ref>()?;
-                map.get_as_ref = true;
-            } else if lookahead.peek(kw::into) {
-                input.parse::<kw::into>()?;
-                input.parse::<Token![=]>()?;
-                custom_into_fn = Some(input.parse()?);
-            } else {
-                return Err(lookahead.error());
-            }
-
-            if input.peek(Token![,]) {
-                input.parse::<Token![,]>()?;
-            }
-        }
-
-        if let Some(map_ty) = map_ty {
-            map.map_type = Some(MapType {
-                ty: map_ty,
-                from_fn: custom_from_fn.map(ToTokens::into_token_stream),
-                is_valid_fn: custom_is_valid_fn.map(ToTokens::into_token_stream),
-                into_fn: custom_into_fn.map(ToTokens::into_token_stream),
-                size_fn: custom_size_fn.map(ToTokens::into_token_stream),
-            });
-        }
-
-        Ok(map)
-    }
 }
 
 #[allow(dead_code)]
@@ -566,8 +473,8 @@ impl Parse for PacketFlag {
     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
         let lookahead = input.lookahead1();
 
-        if lookahead.peek(kw::default_for_builder) {
-            input.parse::<kw::default_for_builder>()?;
+        if lookahead.peek(keyword::default_for_builder) {
+            input.parse::<keyword::default_for_builder>()?;
             Ok(PacketFlag::DefaultForBuilder)
         } else {
             Err(lookahead.error())
