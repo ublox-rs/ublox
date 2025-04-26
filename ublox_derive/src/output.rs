@@ -13,7 +13,7 @@ pub(crate) mod gen_send_code;
 mod match_packet;
 mod util;
 
-pub fn generate_types_for_packet(dbg_ctx: DebugContext, pack_descr: &PackDesc) -> TokenStream {
+pub fn generate_types_for_packet(_dbg_ctx: DebugContext, pack_descr: &PackDesc) -> TokenStream {
     let name = Ident::new(&pack_descr.name, Span::call_site());
     let class = pack_descr.header.class;
     let id = pack_descr.header.id;
