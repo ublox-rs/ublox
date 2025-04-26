@@ -195,7 +195,9 @@ fn extend_bitflags(mac: syn::ItemMacro) -> syn::Result<TokenStream> {
 
 fn do_define_recv_packets(input: TokenStream) -> syn::Result<TokenStream> {
     let recv_packs = input::parse_idents_list(input)?;
-    Ok(output::generate_code_for_parse(&recv_packs))
+    Ok(output::gen_code_for_parse::generate_code_for_parse(
+        &recv_packs,
+    ))
 }
 
 fn type_is_option(ty: &Type) -> bool {
