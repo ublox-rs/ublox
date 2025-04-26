@@ -176,7 +176,7 @@ fn extend_bitflags(mac: syn::ItemMacro) -> syn::Result<TokenStream> {
             ),
         ));
     }
-    let bitflags = input::parse_bitflags(mac)?;
+    let bitflags = input::bitflags::parse_bitflags(mac)?;
     output::generate_code_to_extend_bitflags(bitflags)
 }
 

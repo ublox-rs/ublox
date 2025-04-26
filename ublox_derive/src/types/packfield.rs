@@ -2,7 +2,7 @@ use proc_macro2::TokenStream;
 use std::num::NonZeroUsize;
 use syn::{Ident, Type};
 
-use super::PackFieldMapDesc;
+use super::packfieldmapdesc::PackFieldMapDesc;
 
 #[derive(Debug)]
 pub struct PackField {
