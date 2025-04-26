@@ -129,7 +129,7 @@ fn generate_code_for_recv_packet(
     let pack_desc = input::parse_packet_description(pack_name, attrs, fields, generics)?;
 
     let mut code = output::generate_types_for_packet(dbg_ctx, &pack_desc);
-    let recv_code = output::generate_recv_code_for_packet(dbg_ctx, &pack_desc);
+    let recv_code = output::gen_recv_code::generate_recv_code_for_packet(dbg_ctx, &pack_desc);
     code.extend(recv_code);
     Ok(code)
 }
@@ -161,7 +161,7 @@ fn generate_code_for_recv_send_packet(
     let mut code = output::generate_types_for_packet(dbg_ctx, &pack_desc);
     let send_code = output::gen_send_code::generate_send_code_for_packet(dbg_ctx, &pack_desc);
     code.extend(send_code);
-    let recv_code = output::generate_recv_code_for_packet(dbg_ctx, &pack_desc);
+    let recv_code = output::gen_recv_code::generate_recv_code_for_packet(dbg_ctx, &pack_desc);
     code.extend(recv_code);
     Ok(code)
 }
