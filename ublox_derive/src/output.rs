@@ -1,8 +1,7 @@
+use crate::types::packetflag::PacketFlag;
+use crate::types::recvpackets::RecvPackets;
 use crate::types::BitFlagsMacro;
-use crate::types::{
-    PackDesc, PacketFlag, PayloadLen, RecvPackets, UbxEnumRestHandling, UbxTypeFromFn,
-    UbxTypeIntoFn,
-};
+use crate::types::{PackDesc, PayloadLen, UbxEnumRestHandling, UbxTypeFromFn, UbxTypeIntoFn};
 use proc_macro2::{Span, TokenStream};
 use quote::{format_ident, quote, ToTokens};
 use std::{collections::HashSet, convert::TryFrom};
