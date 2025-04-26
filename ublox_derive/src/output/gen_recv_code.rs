@@ -1,9 +1,9 @@
+use crate::debug::DebugContext;
 use crate::output::util;
 use crate::types::packfield::PackField;
 use crate::types::{PackDesc, PayloadLen};
-use crate::util::DebugContext;
 use proc_macro2::TokenStream;
-use quote::{format_ident, quote, ToTokens};
+use quote::{format_ident, quote};
 use syn::parse_quote;
 
 pub fn generate_recv_code_for_packet(dbg_ctx: DebugContext, pack_descr: &PackDesc) -> TokenStream {
@@ -193,11 +193,6 @@ fn process_fields<'a>(
             *off += size_bytes;
         } else {
             assert!(field_index == pack_descr.fields.len() - 1 || f.size_fn().is_some());
-            dbg_ctx.print_at(
-                file!(),
-                line!(),
-                format_args!("variable_size_field: field_index={field_index}, ty={ty:?}"),
-            );
             process_variable_size_field(
                 dbg_ctx,
                 f,
@@ -335,11 +330,6 @@ fn process_variable_size_field<'a>(
     };
     let getter_out_ty = remove_lifetimes(out_ty.clone());
 
-    dbg_ctx.print_at(
-        file!(),
-        line!(),
-        format_args!("variable_size_field: out_ty:\n{:?}", out_ty),
-    );
     let getter_def = quote! {
         #[doc = #field_comment]
         #[inline]
@@ -347,14 +337,8 @@ fn process_variable_size_field<'a>(
             #(#get_value_lines)*
         }
     };
-    dbg_ctx.print_at(
-        file!(),
-        line!(),
-        format_args!(
-            "variable_size_field: getter_def:\n{}",
-            getter_def.to_token_stream()
-        ),
-    );
+    dbg_ctx.print("getter def:");
+    dbg_ctx.print_code(&getter_def);
     getters.push(getter_def);
 }
 

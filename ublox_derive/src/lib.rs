@@ -1,20 +1,20 @@
 extern crate proc_macro;
 
+pub(crate) mod debug;
 mod input;
 mod output;
 #[cfg(test)]
 mod tests;
 mod types;
-pub(crate) mod util;
 
 use proc_macro2::TokenStream;
 use quote::ToTokens;
 
+use debug::DebugContext;
 use syn::{
     parse_macro_input, punctuated::Punctuated, spanned::Spanned, Attribute, Data, DeriveInput,
     Fields, Generics, Ident, Type, Variant,
 };
-use util::DebugContext;
 
 #[proc_macro_attribute]
 pub fn debug_this(
@@ -164,28 +164,10 @@ fn generate_code_for_recv_send_packet(
     let pack_desc = input::parse_packet_description(pack_name, attrs, fields, generics)?;
 
     let mut code = output::generate_types_for_packet(dbg_ctx, &pack_desc);
-    dbg_ctx.print_at(
-        file!(),
-        line!(),
-        format_args!("=========== CODE ===========\n{code}\n======== END OF CODE ========"),
-    );
+
     let send_code = output::gen_send_code::generate_send_code_for_packet(dbg_ctx, &pack_desc);
-    dbg_ctx.print_at(
-        file!(),
-        line!(),
-        format_args!(
-            "=========== SEND CODE ===========\n{send_code}\n======== END OF SEND CODE ========"
-        ),
-    );
     code.extend(send_code);
     let recv_code = output::gen_recv_code::generate_recv_code_for_packet(dbg_ctx, &pack_desc);
-    dbg_ctx.print_at(
-        file!(),
-        line!(),
-        format_args!(
-            "=========== RECV CODE ===========\n{recv_code}\n======== END OF RECV CODE ========"
-        ),
-    );
     code.extend(recv_code);
 
     Ok(code)

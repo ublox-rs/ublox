@@ -1,6 +1,6 @@
+use crate::debug::DebugContext;
 use crate::types::packetflag::PacketFlag;
 use crate::types::PackDesc;
-use crate::util::DebugContext;
 use proc_macro2::{Span, TokenStream};
 use quote::{format_ident, quote};
 use syn::Ident;
