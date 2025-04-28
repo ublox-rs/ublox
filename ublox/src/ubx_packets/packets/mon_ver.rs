@@ -1,23 +1,22 @@
-use crate::error::ParserError;
+#[cfg(feature = "serde")]
+use super::SerializeUbxPacketFields;
 #[cfg(feature = "serde")]
 use crate::serde::ser::SerializeMap;
 #[allow(unused_imports, reason = "It's only unused in some feature sets")]
 use crate::FieldIter;
 
-use super::SerializeUbxPacketFields;
-use super::UbxPacketMeta;
-use crate::ubx_packets::packets::mon_ver::mon_ver::is_cstr_valid;
+use crate::{error::ParserError, UbxPacketMeta};
 use ublox_derive::ubx_packet_recv;
 
 /// Receiver/Software Version
 #[ubx_packet_recv]
 #[ubx(class = 0x0a, id = 0x04, max_payload_len = 1240)]
 pub struct MonVer {
-    #[ubx(map_type = &str, may_fail, from = mon_ver::convert_to_str_unchecked,
-          is_valid = mon_ver::is_cstr_valid, get_as_ref)]
+    #[ubx(map_type = &str, may_fail, from = convert_to_str_unchecked,
+          is_valid = is_cstr_valid, get_as_ref)]
     software_version: [u8; 30],
-    #[ubx(map_type = &str, may_fail, from = mon_ver::convert_to_str_unchecked,
-          is_valid = mon_ver::is_cstr_valid, get_as_ref)]
+    #[ubx(map_type = &str, may_fail, from = convert_to_str_unchecked,
+          is_valid = is_cstr_valid, get_as_ref)]
     hardware_version: [u8; 10],
 
     /// Extended software information strings
@@ -27,25 +26,23 @@ pub struct MonVer {
     extension: [u8; 0],
 }
 
-mod mon_ver {
-    pub(crate) fn convert_to_str_unchecked(bytes: &[u8]) -> &str {
-        let null_pos = bytes
-            .iter()
-            .position(|x| *x == 0)
-            .expect("is_cstr_valid bug?");
-        core::str::from_utf8(&bytes[0..null_pos])
-            .expect("is_cstr_valid should have prevented this code from running")
-    }
+pub(crate) fn convert_to_str_unchecked(bytes: &[u8]) -> &str {
+    let null_pos = bytes
+        .iter()
+        .position(|x| *x == 0)
+        .expect("is_cstr_valid bug?");
+    core::str::from_utf8(&bytes[0..null_pos])
+        .expect("is_cstr_valid should have prevented this code from running")
+}
 
-    pub(crate) fn is_cstr_valid(bytes: &[u8]) -> bool {
-        let null_pos = match bytes.iter().position(|x| *x == 0) {
-            Some(pos) => pos,
-            None => {
-                return false;
-            },
-        };
-        core::str::from_utf8(&bytes[0..null_pos]).is_ok()
-    }
+pub(crate) fn is_cstr_valid(bytes: &[u8]) -> bool {
+    let null_pos = match bytes.iter().position(|x| *x == 0) {
+        Some(pos) => pos,
+        None => {
+            return false;
+        },
+    };
+    core::str::from_utf8(&bytes[0..null_pos]).is_ok()
 }
 
 #[derive(Debug, Clone)]
@@ -71,7 +68,7 @@ impl<'a> core::iter::Iterator for MonVerExtensionIter<'a> {
         if self.offset < self.data.len() {
             let data = &self.data[self.offset..self.offset + 30];
             self.offset += 30;
-            Some(mon_ver::convert_to_str_unchecked(data))
+            Some(convert_to_str_unchecked(data))
         } else {
             None
         }

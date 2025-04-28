@@ -15,7 +15,7 @@ use tui_logger::{TuiLoggerLevelOutput, TuiLoggerWidget};
 use ublox::{
     EsfAlgStatus, EsfSensorFaults, EsfSensorStatusCalibration, EsfSensorStatusTime, EsfSensorType,
     EsfStatusFusionMode, EsfStatusImuInit, EsfStatusInsInit, EsfStatusMountAngle,
-    EsfStatusWheelTickInit, GpsFix, NavPvtFlags, NavPvtFlags2,
+    EsfStatusWheelTickInit, GnssFixType, NavPvtFlags, NavPvtFlags2,
 };
 
 use crate::app::App;
@@ -136,11 +136,11 @@ fn render_pvt_state(frame: &mut Frame, area: Rect, app: &mut App) {
     );
 
     let gps_fix = match app.pvt_state.position_fix_type {
-        GpsFix::DeadReckoningOnly => "DR",
-        GpsFix::Fix2D => "2D Fix",
-        GpsFix::Fix3D => "3D Fix",
-        GpsFix::GPSPlusDeadReckoning => "3D + DR",
-        GpsFix::TimeOnlyFix => "Time Only",
+        GnssFixType::DeadReckoningOnly => "DR",
+        GnssFixType::Fix2D => "2D Fix",
+        GnssFixType::Fix3D => "3D Fix",
+        GnssFixType::GPSPlusDeadReckoning => "3D + DR",
+        GnssFixType::TimeOnlyFix => "Time Only",
         _ => "No Fix",
     };
 

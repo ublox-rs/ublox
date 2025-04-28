@@ -50,11 +50,11 @@ fn main() {
                     println!("{:?}", packet);
                 },
                 PacketRef::NavPvt(pvt) => {
-                    let has_time = pvt.fix_type() == GpsFix::Fix3D
-                        || pvt.fix_type() == GpsFix::GPSPlusDeadReckoning
-                        || pvt.fix_type() == GpsFix::TimeOnlyFix;
-                    let has_posvel = pvt.fix_type() == GpsFix::Fix3D
-                        || pvt.fix_type() == GpsFix::GPSPlusDeadReckoning;
+                    let has_time = pvt.fix_type() == GnssFixType::Fix3D
+                        || pvt.fix_type() == GnssFixType::GPSPlusDeadReckoning
+                        || pvt.fix_type() == GnssFixType::TimeOnlyFix;
+                    let has_posvel = pvt.fix_type() == GnssFixType::Fix3D
+                        || pvt.fix_type() == GnssFixType::GPSPlusDeadReckoning;
 
                     if has_posvel {
                         let pos: Position = (&pvt).into();

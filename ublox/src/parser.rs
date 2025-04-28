@@ -4,8 +4,7 @@ use alloc::vec::Vec;
 use crate::{
     error::ParserError,
     ubx_packets::{
-        packetref::{match_packet, PacketRef, MAX_PAYLOAD_LEN},
-        RTCM_SYNC_CHAR, SYNC_CHAR_1, SYNC_CHAR_2,
+        match_packet, PacketRef, MAX_PAYLOAD_LEN, RTCM_SYNC_CHAR, SYNC_CHAR_1, SYNC_CHAR_2,
     },
 };
 
@@ -935,7 +934,7 @@ mod test {
             cno_thresh_num_svs: 17,
             cno_thresh: 17,
             static_hold_max_dist: 0x1717,
-            utc_standard: CfgNav5UtcStandard::UtcChina,
+            utc_standard: UtcStandardIdentifier::UtcChina,
             ..CfgNav5Builder::default()
         }
         .into_packet_bytes();
@@ -985,7 +984,7 @@ mod test {
             cno_thresh_num_svs: 17,
             cno_thresh: 17,
             static_hold_max_dist: 0x1717,
-            utc_standard: CfgNav5UtcStandard::UtcChina,
+            utc_standard: UtcStandardIdentifier::UtcChina,
             ..CfgNav5Builder::default()
         }
         .into_packet_bytes();
@@ -1017,7 +1016,7 @@ mod test {
             cno_thresh_num_svs: 17,
             cno_thresh: 17,
             static_hold_max_dist: 0x1717,
-            utc_standard: CfgNav5UtcStandard::UtcChina,
+            utc_standard: UtcStandardIdentifier::UtcChina,
             ..CfgNav5Builder::default()
         }
         .into_packet_bytes();

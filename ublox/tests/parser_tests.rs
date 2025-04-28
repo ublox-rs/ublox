@@ -1,8 +1,8 @@
 #![cfg(feature = "alloc")]
 
 use ublox::{
-    CfgNav5Builder, CfgNav5DynModel, CfgNav5FixMode, CfgNav5Params, CfgNav5UtcStandard, PacketRef,
-    Parser, ParserError, UbxParserIter,
+    CfgNav5Builder, CfgNav5DynModel, CfgNav5FixMode, CfgNav5Params, PacketRef, Parser, ParserError,
+    UbxParserIter, UtcStandardIdentifier,
 };
 
 macro_rules! my_vec {
@@ -155,7 +155,7 @@ fn test_parse_cfg_nav5() {
         cno_thresh_num_svs: 17,
         cno_thresh: 17,
         static_hold_max_dist: 0x1717,
-        utc_standard: CfgNav5UtcStandard::UtcChina,
+        utc_standard: UtcStandardIdentifier::UtcChina,
         ..CfgNav5Builder::default()
     }
     .into_packet_bytes();
@@ -187,7 +187,7 @@ fn test_parse_cfg_nav5() {
                 assert_eq!(17, pack.cno_thresh_num_svs());
                 assert_eq!(17, pack.cno_thresh());
                 assert_eq!(0x1717, pack.static_hold_max_dist());
-                assert_eq!(CfgNav5UtcStandard::UtcChina, pack.utc_standard());
+                assert_eq!(UtcStandardIdentifier::UtcChina, pack.utc_standard());
             },
             _ => panic!(),
         }

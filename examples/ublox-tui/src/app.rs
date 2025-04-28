@@ -4,7 +4,7 @@ use std::{path::PathBuf, vec};
 use ublox::{
     EsfAlgStatus, EsfMeasData, EsfSensorFaults, EsfSensorStatusCalibration, EsfSensorStatusTime,
     EsfSensorType, EsfStatusFusionMode, EsfStatusImuInit, EsfStatusInsInit, EsfStatusMountAngle,
-    EsfStatusWheelTickInit, GpsFix, NavPvtFlags, NavPvtFlags2,
+    EsfStatusWheelTickInit, GnssFixType, NavPvtFlags, NavPvtFlags2,
 };
 
 use crate::{signal::Signal, ui::LogWidget};
@@ -142,7 +142,7 @@ pub struct NavPvtWidgetState {
     pub pdop: f64,
     pub satellites_used: u8,
 
-    pub position_fix_type: GpsFix,
+    pub position_fix_type: GnssFixType,
     pub fix_flags: NavPvtFlags,
     pub invalid_llh: bool,
     pub position_accuracy: (f64, f64),
@@ -182,7 +182,7 @@ impl Default for NavPvtWidgetState {
             velocity_accuracy: f64::NAN,
             heading_accuracy: f64::NAN,
             magnetic_declination_accuracy: f64::NAN,
-            position_fix_type: GpsFix::NoFix,
+            position_fix_type: GnssFixType::NoFix,
             fix_flags: NavPvtFlags::empty(),
             flags2: NavPvtFlags2::empty(),
         }

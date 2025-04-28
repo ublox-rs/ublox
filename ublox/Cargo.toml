@@ -10,6 +10,7 @@ readme.workspace = true
 edition.workspace = true
 
 [features]
+ubx_proto14 = []
 ubx_proto23 = []
 ubx_proto27 = []
 ubx_proto31 = []

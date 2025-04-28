@@ -133,6 +133,10 @@ Enable `std` support.
 
 This library supports no_std environments with a deterministic-size `Parser`. See the documentation for more information.
 
+### `ubx_proto14`
+
+Enable support for uBlox protocol 17 messages (legacy messages).
+
 ### `ubx_proto23`
 
 Enable support for uBlox protocol 23 messages (default).
