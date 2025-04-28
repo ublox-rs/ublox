@@ -23,6 +23,7 @@ jobs:
         feature-args:
           - --features "alloc std ubx_proto23" 
           - --no-default-features --features "alloc ubx_proto23" 
+          - --no-default-features --features ubx_proto14
           - --no-default-features --features ubx_proto23
           - --no-default-features --features ubx_proto27
           - --no-default-features --features ubx_proto31
@@ -129,6 +130,8 @@ jobs:
         include:
           - feature-group: default-features
             feature: alloc
+          - feature-group: only-explicit-features
+            feature: ubx_proto14 
           - feature-group: only-explicit-features
             feature: ubx_proto23 
           - feature-group: only-explicit-features

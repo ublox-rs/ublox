@@ -14,6 +14,7 @@ cargo fmt --all -- --check
 FEATURE_SETS=(
     "--features=alloc,std,ubx_proto23"
     "--no-default-features --features=alloc,ubx_proto23"
+    "--no-default-features --features=ubx_proto14"
     "--no-default-features --features=ubx_proto23"
     "--no-default-features --features=ubx_proto27"
 )
