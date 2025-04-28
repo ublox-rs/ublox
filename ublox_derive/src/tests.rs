@@ -49,7 +49,7 @@ fn test_ubx_packet_recv_simple() {
 
             #[doc = "Some comment"]
             #[doc = "Contains a reference to an underlying buffer, contains accessor methods to retrieve data."]
-            pub struct TestRef<'a>(&'a [u8]);
+            pub struct TestRef<'a>(pub(crate) &'a [u8]);
 
             impl<'a> TestRef<'a> {
                 #[inline]
@@ -140,7 +140,7 @@ fn test_ubx_packet_recv_simple() {
                     val
                 }
 
-                fn validate(payload: &[u8]) -> Result<(), ParserError> {
+                pub(crate) fn validate(payload: &[u8]) -> Result<(), ParserError> {
                     let expect = 16usize;
                     let got = payload.len();
                     if got == expect {
@@ -163,9 +163,9 @@ fn test_ubx_packet_recv_simple() {
             }
             #[doc = "Some comment"]
             #[doc = "Owns the underlying buffer of data, contains accessor methods to retrieve data."]
-            pub struct TestOwned([u8; 16usize]);
+            pub struct TestOwned(pub(crate) [u8; 16usize]);
             impl TestOwned {
-                const PACKET_SIZE: usize = 16usize;
+                pub(crate) const PACKET_SIZE: usize = 16usize;
                 #[inline]
                 pub fn as_bytes(&self) -> &[u8] {
                     &self.0
@@ -242,7 +242,7 @@ fn test_ubx_packet_recv_simple() {
                     let val = <i8>::from_le_bytes([self.0[15usize]]);
                     val
                 }
-                fn validate(payload: &[u8]) -> Result<(), ParserError> {
+                pub(crate) fn validate(payload: &[u8]) -> Result<(), ParserError> {
                     let expect = 16usize;
                     let got = payload.len();
                     if got == expect {
@@ -366,7 +366,7 @@ fn test_ubx_packet_recv_dyn_len() {
 
             #[doc = ""]
             #[doc = "Contains a reference to an underlying buffer, contains accessor methods to retrieve data."]
-            pub struct TestRef<'a>(&'a [u8]);
+            pub struct TestRef<'a>(pub(crate) &'a [u8]);
 
             impl<'a> TestRef<'a> {
                 #[inline]
@@ -397,7 +397,7 @@ fn test_ubx_packet_recv_dyn_len() {
                     &self.0[8usize..]
                 }
 
-                fn validate(payload: &[u8]) -> Result<(), ParserError> {
+                pub(crate) fn validate(payload: &[u8]) -> Result<(), ParserError> {
                     let got = payload.len();
                     let min = 8usize;
                     if got >= min {
@@ -413,9 +413,9 @@ fn test_ubx_packet_recv_dyn_len() {
             }
             #[doc = ""]
             #[doc = "Owns the underlying buffer of data, contains accessor methods to retrieve data."]
-            pub struct TestOwned([u8; 38usize]);
+            pub struct TestOwned(pub(crate) [u8; 38usize]);
             impl TestOwned {
-                const PACKET_SIZE: usize = 38usize;
+                pub(crate) const PACKET_SIZE: usize = 38usize;
                 #[inline]
                 pub fn as_bytes(&self) -> &[u8] {
                     &self.0
@@ -438,7 +438,7 @@ fn test_ubx_packet_recv_dyn_len() {
                 pub fn rest(&self) -> &[u8] {
                     &self.0[8usize..]
                 }
-                fn validate(payload: &[u8]) -> Result<(), ParserError> {
+                pub(crate) fn validate(payload: &[u8]) -> Result<(), ParserError> {
                     let got = payload.len();
                     let min = 8usize;
                     if got >= min {

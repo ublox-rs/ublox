@@ -40,7 +40,7 @@ pub fn generate_recv_code_for_packet(dbg_ctx: DebugContext, pack_descr: &PackDes
     quote! {
         #[doc = #struct_comment]
         #[doc = "Contains a reference to an underlying buffer, contains accessor methods to retrieve data."]
-        pub struct #ref_name<'a>(&'a [u8]);
+        pub struct #ref_name<'a>(pub(crate) &'a [u8]);
         impl<'a> #ref_name<'a> {
             #[inline]
             pub fn as_bytes(&self) -> &[u8] {
@@ -58,10 +58,10 @@ pub fn generate_recv_code_for_packet(dbg_ctx: DebugContext, pack_descr: &PackDes
 
         #[doc = #struct_comment]
         #[doc = "Owns the underlying buffer of data, contains accessor methods to retrieve data."]
-        pub struct #owned_name([u8; #packet_size]);
+        pub struct #owned_name(pub(crate) [u8; #packet_size]);
 
         impl #owned_name {
-            const PACKET_SIZE: usize = #packet_size;
+            pub(crate) const PACKET_SIZE: usize = #packet_size;
 
             #[inline]
             pub fn as_bytes(&self) -> &[u8] {
@@ -87,7 +87,7 @@ fn generate_validator(
 ) -> TokenStream {
     let validator = if let Some(payload_len) = pack_descr.packet_payload_size() {
         quote! {
-            fn validate(payload: &[u8]) -> Result<(), ParserError> {
+            pub(crate) fn validate(payload: &[u8]) -> Result<(), ParserError> {
                 let expect = #payload_len;
                 let got = payload.len();
                 if got ==  expect {
@@ -127,7 +127,7 @@ fn generate_validator(
         };
 
         quote! {
-            fn validate(payload: &[u8]) -> Result<(), ParserError> {
+            pub(crate) fn validate(payload: &[u8]) -> Result<(), ParserError> {
                 let got = payload.len();
                 let min = #min_size;
                 if got >= min {
