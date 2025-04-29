@@ -17,6 +17,7 @@ pub mod aid_ini;
 pub mod cfg_ant;
 pub mod cfg_esf_alg;
 pub mod cfg_esf_wt;
+pub mod cfg_gnss;
 pub mod cfg_inf;
 pub mod cfg_itfm;
 pub mod cfg_msg;
