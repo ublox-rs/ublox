@@ -48,18 +48,18 @@ impl<P: UbxProtocol + 'static> UbxDevice<P> {
         // Send a packet request for the MonVer packet
         self.device
             .write_all(&UbxPacketRequest::request_for::<MonVer>().into_packet_bytes())
-            .expect("Unable to write request/poll for UBX-MON-VER message");
+            .expect("Failed to send poll/request for UBX-MON-VER message");
 
         self.device
             .write_all(&UbxPacketRequest::request_for::<EsfAlg>().into_packet_bytes())
-            .expect("Unable to write request/poll for UBX-ESF-ALG message");
+            .expect("Failed to send poll/request for UBX-ESF-ALG message");
 
         self.device
             .write_all(&UbxPacketRequest::request_for::<EsfStatus>().into_packet_bytes())
-            .expect("Unable to write request/poll for UBX-ESF-STATUS message");
+            .expect("Failed to send poll/request for UBX-ESF-STATUS message");
         self.device
             .write_all(&UbxPacketRequest::request_for::<EsfMeas>().into_packet_bytes())
-            .expect("Unable to write request/poll for UBX-ESF-MEAS message");
+            .expect("Failed to send poll/request for UBX-ESF-MEAS message");
     }
 
     pub fn run(mut self, sender: Sender<UbxStatus>) {
