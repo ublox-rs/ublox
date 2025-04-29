@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 - Add owned variants of `PacketRef` ([#103](https://github.com/ublox-rs/ublox/pull/103))
+- Split large file that defined all packets definition into individual files ([#129])(https://github.com/ublox-rs/ublox/pull/129)
 
 ### Breaking
 
@@ -19,6 +20,9 @@ All notable changes to this project will be documented in this file.
 
 - Almost all `CfgVal` enum variants have been renamed to have a consistent CamelCase representation ([#106](https://github.com/ublox-rs/ublox/pull/106))
 - Added new Packet variant `CfgValGetRecv` for UBX Proto 27 and UBX Proto 31 ([#106](https://github.com/ublox-rs/ublox/pull/106))
+- Replaced `CfgLayer` by `CfgLayerSet` to differentiate it from `CfgLayerGet` ([#106](https://github.com/ublox-rs/ublox/pull/106))
+- Renamed `NavSolution` to `NavSol` ([#129])(https://github.com/ublox-rs/ublox/pull/129)
+- Removed `AlpSrv` from protocol versions 27 and 31 ([#129])(https://github.com/ublox-rs/ublox/pull/129)
 
 ### CI
 
