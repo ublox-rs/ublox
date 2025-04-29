@@ -5,7 +5,7 @@ use crate::{
     error::ParserError,
     ubx_packets::{
         packetref::{match_packet, PacketRef, MAX_PAYLOAD_LEN},
-        RTCM_SYNC_CHAR, SYNC_CHAR_1, SYNC_CHAR_2,
+        UbxConstants,
     },
 };
 
@@ -195,7 +195,7 @@ impl<T: UnderlyingBuffer> Parser<T> {
         let mut buf = DualBuffer::new(&mut self.buf, new_data);
 
         for i in 0..buf.len() {
-            if buf[i] == SYNC_CHAR_1 {
+            if buf[i] == UbxConstants::SYNC_CHAR_1 {
                 buf.drain(i);
                 break;
             }
@@ -208,7 +208,7 @@ impl<T: UnderlyingBuffer> Parser<T> {
         let mut buf = DualBuffer::new(&mut self.buf, new_data);
 
         for i in 0..buf.len() {
-            if buf[i] == SYNC_CHAR_1 || buf[i] == RTCM_SYNC_CHAR {
+            if buf[i] == UbxConstants::SYNC_CHAR_1 || buf[i] == UbxConstants::RTCM_SYNC_CHAR {
                 buf.drain(i);
                 break;
             }
@@ -383,10 +383,13 @@ impl<'a, T: UnderlyingBuffer> DualBuffer<'a, T> {
         // Last case: We have to move the data in underlying, then extend it
         self.buf.drain(self.off);
         self.off = 0;
+
         self.buf
             .extend_from_slice(&self.new_buf[self.new_buf_offset..self.new_buf_offset + new_bytes]);
+
         self.new_buf_offset += new_bytes;
         self.off += count;
+
         Ok(&self.buf[0..count])
     }
 }
@@ -466,6 +469,7 @@ fn extract_packet_ubx<'b, T: UnderlyingBuffer>(
     let (ck_a, ck_b) = checksummer.result();
 
     let (expect_ck_a, expect_ck_b) = (buf[6 + pack_len], buf[6 + pack_len + 1]);
+
     if (ck_a, ck_b) != (expect_ck_a, expect_ck_b) {
         buf.drain(2);
         return Some(Err(ParserError::InvalidChecksum {
@@ -473,6 +477,7 @@ fn extract_packet_ubx<'b, T: UnderlyingBuffer>(
             got: u16::from_le_bytes([ck_a, ck_b]),
         }));
     }
+
     let class_id = buf[2];
     let msg_id = buf[3];
     buf.drain(6);
@@ -491,7 +496,7 @@ fn extract_packet_ubx<'b, T: UnderlyingBuffer>(
 
 impl<T: UnderlyingBuffer> UbxParserIter<'_, T> {
     fn find_sync(&self) -> Option<usize> {
-        (0..self.buf.len()).find(|&i| self.buf[i] == SYNC_CHAR_1)
+        (0..self.buf.len()).find(|&i| self.buf[i] == UbxConstants::SYNC_CHAR_1)
     }
 
     #[allow(clippy::should_implement_trait)]
@@ -511,20 +516,28 @@ impl<T: UnderlyingBuffer> UbxParserIter<'_, T> {
             if self.buf.len() < 2 {
                 return None;
             }
-            if self.buf[1] != SYNC_CHAR_2 {
+            if self.buf[1] != UbxConstants::SYNC_CHAR_2 {
                 self.buf.drain(1);
                 continue;
             }
 
-            if self.buf.len() < 6 {
+            if self.buf.len() < UbxConstants::HEADER_SIZE {
+                // Not a valid UBX header
                 return None;
             }
 
-            let pack_len: usize = u16::from_le_bytes([self.buf[4], self.buf[5]]).into();
+            // Payload length identification
+            let offset = UbxConstants::SYNC_SIZE + 2; //+CLASS +ID
+
+            let pack_len: usize =
+                u16::from_le_bytes([self.buf[offset], self.buf[offset + 1]]).into();
+
             if pack_len > usize::from(MAX_PAYLOAD_LEN) {
-                self.buf.drain(2);
+                self.buf.drain(UbxConstants::PAYLOAD_ENCODING_SIZE);
                 continue;
             }
+
+            // Extract following frame
             return extract_packet_ubx(&mut self.buf, pack_len);
         }
         None
@@ -550,6 +563,7 @@ fn extract_packet_rtcm<'a, 'b, T: UnderlyingBuffer>(
             // We ran out of space, drop this packet and move on
             // TODO: shouldn't we drain pack_len + 3?
             buf.drain(2);
+
             return Some(Err(ParserError::OutOfMemory {
                 required_size: pack_len + 2,
             }));
@@ -567,10 +581,10 @@ fn extract_packet_rtcm<'a, 'b, T: UnderlyingBuffer>(
 impl<T: UnderlyingBuffer> UbxRtcmParserIter<'_, T> {
     fn find_sync(&self) -> NextSync {
         for i in 0..self.buf.len() {
-            if self.buf[i] == SYNC_CHAR_1 {
+            if self.buf[i] == UbxConstants::SYNC_CHAR_1 {
                 return NextSync::Ubx(i);
             }
-            if self.buf[i] == RTCM_SYNC_CHAR {
+            if self.buf[i] == UbxConstants::RTCM_SYNC_CHAR {
                 return NextSync::Rtcm(i);
             }
         }
@@ -586,24 +600,35 @@ impl<T: UnderlyingBuffer> UbxRtcmParserIter<'_, T> {
                 NextSync::Ubx(pos) => {
                     self.buf.drain(pos);
 
-                    if self.buf.len() < 2 {
+                    if self.buf.len() < UbxConstants::SYNC_SIZE {
+                        // Can't extract SYNC_1 + SYNC_2
                         return None;
                     }
-                    if self.buf[1] != SYNC_CHAR_2 {
+
+                    if self.buf[1] != UbxConstants::SYNC_CHAR_2 {
                         self.buf.drain(1);
                         continue;
                     }
 
-                    if self.buf.len() < 6 {
+                    if self.buf.len() < UbxConstants::HEADER_SIZE {
+                        // Not a valid UBX header
                         return None;
                     }
 
-                    let pack_len: usize = u16::from_le_bytes([self.buf[4], self.buf[5]]).into();
+                    // Payload length identification
+                    let offset = UbxConstants::SYNC_SIZE + 2; // CLASS + ID
+
+                    let pack_len: usize =
+                        u16::from_le_bytes([self.buf[offset], self.buf[offset + 1]]).into();
+
                     if pack_len > usize::from(MAX_PAYLOAD_LEN) {
                         self.buf.drain(2);
                         continue;
                     }
+
+                    // Frame parsing
                     let maybe_packet = extract_packet_ubx(&mut self.buf, pack_len);
+
                     match maybe_packet {
                         Some(Ok(packet)) => return Some(Ok(AnyPacketRef::Ubx(packet))),
                         Some(Err(e)) => return Some(Err(e)),

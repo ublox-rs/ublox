@@ -22,8 +22,8 @@ use crate::ubx_packets::packets::mon_ver::is_cstr_valid;
 use crate::FieldIter;
 
 use super::{
-    ubx_checksum, MemWriter, Position, UbxChecksumCalc, UbxPacketCreator, UbxPacketMeta,
-    SYNC_CHAR_1, SYNC_CHAR_2,
+    ubx_checksum, MemWriter, Position, UbxChecksumCalc, UbxConstants, UbxPacketCreator,
+    UbxPacketMeta,
 };
 
 pub use packetref::PacketRef;

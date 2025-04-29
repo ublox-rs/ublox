@@ -471,8 +471,8 @@ pub fn generate_send_code_for_packet(pack_descr: &PackDesc) -> TokenStream {
                 #[inline]
                 pub fn into_packet_bytes(self) -> [u8; Self::PACKET_LEN] {
                     let mut ret = [0u8; Self::PACKET_LEN];
-                    ret[0] = SYNC_CHAR_1;
-                    ret[1] = SYNC_CHAR_2;
+                    ret[0] = UbxConstants::SYNC_CHAR_1;
+                    ret[1] = UbxConstants::SYNC_CHAR_2;
                     ret[2] = #main_name::CLASS;
                     ret[3] = #main_name::ID;
                     let pack_len_bytes = #packet_payload_size_u16 .to_le_bytes();
@@ -496,7 +496,7 @@ pub fn generate_send_code_for_packet(pack_descr: &PackDesc) -> TokenStream {
                 fn create_packet<T: MemWriter>(self, out: &mut T) -> Result<(), MemWriterError<T::Error>> {
                     out.reserve_allocate(#packet_size)?;
                     let len_bytes = #packet_payload_size_u16 .to_le_bytes();
-                    let header = [SYNC_CHAR_1, SYNC_CHAR_2, #main_name::CLASS, #main_name::ID, len_bytes[0], len_bytes[1]];
+                    let header = [UbxConstants::SYNC_CHAR_1, UbxConstants::SYNC_CHAR_2, #main_name::CLASS, #main_name::ID, len_bytes[0], len_bytes[1]];
                     out.write(&header)?;
                     let mut checksum_calc = UbxChecksumCalc::default();
                     checksum_calc.update(&header[2..]);
@@ -528,7 +528,7 @@ pub fn generate_send_code_for_packet(pack_descr: &PackDesc) -> TokenStream {
                   // Tracking issue: https://github.com/rust-lang/rust/issues/72631
                   // out.extend_reserve(6);
                   let mut len_bytes = 0;
-                  let header = [SYNC_CHAR_1, SYNC_CHAR_2, #main_name::CLASS, #main_name::ID, 0, 0];
+                  let header = [UbxConstants::SYNC_CHAR_1, UbxConstants::SYNC_CHAR_2, #main_name::CLASS, #main_name::ID, 0, 0];
                   out.extend(header);
 
                   #(#extend_fields);*;
