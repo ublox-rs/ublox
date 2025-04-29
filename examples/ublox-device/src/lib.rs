@@ -1,8 +1,9 @@
 use cli::UbxPortConfiguration;
 use std::time::Duration;
-use ublox::{CfgPrtUart, CfgPrtUartBuilder, PacketRef, Parser, UartMode, UbxPacketMeta};
 
 pub mod cli;
+pub use ublox;
+use ublox::{CfgPrtUart, CfgPrtUartBuilder, PacketRef, Parser, UartMode, UbxPacketMeta};
 
 pub trait UbxPacketHandler {
     fn handle(&mut self, _packet: PacketRef<'_>) {}

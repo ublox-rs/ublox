@@ -9,11 +9,10 @@ license.workspace = true
 version = "0.1.0"
 
 [features]
-default = ["alloc", "ubx_proto23"]
-alloc = ["ublox/alloc"]
-ubx_proto23 = ["ublox/ubx_proto23", "ublox_device/ubx_proto23"]
-ubx_proto27 = ["ublox/ubx_proto27", "ublox_device/ubx_proto27"]
-ubx_proto31 = ["ublox/ubx_proto31", "ublox_device/ubx_proto31"]
+default = ["ubx_proto23"]
+ubx_proto23 = ["ublox_device/ubx_proto23"]
+ubx_proto27 = ["ublox_device/ubx_proto27"]
+ubx_proto31 = ["ublox_device/ubx_proto31"]
 
 [dependencies]
 anyhow = "1.0"
@@ -32,5 +31,4 @@ tracing-error = "0.2"
 tui-logger = { version = "0.17", features = ["crossterm", "tracing-support"] }
 directories = "6.0"
 
-ublox = { path = "../../ublox", default-features = false, optional = true }
 ublox_device = { path = "../ublox-device", default-features = false, optional = true }

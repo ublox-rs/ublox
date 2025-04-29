@@ -20,7 +20,7 @@ use ratatui::{
 
 use anyhow::Result;
 use tracing::{debug, info, instrument};
-use ublox::SensorData;
+use ublox_device::ublox::{self, SensorData};
 
 use crate::{
     app::{App, UbxStatus},

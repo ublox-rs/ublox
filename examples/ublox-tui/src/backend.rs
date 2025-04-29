@@ -1,7 +1,7 @@
 use std::sync::mpsc::Sender;
 use std::thread;
 use tracing::{debug, error, info, trace};
-use ublox::*;
+use ublox_device::ublox::*;
 
 use crate::app::{
     EsfAlgImuAlignmentWidgetState, EsfAlgStatusWidgetState, EsfMeasurementWidgetState,
