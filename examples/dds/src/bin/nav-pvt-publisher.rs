@@ -3,8 +3,8 @@ use dds::{cli, idl};
 use log::{debug, error, info, trace, warn};
 use rustdds::{with_key::DataWriter, DomainParticipant};
 use std::{io::ErrorKind, time};
-use ublox::{
-    CfgMsgAllPorts, CfgMsgAllPortsBuilder, MonVer, NavPvt, NavPvtFlags2, PacketRef,
+use ublox_device::ublox::{
+    self, CfgMsgAllPorts, CfgMsgAllPortsBuilder, MonVer, NavPvt, NavPvtFlags2, PacketRef,
     UbxPacketRequest,
 };
 use ublox_device::UbxPacketHandler;

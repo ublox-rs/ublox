@@ -12,7 +12,7 @@ use ratatui::{
 };
 
 use tui_logger::{TuiLoggerLevelOutput, TuiLoggerWidget};
-use ublox::{
+use ublox_device::ublox::{
     EsfAlgStatus, EsfSensorFaults, EsfSensorStatusCalibration, EsfSensorStatusTime, EsfSensorType,
     EsfStatusFusionMode, EsfStatusImuInit, EsfStatusInsInit, EsfStatusMountAngle,
     EsfStatusWheelTickInit, GnssFixType, NavPvtFlags, NavPvtFlags2,

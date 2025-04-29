@@ -9,8 +9,7 @@ license.workspace = true
 version = "0.1.0"
 
 [features]
-default = ["alloc", "ubx_proto23"]
-alloc = ["ublox/alloc"]
+default = ["ubx_proto23"]
 ubx_proto23 = ["ublox/ubx_proto23"]
 ubx_proto27 = ["ublox/ubx_proto27"]
 ubx_proto31 = ["ublox/ubx_proto31"]
@@ -20,4 +19,4 @@ anyhow = "1.0"
 clap = { version = "4.2", features = ["cargo"] }
 serialport = "4.2"
 
-ublox = { path = "../../ublox", default-features = false }
+ublox = { path = "../../ublox", default-features = false, features = ["alloc"] }

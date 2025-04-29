@@ -3,13 +3,13 @@ use serialport::SerialPort;
 use std::convert::TryInto;
 use std::thread;
 use std::time::Duration;
-use ublox::*;
+use ublox_device::ublox::*;
 
 fn main() {
     let mut cli = ublox_device::cli::CommandBuilder::default().build();
     cli = cli
-        .about("uBlox multi-threaded CLI example program for ESF/ADR operation.")
-        .name("Demonstrate usage of the uBlox package for ESF+ADR mode with one thread for receiving and one for sending UBX messages.")
+        .about(clap::crate_description!())
+        .name(clap::crate_name!())
         .author(clap::crate_authors!());
 
     let serialport = ublox_device::cli::Command::serialport(cli.clone())

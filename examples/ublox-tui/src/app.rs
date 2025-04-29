@@ -1,7 +1,7 @@
 use core::f64;
 use std::{path::PathBuf, vec};
 
-use ublox::{
+use ublox_device::ublox::{
     EsfAlgStatus, EsfMeasData, EsfSensorFaults, EsfSensorStatusCalibration, EsfSensorStatusTime,
     EsfSensorType, EsfStatusFusionMode, EsfStatusImuInit, EsfStatusInsInit, EsfStatusMountAngle,
     EsfStatusWheelTickInit, GnssFixType, NavPvtFlags, NavPvtFlags2,

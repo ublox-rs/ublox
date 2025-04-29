@@ -1,7 +1,7 @@
 [package]
-authors = ["Andrei Gherghescu <gandrein@pm.me>"]
+authors = ["Andrei Gherghescu <andrei-ng@protonmail.com>"]
 name = "send-receive"
-description = "uBlox using two threads, one for reading one for writing"
+description = "Demonstrate usage of the uBlox package for ESF+ADR mode with one thread for receiving and one for sending UBX messages."
 publish = false
 edition.workspace = true
 rust-version.workspace = true
@@ -9,16 +9,14 @@ license.workspace = true
 version = "0.1.0"
 
 [features]
-default = ["alloc", "ubx_proto23"]
-alloc = ["ublox/alloc"]
-ubx_proto23 = ["ublox/ubx_proto23", "ublox_device/ubx_proto23"]
-ubx_proto27 = ["ublox/ubx_proto27", "ublox_device/ubx_proto27"]
-ubx_proto31 = ["ublox/ubx_proto31", "ublox_device/ubx_proto31"]
+default = ["ubx_proto23"]
+ubx_proto23 = ["ublox_device/ubx_proto23"]
+ubx_proto27 = ["ublox_device/ubx_proto27"]
+ubx_proto31 = ["ublox_device/ubx_proto31"]
 
 [dependencies]
 chrono = "0.4"
 clap = { version = "4.2", features = ["cargo"] }
 serialport = "4.2"
 
-ublox = { path = "../../ublox", default-features = false, optional = true }
 ublox_device = { path = "../ublox-device", default-features = false, optional = true }

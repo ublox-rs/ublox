@@ -1,12 +1,12 @@
 use chrono::prelude::*;
 use std::convert::TryInto;
-use ublox::*;
+use ublox_device::ublox::*;
 
 fn main() {
     let mut cli = ublox_device::cli::CommandBuilder::default().build();
     cli = cli
-        .about("Demonstrate basic usage of uBlox package")
-        .name("basic_cli")
+        .about(clap::crate_description!())
+        .name(clap::crate_name!())
         .author(clap::crate_authors!());
 
     let serialport = ublox_device::cli::Command::serialport(cli.clone())

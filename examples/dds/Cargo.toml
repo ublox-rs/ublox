@@ -1,6 +1,6 @@
 [package]
 authors = ["Andrei Gherghescu <andrei-ng@protonmail.com>"]
-description = "uBlox DDS example"
+description = "Use Data Distribution Service (DDS) to send data across LAN"
 name = "dds"
 publish = false
 rust-version.workspace = true
@@ -9,11 +9,10 @@ edition.workspace = true
 version = "0.1.0"
 
 [features]
-default = ["alloc", "ubx_proto23"]
-alloc = ["ublox/alloc"]
-ubx_proto23 = ["ublox/ubx_proto23", "ublox_device/ubx_proto23"]
-ubx_proto27 = ["ublox/ubx_proto27", "ublox_device/ubx_proto27"]
-ubx_proto31 = ["ublox/ubx_proto31", "ublox_device/ubx_proto31"]
+default = ["ubx_proto23"]
+ubx_proto23 = ["ublox_device/ubx_proto23"]
+ubx_proto27 = ["ublox_device/ubx_proto27"]
+ubx_proto31 = ["ublox_device/ubx_proto31"]
 
 [dependencies]
 chrono = "0.4"
@@ -28,7 +27,6 @@ smol = { version = "2.0" }
 rustdds = "0.11"
 
 ublox_device = { path = "../ublox-device", default-features = false, optional = true }
-ublox = { path = "../../ublox", default-features = false, optional = true }
 
 [[bin]]
 name = "dds-nav-pvt-publisher"
