@@ -10,11 +10,15 @@ use crate::FieldIter;
 use alloc::vec::Vec;
 
 use crate::{
-    cfg_val::{CfgKey, CfgVal},
+    cfg_val::CfgVal,
+    // cfg_val::CfgKey,
     error::ParserError,
-    ubx_checksum, UbxPacketMeta, SYNC_CHAR_1, SYNC_CHAR_2,
+    ubx_checksum,
+    UbxPacketMeta,
+    SYNC_CHAR_1,
+    SYNC_CHAR_2,
 };
-use ublox_derive::{ubx_extend, ubx_extend_bitflags, ubx_packet_recv, ubx_packet_send};
+use ublox_derive::{ubx_extend, ubx_extend_bitflags, ubx_packet_recv_send, ubx_packet_send};
 
 #[ubx_packet_send]
 #[ubx(
@@ -22,55 +26,40 @@ use ublox_derive::{ubx_extend, ubx_extend_bitflags, ubx_packet_recv, ubx_packet_
   id = 0x8a,
   max_payload_len = 772, // 4 + (4 + 8) * 64
 )]
-struct CfgValSet<'a> {
+struct CfgValSet<'cfg> {
     /// Message version
     version: u8,
     /// The layers from which the configuration items should be retrieved
     #[ubx(map_type = CfgLayerSet)]
     layers: u8,
     reserved1: u16,
-    cfg_data: &'a [CfgVal],
+    cfg_data: &'cfg [CfgVal],
 }
 
 /// The CfgValGet message is limited to requesting a maximum of 64 key-value pairs.
 pub const MAX_CFG_KEYS: u16 = 64;
 
-#[ubx_packet_send]
-#[ubx(
-  class = 0x06,
-  id = 0x8b,
-  max_payload_len = 260, // 4 + sizeof(u32) * MAX_CFG_KEYS
-)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 /// This message is limited to containing a maximum of 64 key IDs.
 /// This message returns a UBX-ACK-NAK
 ///  - if any key is unknown to the receiver FW
 ///  - if the layer field speciﬁes an invalid layer to get the value from
 ///  - if the keys array speciﬁes more than 64 key IDs.
-struct CfgValGetSend<'a> {
-    /// Message version
-    version: u8,
-    /// The layers from which the configuration items should be retrieved
-    #[ubx(map_type = CfgLayerGet)]
-    layers: u8,
-    position: u16,
-    cfg_keys: &'a [CfgKey],
-}
-
-#[ubx_packet_recv]
+#[ubx_packet_recv_send]
 #[ubx(
   class = 0x06,
   id = 0x8b,
-  max_payload_len = 772, // 4 + (sizeof(u32) + sizeof(largest val)) * MAX_CFG_KEYS
+//   max_payload_len = 260, // 4 + sizeof(u32) * MAX_CFG_KEYS // When sent
+  max_payload_len = 772, // 4 + (sizeof(u32) + sizeof(largest val)) * MAX_CFG_KEYS // When received
 )]
-struct CfgValGetRecv {
+struct CfgValGetRecv<'a> {
     /// Message version
     version: u8,
     #[ubx(map_type = CfgLayerGet)]
     layers: u8,
     position: u16,
+    // cfg_keys: &'a [CfgKey],
     #[ubx(
-        map_type = CfgValIter,
+        map_type = CfgValIter<'a>,
         from = CfgValIter::new,
         may_fail,
         is_valid = CfgValIter::is_valid,
