@@ -1,19 +1,22 @@
 // Preamble is masked out by UBX
-// const GPS_PREAMBLE_MSB_MASK: u32 = 0xff000000;
-// const GPS_PREAMBLE_OK_MASK: u32 = 0x8b000000;
+const GPS_PREAMBLE_MASK: u32 = 0xff000000;
+const GPS_PREAMBLE_SHIFT: u32 = 24;
+const GPS_TLM_MESSAGE_MASK: u32 = 0x00fffc00;
+const GPS_TLM_MESSAGE_SHIFT: u32 = 8;
 
-const GPS_HOW_TOW_MASK: u32 = 0xffff1000;
-const GPS_HOW_ALERT_BIT_MASK: u32 = 0x00002000;
-const GPS_HOW_ANTI_SPOOFING_BIT_MASK: u32 = 0x00004000;
-const GPS_HOW_FRAME_ID_MASK: u32 = 0x00008300;
+const GPS_HOW_TOW_MASK: u32 = 0xffff8000;
+const GPS_HOW_TOW_SHIFT: u32 = 13;
+const GPS_HOW_ALERT_BIT_MASK: u32 = 0x00004000;
+const GPS_HOW_ANTI_SPOOFING_BIT_MASK: u32 = 0x00002000;
+const GPS_HOW_FRAME_ID_MASK: u32 = 0x00001c00;
+const GPS_HOW_FRAME_ID_SHIFT: u32 = 10;
 
 /// [GpsTelemetryWord] marks the beginning of each frame
 #[derive(Debug, Clone)]
 /// [GpsTelemetryWord]
 pub struct GpsTelemetryWord {
-    // masked out by UBX
-    // pub preamble: u8,
-    // pub tlm_message: u16,
+    pub preamble: u8,
+    pub tlm_message: u16,
     // pub integrity: u8,
     // pub reserved: u8,
     // pub parity: u8,
@@ -21,18 +24,12 @@ pub struct GpsTelemetryWord {
 
 impl GpsTelemetryWord {
     pub fn decode(dword: u32) -> Option<Self> {
-        // let preamble = dword & GPS_PREAMBLE_MSB_MASK;
-
-        // if preamble != GPS_PREAMBLE_OK_MASK {
-        //     return None;
-        // }
+        let preamble = ((dword & GPS_PREAMBLE_MASK) >> GPS_PREAMBLE_SHIFT) as u8;
+        let tlm_message = ((dword & GPS_TLM_MESSAGE_MASK) >> GPS_TLM_MESSAGE_SHIFT) as u16;
 
         Some(Self {
-            // preamble: (preamble >> 24) as u8,
-            // tlm_message: 0,
-            // integrity: 0,
-            // reserved: 0,
-            // parity: 0,
+            preamble,
+            tlm_message,
         })
     }
 }
@@ -48,21 +45,17 @@ pub struct GpsHowWord {
 }
 impl GpsHowWord {
     pub fn decode(dword: u32) -> Option<Self> {
-        let tow = dword & GPS_HOW_TOW_MASK;
-        let alert = (dword & GPS_HOW_ALERT_BIT_MASK);
-        let anti_spoofing = dword & GPS_HOW_ANTI_SPOOFING_BIT_MASK;
-        let frame_id = ((dword & GPS_HOW_FRAME_ID_MASK) >> 18) as u8;
+        let tow = (dword & GPS_HOW_TOW_MASK) >> GPS_HOW_TOW_SHIFT;
+
+        let alert = (dword & GPS_HOW_ALERT_BIT_MASK) > 0;
+        let anti_spoofing = (dword & GPS_HOW_ANTI_SPOOFING_BIT_MASK) > 0;
+        let frame_id = ((dword & GPS_HOW_FRAME_ID_MASK) >> GPS_HOW_FRAME_ID_SHIFT) as u8;
 
         Some(Self {
             tow,
-            alert: alert > 0,
-            anti_spoofing: anti_spoofing > 0,
+            alert,
             frame_id,
-            // preamble: (preamble >> 24) as u8,
-            // tlm_message: 0,
-            // integrity: 0,
-            // reserved: 0,
-            // parity: 0,
+            anti_spoofing,
         })
     }
 }
@@ -71,6 +64,7 @@ impl GpsHowWord {
 pub enum GpsDataWord {
     /// [GpsDataWord::Telemetry] is a marks the beginning of each frame.
     Telemetry(GpsTelemetryWord),
+
     /// [GpsDataWord::How] marks the beginning of each frame, following [GpsDataWord::Telemetry].
     How(GpsHowWord),
 }
