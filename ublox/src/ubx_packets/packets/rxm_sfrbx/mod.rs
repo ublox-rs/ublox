@@ -61,8 +61,17 @@ pub enum RxmSfrbxInterprated {
 }
 
 pub struct RxmSfrbxInterprator<'a> {
+    /// Data word counter, to know where we are within current frame
     dword: usize,
+
+    /// GNSS-ID because frame interpretation is GNSS dependent
     gnss_id: u8,
+
+    /// Stored frame_id to continue the parsing process.
+    /// GPS uses 3 bits, we'll see if this need to change as others are introduced.
+    frame_id: u8,
+
+    /// u32 (uninterpreated) words iterator
     iter: DwrdIter<'a>,
 }
 
@@ -77,12 +86,36 @@ impl core::iter::Iterator for RxmSfrbxInterprator<'_> {
                 // GPS interpretation
                 match self.dword {
                     0 => {
-                        let tlm = gps::GpsTelemetryWord::decode(dword)?;
+                        let tlm = gps::GpsTelemetryWord::decode(dword);
                         Some(RxmSfrbxInterprated::Gps(gps::GpsDataWord::Telemetry(tlm)))
                     },
                     1 => {
-                        let how = gps::GpsHowWord::decode(dword)?;
+                        let how = gps::GpsHowWord::decode(dword);
+
+                        // store frame_id for later
+                        self.frame_id = how.frame_id;
+
                         Some(RxmSfrbxInterprated::Gps(gps::GpsDataWord::How(how)))
+                    },
+                    2 => {
+                        // Frame dependent
+                        match self.frame_id {
+                            2 => {
+                                // GPS Frame #2 word 2
+                                let decoded = gps::GpsSubframe2Word2::decode(dword);
+                                Some(RxmSfrbxInterprated::Gps(gps::GpsDataWord::Subframe2Word2(
+                                    decoded,
+                                )))
+                            },
+                            3 => {
+                                // GPS Frame #3 word 2
+                                let decoded = gps::GpsSubframe3Word2::decode(dword);
+                                Some(RxmSfrbxInterprated::Gps(gps::GpsDataWord::Subframe3Word2(
+                                    decoded,
+                                )))
+                            },
+                            _ => None, // not supported yet
+                        }
                     },
                     _ => None,
                 }
@@ -102,6 +135,7 @@ impl RxmSfrbxRef<'_> {
     pub fn interprator(&self) -> RxmSfrbxInterprator {
         RxmSfrbxInterprator {
             dword: 0,
+            frame_id: 0,
             iter: self.dwrd(),
             gnss_id: self.gnss_id(),
         }

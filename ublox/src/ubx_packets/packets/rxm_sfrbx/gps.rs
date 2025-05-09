@@ -1,3 +1,5 @@
+const GPS_PARITY_MASK: u32 = 0x000000ff;
+
 // Preamble is masked out by UBX
 const GPS_TLM_PREAMBLE_MASK: u32 = 0xff000000;
 const GPS_TLM_PREAMBLE_SHIFT: u32 = 24;
@@ -5,7 +7,6 @@ const GPS_TLM_MESSAGE_MASK: u32 = 0x00fffc00;
 const GPS_TLM_MESSAGE_SHIFT: u32 = 8;
 const GPS_TLM_INTEGRITY_BIT_MASK: u32 = 0x00000200;
 const GPS_TLM_RESERVED_BIT_MASK: u32 = 0x00000100;
-const GPS_TLM_PARITY_MASK: u32 = 0x000000ff;
 
 const GPS_HOW_TOW_MASK: u32 = 0xffff8000;
 const GPS_HOW_TOW_SHIFT: u32 = 13;
@@ -13,6 +14,16 @@ const GPS_HOW_ALERT_BIT_MASK: u32 = 0x00004000;
 const GPS_HOW_ANTI_SPOOFING_BIT_MASK: u32 = 0x00002000;
 const GPS_HOW_FRAME_ID_MASK: u32 = 0x00001c00;
 const GPS_HOW_FRAME_ID_SHIFT: u32 = 10;
+
+const GPS_SUBFRAME2_WORD2_IODE_MASK: u32 = 0xff000000;
+const GPS_SUBFRAME2_WORD2_IODE_SHIFT: u32 = 24;
+const GPS_SUBFRAME2_WORD2_CRS_MASK: u32 = 0x00ffff00;
+const GPS_SUBFRAME2_WORD2_CRS_SHIFT: u32 = 8;
+
+const GPS_SUBFRAME3_WORD2_CIC_MASK: u32 = 0xffff0000;
+const GPS_SUBFRAME3_WORD2_CIC_SHIFT: u32 = 16;
+const GPS_SUBFRAME3_WORD2_OMEGA_0_MASK: u32 = 0x0000ff00;
+const GPS_SUBFRAME3_WORD2_OMEGA_0_SHIFT: u32 = 8;
 
 /// [GpsTelemetryWord] marks the beginning of each frame
 #[derive(Debug, Clone)]
@@ -36,20 +47,20 @@ pub struct GpsTelemetryWord {
 }
 
 impl GpsTelemetryWord {
-    pub fn decode(dword: u32) -> Option<Self> {
+    pub(crate) fn decode(dword: u32) -> Self {
         let preamble = ((dword & GPS_TLM_PREAMBLE_MASK) >> GPS_TLM_PREAMBLE_SHIFT) as u8;
         let tlm_message = ((dword & GPS_TLM_MESSAGE_MASK) >> GPS_TLM_MESSAGE_SHIFT) as u16;
         let integrity = (dword & GPS_TLM_INTEGRITY_BIT_MASK) > 0;
-        let reserved = (dword & GPS_TLM_INTEGRITY_BIT_MASK) > 0;
-        let parity = (dword & GPS_TLM_PARITY_MASK) as u8;
+        let reserved = (dword & GPS_TLM_RESERVED_BIT_MASK) > 0;
+        let parity = (dword & GPS_PARITY_MASK) as u8;
 
-        Some(Self {
+        Self {
             preamble,
             tlm_message,
             integrity,
             reserved,
             parity,
-        })
+        }
     }
 }
 
@@ -69,22 +80,72 @@ pub struct GpsHowWord {
 
     /// Following Frame ID (to decoding following data words)
     pub frame_id: u8,
+
+    /// Parity bits
+    pub parity: u8,
 }
 
 impl GpsHowWord {
-    pub fn decode(dword: u32) -> Option<Self> {
+    pub(crate) fn decode(dword: u32) -> Self {
         let tow = (dword & GPS_HOW_TOW_MASK) >> GPS_HOW_TOW_SHIFT;
 
         let alert = (dword & GPS_HOW_ALERT_BIT_MASK) > 0;
         let anti_spoofing = (dword & GPS_HOW_ANTI_SPOOFING_BIT_MASK) > 0;
         let frame_id = ((dword & GPS_HOW_FRAME_ID_MASK) >> GPS_HOW_FRAME_ID_SHIFT) as u8;
 
-        Some(Self {
+        let parity = (dword & GPS_PARITY_MASK) as u8;
+
+        Self {
             tow,
             alert,
             frame_id,
             anti_spoofing,
-        })
+            parity,
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct GpsSubframe2Word2 {
+    pub iode: u8,
+    pub crs: u16,
+    pub parity: u8,
+}
+
+impl GpsSubframe2Word2 {
+    pub(crate) fn decode(dword: u32) -> Self {
+        let iode =
+            ((dword & GPS_SUBFRAME2_WORD2_IODE_MASK) >> GPS_SUBFRAME2_WORD2_IODE_SHIFT) as u8;
+        let crs = ((dword & GPS_SUBFRAME2_WORD2_CRS_MASK) >> GPS_SUBFRAME2_WORD2_CRS_SHIFT) as u16;
+        let parity = (dword & GPS_PARITY_MASK) as u8;
+
+        Self { iode, crs, parity }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct GpsSubframe3Word2 {
+    pub cic: u16,
+
+    /// MSB(8) bits of Omega_0. You will have to
+    /// agglomerate Subframe3 Word3 omega_0_lsb to complete this value.
+    pub omega_0_msb: u8,
+
+    pub parity: u8,
+}
+
+impl GpsSubframe3Word2 {
+    pub(crate) fn decode(dword: u32) -> Self {
+        let cic = ((dword & GPS_SUBFRAME3_WORD2_CIC_MASK) >> GPS_SUBFRAME3_WORD2_CIC_SHIFT) as u16;
+        let omega_0_msb =
+            ((dword & GPS_SUBFRAME3_WORD2_OMEGA_0_MASK) >> GPS_SUBFRAME3_WORD2_OMEGA_0_SHIFT) as u8;
+        let parity = (dword & GPS_PARITY_MASK) as u8;
+
+        Self {
+            cic,
+            parity,
+            omega_0_msb,
+        }
     }
 }
 
@@ -95,4 +156,10 @@ pub enum GpsDataWord {
 
     /// [GpsDataWord::How] marks the beginning of each frame, following [GpsDataWord::Telemetry].
     How(GpsHowWord),
+
+    /// Subframe #2 Word #2
+    Subframe2Word2(GpsSubframe2Word2),
+
+    /// Subframe #3 Word #2
+    Subframe3Word2(GpsSubframe3Word2),
 }
