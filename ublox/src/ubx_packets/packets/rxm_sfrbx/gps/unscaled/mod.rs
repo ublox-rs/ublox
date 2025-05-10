@@ -76,7 +76,7 @@ impl GpsUnscaledEph2 {
             sqrt_a: {
                 let mut sqrt_a = self.word9.sqrt_a_lsb;
                 sqrt_a += (self.word8.sqrt_a_msb as u32) << 25;
-                (sqrt_a as f64) / 2.0_f64.powi(19) 
+                (sqrt_a as f64) / 2.0_f64.powi(19)
             },
         }
     }

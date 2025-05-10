@@ -138,7 +138,7 @@ impl GpsUnscaledEph3Word9 {
         let omega_dot = ((dword & WORD9_OMEGADOT_MASK) >> WORD9_OMEGADOT_SHIFT) as u32;
 
         let omega_dot = twos_complement(omega_dot, 0xffffff, 24);
-        
+
         Self { omega_dot }
     }
 }

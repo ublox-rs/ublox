@@ -111,7 +111,7 @@ pub struct GpsEphFrame2 {
 
     /// Latitude cosine harmonic correction term
     pub cuc: f64,
-    
+
     /// Latitude sine harmonic correction term
     pub cus: f64,
 

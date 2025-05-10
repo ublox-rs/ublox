@@ -55,12 +55,12 @@ impl core::iter::Iterator for DwrdIter<'_> {
 }
 
 #[derive(Debug, Clone)]
-pub enum RxmSfrbxInterprated {
+pub enum RxmSfrbxInterpreted {
     /// [gps::GpsFrame]
     GPS(gps::GpsFrame),
 }
 
-struct RxmSfrbxInterprator<'a> {
+struct RxmSfrbxInterpretor<'a> {
     /// Data word counter, to know where we are within current frame
     ptr: usize,
 
@@ -71,10 +71,10 @@ struct RxmSfrbxInterprator<'a> {
     iter: DwrdIter<'a>,
 }
 
-impl RxmSfrbxInterprator<'_> {
-    /// Consumes all data words, trying to obtain an [RxmSfrbxInterprated],
+impl RxmSfrbxInterpretor<'_> {
+    /// Consumes all data words, trying to obtain an [RxmSfrbxInterpreted],
     /// for supported frames.
-    pub fn interprate(&mut self) -> Option<RxmSfrbxInterprated> {
+    pub fn interprete(&mut self) -> Option<RxmSfrbxInterpreted> {
         // GPS Frame possibly constructed
         let mut gps = Option::<gps::GpsUnscaledFrame>::None;
 
@@ -83,7 +83,7 @@ impl RxmSfrbxInterprator<'_> {
 
             match self.gnss_id {
                 0 => {
-                    if self.gps_interpration(dword, &mut gps).is_none() {
+                    if self.gps_interpretion(dword, &mut gps).is_none() {
                         // no need to continue interpretation prcess
                         break;
                     }
@@ -97,7 +97,7 @@ impl RxmSfrbxInterprator<'_> {
             0 => {
                 let gps = gps?; // decoding went well
                 let scaled = gps.scale();
-                Some(RxmSfrbxInterprated::GPS(scaled))
+                Some(RxmSfrbxInterpreted::GPS(scaled))
             },
             _ => {
                 // not supported yet
@@ -106,10 +106,10 @@ impl RxmSfrbxInterprator<'_> {
         }
     }
 
-    fn gps_interpration(
+    fn gps_interpretion(
         &mut self,
         dword: u32,
-        interprated: &mut Option<gps::GpsUnscaledFrame>,
+        interpreted: &mut Option<gps::GpsUnscaledFrame>,
     ) -> Option<()> {
         match self.ptr {
             1 => {
@@ -117,21 +117,21 @@ impl RxmSfrbxInterprator<'_> {
                 let telemetry = gps::GpsTelemetryWord::decode(dword)?;
                 let mut frame = GpsUnscaledFrame::default();
                 frame.telemetry = telemetry;
-                *interprated = Some(frame);
+                *interpreted = Some(frame);
             },
             2 => {
                 // HOW word (must follow TLM).
-                // After this step, the interpratation cannot fail.
+                // After this step, the interpretation cannot fail.
                 // It just must be wrapped correctly (many cases, basically indexed on frame_id & ptr).
                 let how = gps::GpsHowWord::decode(dword);
-                if let Some(interprated) = interprated {
-                    interprated.how = how;
+                if let Some(interpreted) = interpreted {
+                    interpreted.how = how;
                 }
             },
             3 => {
                 // Frame dependent construction
-                if let Some(interprated) = interprated {
-                    let frame_id = interprated.how.frame_id;
+                if let Some(interpreted) = interpreted {
+                    let frame_id = interpreted.how.frame_id;
                     match frame_id {
                         1 => {
                             // GPS Ephemeris #1
@@ -139,21 +139,21 @@ impl RxmSfrbxInterprator<'_> {
                             let mut subframe1 = gps::GpsUnscaledEph1::default();
                             subframe1.word3 = word3;
 
-                            interprated.subframe = gps::GpsUnscaledSubframe::Eph1(subframe1);
+                            interpreted.subframe = gps::GpsUnscaledSubframe::Eph1(subframe1);
                         },
                         2 => {
                             let word3 = gps::GpsUnscaledEph2Word3::decode(dword);
                             let mut subframe2 = gps::GpsUnscaledEph2::default();
                             subframe2.word3 = word3;
 
-                            interprated.subframe = gps::GpsUnscaledSubframe::Eph2(subframe2);
+                            interpreted.subframe = gps::GpsUnscaledSubframe::Eph2(subframe2);
                         },
                         3 => {
                             let word3 = gps::GpsUnscaledEph3Word3::decode(dword);
                             let mut subframe3 = gps::GpsUnscaledEph3::default();
                             subframe3.word3 = word3;
 
-                            interprated.subframe = gps::GpsUnscaledSubframe::Eph3(subframe3);
+                            interpreted.subframe = gps::GpsUnscaledSubframe::Eph3(subframe3);
                         },
                         // Almanac #4 not supported yet
                         // 4 => {
@@ -169,12 +169,12 @@ impl RxmSfrbxInterprator<'_> {
             },
             4 => {
                 // Frame dependent continuation
-                if let Some(interprated) = interprated {
-                    let frame_id = interprated.how.frame_id;
+                if let Some(interpreted) = interpreted {
+                    let frame_id = interpreted.how.frame_id;
                     match frame_id {
                         1 => {
                             let word4 = gps::GpsUnscaledEph1Word4::decode(dword);
-                            match &mut interprated.subframe {
+                            match &mut interpreted.subframe {
                                 gps::GpsUnscaledSubframe::Eph1(subframe) => {
                                     subframe.word4 = word4;
                                 },
@@ -183,7 +183,7 @@ impl RxmSfrbxInterprator<'_> {
                         },
                         2 => {
                             let word4 = gps::GpsUnscaledEph2Word4::decode(dword);
-                            match &mut interprated.subframe {
+                            match &mut interpreted.subframe {
                                 gps::GpsUnscaledSubframe::Eph2(subframe) => {
                                     subframe.word4 = word4;
                                 },
@@ -192,7 +192,7 @@ impl RxmSfrbxInterprator<'_> {
                         },
                         3 => {
                             let word4 = gps::GpsUnscaledEph3Word4::decode(dword);
-                            match &mut interprated.subframe {
+                            match &mut interpreted.subframe {
                                 gps::GpsUnscaledSubframe::Eph3(subframe) => {
                                     subframe.word4 = word4;
                                 },
@@ -213,12 +213,12 @@ impl RxmSfrbxInterprator<'_> {
             },
             5 => {
                 // Frame dependent continuation
-                if let Some(interprated) = interprated {
-                    let frame_id = interprated.how.frame_id;
+                if let Some(interpreted) = interpreted {
+                    let frame_id = interpreted.how.frame_id;
                     match frame_id {
                         1 => {
                             let word5 = gps::GpsUnscaledEph1Word5::decode(dword);
-                            match &mut interprated.subframe {
+                            match &mut interpreted.subframe {
                                 gps::GpsUnscaledSubframe::Eph1(subframe) => {
                                     subframe.word5 = word5;
                                 },
@@ -227,7 +227,7 @@ impl RxmSfrbxInterprator<'_> {
                         },
                         2 => {
                             let word5 = gps::GpsUnscaledEph2Word5::decode(dword);
-                            match &mut interprated.subframe {
+                            match &mut interpreted.subframe {
                                 gps::GpsUnscaledSubframe::Eph2(subframe) => {
                                     subframe.word5 = word5;
                                 },
@@ -236,7 +236,7 @@ impl RxmSfrbxInterprator<'_> {
                         },
                         3 => {
                             let word5 = gps::GpsUnscaledEph3Word5::decode(dword);
-                            match &mut interprated.subframe {
+                            match &mut interpreted.subframe {
                                 gps::GpsUnscaledSubframe::Eph3(subframe) => {
                                     subframe.word5 = word5;
                                 },
@@ -257,12 +257,12 @@ impl RxmSfrbxInterprator<'_> {
             },
             6 => {
                 // Frame dependent continuation
-                if let Some(interprated) = interprated {
-                    let frame_id = interprated.how.frame_id;
+                if let Some(interpreted) = interpreted {
+                    let frame_id = interpreted.how.frame_id;
                     match frame_id {
                         1 => {
                             let word6 = gps::GpsUnscaledEph1Word6::decode(dword);
-                            match &mut interprated.subframe {
+                            match &mut interpreted.subframe {
                                 gps::GpsUnscaledSubframe::Eph1(subframe) => {
                                     subframe.word6 = word6;
                                 },
@@ -271,7 +271,7 @@ impl RxmSfrbxInterprator<'_> {
                         },
                         2 => {
                             let word6 = gps::GpsUnscaledEph2Word6::decode(dword);
-                            match &mut interprated.subframe {
+                            match &mut interpreted.subframe {
                                 gps::GpsUnscaledSubframe::Eph2(subframe) => {
                                     subframe.word6 = word6;
                                 },
@@ -280,7 +280,7 @@ impl RxmSfrbxInterprator<'_> {
                         },
                         3 => {
                             let word6 = gps::GpsUnscaledEph3Word6::decode(dword);
-                            match &mut interprated.subframe {
+                            match &mut interpreted.subframe {
                                 gps::GpsUnscaledSubframe::Eph3(subframe) => {
                                     subframe.word6 = word6;
                                 },
@@ -301,12 +301,12 @@ impl RxmSfrbxInterprator<'_> {
             },
             7 => {
                 // Frame dependent continuation
-                if let Some(interprated) = interprated {
-                    let frame_id = interprated.how.frame_id;
+                if let Some(interpreted) = interpreted {
+                    let frame_id = interpreted.how.frame_id;
                     match frame_id {
                         1 => {
                             let word7 = gps::GpsUnscaledEph1Word7::decode(dword);
-                            match &mut interprated.subframe {
+                            match &mut interpreted.subframe {
                                 gps::GpsUnscaledSubframe::Eph1(subframe) => {
                                     subframe.word7 = word7;
                                 },
@@ -315,7 +315,7 @@ impl RxmSfrbxInterprator<'_> {
                         },
                         2 => {
                             let word7 = gps::GpsUnscaledEph2Word7::decode(dword);
-                            match &mut interprated.subframe {
+                            match &mut interpreted.subframe {
                                 gps::GpsUnscaledSubframe::Eph2(subframe) => {
                                     subframe.word7 = word7;
                                 },
@@ -324,7 +324,7 @@ impl RxmSfrbxInterprator<'_> {
                         },
                         3 => {
                             let word7 = gps::GpsUnscaledEph3Word7::decode(dword);
-                            match &mut interprated.subframe {
+                            match &mut interpreted.subframe {
                                 gps::GpsUnscaledSubframe::Eph3(subframe) => {
                                     subframe.word7 = word7;
                                 },
@@ -345,12 +345,12 @@ impl RxmSfrbxInterprator<'_> {
             },
             8 => {
                 // Frame dependent continuation
-                if let Some(interprated) = interprated {
-                    let frame_id = interprated.how.frame_id;
+                if let Some(interpreted) = interpreted {
+                    let frame_id = interpreted.how.frame_id;
                     match frame_id {
                         1 => {
                             let word8 = gps::GpsUnscaledEph1Word8::decode(dword);
-                            match &mut interprated.subframe {
+                            match &mut interpreted.subframe {
                                 gps::GpsUnscaledSubframe::Eph1(subframe) => {
                                     subframe.word8 = word8;
                                 },
@@ -359,7 +359,7 @@ impl RxmSfrbxInterprator<'_> {
                         },
                         2 => {
                             let word8 = gps::GpsUnscaledEph2Word8::decode(dword);
-                            match &mut interprated.subframe {
+                            match &mut interpreted.subframe {
                                 gps::GpsUnscaledSubframe::Eph2(subframe) => {
                                     subframe.word8 = word8;
                                 },
@@ -368,7 +368,7 @@ impl RxmSfrbxInterprator<'_> {
                         },
                         3 => {
                             let word8 = gps::GpsUnscaledEph3Word8::decode(dword);
-                            match &mut interprated.subframe {
+                            match &mut interpreted.subframe {
                                 gps::GpsUnscaledSubframe::Eph3(subframe) => {
                                     subframe.word8 = word8;
                                 },
@@ -389,12 +389,12 @@ impl RxmSfrbxInterprator<'_> {
             },
             9 => {
                 // Frame dependent continuation
-                if let Some(interprated) = interprated {
-                    let frame_id = interprated.how.frame_id;
+                if let Some(interpreted) = interpreted {
+                    let frame_id = interpreted.how.frame_id;
                     match frame_id {
                         1 => {
                             let word9 = gps::GpsUnscaledEph1Word9::decode(dword);
-                            match &mut interprated.subframe {
+                            match &mut interpreted.subframe {
                                 gps::GpsUnscaledSubframe::Eph1(subframe) => {
                                     subframe.word9 = word9;
                                 },
@@ -403,7 +403,7 @@ impl RxmSfrbxInterprator<'_> {
                         },
                         2 => {
                             let word9 = gps::GpsUnscaledEph2Word9::decode(dword);
-                            match &mut interprated.subframe {
+                            match &mut interpreted.subframe {
                                 gps::GpsUnscaledSubframe::Eph2(subframe) => {
                                     subframe.word9 = word9;
                                 },
@@ -412,7 +412,7 @@ impl RxmSfrbxInterprator<'_> {
                         },
                         3 => {
                             let word9 = gps::GpsUnscaledEph3Word9::decode(dword);
-                            match &mut interprated.subframe {
+                            match &mut interpreted.subframe {
                                 gps::GpsUnscaledSubframe::Eph3(subframe) => {
                                     subframe.word9 = word9;
                                 },
@@ -433,12 +433,12 @@ impl RxmSfrbxInterprator<'_> {
             },
             10 => {
                 // Frame dependent continuation
-                if let Some(interprated) = interprated {
-                    let frame_id = interprated.how.frame_id;
+                if let Some(interpreted) = interpreted {
+                    let frame_id = interpreted.how.frame_id;
                     match frame_id {
                         1 => {
                             let word10 = gps::GpsUnscaledEph1Word10::decode(dword);
-                            match &mut interprated.subframe {
+                            match &mut interpreted.subframe {
                                 gps::GpsUnscaledSubframe::Eph1(subframe) => {
                                     subframe.word10 = word10;
                                 },
@@ -447,7 +447,7 @@ impl RxmSfrbxInterprator<'_> {
                         },
                         2 => {
                             let word10 = gps::GpsUnscaledEph2Word10::decode(dword);
-                            match &mut interprated.subframe {
+                            match &mut interpreted.subframe {
                                 gps::GpsUnscaledSubframe::Eph2(subframe) => {
                                     subframe.word10 = word10;
                                 },
@@ -456,7 +456,7 @@ impl RxmSfrbxInterprator<'_> {
                         },
                         3 => {
                             let word10 = gps::GpsUnscaledEph3Word10::decode(dword);
-                            match &mut interprated.subframe {
+                            match &mut interpreted.subframe {
                                 gps::GpsUnscaledSubframe::Eph3(subframe) => {
                                     subframe.word10 = word10;
                                 },
@@ -483,15 +483,15 @@ impl RxmSfrbxInterprator<'_> {
 }
 
 impl RxmSfrbxRef<'_> {
-    /// Try to interprate the RXM-SFRBX inner frame (when supported/known).
-    pub fn interprate(&self) -> Option<RxmSfrbxInterprated> {
-        self.interprator().interprate()
+    /// Try to interprete the RXM-SFRBX inner frame (when supported/known).
+    pub fn interprete(&self) -> Option<RxmSfrbxInterpreted> {
+        self.interpretor().interprete()
     }
 
-    /// Builds the [RxmSfrbxInterprator] that can interpreta
+    /// Builds the [RxmSfrbxInterpretor] that can interpreta
     /// some of the inner words we support.
-    fn interprator(&self) -> RxmSfrbxInterprator<'_> {
-        RxmSfrbxInterprator {
+    fn interpretor(&self) -> RxmSfrbxInterpretor<'_> {
+        RxmSfrbxInterpretor {
             ptr: 0,
             iter: self.dwrd(),
             gnss_id: self.gnss_id(),
