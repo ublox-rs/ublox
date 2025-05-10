@@ -97,6 +97,9 @@ pub struct GpsEphFrame1 {
 /// Frame #2 of all Ephemeris GPS frames.
 #[derive(Debug, Default, Clone)]
 pub struct GpsEphFrame2 {
+    /// Time of issue of ephemeris (in seconds of week)
+    pub toe: u32,
+
     /// IODE: Issue of Data (Ephemeris)
     pub iode: u8,
 
@@ -108,12 +111,18 @@ pub struct GpsEphFrame2 {
 
     /// Latitude cosine harmonic correction term
     pub cuc: f64,
+    
+    /// Latitude sine harmonic correction term
+    pub cus: f64,
 
     /// Orbit radius sine harmonic correction term
     pub crs: f64,
 
     /// Eccentricity
     pub e: f64,
+
+    /// Sqrt(a)
+    pub sqrt_a: f64,
 }
 
 #[derive(Debug, Default, Clone)]
@@ -138,6 +147,12 @@ pub struct GpsEphFrame3 {
 
     /// Rate of inclination angle
     pub idot: f64,
+
+    /// Omega:
+    pub omega: f64,
+
+    /// Omega_dot
+    pub omega_dot: f64,
 }
 
 // #[derive(Debug, Default, Clone)]
@@ -166,7 +181,7 @@ pub struct GpsEphFrame3 {
 //     pub af1: u16,
 // }
 
-// /// Interpratation that applies for Pages 1-24 (included) of GPS Frame #5 (Almanac).
+// /// Interpretation that applies for Pages 1-24 (included) of GPS Frame #5 (Almanac).
 // #[derive(Debug, Default, Clone)]
 // pub struct GpsSubframe5Page1Thru24 {
 //     /// 2-bit data ID
@@ -203,7 +218,7 @@ pub struct GpsEphFrame3 {
 //     pub m0: f64,
 // }
 
-// /// Interpratation that applies for Page 25 of GPS Frame #5.
+// /// Interpretation that applies for Page 25 of GPS Frame #5.
 // #[derive(Debug, Default, Clone)]
 // pub struct GpsSubframe5Page25 {
 //     /// 2-bit data ID
