@@ -86,7 +86,7 @@ impl core::iter::Iterator for RxmSfrbxInterprator<'_> {
                 // GPS interpretation
                 match self.dword {
                     0 => {
-                        let tlm = gps::GpsTelemetryWord::decode(dword);
+                        let tlm = gps::GpsTelemetryWord::decode(dword)?;
                         Some(RxmSfrbxInterprated::Gps(gps::GpsDataWord::Telemetry(tlm)))
                     },
                     1 => {
@@ -101,23 +101,138 @@ impl core::iter::Iterator for RxmSfrbxInterprator<'_> {
                         // Frame dependent
                         match self.frame_id {
                             2 => {
-                                // GPS Frame #2 word 2
-                                let decoded = gps::GpsSubframe2Word2::decode(dword);
-                                Some(RxmSfrbxInterprated::Gps(gps::GpsDataWord::Subframe2Word2(
+                                // GPS Frame #2 word 3
+                                let decoded = gps::GpsSubframe2Word3::decode(dword);
+                                Some(RxmSfrbxInterprated::Gps(gps::GpsDataWord::Subframe2Word3(
                                     decoded,
                                 )))
                             },
-                            3 => {
-                                // GPS Frame #3 word 2
-                                let decoded = gps::GpsSubframe3Word2::decode(dword);
-                                Some(RxmSfrbxInterprated::Gps(gps::GpsDataWord::Subframe3Word2(
+                            // 3 => {
+                            //     // GPS Frame #3 word 3
+                            //     let decoded = gps::GpsSubframe3Word3::decode(dword);
+                            //     Some(RxmSfrbxInterprated::Gps(gps::GpsDataWord::Subframe3Word3(
+                            //         decoded,
+                            //     )))
+                            // },
+                            _ => None, // not supported yet
+                        }
+                    },
+                    3 => {
+                        // Frame dependent
+                        match self.frame_id {
+                            2 => {
+                                // GPS Frame #2 word 4
+                                let decoded = gps::GpsSubframe2Word4::decode(dword);
+                                Some(RxmSfrbxInterprated::Gps(gps::GpsDataWord::Subframe2Word4(
+                                    decoded,
+                                )))
+                            },
+                            // 3 => {
+                            //     // GPS Frame #3 word 4
+                            //     let decoded = gps::GpsSubframe3Word4::decode(dword);
+                            //     Some(RxmSfrbxInterprated::Gps(gps::GpsDataWord::Subframe3Word4(
+                            //         decoded,
+                            //     )))
+                            // },
+                            _ => None, // not supported yet
+                        }
+                    },
+                    4 => {
+                        // Frame dependent
+                        match self.frame_id {
+                            2 => {
+                                // GPS Frame #2 word 5
+                                let decoded = gps::GpsSubframe2Word5::decode(dword);
+                                Some(RxmSfrbxInterprated::Gps(gps::GpsDataWord::Subframe2Word5(
+                                    decoded,
+                                )))
+                            },
+                            // 3 => {
+                            //     // GPS Frame #3 word 5
+                            //     let decoded = gps::GpsSubframe3Word5::decode(dword);
+                            //     Some(RxmSfrbxInterprated::Gps(gps::GpsDataWord::Subframe3Word5(
+                            //         decoded,
+                            //     )))
+                            // },
+                            _ => None, // not supported yet
+                        }
+                    },
+                    5 => {
+                        // Frame dependent
+                        match self.frame_id {
+                            2 => {
+                                // GPS Frame #2 word 6
+                                let decoded = gps::GpsSubframe2Word6::decode(dword);
+                                Some(RxmSfrbxInterprated::Gps(gps::GpsDataWord::Subframe2Word6(
                                     decoded,
                                 )))
                             },
                             _ => None, // not supported yet
                         }
                     },
-                    _ => None,
+                    6 => {
+                        // Frame dependent
+                        match self.frame_id {
+                            2 => {
+                                // GPS Frame #2 word 7
+                                let decoded = gps::GpsSubframe2Word7::decode(dword);
+                                Some(RxmSfrbxInterprated::Gps(gps::GpsDataWord::Subframe2Word7(
+                                    decoded,
+                                )))
+                            },
+                            _ => None, // not supported yet
+                        }
+                    },
+                    7 => {
+                        // Frame dependent
+                        match self.frame_id {
+                            2 => {
+                                // GPS Frame #2 word 8
+                                let decoded = gps::GpsSubframe2Word8::decode(dword);
+                                Some(RxmSfrbxInterprated::Gps(gps::GpsDataWord::Subframe2Word8(
+                                    decoded,
+                                )))
+                            },
+                            _ => None, // not supported yet
+                        }
+                    },
+                    8 => {
+                        // Frame dependent
+                        match self.frame_id {
+                            2 => {
+                                // GPS Frame #2 word 9
+                                let decoded = gps::GpsSubframe2Word9::decode(dword);
+                                Some(RxmSfrbxInterprated::Gps(gps::GpsDataWord::Subframe2Word9(
+                                    decoded,
+                                )))
+                            },
+                            _ => None, // not supported yet
+                        }
+                    },
+                    9 => {
+                        // Frame dependent
+                        match self.frame_id {
+                            2 => {
+                                // GPS Frame #2 word 10
+                                let decoded = gps::GpsSubframe2Word10::decode(dword);
+                                Some(RxmSfrbxInterprated::Gps(gps::GpsDataWord::Subframe2Word10(
+                                    decoded,
+                                )))
+                            },
+                            // 3 => {
+                            //     // GPS Frame #3 word 5
+                            //     let decoded = gps::GpsSubframe3Word6::decode(dword);
+                            //     Some(RxmSfrbxInterprated::Gps(gps::GpsDataWord::Subframe3Word6(
+                            //         decoded,
+                            //     )))
+                            // },
+                            _ => None, // not supported yet
+                        }
+                    },
+                    _ => {
+                        // following GPS dword not interprated yet
+                        None
+                    },
                 }
             },
             _ => {
