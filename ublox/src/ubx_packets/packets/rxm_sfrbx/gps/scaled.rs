@@ -3,25 +3,25 @@ use super::{GpsHowWord, GpsTelemetryWord};
 /// Interprated [GpsSubframe]s
 #[derive(Debug, Clone)]
 pub enum GpsSubframe {
-    /// GPS - [GpsSubframe1]
-    Subframe1(GpsSubframe1),
+    /// GPS Ephemeris Frame #1
+    Eph1(GpsEphFrame1),
 
-    /// GPS - [GpsSubframe2]
-    Subframe2(GpsSubframe2),
+    /// GPS Ephemeris Frame #2
+    Eph2(GpsEphFrame2),
 
-    /// GPS - [GpsSubframe3]
-    Subframe3(GpsSubframe3),
+    /// GPS Ephemeris Frame #3
+    Eph3(GpsEphFrame3),
+    // Almanac frames page 1-24 (not supported yet)
+    // /// GPS - Frame #5 Pages 1-24 (included)
+    // Subframe5Page1Thru24(GpsSubframe5Page1Thru24),
 
-    /// GPS - paginated (use internal page id) [GpsSubframe4]
-    Subframe4(GpsSubframe4),
-
-    /// GPS - paginated (use internal page id) [GpsSubframe5]
-    Subframe5(GpsSubframe5),
+    // Almanac frames page 25 (not supported yet)
+    // Subframe5Page25(GpsSubframe5Page25),
 }
 
 impl Default for GpsSubframe {
     fn default() -> Self {
-        Self::Subframe1(Default::default())
+        Self::Eph1(Default::default())
     }
 }
 
@@ -37,8 +37,9 @@ pub struct GpsFrame {
     pub subframe: GpsSubframe,
 }
 
+/// Frame #1 of all Ephemeris GPS frames.
 #[derive(Debug, Default, Clone)]
-pub struct GpsSubframe1 {
+pub struct GpsEphFrame1 {
     /// 10-bit week counter
     pub week: u16,
 
@@ -93,8 +94,9 @@ pub struct GpsSubframe1 {
     pub af0: f64,
 }
 
+/// Frame #2 of all Ephemeris GPS frames.
 #[derive(Debug, Default, Clone)]
-pub struct GpsSubframe2 {
+pub struct GpsEphFrame2 {
     /// IODE: Issue of Data (Ephemeris)
     pub iode: u8,
 
@@ -115,7 +117,7 @@ pub struct GpsSubframe2 {
 }
 
 #[derive(Debug, Default, Clone)]
-pub struct GpsSubframe3 {
+pub struct GpsEphFrame3 {
     /// Inclination angle sine harmonic correction term
     pub cis: f64,
 
@@ -138,52 +140,130 @@ pub struct GpsSubframe3 {
     pub idot: f64,
 }
 
-#[derive(Debug, Default, Clone)]
-pub struct GpsSubframe4 {
-    /// Eccentricity
-    pub e: u16,
+// #[derive(Debug, Default, Clone)]
+// pub struct GpsSubframe4 {
+//     /// Eccentricity
+//     pub e: u16,
 
-    pub toa: u8,
+//     pub toa: u8,
 
-    pub delta_i: u16,
-    pub p_dot: u16,
-    pub sv_health: u8,
-    pub sqrt_a: u32,
-    pub omega0: u32,
+//     pub delta_i: u16,
+//     pub p_dot: u16,
+//     pub sv_health: u8,
+//     pub sqrt_a: u32,
+//     pub omega0: u32,
 
-    /// Argument of perigee
-    pub omega: u32,
+//     /// Argument of perigee
+//     pub omega: u32,
 
-    /// Mean anomaly at Reference Time
-    pub m0: u32,
+//     /// Mean anomaly at Reference Time
+//     pub m0: u32,
 
-    /// af0 (s)
-    pub af0: u16,
+//     /// af0 (s)
+//     pub af0: u16,
 
-    /// af1 (s.s⁻¹)
-    pub af1: u16,
-}
+//     /// af1 (s.s⁻¹)
+//     pub af1: u16,
+// }
 
-#[derive(Debug, Default, Clone)]
-pub struct GpsSubframe5 {
-    /// 2-bit data ID
-    pub data_id: u8,
+// /// Interpratation that applies for Pages 1-24 (included) of GPS Frame #5 (Almanac).
+// #[derive(Debug, Default, Clone)]
+// pub struct GpsSubframe5Page1Thru24 {
+//     /// 2-bit data ID
+//     pub data_id: u8,
 
-    /// 6-bit SV ID
-    pub sv_id: u8,
+//     /// 6-bit SV ID
+//     pub sv_id: u8,
 
-    /// eccentricity
-    pub e: f64,
+//     /// eccentricity
+//     pub e: f64,
 
-    /// p_dot
-    pub p_dot: f64,
+//     /// Time of Issue of Almanac (seconds within week)
+//     pub toa: u32,
 
-    pub sv_health: u8,
+//     /// delta_i
+//     pub delta_i: f64,
 
-    pub sqrt_a: f64,
-    pub omega0: f64,
-    pub omega: f64,
-    pub m0: f64,
-    pub af0: f64,
-    pub af1: f64,
-}
+//     /// Omega_dot
+//     pub omega_dot: f64,
+
+//     /// 8-bit SV health
+//     pub sv_health: u8,
+
+//     /// sqrt(a)
+//     pub sqrt_a: f64,
+
+//     /// omega_0
+//     pub omega_0: f64,
+
+//     /// omega
+//     pub omega: f64,
+
+//     /// m0
+//     pub m0: f64,
+// }
+
+// /// Interpratation that applies for Page 25 of GPS Frame #5.
+// #[derive(Debug, Default, Clone)]
+// pub struct GpsSubframe5Page25 {
+//     /// 2-bit data ID
+//     pub data_id: u8,
+
+//     /// 6-bit Page ID
+//     pub page_id: u8,
+
+//     /// Almanac week counter
+//     pub wna: u8,
+
+//     /// Time of Issue of Almanac (seconds)
+//     pub toa: u32,
+
+//     /// 6-bit SV (#1) health flags
+//     pub sv1_health: u8,
+//     /// 6-bit SV (#2) health flags
+//     pub sv2_health: u8,
+//     /// 6-bit SV (#3) health flags
+//     pub sv3_health: u8,
+//     /// 6-bit SV (#4) health flags
+//     pub sv4_health: u8,
+//     /// 6-bit SV (#5) health flags
+//     pub sv5_health: u8,
+//     /// 6-bit SV (#6) health flags
+//     pub sv6_health: u8,
+//     /// 6-bit SV (#7) health flags
+//     pub sv7_health: u8,
+//     /// 6-bit SV (#8) health flags
+//     pub sv8_health: u8,
+//     /// 6-bit SV (#9) health flags
+//     pub sv9_health: u8,
+//     /// 6-bit SV (#10) health flags
+//     pub sv10_health: u8,
+//     /// 6-bit SV (#11) health flags
+//     pub sv11_health: u8,
+//     /// 6-bit SV (#12) health flags
+//     pub sv12_health: u8,
+//     /// 6-bit SV (#13) health flags
+//     pub sv13_health: u8,
+//     /// 6-bit SV (#14) health flags
+//     pub sv14_health: u8,
+//     /// 6-bit SV (#15) health flags
+//     pub sv15_health: u8,
+//     /// 6-bit SV (#16) health flags
+//     pub sv16_health: u8,
+//     /// 6-bit SV (#17) health flags
+//     pub sv17_health: u8,
+//     /// 6-bit SV (#18) health flags
+//     pub sv18_health: u8,
+//     /// 6-bit SV (#19) health flags
+//     pub sv19_health: u8,
+//     /// 6-bit SV (#20) health flags
+//     pub sv20_health: u8,
+//     /// 6-bit SV (#21) health flags
+//     pub sv21_health: u8,
+//     /// 6-bit SV (#22) health flags
+//     pub sv22_health: u8,
+//     /// 6-bit SV (#23) health flags
+//     pub sv23_health: u8,
+//     /// 6-bit SV (#24) health flags
+//     pub sv24_health: u8,
+// }

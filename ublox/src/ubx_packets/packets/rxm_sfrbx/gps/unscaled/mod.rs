@@ -1,32 +1,30 @@
 pub(crate) mod frame1;
 pub(crate) mod frame2;
 pub(crate) mod frame3;
-// frame4 contains mostly system reserved stuff
-// but also the Kb model and A/S indication that could be useful..
-pub(crate) mod frame5;
+// pub(crate) mod frame5; // almanac: not supported yet
 
 pub(crate) use frame1::*;
 pub(crate) use frame2::*;
 pub(crate) use frame3::*;
-pub(crate) use frame5::*;
+// pub(crate) use frame5::*; // almanac: not supported yet
 
 use super::{scaled::*, GpsHowWord, GpsTelemetryWord};
 
 #[derive(Debug, Default, Clone)]
-pub(crate) struct GpsUnscaled1 {
-    pub word3: GpsUnscaled1Word3,
-    pub word4: GpsUnscaled1Word4,
-    pub word5: GpsUnscaled1Word5,
-    pub word6: GpsUnscaled1Word6,
-    pub word7: GpsUnscaled1Word7,
-    pub word8: GpsUnscaled1Word8,
-    pub word9: GpsUnscaled1Word9,
-    pub word10: GpsUnscaled1Word10,
+pub(crate) struct GpsUnscaledEph1 {
+    pub word3: GpsUnscaledEph1Word3,
+    pub word4: GpsUnscaledEph1Word4,
+    pub word5: GpsUnscaledEph1Word5,
+    pub word6: GpsUnscaledEph1Word6,
+    pub word7: GpsUnscaledEph1Word7,
+    pub word8: GpsUnscaledEph1Word8,
+    pub word9: GpsUnscaledEph1Word9,
+    pub word10: GpsUnscaledEph1Word10,
 }
 
-impl GpsUnscaled1 {
-    pub fn scale(&self) -> GpsSubframe1 {
-        GpsSubframe1 {
+impl GpsUnscaledEph1 {
+    pub fn scale(&self) -> GpsEphFrame1 {
+        GpsEphFrame1 {
             week: self.word3.week,
             ca_or_p_l2: self.word3.ca_or_p_l2,
             ura: self.word3.ura,
@@ -42,20 +40,20 @@ impl GpsUnscaled1 {
 }
 
 #[derive(Debug, Default, Clone)]
-pub(crate) struct GpsUnscaled2 {
-    pub word3: GpsUnscaled2Word3,
-    pub word4: GpsUnscaled2Word4,
-    pub word5: GpsUnscaled2Word5,
-    pub word6: GpsUnscaled2Word6,
-    pub word7: GpsUnscaled2Word7,
-    pub word8: GpsUnscaled2Word8,
-    pub word9: GpsUnscaled2Word9,
-    pub word10: GpsUnscaled2Word10,
+pub(crate) struct GpsUnscaledEph2 {
+    pub word3: GpsUnscaledEph2Word3,
+    pub word4: GpsUnscaledEph2Word4,
+    pub word5: GpsUnscaledEph2Word5,
+    pub word6: GpsUnscaledEph2Word6,
+    pub word7: GpsUnscaledEph2Word7,
+    pub word8: GpsUnscaledEph2Word8,
+    pub word9: GpsUnscaledEph2Word9,
+    pub word10: GpsUnscaledEph2Word10,
 }
 
-impl GpsUnscaled2 {
-    pub fn scale(&self) -> GpsSubframe2 {
-        GpsSubframe2 {
+impl GpsUnscaledEph2 {
+    pub fn scale(&self) -> GpsEphFrame2 {
+        GpsEphFrame2 {
             iode: self.word3.iode,
             crs: (self.word3.crs as f64) / 2.0_f64.powi(5),
             delta_n: (self.word4.delta_n as f64) / 2.0_f64.powi(43),
@@ -78,20 +76,20 @@ impl GpsUnscaled2 {
 }
 
 #[derive(Debug, Default, Clone)]
-pub(crate) struct GpsUnscaled3 {
-    pub word3: GpsUnscaled3Word3,
-    pub word4: GpsUnscaled3Word4,
-    pub word5: GpsUnscaled3Word5,
-    pub word6: GpsUnscaled3Word6,
-    pub word7: GpsUnscaled3Word7,
-    pub word8: GpsUnscaled3Word8,
-    pub word9: GpsUnscaled3Word9,
-    pub word10: GpsUnscaled3Word10,
+pub(crate) struct GpsUnscaledEph3 {
+    pub word3: GpsUnscaledEph3Word3,
+    pub word4: GpsUnscaledEph3Word4,
+    pub word5: GpsUnscaledEph3Word5,
+    pub word6: GpsUnscaledEph3Word6,
+    pub word7: GpsUnscaledEph3Word7,
+    pub word8: GpsUnscaledEph3Word8,
+    pub word9: GpsUnscaledEph3Word9,
+    pub word10: GpsUnscaledEph3Word10,
 }
 
-impl GpsUnscaled3 {
-    pub fn scale(&self) -> GpsSubframe3 {
-        GpsSubframe3 {
+impl GpsUnscaledEph3 {
+    pub fn scale(&self) -> GpsEphFrame3 {
+        GpsEphFrame3 {
             cis: (self.word5.cis as f64) / 2.0_f64.powi(29),
             i0: {
                 // form the u32 raw word
@@ -115,65 +113,134 @@ impl GpsUnscaled3 {
     }
 }
 
-#[derive(Debug, Default, Clone)]
-pub(crate) struct GpsUnscaled5 {
-    pub word3: GpsUnscaled5Word3,
-    pub word4: GpsUnscaled5Word4,
-    pub word5: GpsUnscaled5Word5,
-    pub word6: GpsUnscaled5Word6,
-    pub word7: GpsUnscaled5Word7,
-    pub word8: GpsUnscaled5Word8,
-    pub word9: GpsUnscaled5Word9,
-    pub word10: GpsUnscaled5Word10,
-}
+// Almanac Pages 1-24 not supported yet
+// /// Interpratation that is valid for Page ID 1-24 included.
+// /// Afterwards, there is one final 25th page.
+// #[derive(Debug, Default, Clone)]
+// pub(crate) struct GpsUnscaled5Page1Thru24 {
+//     pub word3: GpsUnscaled5Page1Thru24Word3,
+//     pub word4: GpsUnscaled5Page1Thru24Word4,
+//     pub word5: GpsUnscaled5Page1Thru24Word5,
+//     pub word6: GpsUnscaled5Page1Thru24Word6,
+//     pub word7: GpsUnscaled5Page1Thru24Word7,
+//     pub word8: GpsUnscaled5Page1Thru24Word8,
+//     pub word9: GpsUnscaled5Page1Thru24Word9,
+//     pub word10: GpsUnscaled5Page1Thru24Word10,
+// }
 
-impl GpsUnscaled5 {
-    pub fn scale(&self) -> GpsSubframe5 {
-        GpsSubframe5 {
-            data_id: 0,
-            sv_id: 0,
-            e: 0.0,
-            p_dot: 0.0,
-            sv_health: 0,
-            sqrt_a: 0.0,
-            omega0: 0.0,
-            omega: 0.0,
-            m0: 0.0,
-            af0: 0.0,
-            af1: 0.0,
-        }
-    }
-}
+// impl GpsUnscaled5Page1Thru24 {
+//     pub fn scale(&self) -> GpsSubframe5Page1Thru24 {
+//         GpsSubframe5Page1Thru24 {
+//             data_id: 0,
+//             sv_id: 0,
+//             e: {
+//                 // form u32 word
+//                 let e = (self.word3.e as u32) as f64;
+//                 e / 2.0_f64.powi(21)
+//             },
+//             toa: (self.word4.toa as u32) * 2_u32.pow(12),
+//             delta_i: 0.0,
+//             omega_dot: 0.0,
+//             sv_health: 0,
+//             sqrt_a: 0.0,
+//             omega_0: 0.0,
+//             omega: 0.0,
+//             m0: 0.0,
+//         }
+//     }
+// }
+
+// Almanac Page 25 not supported yet
+// /// Interpratation that is valid for Page ID 25 of frame #5,
+// /// following the first 24 pages.
+// #[derive(Debug, Default, Clone)]
+// pub(crate) struct GpsUnscaled5Page25 {
+//     pub word3: GpsUnscaled5Page25Word3,
+//     pub sv1_4_health: GpsUnscaled5Page25HealthWord,
+//     pub sv5_8_health: GpsUnscaled5Page25HealthWord,
+//     pub sv9_12_health: GpsUnscaled5Page25HealthWord,
+//     pub sv13_16_health: GpsUnscaled5Page25HealthWord,
+//     pub sv17_20_health: GpsUnscaled5Page25HealthWord,
+//     pub sv21_24_health: GpsUnscaled5Page25HealthWord,
+// }
+
+// impl GpsUnscaled5Page25 {
+//     pub fn scale(&self) -> GpsSubframe5Page25 {
+//         GpsSubframe5Page25 {
+//             data_id: self.word3.data_id,
+//             page_id: self.word3.page_id,
+//             toa: (self.word3.toa as u32) * 2_u32.pow(12),
+//             wna: self.word3.wna,
+//             sv1_health: self.sv1_4_health.sv_1msb_health,
+//             sv2_health: self.sv1_4_health.sv_2_health,
+//             sv3_health: self.sv1_4_health.sv_3_health,
+//             sv4_health: self.sv1_4_health.sv_4lsb_health,
+
+//             sv5_health: self.sv5_8_health.sv_1msb_health,
+//             sv6_health: self.sv5_8_health.sv_2_health,
+//             sv7_health: self.sv5_8_health.sv_3_health,
+//             sv8_health: self.sv5_8_health.sv_4lsb_health,
+
+//             sv9_health: self.sv9_12_health.sv_1msb_health,
+//             sv10_health: self.sv9_12_health.sv_2_health,
+//             sv11_health: self.sv9_12_health.sv_3_health,
+//             sv12_health: self.sv9_12_health.sv_4lsb_health,
+
+//             sv13_health: self.sv13_16_health.sv_1msb_health,
+//             sv14_health: self.sv13_16_health.sv_2_health,
+//             sv15_health: self.sv13_16_health.sv_3_health,
+//             sv16_health: self.sv13_16_health.sv_4lsb_health,
+
+//             sv17_health: self.sv17_20_health.sv_1msb_health,
+//             sv18_health: self.sv17_20_health.sv_2_health,
+//             sv19_health: self.sv17_20_health.sv_3_health,
+//             sv20_health: self.sv17_20_health.sv_4lsb_health,
+
+//             sv21_health: self.sv21_24_health.sv_1msb_health,
+//             sv22_health: self.sv21_24_health.sv_2_health,
+//             sv23_health: self.sv21_24_health.sv_3_health,
+//             sv24_health: self.sv21_24_health.sv_4lsb_health,
+//         }
+//     }
+// }
 
 /// Interprated [GpsUnscaledSubframe]s (not scaled yet)
 #[derive(Debug, Clone)]
 pub(crate) enum GpsUnscaledSubframe {
-    /// GPS - Unscaled Subframe #1
-    Subframe1(GpsUnscaled1),
+    /// GPS Ephemeris #1 frame
+    Eph1(GpsUnscaledEph1),
 
     /// GPS - Unscaled Subframe #2
-    Subframe2(GpsUnscaled2),
+    Eph2(GpsUnscaledEph2),
 
     /// GPS - Unscaled Subframe #3
-    Subframe3(GpsUnscaled3),
+    Eph3(GpsUnscaledEph3),
+    // GPS Almanac Page 1-24 not supported yet
+    // /// GPS - Unscaled Subframe #5 Pages 1-24 (included).
+    // /// Use the page_id field to determine which one it is.
+    // Subframe5Page1Thru24(GpsUnscaled5Page1Thru24),
 
-    /// GPS - Unscaled Paginated Subframe #5
-    Subframe5(GpsUnscaled5),
+    // GPS Almanac Page 25 not supported yet
+    // /// GPS - Unscaled Subframe #5 Page 25 (last one).
+    // Subframe5Page25(GpsUnscaled5Page25),
 }
 
 impl Default for GpsUnscaledSubframe {
     fn default() -> Self {
-        Self::Subframe1(Default::default())
+        Self::Eph1(Default::default())
     }
 }
 
 impl GpsUnscaledSubframe {
     pub fn scale(&self) -> GpsSubframe {
         match self {
-            Self::Subframe1(subframe) => GpsSubframe::Subframe1(subframe.scale()),
-            Self::Subframe2(subframe) => GpsSubframe::Subframe2(subframe.scale()),
-            Self::Subframe3(subframe) => GpsSubframe::Subframe3(subframe.scale()),
-            Self::Subframe5(subframe) => GpsSubframe::Subframe5(subframe.scale()),
+            Self::Eph1(subframe) => GpsSubframe::Eph1(subframe.scale()),
+            Self::Eph2(subframe) => GpsSubframe::Eph2(subframe.scale()),
+            Self::Eph3(subframe) => GpsSubframe::Eph3(subframe.scale()),
+            // Almanac Page 1-24 not supported yet
+            // Self::Subframe5Page1Thru24(subframe) => GpsSubframe::Subframe5Page1Thru24(subframe.scale()),
+            // Almanac Page 25 not supported yet
+            // Self::Subframe5Page25(subframe) => GpsSubframe::Subframe5Page25(subframe.scale()),
         }
     }
 }
