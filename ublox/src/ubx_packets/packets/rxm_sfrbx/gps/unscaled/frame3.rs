@@ -34,7 +34,7 @@ const WORD10_IDOT_SHIFT: u32 = 0;
 
 #[derive(Debug, Default, Clone)]
 pub struct GpsUnscaled3Word3 {
-    pub cic: u16,
+    pub cic: i16,
 
     /// Omega0 (8) MSB, you will have to associate this to Word #4
     pub omega0_msb: u8,
@@ -43,7 +43,7 @@ pub struct GpsUnscaled3Word3 {
 impl GpsUnscaled3Word3 {
     pub(crate) fn decode(dword: u32) -> Self {
         let dword = dword >> GPS_PARITY_SIZE;
-        let cic = ((dword & WORD3_CIC_MASK) >> WORD3_CIC_SHIFT) as u16;
+        let cic = ((dword & WORD3_CIC_MASK) >> WORD3_CIC_SHIFT) as i16;
         let omega0_msb = ((dword & WORD3_OMEGA0_MASK) >> WORD3_OMEGA0_SHIFT) as u8;
         Self { cic, omega0_msb }
     }
@@ -64,7 +64,7 @@ impl GpsUnscaled3Word4 {
 }
 #[derive(Debug, Default, Clone)]
 pub struct GpsUnscaled3Word5 {
-    pub cis: u16,
+    pub cis: i16,
 
     /// I0 (8) MSB, you will have to associate this to Word #6
     pub i0_msb: u8,
@@ -73,7 +73,7 @@ pub struct GpsUnscaled3Word5 {
 impl GpsUnscaled3Word5 {
     pub(crate) fn decode(dword: u32) -> Self {
         let dword = dword >> GPS_PARITY_SIZE;
-        let cis = ((dword & WORD5_CIS_MASK) >> WORD5_CIS_SHIFT) as u16;
+        let cis = ((dword & WORD5_CIS_MASK) >> WORD5_CIS_SHIFT) as i16;
         let i0_msb = ((dword & WORD5_I0_MASK) >> WORD5_I0_SHIFT) as u8;
         Self { cis, i0_msb }
     }
@@ -95,7 +95,7 @@ impl GpsUnscaled3Word6 {
 
 #[derive(Debug, Default, Clone)]
 pub struct GpsUnscaled3Word7 {
-    pub crc: u16,
+    pub crc: i16,
 
     /// Omega (8) MSB, you will have to associate this to Word #8
     pub omega_msb: u8,
@@ -104,7 +104,7 @@ pub struct GpsUnscaled3Word7 {
 impl GpsUnscaled3Word7 {
     pub(crate) fn decode(dword: u32) -> Self {
         let dword = dword >> GPS_PARITY_SIZE;
-        let crc = ((dword & WORD7_CRC_MASK) >> WORD7_CRC_SHIFT) as u16;
+        let crc = ((dword & WORD7_CRC_MASK) >> WORD7_CRC_SHIFT) as i16;
         let omega_msb = ((dword & WORD7_OMEGA_MASK) >> WORD7_OMEGA_SHIFT) as u8;
         Self { crc, omega_msb }
     }
@@ -141,14 +141,14 @@ impl GpsUnscaled3Word9 {
 #[derive(Debug, Default, Clone)]
 pub struct GpsUnscaled3Word10 {
     pub iode: u8,
-    pub idot: u16,
+    pub idot: i16,
 }
 
 impl GpsUnscaled3Word10 {
     pub(crate) fn decode(dword: u32) -> Self {
         let dword = dword >> (GPS_PARITY_SIZE + 2);
         let iode = ((dword & WORD10_IODE_MASK) >> WORD10_IODE_SHIFT) as u8;
-        let idot = ((dword & WORD10_IDOT_MASK) >> WORD10_IDOT_SHIFT) as u16;
+        let idot = ((dword & WORD10_IDOT_MASK) >> WORD10_IDOT_SHIFT) as i16;
         Self { iode, idot }
     }
 }

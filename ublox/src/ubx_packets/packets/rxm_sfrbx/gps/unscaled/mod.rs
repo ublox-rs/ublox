@@ -1,10 +1,14 @@
 pub(crate) mod frame1;
 pub(crate) mod frame2;
 pub(crate) mod frame3;
+// frame4 contains mostly system reserved stuff
+// but also the Kb model and A/S indication that could be useful..
+pub(crate) mod frame5;
 
 pub(crate) use frame1::*;
 pub(crate) use frame2::*;
 pub(crate) use frame3::*;
+pub(crate) use frame5::*;
 
 use super::{scaled::*, GpsHowWord, GpsTelemetryWord};
 
@@ -22,7 +26,18 @@ pub(crate) struct GpsUnscaled1 {
 
 impl GpsUnscaled1 {
     pub fn scale(&self) -> GpsSubframe1 {
-        GpsSubframe1::default()
+        GpsSubframe1 {
+            week: self.word3.week,
+            ca_or_p_l2: self.word3.ca_or_p_l2,
+            ura: self.word3.ura,
+            health: self.word3.health,
+            iodc: { (self.word3.iodc_msb as u16) << 8 + self.word8.iodc_lsb as u16 },
+            tgd: (self.word7.tgd as f64) / 2.0_f64.powi(31),
+            toc: (self.word8.toc as u32) * 2_u32.pow(4),
+            af2: (self.word9.af2 as f64) / 2.0_f64.powi(55),
+            af1: (self.word9.af1 as f64) / 2.0_f64.powi(43),
+            af0: (self.word10.af0 as f64) / 2.0_f64.powi(31),
+        }
     }
 }
 
@@ -40,7 +55,14 @@ pub(crate) struct GpsUnscaled2 {
 
 impl GpsUnscaled2 {
     pub fn scale(&self) -> GpsSubframe2 {
-        GpsSubframe2::default()
+        GpsSubframe2 {
+            iode: self.word3.iode,
+            crs: (self.word3.crs as f64) / 2.0_f64.powi(5),
+            delta_n: (self.word4.delta_n as f64) / 2.0_f64.powi(43),
+            m0: 0.0,
+            cuc: 0.0,
+            e: 0.0,
+        }
     }
 }
 
@@ -58,7 +80,45 @@ pub(crate) struct GpsUnscaled3 {
 
 impl GpsUnscaled3 {
     pub fn scale(&self) -> GpsSubframe3 {
-        GpsSubframe3::default()
+        GpsSubframe3 {
+            cis: 0.0,
+            i0: 0.0,
+            cic: 0.0,
+            omega0: 0.0,
+            crc: 0.0,
+            iode: 0.0,
+            idot: 0.0,
+        }
+    }
+}
+
+#[derive(Debug, Default, Clone)]
+pub(crate) struct GpsUnscaled5 {
+    pub word3: GpsUnscaled5Word3,
+    pub word4: GpsUnscaled5Word4,
+    pub word5: GpsUnscaled5Word5,
+    pub word6: GpsUnscaled5Word6,
+    pub word7: GpsUnscaled5Word7,
+    pub word8: GpsUnscaled5Word8,
+    pub word9: GpsUnscaled5Word9,
+    pub word10: GpsUnscaled5Word10,
+}
+
+impl GpsUnscaled5 {
+    pub fn scale(&self) -> GpsSubframe5 {
+        GpsSubframe5 {
+            data_id: 0,
+            sv_id: 0,
+            e: 0.0,
+            p_dot: 0.0,
+            sv_health: 0,
+            sqrt_a: 0.0,
+            omega0: 0.0,
+            omega: 0.0,
+            m0: 0.0,
+            af0: 0.0,
+            af1: 0.0,
+        }
     }
 }
 
@@ -73,6 +133,9 @@ pub(crate) enum GpsUnscaledSubframe {
 
     /// GPS - Unscaled Subframe #3
     Subframe3(GpsUnscaled3),
+
+    /// GPS - Unscaled Paginated Subframe #5
+    Subframe5(GpsUnscaled5),
 }
 
 impl Default for GpsUnscaledSubframe {
@@ -87,6 +150,7 @@ impl GpsUnscaledSubframe {
             Self::Subframe1(subframe) => GpsSubframe::Subframe1(subframe.scale()),
             Self::Subframe2(subframe) => GpsSubframe::Subframe2(subframe.scale()),
             Self::Subframe3(subframe) => GpsSubframe::Subframe3(subframe.scale()),
+            Self::Subframe5(subframe) => GpsSubframe::Subframe5(subframe.scale()),
         }
     }
 }

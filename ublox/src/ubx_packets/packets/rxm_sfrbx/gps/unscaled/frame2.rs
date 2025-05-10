@@ -38,21 +38,22 @@ const WORD10_AODO_SHIFT: u32 = 2;
 #[derive(Debug, Default, Clone)]
 pub struct GpsUnscaled2Word3 {
     pub iode: u8,
-    pub crs: u16,
+
+    pub crs: i16,
 }
 
 impl GpsUnscaled2Word3 {
     pub(crate) fn decode(dword: u32) -> Self {
         let dword = dword >> GPS_PARITY_SIZE;
         let iode = ((dword & WORD3_IODE_MASK) >> WORD3_IODE_SHIFT) as u8;
-        let crs = ((dword & WORD3_CRS_MASK) >> WORD3_CRS_SHIFT) as u16;
+        let crs = ((dword & WORD3_CRS_MASK) >> WORD3_CRS_SHIFT) as i16;
         Self { iode, crs }
     }
 }
 
 #[derive(Debug, Default, Clone)]
 pub struct GpsUnscaled2Word4 {
-    pub delta_n: u16,
+    pub delta_n: i16,
 
     /// M0 (8) msb, you need to associate this to Subframe #2 Word #5
     pub m0_msb: u8,
@@ -61,7 +62,7 @@ pub struct GpsUnscaled2Word4 {
 impl GpsUnscaled2Word4 {
     pub(crate) fn decode(dword: u32) -> Self {
         let dword = dword >> GPS_PARITY_SIZE;
-        let delta_n = ((dword & WORD4_DELTAN_MASK) >> WORD4_DELTAN_SHIFT) as u16;
+        let delta_n = ((dword & WORD4_DELTAN_MASK) >> WORD4_DELTAN_SHIFT) as i16;
         let m0_msb = ((dword & WORD4_M0_MSB_MASK) >> WORD4_M0_MSB_SHIFT) as u8;
         Self { delta_n, m0_msb }
     }
@@ -82,7 +83,7 @@ impl GpsUnscaled2Word5 {
 
 #[derive(Debug, Default, Clone)]
 pub struct GpsUnscaled2Word6 {
-    pub cuc: u16,
+    pub cuc: i16,
 
     /// MSB(8) eccentricity, you need to associate this to Subframe #2 Word #7
     pub e_msb: u8,
@@ -91,7 +92,7 @@ pub struct GpsUnscaled2Word6 {
 impl GpsUnscaled2Word6 {
     pub(crate) fn decode(dword: u32) -> Self {
         let dword = dword >> GPS_PARITY_SIZE;
-        let cuc = ((dword & WORD6_CUC_MASK) >> WORD6_CUC_SHIFT) as u16;
+        let cuc = ((dword & WORD6_CUC_MASK) >> WORD6_CUC_SHIFT) as i16;
         let e_msb = ((dword & WORD6_E_MSB_MASK) >> WORD6_E_MSB_SHIFT) as u8;
         Self { cuc, e_msb }
     }

@@ -23,6 +23,11 @@ const GPS_HOW_ANTI_SPOOFING_BIT_MASK: u32 = 0x000020;
 const GPS_HOW_FRAME_ID_MASK: u32 = 0x00001C;
 const GPS_HOW_FRAME_ID_SHIFT: u32 = 2;
 
+pub(crate) fn twos_complement(value: u32, bit_mask: u32, msb: u8) -> i32 {
+    let value = value & bit_mask;
+    ((value << msb) as i32) >> msb
+}
+
 /// [GpsTelemetryWord] marks the beginning of each frame
 #[derive(Debug, Default, Clone)]
 /// [GpsTelemetryWord]
