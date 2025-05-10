@@ -55,21 +55,28 @@ impl GpsUnscaledEph2 {
     pub fn scale(&self) -> GpsEphFrame2 {
         GpsEphFrame2 {
             iode: self.word3.iode,
+            toe: (self.word10.toe as u32) * 2_u32.pow(4),
             crs: (self.word3.crs as f64) / 2.0_f64.powi(5),
             delta_n: (self.word4.delta_n as f64) / 2.0_f64.powi(43),
             m0: {
-                let mut m0 = (self.word4.m0_msb as u32) << 4;
+                let mut m0 = (self.word4.m0_msb as u32) << 25;
                 m0 += self.word5.m0_lsb;
 
                 (m0 as i32) as f64 / 2.0_f64.powi(31)
             },
+            cus: (self.word8.cus as f64) / 2.0_f64.powi(29),
             cuc: (self.word6.cuc as f64) / 2.0_f64.powi(29),
             e: {
                 // form u32 word
-                let mut e = (self.word6.e_msb as u32) << 24;
+                let mut e = (self.word6.e_msb as u32) << 25;
                 e += self.word7.e_lsb;
 
                 (e as i32) as f64 / 2.0_f64.powi(33)
+            },
+            sqrt_a: {
+                let mut sqrt_a = self.word9.sqrt_a_lsb;
+                sqrt_a += (self.word8.sqrt_a_msb as u32) << 25;
+                (sqrt_a as f64) / 2.0_f64.powi(19) 
             },
         }
     }
@@ -109,6 +116,16 @@ impl GpsUnscaledEph3 {
             crc: (self.word7.crc as f64) / 2.0_f64.powi(5),
             iode: self.word10.iode,
             idot: (self.word10.idot as f64) / 2.0_f64.powi(43),
+
+            omega_dot: (self.word9.omega_dot as f64) / 2.0_f64.powi(43),
+
+            omega: {
+                // form the u32 raw word
+                let mut omega = (self.word7.omega_msb as u32) << 24;
+                omega += self.word8.omega_lsb;
+
+                (omega as i32) as f64 / 2.0_f64.powi(31)
+            },
         }
     }
 }

@@ -128,14 +128,17 @@ impl GpsUnscaledEph3Word8 {
 
 #[derive(Debug, Default, Clone)]
 pub struct GpsUnscaledEph3Word9 {
-    // Omega dot (24 bits)
-    pub omega_dot: u32,
+    // 24-bit Omega_dot
+    pub omega_dot: i32,
 }
 
 impl GpsUnscaledEph3Word9 {
     pub(crate) fn decode(dword: u32) -> Self {
         let dword = dword >> GPS_PARITY_SIZE;
         let omega_dot = ((dword & WORD9_OMEGADOT_MASK) >> WORD9_OMEGADOT_SHIFT) as u32;
+
+        let omega_dot = twos_complement(omega_dot, 0xffffff, 24);
+        
         Self { omega_dot }
     }
 }
