@@ -59,9 +59,20 @@ impl GpsUnscaled2 {
             iode: self.word3.iode,
             crs: (self.word3.crs as f64) / 2.0_f64.powi(5),
             delta_n: (self.word4.delta_n as f64) / 2.0_f64.powi(43),
-            m0: 0.0,
-            cuc: 0.0,
-            e: 0.0,
+            m0: {
+                let mut m0 = (self.word4.m0_msb as u32) << 4;
+                m0 += self.word5.m0_lsb;
+
+                (m0 as i32) as f64 / 2.0_f64.powi(31)
+            },
+            cuc: (self.word6.cuc as f64) / 2.0_f64.powi(29),
+            e: {
+                // form u32 word
+                let mut e = (self.word6.e_msb as u32) << 24;
+                e += self.word7.e_lsb;
+
+                (e as i32) as f64 / 2.0_f64.powi(33)
+            },
         }
     }
 }
@@ -81,13 +92,25 @@ pub(crate) struct GpsUnscaled3 {
 impl GpsUnscaled3 {
     pub fn scale(&self) -> GpsSubframe3 {
         GpsSubframe3 {
-            cis: 0.0,
-            i0: 0.0,
-            cic: 0.0,
-            omega0: 0.0,
-            crc: 0.0,
-            iode: 0.0,
-            idot: 0.0,
+            cis: (self.word5.cis as f64) / 2.0_f64.powi(29),
+            i0: {
+                // form the u32 raw word
+                let mut i0 = (self.word5.i0_msb as u32) << 24;
+                i0 += self.word6.i0_lsb;
+
+                (i0 as i32) as f64 / 2.0_f64.powi(31)
+            },
+            cic: (self.word3.cic as f64) / 2.0_f64.powi(29),
+            omega0: {
+                // form the u32 raw word
+                let mut omega0 = (self.word3.omega0_msb as u32) << 24;
+                omega0 += self.word4.omega0_lsb;
+
+                (omega0 as i32) as f64 / 2.0_f64.powi(31)
+            },
+            crc: (self.word7.crc as f64) / 2.0_f64.powi(5),
+            iode: self.word10.iode,
+            idot: (self.word10.idot as f64) / 2.0_f64.powi(43),
         }
     }
 }

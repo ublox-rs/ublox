@@ -132,7 +132,7 @@ pub struct GpsSubframe3 {
     pub crc: f64,
 
     /// IODE: Issue of Data (Ephemeris)
-    pub iode: f64,
+    pub iode: u8,
 
     /// Rate of inclination angle
     pub idot: f64,

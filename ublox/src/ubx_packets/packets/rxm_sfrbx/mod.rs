@@ -488,10 +488,13 @@ impl RxmSfrbxInterprator<'_> {
 }
 
 impl RxmSfrbxRef<'_> {
+    /// Try to interprate the RXM-SFRBX inner frame (when supported/known).
     pub fn interprate(&self) -> Option<RxmSfrbxInterprated> {
         self.interprator().interprate()
     }
 
+    /// Builds the [RxmSfrbxInterprator] that can interpreta
+    /// some of the inner words we support.
     fn interprator(&self) -> RxmSfrbxInterprator<'_> {
         RxmSfrbxInterprator {
             ptr: 0,

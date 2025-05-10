@@ -1,3 +1,5 @@
+use crate::twos_complement;
+
 use super::super::GPS_PARITY_SIZE;
 
 const WORD3_WEEK_MASK: u32 = 0xffC000;
@@ -38,19 +40,19 @@ const WORD10_AF0_SHIFT: u32 = 0;
 
 #[derive(Debug, Default, Clone)]
 pub struct GpsUnscaled1Word3 {
-    // 10-bit week counter
+    /// 10-bit week counter
     pub week: u16,
 
-    // 2 bits C/A or P ON L2
+    /// 2 bits C/A or P ON L2
     pub ca_or_p_l2: u8,
 
-    // 4-bit URA index
+    /// 4-bit URA index
     pub ura: u8,
 
-    // 6-bit SV Health
+    /// 6-bit SV Health
     pub health: u8,
 
-    // 2-bit (MSB) IODC, you will have to associate this to Word # 8
+    /// 2-bit (MSB) IODC, you will have to associate this to Word # 8
     pub iodc_msb: u8,
 }
 
@@ -183,7 +185,8 @@ pub struct GpsUnscaled1Word10 {
 impl GpsUnscaled1Word10 {
     pub(crate) fn decode(dword: u32) -> Self {
         let dword = dword >> (GPS_PARITY_SIZE + 2);
-        let af0 = ((dword & WORD10_AF0_MASK) >> WORD10_AF0_SHIFT) as i32;
+        let af0 = ((dword & WORD10_AF0_MASK) >> WORD10_AF0_SHIFT) as u32;
+        let af0 = twos_complement(af0, 0x3fffff, 22);
         Self { af0 }
     }
 }

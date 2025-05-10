@@ -1,3 +1,5 @@
+use crate::twos_complement;
+
 use super::super::GPS_PARITY_SIZE;
 
 const WORD3_CIC_MASK: u32 = 0xffff00;
@@ -140,15 +142,22 @@ impl GpsUnscaled3Word9 {
 
 #[derive(Debug, Default, Clone)]
 pub struct GpsUnscaled3Word10 {
+    /// 8-bit IODE
     pub iode: u8,
-    pub idot: i16,
+
+    /// 14-bit IDOT
+    pub idot: i32,
 }
 
 impl GpsUnscaled3Word10 {
     pub(crate) fn decode(dword: u32) -> Self {
         let dword = dword >> (GPS_PARITY_SIZE + 2);
         let iode = ((dword & WORD10_IODE_MASK) >> WORD10_IODE_SHIFT) as u8;
-        let idot = ((dword & WORD10_IDOT_MASK) >> WORD10_IDOT_SHIFT) as i16;
+
+        // 14-bit signed 2's
+        let idot = ((dword & WORD10_IDOT_MASK) >> WORD10_IDOT_SHIFT) as u32;
+        let idot = twos_complement(idot, 0x3fff, 14);
+
         Self { iode, idot }
     }
 }
