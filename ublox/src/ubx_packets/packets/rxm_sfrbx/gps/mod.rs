@@ -2,9 +2,11 @@
 // NB(1): Parity bits are always truncated by the UBX firmware
 // See UBX-AID section of the UBX docs
 //////////////////////////////////////////////////////////////
+mod frame1;
 mod frame2;
 mod frame3;
 
+pub use frame1::*;
 pub use frame2::*;
 pub use frame3::*;
 
@@ -24,7 +26,7 @@ const GPS_HOW_FRAME_ID_MASK: u32 = 0x00001C;
 const GPS_HOW_FRAME_ID_SHIFT: u32 = 2;
 
 /// [GpsTelemetryWord] marks the beginning of each frame
-#[derive(Debug, Clone)]
+#[derive(Debug, Default, Clone)]
 /// [GpsTelemetryWord]
 pub struct GpsTelemetryWord {
     /// TLM Message
@@ -61,7 +63,7 @@ impl GpsTelemetryWord {
 }
 
 /// [GpsHowWord] marks the beginning of each frame, following [GpsTelemetryWord]
-#[derive(Debug, Clone)]
+#[derive(Debug, Default, Clone)]
 /// [GpsHowWord]
 pub struct GpsHowWord {
     /// Elapsed seconds in GPST week
@@ -99,60 +101,64 @@ impl GpsHowWord {
     }
 }
 
-/// Interprated [GpsDataWord]
+#[derive(Debug, Default, Clone)]
+pub struct GpsSubframe1 {
+    pub word3: GpsSubframe1Word3,
+    pub word4: GpsSubframe1Word4,
+    pub word5: GpsSubframe1Word5,
+    pub word6: GpsSubframe1Word6,
+    pub word7: GpsSubframe1Word7,
+    pub word8: GpsSubframe1Word8,
+    pub word9: GpsSubframe1Word9,
+    pub word10: GpsSubframe1Word10,
+}
+
+#[derive(Debug, Default, Clone)]
+pub struct GpsSubframe2 {
+    pub word3: GpsSubframe2Word3,
+    pub word4: GpsSubframe2Word4,
+    pub word5: GpsSubframe2Word5,
+    pub word6: GpsSubframe2Word6,
+    pub word7: GpsSubframe2Word7,
+    pub word8: GpsSubframe2Word8,
+    pub word9: GpsSubframe2Word9,
+    pub word10: GpsSubframe2Word10,
+}
+
+#[derive(Debug, Default, Clone)]
+pub struct GpsSubframe3 {
+    pub word3: GpsSubframe3Word3,
+    pub word4: GpsSubframe3Word4,
+    pub word5: GpsSubframe3Word5,
+    pub word6: GpsSubframe3Word6,
+    pub word7: GpsSubframe3Word7,
+    pub word8: GpsSubframe3Word8,
+    pub word9: GpsSubframe3Word9,
+    pub word10: GpsSubframe3Word10,
+}
+
+/// Interprated [GpsSubframe]s
 #[derive(Debug, Clone)]
-pub enum GpsDataWord {
-    /// [GpsDataWord::Telemetry] is a marks the beginning of each frame.
-    Telemetry(GpsTelemetryWord),
+pub enum GpsSubframe {
+    /// GPS - Subframe #1
+    Subframe1(GpsSubframe1),
 
-    /// [GpsDataWord::How] marks the beginning of each frame, following [GpsDataWord::Telemetry].
-    How(GpsHowWord),
+    /// GPS - Subframe #2
+    Subframe2(GpsSubframe2),
 
-    /// Subframe #2 Word #3
-    Subframe2Word3(GpsSubframe2Word3),
+    /// GPS - Subframe #3
+    Subframe3(GpsSubframe3),
+}
 
-    /// Subframe #2 Word #4
-    Subframe2Word4(GpsSubframe2Word4),
+impl Default for GpsSubframe {
+    fn default() -> Self {
+        Self::Subframe1(Default::default())
+    }
+}
 
-    /// Subframe #2 Word #5
-    Subframe2Word5(GpsSubframe2Word5),
-
-    /// Subframe #2 Word #6
-    Subframe2Word6(GpsSubframe2Word6),
-
-    /// Subframe #2 Word #7
-    Subframe2Word7(GpsSubframe2Word7),
-
-    /// Subframe #2 Word #8
-    Subframe2Word8(GpsSubframe2Word8),
-
-    /// Subframe #2 Word #9
-    Subframe2Word9(GpsSubframe2Word9),
-
-    /// Subframe #2 Word #10
-    Subframe2Word10(GpsSubframe2Word10),
-
-    /// Subframe #3 Word #3
-    Subframe3Word3(GpsSubframe3Word3),
-
-    /// Subframe #3 Word #4
-    Subframe3Word4(GpsSubframe3Word4),
-
-    /// Subframe #3 Word #5
-    Subframe3Word5(GpsSubframe3Word5),
-
-    /// Subframe #3 Word #6
-    Subframe3Word6(GpsSubframe3Word6),
-
-    /// Subframe #3 Word #7
-    Subframe3Word7(GpsSubframe3Word7),
-
-    /// Subframe #3 Word #8
-    Subframe3Word8(GpsSubframe3Word8),
-
-    /// Subframe #3 Word #9
-    Subframe3Word9(GpsSubframe3Word9),
-
-    /// Subframe #3 Word #10
-    Subframe3Word10(GpsSubframe3Word10),
+#[derive(Debug, Default, Clone)]
+pub struct GpsFrame {
+    pub telemetry: GpsTelemetryWord,
+    pub how: GpsHowWord,
+    pub subframe: GpsSubframe,
 }

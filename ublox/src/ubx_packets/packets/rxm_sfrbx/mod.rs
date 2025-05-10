@@ -56,229 +56,374 @@ impl core::iter::Iterator for DwrdIter<'_> {
 
 #[derive(Debug, Clone)]
 pub enum RxmSfrbxInterprated {
-    /// GPS Subframe
-    Gps(GpsDataWord),
+    /// [gps::GpsFrame]
+    GPS(gps::GpsFrame),
 }
 
-pub struct RxmSfrbxInterprator<'a> {
+struct RxmSfrbxInterprator<'a> {
     /// Data word counter, to know where we are within current frame
-    dword: usize,
+    ptr: usize,
 
     /// GNSS-ID because frame interpretation is GNSS dependent
     gnss_id: u8,
-
-    /// Stored frame_id to continue the parsing process.
-    /// GPS uses 3 bits, we'll see if this need to change as others are introduced.
-    frame_id: u8,
 
     /// u32 (uninterpreated) words iterator
     iter: DwrdIter<'a>,
 }
 
-impl core::iter::Iterator for RxmSfrbxInterprator<'_> {
-    type Item = RxmSfrbxInterprated;
+impl RxmSfrbxInterprator<'_> {
+    /// Consumes all data words, trying to obtain an [RxmSfrbxInterprated],
+    /// for supported frames.
+    pub fn interprate(&mut self) -> Option<RxmSfrbxInterprated> {
+        // GPS Frame possibly constructed
+        let mut gps = Option::<gps::GpsFrame>::None;
 
-    fn next(&mut self) -> Option<Self::Item> {
-        let dword = self.iter.next()?;
+        while let Some(dword) = self.iter.next() {
+            self.ptr += 1; // increment position within frame
 
-        let ret = match self.gnss_id {
+            match self.gnss_id {
+                0 => {
+                    if self.gps_interpration(dword, &mut gps).is_none() {
+                        // no need to continue interpretation prcess
+                        break;
+                    }
+                },
+                _ => {}, // not applicable
+            }
+        }
+
+        // final wrapping
+        match self.gnss_id {
             0 => {
-                // GPS interpretation
-                match self.dword {
-                    0 => {
-                        let tlm = gps::GpsTelemetryWord::decode(dword)?;
-                        Some(RxmSfrbxInterprated::Gps(gps::GpsDataWord::Telemetry(tlm)))
-                    },
-                    1 => {
-                        let how = gps::GpsHowWord::decode(dword);
-
-                        // store frame_id for later
-                        self.frame_id = how.frame_id;
-
-                        Some(RxmSfrbxInterprated::Gps(gps::GpsDataWord::How(how)))
-                    },
-                    2 => {
-                        // Frame dependent
-                        match self.frame_id {
-                            2 => {
-                                // GPS Frame #2 word 3
-                                let decoded = gps::GpsSubframe2Word3::decode(dword);
-                                Some(RxmSfrbxInterprated::Gps(gps::GpsDataWord::Subframe2Word3(
-                                    decoded,
-                                )))
-                            },
-                            3 => {
-                                // GPS Frame #2 word 3
-                                let decoded = gps::GpsSubframe3Word3::decode(dword);
-                                Some(RxmSfrbxInterprated::Gps(gps::GpsDataWord::Subframe3Word3(
-                                    decoded,
-                                )))
-                            },
-                            _ => None, // not supported yet
-                        }
-                    },
-                    3 => {
-                        // Frame dependent
-                        match self.frame_id {
-                            2 => {
-                                // GPS Frame #2 word 4
-                                let decoded = gps::GpsSubframe2Word4::decode(dword);
-                                Some(RxmSfrbxInterprated::Gps(gps::GpsDataWord::Subframe2Word4(
-                                    decoded,
-                                )))
-                            },
-                            3 => {
-                                // GPS Frame #2 word 4
-                                let decoded = gps::GpsSubframe3Word4::decode(dword);
-                                Some(RxmSfrbxInterprated::Gps(gps::GpsDataWord::Subframe3Word4(
-                                    decoded,
-                                )))
-                            },
-                            _ => None, // not supported yet
-                        }
-                    },
-                    4 => {
-                        // Frame dependent
-                        match self.frame_id {
-                            2 => {
-                                // GPS Frame #2 word 5
-                                let decoded = gps::GpsSubframe2Word5::decode(dword);
-                                Some(RxmSfrbxInterprated::Gps(gps::GpsDataWord::Subframe2Word5(
-                                    decoded,
-                                )))
-                            },
-                            3 => {
-                                // GPS Frame #3 word 5
-                                let decoded = gps::GpsSubframe3Word5::decode(dword);
-                                Some(RxmSfrbxInterprated::Gps(gps::GpsDataWord::Subframe3Word5(
-                                    decoded,
-                                )))
-                            },
-                            _ => None, // not supported yet
-                        }
-                    },
-                    5 => {
-                        // Frame dependent
-                        match self.frame_id {
-                            2 => {
-                                // GPS Frame #2 word 6
-                                let decoded = gps::GpsSubframe2Word6::decode(dword);
-                                Some(RxmSfrbxInterprated::Gps(gps::GpsDataWord::Subframe2Word6(
-                                    decoded,
-                                )))
-                            },
-                            3 => {
-                                // GPS Frame #3 word 6
-                                let decoded = gps::GpsSubframe3Word6::decode(dword);
-                                Some(RxmSfrbxInterprated::Gps(gps::GpsDataWord::Subframe3Word6(
-                                    decoded,
-                                )))
-                            },
-                            _ => None, // not supported yet
-                        }
-                    },
-                    6 => {
-                        // Frame dependent
-                        match self.frame_id {
-                            2 => {
-                                // GPS Frame #2 word 7
-                                let decoded = gps::GpsSubframe2Word7::decode(dword);
-                                Some(RxmSfrbxInterprated::Gps(gps::GpsDataWord::Subframe2Word7(
-                                    decoded,
-                                )))
-                            },
-                            3 => {
-                                // GPS Frame #3 word 7
-                                let decoded = gps::GpsSubframe3Word7::decode(dword);
-                                Some(RxmSfrbxInterprated::Gps(gps::GpsDataWord::Subframe3Word7(
-                                    decoded,
-                                )))
-                            },
-                            _ => None, // not supported yet
-                        }
-                    },
-                    7 => {
-                        // Frame dependent
-                        match self.frame_id {
-                            2 => {
-                                // GPS Frame #2 word 8
-                                let decoded = gps::GpsSubframe2Word8::decode(dword);
-                                Some(RxmSfrbxInterprated::Gps(gps::GpsDataWord::Subframe2Word8(
-                                    decoded,
-                                )))
-                            },
-                            3 => {
-                                // GPS Frame #3 word 8
-                                let decoded = gps::GpsSubframe3Word8::decode(dword);
-                                Some(RxmSfrbxInterprated::Gps(gps::GpsDataWord::Subframe3Word8(
-                                    decoded,
-                                )))
-                            },
-                            _ => None, // not supported yet
-                        }
-                    },
-                    8 => {
-                        // Frame dependent
-                        match self.frame_id {
-                            2 => {
-                                // GPS Frame #2 word 9
-                                let decoded = gps::GpsSubframe2Word9::decode(dword);
-                                Some(RxmSfrbxInterprated::Gps(gps::GpsDataWord::Subframe2Word9(
-                                    decoded,
-                                )))
-                            },
-                            3 => {
-                                // GPS Frame #3 word 9
-                                let decoded = gps::GpsSubframe3Word9::decode(dword);
-                                Some(RxmSfrbxInterprated::Gps(gps::GpsDataWord::Subframe3Word9(
-                                    decoded,
-                                )))
-                            },
-                            _ => None, // not supported yet
-                        }
-                    },
-                    9 => {
-                        // Frame dependent
-                        match self.frame_id {
-                            2 => {
-                                // GPS Frame #2 word 10
-                                let decoded = gps::GpsSubframe2Word10::decode(dword);
-                                Some(RxmSfrbxInterprated::Gps(gps::GpsDataWord::Subframe2Word10(
-                                    decoded,
-                                )))
-                            },
-                            3 => {
-                                // GPS Frame #3 word 10
-                                let decoded = gps::GpsSubframe3Word10::decode(dword);
-                                Some(RxmSfrbxInterprated::Gps(gps::GpsDataWord::Subframe3Word10(
-                                    decoded,
-                                )))
-                            },
-                            _ => None, // not supported yet
-                        }
-                    },
-                    _ => {
-                        // following GPS dword not interprated yet
-                        None
-                    },
-                }
+                let gps = gps?; // decoding went well
+                Some(RxmSfrbxInterprated::GPS(gps))
             },
             _ => {
-                // Not interprated yet
+                // not supported yet
                 None
             },
-        };
+        }
+    }
 
-        self.dword += 1;
-        ret
+    fn gps_interpration(
+        &mut self,
+        dword: u32,
+        interprated: &mut Option<gps::GpsFrame>,
+    ) -> Option<()> {
+        match self.ptr {
+            1 => {
+                // TLM word (must be valid)
+                let telemetry = gps::GpsTelemetryWord::decode(dword)?;
+                let mut frame = GpsFrame::default();
+                frame.telemetry = telemetry;
+                *interprated = Some(frame);
+            },
+            2 => {
+                // HOW word (must follow TLM).
+                // After this step, the interpratation cannot fail.
+                // It just must be wrapped correctly (many cases, basically indexed on frame_id & ptr).
+                let how = gps::GpsHowWord::decode(dword);
+                if let Some(interprated) = interprated {
+                    interprated.how = how;
+                }
+            },
+            3 => {
+                // Frame dependent construction
+                if let Some(interprated) = interprated {
+                    let frame_id = interprated.how.frame_id;
+                    match frame_id {
+                        1 => {
+                            let word3 = gps::GpsSubframe1Word3::decode(dword);
+                            let mut subframe1 = gps::GpsSubframe1::default();
+                            subframe1.word3 = word3;
+
+                            interprated.subframe = gps::GpsSubframe::Subframe1(subframe1);
+                        },
+                        2 => {
+                            let word3 = gps::GpsSubframe2Word3::decode(dword);
+                            let mut subframe2 = gps::GpsSubframe2::default();
+                            subframe2.word3 = word3;
+
+                            interprated.subframe = gps::GpsSubframe::Subframe2(subframe2);
+                        },
+                        3 => {
+                            let word3 = gps::GpsSubframe3Word3::decode(dword);
+                            let mut subframe3 = gps::GpsSubframe3::default();
+                            subframe3.word3 = word3;
+
+                            interprated.subframe = gps::GpsSubframe::Subframe3(subframe3);
+                        },
+                        _ => {}, // not supported yet
+                    }
+                }
+            },
+            4 => {
+                // Frame dependent continuation
+                if let Some(interprated) = interprated {
+                    let frame_id = interprated.how.frame_id;
+                    match frame_id {
+                        1 => {
+                            let word4 = gps::GpsSubframe1Word4::decode(dword);
+                            match &mut interprated.subframe {
+                                gps::GpsSubframe::Subframe1(subframe) => {
+                                    subframe.word4 = word4;
+                                },
+                                _ => {}, // not applicable
+                            }
+                        },
+                        2 => {
+                            let word4 = gps::GpsSubframe2Word4::decode(dword);
+                            match &mut interprated.subframe {
+                                gps::GpsSubframe::Subframe2(subframe) => {
+                                    subframe.word4 = word4;
+                                },
+                                _ => {}, // not applicable
+                            }
+                        },
+                        3 => {
+                            let word4 = gps::GpsSubframe3Word4::decode(dword);
+                            match &mut interprated.subframe {
+                                gps::GpsSubframe::Subframe3(subframe) => {
+                                    subframe.word4 = word4;
+                                },
+                                _ => {}, // not applicable
+                            }
+                        },
+                        _ => {}, // not supported yet
+                    }
+                }
+            },
+            5 => {
+                // Frame dependent continuation
+                if let Some(interprated) = interprated {
+                    let frame_id = interprated.how.frame_id;
+                    match frame_id {
+                        1 => {
+                            let word5 = gps::GpsSubframe1Word5::decode(dword);
+                            match &mut interprated.subframe {
+                                gps::GpsSubframe::Subframe1(subframe) => {
+                                    subframe.word5 = word5;
+                                },
+                                _ => {}, // not applicable
+                            }
+                        },
+                        2 => {
+                            let word5 = gps::GpsSubframe2Word5::decode(dword);
+                            match &mut interprated.subframe {
+                                gps::GpsSubframe::Subframe2(subframe) => {
+                                    subframe.word5 = word5;
+                                },
+                                _ => {}, // not applicable
+                            }
+                        },
+                        3 => {
+                            let word5 = gps::GpsSubframe3Word5::decode(dword);
+                            match &mut interprated.subframe {
+                                gps::GpsSubframe::Subframe3(subframe) => {
+                                    subframe.word5 = word5;
+                                },
+                                _ => {}, // not applicable
+                            }
+                        },
+                        _ => {}, // not supported yet
+                    }
+                }
+            },
+            6 => {
+                // Frame dependent continuation
+                if let Some(interprated) = interprated {
+                    let frame_id = interprated.how.frame_id;
+                    match frame_id {
+                        1 => {
+                            let word6 = gps::GpsSubframe1Word6::decode(dword);
+                            match &mut interprated.subframe {
+                                gps::GpsSubframe::Subframe1(subframe) => {
+                                    subframe.word6 = word6;
+                                },
+                                _ => {}, // not applicable
+                            }
+                        },
+                        2 => {
+                            let word6 = gps::GpsSubframe2Word6::decode(dword);
+                            match &mut interprated.subframe {
+                                gps::GpsSubframe::Subframe2(subframe) => {
+                                    subframe.word6 = word6;
+                                },
+                                _ => {}, // not applicable
+                            }
+                        },
+                        3 => {
+                            let word6 = gps::GpsSubframe3Word6::decode(dword);
+                            match &mut interprated.subframe {
+                                gps::GpsSubframe::Subframe3(subframe) => {
+                                    subframe.word6 = word6;
+                                },
+                                _ => {}, // not applicable
+                            }
+                        },
+                        _ => {}, // not supported yet
+                    }
+                }
+            },
+            7 => {
+                // Frame dependent continuation
+                if let Some(interprated) = interprated {
+                    let frame_id = interprated.how.frame_id;
+                    match frame_id {
+                        1 => {
+                            let word7 = gps::GpsSubframe1Word7::decode(dword);
+                            match &mut interprated.subframe {
+                                gps::GpsSubframe::Subframe1(subframe) => {
+                                    subframe.word7 = word7;
+                                },
+                                _ => {}, // not applicable
+                            }
+                        },
+                        2 => {
+                            let word7 = gps::GpsSubframe2Word7::decode(dword);
+                            match &mut interprated.subframe {
+                                gps::GpsSubframe::Subframe2(subframe) => {
+                                    subframe.word7 = word7;
+                                },
+                                _ => {}, // not applicable
+                            }
+                        },
+                        3 => {
+                            let word7 = gps::GpsSubframe3Word7::decode(dword);
+                            match &mut interprated.subframe {
+                                gps::GpsSubframe::Subframe3(subframe) => {
+                                    subframe.word7 = word7;
+                                },
+                                _ => {}, // not applicable
+                            }
+                        },
+                        _ => {}, // not supported yet
+                    }
+                }
+            },
+            8 => {
+                // Frame dependent continuation
+                if let Some(interprated) = interprated {
+                    let frame_id = interprated.how.frame_id;
+                    match frame_id {
+                        1 => {
+                            let word8 = gps::GpsSubframe1Word8::decode(dword);
+                            match &mut interprated.subframe {
+                                gps::GpsSubframe::Subframe1(subframe) => {
+                                    subframe.word8 = word8;
+                                },
+                                _ => {}, // not applicable
+                            }
+                        },
+                        2 => {
+                            let word8 = gps::GpsSubframe2Word8::decode(dword);
+                            match &mut interprated.subframe {
+                                gps::GpsSubframe::Subframe2(subframe) => {
+                                    subframe.word8 = word8;
+                                },
+                                _ => {}, // not applicable
+                            }
+                        },
+                        3 => {
+                            let word8 = gps::GpsSubframe3Word8::decode(dword);
+                            match &mut interprated.subframe {
+                                gps::GpsSubframe::Subframe3(subframe) => {
+                                    subframe.word8 = word8;
+                                },
+                                _ => {}, // not applicable
+                            }
+                        },
+                        _ => {}, // not supported yet
+                    }
+                }
+            },
+            9 => {
+                // Frame dependent continuation
+                if let Some(interprated) = interprated {
+                    let frame_id = interprated.how.frame_id;
+                    match frame_id {
+                        1 => {
+                            let word9 = gps::GpsSubframe1Word9::decode(dword);
+                            match &mut interprated.subframe {
+                                gps::GpsSubframe::Subframe1(subframe) => {
+                                    subframe.word9 = word9;
+                                },
+                                _ => {}, // not applicable
+                            }
+                        },
+                        2 => {
+                            let word9 = gps::GpsSubframe2Word9::decode(dword);
+                            match &mut interprated.subframe {
+                                gps::GpsSubframe::Subframe2(subframe) => {
+                                    subframe.word9 = word9;
+                                },
+                                _ => {}, // not applicable
+                            }
+                        },
+                        3 => {
+                            let word9 = gps::GpsSubframe3Word9::decode(dword);
+                            match &mut interprated.subframe {
+                                gps::GpsSubframe::Subframe3(subframe) => {
+                                    subframe.word9 = word9;
+                                },
+                                _ => {}, // not applicable
+                            }
+                        },
+                        _ => {}, // not supported yet
+                    }
+                }
+            },
+            10 => {
+                // Frame dependent continuation
+                if let Some(interprated) = interprated {
+                    let frame_id = interprated.how.frame_id;
+                    match frame_id {
+                        1 => {
+                            let word10 = gps::GpsSubframe1Word10::decode(dword);
+                            match &mut interprated.subframe {
+                                gps::GpsSubframe::Subframe1(subframe) => {
+                                    subframe.word10 = word10;
+                                },
+                                _ => {}, // not applicable
+                            }
+                        },
+                        2 => {
+                            let word10 = gps::GpsSubframe2Word10::decode(dword);
+                            match &mut interprated.subframe {
+                                gps::GpsSubframe::Subframe2(subframe) => {
+                                    subframe.word10 = word10;
+                                },
+                                _ => {}, // not applicable
+                            }
+                        },
+                        3 => {
+                            let word10 = gps::GpsSubframe3Word10::decode(dword);
+                            match &mut interprated.subframe {
+                                gps::GpsSubframe::Subframe3(subframe) => {
+                                    subframe.word10 = word10;
+                                },
+                                _ => {}, // not applicable
+                            }
+                        },
+                        _ => {}, // not supported yet
+                    }
+                }
+            },
+            _ => {}, // not applicable
+        }
+
+        Some(())
     }
 }
 
 impl RxmSfrbxRef<'_> {
-    pub fn interprator(&self) -> RxmSfrbxInterprator {
+    pub fn interprate(&self) -> Option<RxmSfrbxInterprated> {
+        self.interprator().interprate()
+    }
+
+    fn interprator(&self) -> RxmSfrbxInterprator<'_> {
         RxmSfrbxInterprator {
-            dword: 0,
-            frame_id: 0,
+            ptr: 0,
             iter: self.dwrd(),
             gnss_id: self.gnss_id(),
         }
