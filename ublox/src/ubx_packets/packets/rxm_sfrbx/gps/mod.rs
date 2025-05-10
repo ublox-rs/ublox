@@ -2,13 +2,11 @@
 // NB(1): Parity bits are always truncated by the UBX firmware
 // See UBX-AID section of the UBX docs
 //////////////////////////////////////////////////////////////
-mod frame1;
-mod frame2;
-mod frame3;
+pub(crate) mod unscaled;
+pub(crate) use unscaled::*;
 
-pub use frame1::*;
-pub use frame2::*;
-pub use frame3::*;
+pub mod scaled;
+pub use scaled::*;
 
 const GPS_PARITY_SIZE: u32 = 6;
 
@@ -99,66 +97,4 @@ impl GpsHowWord {
             anti_spoofing,
         }
     }
-}
-
-#[derive(Debug, Default, Clone)]
-pub struct GpsSubframe1 {
-    pub word3: GpsSubframe1Word3,
-    pub word4: GpsSubframe1Word4,
-    pub word5: GpsSubframe1Word5,
-    pub word6: GpsSubframe1Word6,
-    pub word7: GpsSubframe1Word7,
-    pub word8: GpsSubframe1Word8,
-    pub word9: GpsSubframe1Word9,
-    pub word10: GpsSubframe1Word10,
-}
-
-#[derive(Debug, Default, Clone)]
-pub struct GpsSubframe2 {
-    pub word3: GpsSubframe2Word3,
-    pub word4: GpsSubframe2Word4,
-    pub word5: GpsSubframe2Word5,
-    pub word6: GpsSubframe2Word6,
-    pub word7: GpsSubframe2Word7,
-    pub word8: GpsSubframe2Word8,
-    pub word9: GpsSubframe2Word9,
-    pub word10: GpsSubframe2Word10,
-}
-
-#[derive(Debug, Default, Clone)]
-pub struct GpsSubframe3 {
-    pub word3: GpsSubframe3Word3,
-    pub word4: GpsSubframe3Word4,
-    pub word5: GpsSubframe3Word5,
-    pub word6: GpsSubframe3Word6,
-    pub word7: GpsSubframe3Word7,
-    pub word8: GpsSubframe3Word8,
-    pub word9: GpsSubframe3Word9,
-    pub word10: GpsSubframe3Word10,
-}
-
-/// Interprated [GpsSubframe]s
-#[derive(Debug, Clone)]
-pub enum GpsSubframe {
-    /// GPS - Subframe #1
-    Subframe1(GpsSubframe1),
-
-    /// GPS - Subframe #2
-    Subframe2(GpsSubframe2),
-
-    /// GPS - Subframe #3
-    Subframe3(GpsSubframe3),
-}
-
-impl Default for GpsSubframe {
-    fn default() -> Self {
-        Self::Subframe1(Default::default())
-    }
-}
-
-#[derive(Debug, Default, Clone)]
-pub struct GpsFrame {
-    pub telemetry: GpsTelemetryWord,
-    pub how: GpsHowWord,
-    pub subframe: GpsSubframe,
 }

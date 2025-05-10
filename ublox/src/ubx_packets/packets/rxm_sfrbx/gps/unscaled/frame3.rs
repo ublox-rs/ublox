@@ -1,4 +1,4 @@
-use super::GPS_PARITY_SIZE;
+use super::super::GPS_PARITY_SIZE;
 
 const WORD3_CIC_MASK: u32 = 0xffff00;
 const WORD3_CIC_SHIFT: u32 = 8; // remaining payload bits
@@ -33,14 +33,14 @@ const WORD10_IDOT_MASK: u32 = 0x003fff;
 const WORD10_IDOT_SHIFT: u32 = 0;
 
 #[derive(Debug, Default, Clone)]
-pub struct GpsSubframe3Word3 {
+pub struct GpsUnscaled3Word3 {
     pub cic: u16,
 
     /// Omega0 (8) MSB, you will have to associate this to Word #4
     pub omega0_msb: u8,
 }
 
-impl GpsSubframe3Word3 {
+impl GpsUnscaled3Word3 {
     pub(crate) fn decode(dword: u32) -> Self {
         let dword = dword >> GPS_PARITY_SIZE;
         let cic = ((dword & WORD3_CIC_MASK) >> WORD3_CIC_SHIFT) as u16;
@@ -50,12 +50,12 @@ impl GpsSubframe3Word3 {
 }
 
 #[derive(Debug, Default, Clone)]
-pub struct GpsSubframe3Word4 {
+pub struct GpsUnscaled3Word4 {
     /// Omega0 (24) LSB, you will have to associate this to Word #3
     pub omega0_lsb: u32,
 }
 
-impl GpsSubframe3Word4 {
+impl GpsUnscaled3Word4 {
     pub(crate) fn decode(dword: u32) -> Self {
         let dword = dword >> GPS_PARITY_SIZE;
         let omega0_lsb = ((dword & WORD4_OMEGA0_MASK) >> WORD4_OMEGA0_SHIFT) as u32;
@@ -63,14 +63,14 @@ impl GpsSubframe3Word4 {
     }
 }
 #[derive(Debug, Default, Clone)]
-pub struct GpsSubframe3Word5 {
+pub struct GpsUnscaled3Word5 {
     pub cis: u16,
 
     /// I0 (8) MSB, you will have to associate this to Word #6
     pub i0_msb: u8,
 }
 
-impl GpsSubframe3Word5 {
+impl GpsUnscaled3Word5 {
     pub(crate) fn decode(dword: u32) -> Self {
         let dword = dword >> GPS_PARITY_SIZE;
         let cis = ((dword & WORD5_CIS_MASK) >> WORD5_CIS_SHIFT) as u16;
@@ -80,12 +80,12 @@ impl GpsSubframe3Word5 {
 }
 
 #[derive(Debug, Default, Clone)]
-pub struct GpsSubframe3Word6 {
+pub struct GpsUnscaled3Word6 {
     /// I0 (24) LSB, you will have to associate this to Word #5
     pub i0_lsb: u32,
 }
 
-impl GpsSubframe3Word6 {
+impl GpsUnscaled3Word6 {
     pub(crate) fn decode(dword: u32) -> Self {
         let dword = dword >> GPS_PARITY_SIZE;
         let i0_lsb = ((dword & WORD6_I0_MASK) >> WORD6_I0_SHIFT) as u32;
@@ -94,14 +94,14 @@ impl GpsSubframe3Word6 {
 }
 
 #[derive(Debug, Default, Clone)]
-pub struct GpsSubframe3Word7 {
+pub struct GpsUnscaled3Word7 {
     pub crc: u16,
 
     /// Omega (8) MSB, you will have to associate this to Word #8
     pub omega_msb: u8,
 }
 
-impl GpsSubframe3Word7 {
+impl GpsUnscaled3Word7 {
     pub(crate) fn decode(dword: u32) -> Self {
         let dword = dword >> GPS_PARITY_SIZE;
         let crc = ((dword & WORD7_CRC_MASK) >> WORD7_CRC_SHIFT) as u16;
@@ -111,12 +111,12 @@ impl GpsSubframe3Word7 {
 }
 
 #[derive(Debug, Default, Clone)]
-pub struct GpsSubframe3Word8 {
+pub struct GpsUnscaled3Word8 {
     /// Omega (24) LSB, you will have to associate this to Word #7
     pub omega_lsb: u32,
 }
 
-impl GpsSubframe3Word8 {
+impl GpsUnscaled3Word8 {
     pub(crate) fn decode(dword: u32) -> Self {
         let dword = dword >> GPS_PARITY_SIZE;
         let omega_lsb = ((dword & WORD8_OMEGA_MASK) >> WORD8_OMEGA_SHIFT) as u32;
@@ -125,12 +125,12 @@ impl GpsSubframe3Word8 {
 }
 
 #[derive(Debug, Default, Clone)]
-pub struct GpsSubframe3Word9 {
+pub struct GpsUnscaled3Word9 {
     // Omega dot (24 bits)
     pub omega_dot: u32,
 }
 
-impl GpsSubframe3Word9 {
+impl GpsUnscaled3Word9 {
     pub(crate) fn decode(dword: u32) -> Self {
         let dword = dword >> GPS_PARITY_SIZE;
         let omega_dot = ((dword & WORD9_OMEGADOT_MASK) >> WORD9_OMEGADOT_SHIFT) as u32;
@@ -139,12 +139,12 @@ impl GpsSubframe3Word9 {
 }
 
 #[derive(Debug, Default, Clone)]
-pub struct GpsSubframe3Word10 {
+pub struct GpsUnscaled3Word10 {
     pub iode: u8,
     pub idot: u16,
 }
 
-impl GpsSubframe3Word10 {
+impl GpsUnscaled3Word10 {
     pub(crate) fn decode(dword: u32) -> Self {
         let dword = dword >> (GPS_PARITY_SIZE + 2);
         let iode = ((dword & WORD10_IODE_MASK) >> WORD10_IODE_SHIFT) as u8;
