@@ -3,8 +3,10 @@
 // See UBX-AID section of the UBX docs
 //////////////////////////////////////////////////////////////
 mod frame2;
+mod frame3;
 
 pub use frame2::*;
+pub use frame3::*;
 
 const GPS_PARITY_SIZE: u32 = 6;
 
@@ -15,7 +17,7 @@ const GPS_TLM_INTEGRITY_BIT_MASK: u32 = 0x000004;
 const GPS_TLM_RESERVED_BIT_MASK: u32 = 0x000002;
 
 const GPS_HOW_TOW_MASK: u32 = 0xffff80;
-const GPS_HOW_TOW_SHIFT: u32 = 5;
+const GPS_HOW_TOW_SHIFT: u32 = 5; // remaining payload bits
 const GPS_HOW_ALERT_BIT_MASK: u32 = 0x000040;
 const GPS_HOW_ANTI_SPOOFING_BIT_MASK: u32 = 0x000020;
 const GPS_HOW_FRAME_ID_MASK: u32 = 0x00001C;
@@ -129,15 +131,28 @@ pub enum GpsDataWord {
 
     /// Subframe #2 Word #10
     Subframe2Word10(GpsSubframe2Word10),
-    // /// Subframe #3 Word #3
-    // Subframe3Word3(GpsSubframe3Word3),
 
-    // /// Subframe #3 Word #4
-    // Subframe3Word4(GpsSubframe3Word4),
+    /// Subframe #3 Word #3
+    Subframe3Word3(GpsSubframe3Word3),
 
-    // /// Subframe #3 Word #5
-    // Subframe3Word5(GpsSubframe3Word5),
+    /// Subframe #3 Word #4
+    Subframe3Word4(GpsSubframe3Word4),
 
-    // /// Subframe #3 Word #6
-    // Subframe3Word6(GpsSubframe3Word6),
+    /// Subframe #3 Word #5
+    Subframe3Word5(GpsSubframe3Word5),
+
+    /// Subframe #3 Word #6
+    Subframe3Word6(GpsSubframe3Word6),
+
+    /// Subframe #3 Word #7
+    Subframe3Word7(GpsSubframe3Word7),
+
+    /// Subframe #3 Word #8
+    Subframe3Word8(GpsSubframe3Word8),
+
+    /// Subframe #3 Word #9
+    Subframe3Word9(GpsSubframe3Word9),
+
+    /// Subframe #3 Word #10
+    Subframe3Word10(GpsSubframe3Word10),
 }

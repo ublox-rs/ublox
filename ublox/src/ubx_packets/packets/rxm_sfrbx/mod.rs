@@ -107,13 +107,13 @@ impl core::iter::Iterator for RxmSfrbxInterprator<'_> {
                                     decoded,
                                 )))
                             },
-                            // 3 => {
-                            //     // GPS Frame #3 word 3
-                            //     let decoded = gps::GpsSubframe3Word3::decode(dword);
-                            //     Some(RxmSfrbxInterprated::Gps(gps::GpsDataWord::Subframe3Word3(
-                            //         decoded,
-                            //     )))
-                            // },
+                            3 => {
+                                // GPS Frame #2 word 3
+                                let decoded = gps::GpsSubframe3Word3::decode(dword);
+                                Some(RxmSfrbxInterprated::Gps(gps::GpsDataWord::Subframe3Word3(
+                                    decoded,
+                                )))
+                            },
                             _ => None, // not supported yet
                         }
                     },
@@ -127,13 +127,13 @@ impl core::iter::Iterator for RxmSfrbxInterprator<'_> {
                                     decoded,
                                 )))
                             },
-                            // 3 => {
-                            //     // GPS Frame #3 word 4
-                            //     let decoded = gps::GpsSubframe3Word4::decode(dword);
-                            //     Some(RxmSfrbxInterprated::Gps(gps::GpsDataWord::Subframe3Word4(
-                            //         decoded,
-                            //     )))
-                            // },
+                            3 => {
+                                // GPS Frame #2 word 4
+                                let decoded = gps::GpsSubframe3Word4::decode(dword);
+                                Some(RxmSfrbxInterprated::Gps(gps::GpsDataWord::Subframe3Word4(
+                                    decoded,
+                                )))
+                            },
                             _ => None, // not supported yet
                         }
                     },
@@ -147,13 +147,13 @@ impl core::iter::Iterator for RxmSfrbxInterprator<'_> {
                                     decoded,
                                 )))
                             },
-                            // 3 => {
-                            //     // GPS Frame #3 word 5
-                            //     let decoded = gps::GpsSubframe3Word5::decode(dword);
-                            //     Some(RxmSfrbxInterprated::Gps(gps::GpsDataWord::Subframe3Word5(
-                            //         decoded,
-                            //     )))
-                            // },
+                            3 => {
+                                // GPS Frame #3 word 5
+                                let decoded = gps::GpsSubframe3Word5::decode(dword);
+                                Some(RxmSfrbxInterprated::Gps(gps::GpsDataWord::Subframe3Word5(
+                                    decoded,
+                                )))
+                            },
                             _ => None, // not supported yet
                         }
                     },
@@ -164,6 +164,13 @@ impl core::iter::Iterator for RxmSfrbxInterprator<'_> {
                                 // GPS Frame #2 word 6
                                 let decoded = gps::GpsSubframe2Word6::decode(dword);
                                 Some(RxmSfrbxInterprated::Gps(gps::GpsDataWord::Subframe2Word6(
+                                    decoded,
+                                )))
+                            },
+                            3 => {
+                                // GPS Frame #3 word 6
+                                let decoded = gps::GpsSubframe3Word6::decode(dword);
+                                Some(RxmSfrbxInterprated::Gps(gps::GpsDataWord::Subframe3Word6(
                                     decoded,
                                 )))
                             },
@@ -180,6 +187,13 @@ impl core::iter::Iterator for RxmSfrbxInterprator<'_> {
                                     decoded,
                                 )))
                             },
+                            3 => {
+                                // GPS Frame #3 word 7
+                                let decoded = gps::GpsSubframe3Word7::decode(dword);
+                                Some(RxmSfrbxInterprated::Gps(gps::GpsDataWord::Subframe3Word7(
+                                    decoded,
+                                )))
+                            },
                             _ => None, // not supported yet
                         }
                     },
@@ -190,6 +204,13 @@ impl core::iter::Iterator for RxmSfrbxInterprator<'_> {
                                 // GPS Frame #2 word 8
                                 let decoded = gps::GpsSubframe2Word8::decode(dword);
                                 Some(RxmSfrbxInterprated::Gps(gps::GpsDataWord::Subframe2Word8(
+                                    decoded,
+                                )))
+                            },
+                            3 => {
+                                // GPS Frame #3 word 8
+                                let decoded = gps::GpsSubframe3Word8::decode(dword);
+                                Some(RxmSfrbxInterprated::Gps(gps::GpsDataWord::Subframe3Word8(
                                     decoded,
                                 )))
                             },
@@ -206,6 +227,13 @@ impl core::iter::Iterator for RxmSfrbxInterprator<'_> {
                                     decoded,
                                 )))
                             },
+                            3 => {
+                                // GPS Frame #3 word 9
+                                let decoded = gps::GpsSubframe3Word9::decode(dword);
+                                Some(RxmSfrbxInterprated::Gps(gps::GpsDataWord::Subframe3Word9(
+                                    decoded,
+                                )))
+                            },
                             _ => None, // not supported yet
                         }
                     },
@@ -219,13 +247,13 @@ impl core::iter::Iterator for RxmSfrbxInterprator<'_> {
                                     decoded,
                                 )))
                             },
-                            // 3 => {
-                            //     // GPS Frame #3 word 5
-                            //     let decoded = gps::GpsSubframe3Word6::decode(dword);
-                            //     Some(RxmSfrbxInterprated::Gps(gps::GpsDataWord::Subframe3Word6(
-                            //         decoded,
-                            //     )))
-                            // },
+                            3 => {
+                                // GPS Frame #3 word 10
+                                let decoded = gps::GpsSubframe3Word10::decode(dword);
+                                Some(RxmSfrbxInterprated::Gps(gps::GpsDataWord::Subframe3Word10(
+                                    decoded,
+                                )))
+                            },
                             _ => None, // not supported yet
                         }
                     },
