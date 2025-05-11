@@ -29,7 +29,10 @@ impl GpsUnscaledEph1 {
             ca_or_p_l2: self.word3.ca_or_p_l2,
             ura: self.word3.ura,
             health: self.word3.health,
-            iodc: { (self.word3.iodc_msb as u16) << 8 + self.word8.iodc_lsb as u16 },
+            reserved_word5: self.word5.reserved,
+            reserved_word6: self.word6.reserved,
+            reserved_word7: self.word7.reserved,
+            iodc: { (self.word3.iodc_msb as u16) << 9 + self.word8.iodc_lsb as u16 },
             tgd: (self.word7.tgd as f64) / 2.0_f64.powi(31),
             toc: (self.word8.toc as u32) * 2_u32.pow(4),
             af2: (self.word9.af2 as f64) / 2.0_f64.powi(55),
@@ -240,25 +243,28 @@ pub(crate) enum GpsUnscaledSubframe {
     // GPS Almanac Page 25 not supported yet
     // /// GPS - Unscaled Subframe #5 Page 25 (last one).
     // Subframe5Page25(GpsUnscaled5Page25),
-}
-
-impl Default for GpsUnscaledSubframe {
-    fn default() -> Self {
-        Self::Eph1(Default::default())
-    }
+    /// Non supported subframe
+    NonSupported,
 }
 
 impl GpsUnscaledSubframe {
-    pub fn scale(&self) -> GpsSubframe {
+    pub fn scale(&self) -> Option<GpsSubframe> {
         match self {
-            Self::Eph1(subframe) => GpsSubframe::Eph1(subframe.scale()),
-            Self::Eph2(subframe) => GpsSubframe::Eph2(subframe.scale()),
-            Self::Eph3(subframe) => GpsSubframe::Eph3(subframe.scale()),
+            Self::Eph1(subframe) => Some(GpsSubframe::Eph1(subframe.scale())),
+            Self::Eph2(subframe) => Some(GpsSubframe::Eph2(subframe.scale())),
+            Self::Eph3(subframe) => Some(GpsSubframe::Eph3(subframe.scale())),
             // Almanac Page 1-24 not supported yet
             // Self::Subframe5Page1Thru24(subframe) => GpsSubframe::Subframe5Page1Thru24(subframe.scale()),
             // Almanac Page 25 not supported yet
             // Self::Subframe5Page25(subframe) => GpsSubframe::Subframe5Page25(subframe.scale()),
+            Self::NonSupported => None,
         }
+    }
+}
+
+impl Default for GpsUnscaledSubframe {
+    fn default() -> Self {
+        Self::NonSupported
     }
 }
 
@@ -270,11 +276,12 @@ pub(crate) struct GpsUnscaledFrame {
 }
 
 impl GpsUnscaledFrame {
-    pub(crate) fn scale(&self) -> GpsFrame {
-        GpsFrame {
-            telemetry: self.telemetry.clone(),
+    /// Scale this [GpsUnscaledFrame] into [GpsFrame], if it is correctly supported.
+    pub(crate) fn scale(&self) -> Option<GpsFrame> {
+        Some(GpsFrame {
             how: self.how.clone(),
-            subframe: self.subframe.scale(),
-        }
+            subframe: self.subframe.scale()?,
+            telemetry: self.telemetry.clone(),
+        })
     }
 }

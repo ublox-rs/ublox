@@ -74,8 +74,6 @@ pub struct GpsEphFrame1 {
     pub health: u8,
 
     /// 10-bit IODC.  
-    /// IODC indicates the issue number of the data set and provides the user
-    /// with a convenient means of detecting any change in the correction parameters.
     pub iodc: u16,
 
     /// TOC in seconds (elapsed within week)
@@ -92,6 +90,15 @@ pub struct GpsEphFrame1 {
 
     /// af0 (s)
     pub af0: f64,
+
+    /// 24-bit reserved word #5
+    pub reserved_word5: u32,
+
+    /// 24-bit reserved word #6
+    pub reserved_word6: u32,
+
+    ///16-bit reserved word #7
+    pub reserved_word7: u16,
 }
 
 /// Frame #2 of all Ephemeris GPS frames.

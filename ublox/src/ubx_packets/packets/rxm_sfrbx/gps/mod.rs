@@ -16,12 +16,19 @@ const GPS_TLM_MESSAGE_SHIFT: u32 = 3;
 const GPS_TLM_INTEGRITY_BIT_MASK: u32 = 0x000004;
 const GPS_TLM_RESERVED_BIT_MASK: u32 = 0x000002;
 
-const GPS_HOW_TOW_MASK: u32 = 0xffff80;
+const GPS_HOW_TOW_MASK: u32 = 0x3fffe0;
 const GPS_HOW_TOW_SHIFT: u32 = 5; // remaining payload bits
-const GPS_HOW_ALERT_BIT_MASK: u32 = 0x000040;
-const GPS_HOW_ANTI_SPOOFING_BIT_MASK: u32 = 0x000020;
-const GPS_HOW_FRAME_ID_MASK: u32 = 0x00001C;
-const GPS_HOW_FRAME_ID_SHIFT: u32 = 2;
+const GPS_HOW_ALERT_BIT_MASK: u32 = 0x000010;
+const GPS_HOW_ANTI_SPOOFING_BIT_MASK: u32 = 0x000008;
+const GPS_HOW_FRAME_ID_MASK: u32 = 0x000007;
+const GPS_HOW_FRAME_ID_SHIFT: u32 = 0;
+
+// const GPS_HOW_TOW_MASK: u32 = 0x0001c0;
+// const GPS_HOW_TOW_SHIFT: u32 = 5; // remaining payload bits
+// const GPS_HOW_ALERT_BIT_MASK: u32 = 0x000040;
+// const GPS_HOW_ANTI_SPOOFING_BIT_MASK: u32 = 0x000020;
+// const GPS_HOW_FRAME_ID_MASK: u32 = 0x00001c;
+// const GPS_HOW_FRAME_ID_SHIFT: u32 = 2;
 
 pub(crate) fn twos_complement(value: u32, bit_mask: u32, msb: u8) -> i32 {
     let value = value & bit_mask;
@@ -85,7 +92,7 @@ pub struct GpsHowWord {
 
 impl GpsHowWord {
     pub(crate) fn decode(dword: u32) -> Self {
-        // yet another custom shift..
+        // stripped parity bits..
         let dword = dword >> (GPS_PARITY_SIZE + 2);
 
         let tow = (dword & GPS_HOW_TOW_MASK) >> GPS_HOW_TOW_SHIFT;
