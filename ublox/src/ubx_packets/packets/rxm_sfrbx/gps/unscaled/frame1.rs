@@ -1,6 +1,4 @@
-use crate::twos_complement;
-
-use super::super::GPS_PARITY_SIZE;
+use super::super::{twos_complement, GPS_PARITY_SIZE};
 
 const WORD3_WEEK_MASK: u32 = 0xffC000;
 const WORD3_WEEK_SHIFT: u32 = 14; // remaining payload bits
@@ -18,6 +16,7 @@ const WORD4_RESERVED_MASK: u32 = 0x7fffff;
 const WORD4_RESERVED_SHIFT: u32 = 0;
 
 const WORD5_RESERVED_MASK: u32 = 0xffffff;
+
 const WORD6_RESERVED_MASK: u32 = 0xffffff;
 
 const WORD7_RESERVED_MASK: u32 = 0xffff00;
@@ -61,6 +60,7 @@ impl GpsUnscaledEph1Word3 {
         let dword = dword >> GPS_PARITY_SIZE;
 
         let week = ((dword & WORD3_WEEK_MASK) >> WORD3_WEEK_SHIFT) as u16;
+
         let ca_or_p_l2 = ((dword & WORD3_CA_P_L2_MASK) >> WORD3_CA_P_L2_SHIFT) as u8;
         let ura = ((dword & WORD3_URA_MASK) >> WORD3_URA_SHIFT) as u8;
         let health = ((dword & WORD3_HEALTH_MASK) >> WORD3_HEALTH_SHIFT) as u8;

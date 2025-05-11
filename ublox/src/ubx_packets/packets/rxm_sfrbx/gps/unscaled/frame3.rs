@@ -1,6 +1,4 @@
-use crate::twos_complement;
-
-use super::super::GPS_PARITY_SIZE;
+use super::super::{twos_complement, GPS_PARITY_SIZE};
 
 const WORD3_CIC_MASK: u32 = 0xffff00;
 const WORD3_CIC_SHIFT: u32 = 8; // remaining payload bits

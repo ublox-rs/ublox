@@ -1,4 +1,4 @@
-use super::super::GPS_PARITY_SIZE;
+use super::super::{twos_complement, GPS_PARITY_SIZE};
 
 const WORD3_IODE_MASK: u32 = 0xff0000;
 const WORD3_IODE_SHIFT: u32 = 16; // remaining payload bits
@@ -33,20 +33,23 @@ const WORD10_TOE_MASK: u32 = 0xffff00;
 const WORD10_TOE_SHIFT: u32 = 8;
 const WORD10_FITINT_MASK: u32 = 0x000080;
 const WORD10_AODO_MASK: u32 = 0x00007C;
-const WORD10_AODO_SHIFT: u32 = 2;
+const WORD10_AODO_SHIFT: u32 = 0;
 
 #[derive(Debug, Default, Clone)]
 pub struct GpsUnscaledEph2Word3 {
     pub iode: u8,
 
-    pub crs: i16,
+    pub crs: i32,
 }
 
 impl GpsUnscaledEph2Word3 {
     pub(crate) fn decode(dword: u32) -> Self {
         let dword = dword >> GPS_PARITY_SIZE;
         let iode = ((dword & WORD3_IODE_MASK) >> WORD3_IODE_SHIFT) as u8;
-        let crs = ((dword & WORD3_CRS_MASK) >> WORD3_CRS_SHIFT) as i16;
+
+        let crs = ((dword & WORD3_CRS_MASK) >> WORD3_CRS_SHIFT) as u32;
+        let crs = twos_complement(crs, 0xffff, 16);
+
         Self { iode, crs }
     }
 }
@@ -83,7 +86,7 @@ impl GpsUnscaledEph2Word5 {
 
 #[derive(Debug, Default, Clone)]
 pub struct GpsUnscaledEph2Word6 {
-    pub cuc: i16,
+    pub cuc: i32,
 
     /// MSB(8) eccentricity, you need to associate this to Subframe #2 Word #7
     pub e_msb: u8,
@@ -92,8 +95,12 @@ pub struct GpsUnscaledEph2Word6 {
 impl GpsUnscaledEph2Word6 {
     pub(crate) fn decode(dword: u32) -> Self {
         let dword = dword >> GPS_PARITY_SIZE;
-        let cuc = ((dword & WORD6_CUC_MASK) >> WORD6_CUC_SHIFT) as i16;
+
+        let cuc = ((dword & WORD6_CUC_MASK) >> WORD6_CUC_SHIFT) as u32;
+        let cuc = twos_complement(cuc, 0xffff, 16);
+
         let e_msb = ((dword & WORD6_E_MSB_MASK) >> WORD6_E_MSB_SHIFT) as u8;
+
         Self { cuc, e_msb }
     }
 }
@@ -114,7 +121,7 @@ impl GpsUnscaledEph2Word7 {
 
 #[derive(Debug, Default, Clone)]
 pub struct GpsUnscaledEph2Word8 {
-    pub cus: u16,
+    pub cus: i32,
 
     /// MSB(8) A⁻¹: you need to associate this to Subframe #2 Word #9
     pub sqrt_a_msb: u8,
@@ -123,7 +130,10 @@ pub struct GpsUnscaledEph2Word8 {
 impl GpsUnscaledEph2Word8 {
     pub(crate) fn decode(dword: u32) -> Self {
         let dword = dword >> GPS_PARITY_SIZE;
-        let cus = ((dword & WORD8_CUS_MASK) >> WORD8_CUS_SHIFT) as u16;
+
+        let cus = ((dword & WORD8_CUS_MASK) >> WORD8_CUS_SHIFT) as u32;
+        let cus = twos_complement(cus, 0xffff, 16);
+
         let sqrt_a_msb = ((dword & WORD8_SQRTA_MSB_MASK) >> WORD8_SQRTA_MSB_SHIFT) as u8;
         Self { cus, sqrt_a_msb }
     }

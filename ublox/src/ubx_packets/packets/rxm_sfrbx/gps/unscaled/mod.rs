@@ -62,7 +62,7 @@ impl GpsUnscaledEph2 {
             crs: (self.word3.crs as f64) / 2.0_f64.powi(5),
             delta_n: (self.word4.delta_n as f64) / 2.0_f64.powi(43),
             m0: {
-                let mut m0 = (self.word4.m0_msb as u32) << 25;
+                let mut m0 = (self.word4.m0_msb as u32) << 24;
                 m0 += self.word5.m0_lsb;
 
                 (m0 as i32) as f64 / 2.0_f64.powi(31)
@@ -71,14 +71,14 @@ impl GpsUnscaledEph2 {
             cuc: (self.word6.cuc as f64) / 2.0_f64.powi(29),
             e: {
                 // form u32 word
-                let mut e = (self.word6.e_msb as u32) << 25;
+                let mut e = (self.word6.e_msb as u32) << 24;
                 e += self.word7.e_lsb;
 
                 (e as i32) as f64 / 2.0_f64.powi(33)
             },
             sqrt_a: {
                 let mut sqrt_a = self.word9.sqrt_a_lsb;
-                sqrt_a += (self.word8.sqrt_a_msb as u32) << 25;
+                sqrt_a += (self.word8.sqrt_a_msb as u32) << 24;
                 (sqrt_a as f64) / 2.0_f64.powi(19)
             },
         }
