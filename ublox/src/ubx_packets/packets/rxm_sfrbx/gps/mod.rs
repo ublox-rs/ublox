@@ -30,9 +30,16 @@ const GPS_HOW_FRAME_ID_SHIFT: u32 = 0;
 // const GPS_HOW_FRAME_ID_MASK: u32 = 0x00001c;
 // const GPS_HOW_FRAME_ID_SHIFT: u32 = 2;
 
-pub(crate) fn twos_complement(value: u32, bit_mask: u32, msb: u8) -> i32 {
-    let value = value & bit_mask;
-    ((value << msb) as i32) >> msb
+pub(crate) fn twos_complement(value: u32, bits_mask: u32, sign_bit_mask: u32) -> i32 {
+    let value = value & bits_mask;
+
+    let signed = (value & sign_bit_mask) > 0;
+
+    if signed {
+        (value | !bits_mask) as i32
+    } else {
+        value as i32
+    }
 }
 
 /// [GpsTelemetryWord] marks the beginning of each frame

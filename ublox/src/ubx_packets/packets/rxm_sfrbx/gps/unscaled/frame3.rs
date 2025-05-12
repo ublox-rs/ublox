@@ -13,7 +13,7 @@ const WORD5_CIS_SHIFT: u32 = 8;
 const WORD5_I0_MASK: u32 = 0x0000ff;
 const WORD5_I0_SHIFT: u32 = 0;
 
-const WORD6_I0_MASK: u32 = 0xffffff;
+const WORD6_I0_MASK: u32 = 0x00ffffff;
 const WORD6_I0_SHIFT: u32 = 0;
 
 const WORD7_CRC_MASK: u32 = 0xffff00;
@@ -134,9 +134,7 @@ impl GpsUnscaledEph3Word9 {
     pub(crate) fn decode(dword: u32) -> Self {
         let dword = dword >> GPS_PARITY_SIZE;
         let omega_dot = ((dword & WORD9_OMEGADOT_MASK) >> WORD9_OMEGADOT_SHIFT) as u32;
-
-        let omega_dot = twos_complement(omega_dot, 0xffffff, 24);
-
+        let omega_dot = twos_complement(omega_dot, 0xffffff, 0x800000);
         Self { omega_dot }
     }
 }
@@ -157,7 +155,7 @@ impl GpsUnscaledEph3Word10 {
 
         // 14-bit signed 2's
         let idot = ((dword & WORD10_IDOT_MASK) >> WORD10_IDOT_SHIFT) as u32;
-        let idot = twos_complement(idot, 0x3fff, 14);
+        let idot = twos_complement(idot, 0x3fff, 0x2000);
 
         Self { iode, idot }
     }

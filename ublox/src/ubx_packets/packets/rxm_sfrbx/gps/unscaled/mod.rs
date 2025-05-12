@@ -32,7 +32,12 @@ impl GpsUnscaledEph1 {
             reserved_word5: self.word5.reserved,
             reserved_word6: self.word6.reserved,
             reserved_word7: self.word7.reserved,
-            iodc: { (self.word3.iodc_msb as u16) << 9 + self.word8.iodc_lsb as u16 },
+            iodc: {
+                let mut iodc = self.word3.iodc_msb as u16;
+                iodc <<= 8;
+                iodc |= self.word8.iodc_lsb as u16;
+                iodc
+            },
             tgd: (self.word7.tgd as f64) / 2.0_f64.powi(31),
             toc: (self.word8.toc as u32) * 2_u32.pow(4),
             af2: (self.word9.af2 as f64) / 2.0_f64.powi(55),
@@ -62,23 +67,26 @@ impl GpsUnscaledEph2 {
             crs: (self.word3.crs as f64) / 2.0_f64.powi(5),
             delta_n: (self.word4.delta_n as f64) / 2.0_f64.powi(43),
             m0: {
-                let mut m0 = (self.word4.m0_msb as u32) << 24;
-                m0 += self.word5.m0_lsb;
+                let mut m0 = self.word4.m0_msb as u32;
+                m0 <<= 24;
+                m0 |= self.word5.m0_lsb;
 
                 (m0 as i32) as f64 / 2.0_f64.powi(31)
             },
             cus: (self.word8.cus as f64) / 2.0_f64.powi(29),
             cuc: (self.word6.cuc as f64) / 2.0_f64.powi(29),
             e: {
-                // form u32 word
-                let mut e = (self.word6.e_msb as u32) << 24;
-                e += self.word7.e_lsb;
+                let mut e = self.word6.e_msb as u32;
+                e <<= 24;
+                e |= self.word7.e_lsb;
 
                 (e as i32) as f64 / 2.0_f64.powi(33)
             },
             sqrt_a: {
-                let mut sqrt_a = self.word9.sqrt_a_lsb;
-                sqrt_a += (self.word8.sqrt_a_msb as u32) << 24;
+                let mut sqrt_a = self.word8.sqrt_a_msb as u32;
+                sqrt_a <<= 24;
+                sqrt_a |= self.word9.sqrt_a_lsb;
+
                 (sqrt_a as f64) / 2.0_f64.powi(19)
             },
         }
@@ -103,16 +111,17 @@ impl GpsUnscaledEph3 {
             cis: (self.word5.cis as f64) / 2.0_f64.powi(29),
             i0: {
                 // form the u32 raw word
-                let mut i0 = (self.word5.i0_msb as u32) << 24;
-                i0 += self.word6.i0_lsb;
+                let mut i0 = self.word6.i0_lsb as u32;
+                i0 = i0 | ((self.word5.i0_msb as u32) << 24);
 
                 (i0 as i32) as f64 / 2.0_f64.powi(31)
             },
             cic: (self.word3.cic as f64) / 2.0_f64.powi(29),
             omega0: {
                 // form the u32 raw word
-                let mut omega0 = (self.word3.omega0_msb as u32) << 24;
-                omega0 += self.word4.omega0_lsb;
+                let mut omega0 = self.word3.omega0_msb as u32;
+                omega0 <<= 24;
+                omega0 |= self.word4.omega0_lsb;
 
                 (omega0 as i32) as f64 / 2.0_f64.powi(31)
             },

@@ -31,8 +31,8 @@ const WORD9_SQRTA_LSB_SHIFT: u32 = 0;
 
 const WORD10_TOE_MASK: u32 = 0xffff00;
 const WORD10_TOE_SHIFT: u32 = 8;
-const WORD10_FITINT_MASK: u32 = 0x000080;
-const WORD10_AODO_MASK: u32 = 0x00007C;
+const WORD10_FITINT_MASK: u32 = 0x000020;
+const WORD10_AODO_MASK: u32 = 0x00001f;
 const WORD10_AODO_SHIFT: u32 = 0;
 
 #[derive(Debug, Default, Clone)]
@@ -48,7 +48,7 @@ impl GpsUnscaledEph2Word3 {
         let iode = ((dword & WORD3_IODE_MASK) >> WORD3_IODE_SHIFT) as u8;
 
         let crs = ((dword & WORD3_CRS_MASK) >> WORD3_CRS_SHIFT) as u32;
-        let crs = twos_complement(crs, 0xffff, 16);
+        let crs = twos_complement(crs, 0xffff, 0x8000);
 
         Self { iode, crs }
     }
@@ -97,7 +97,7 @@ impl GpsUnscaledEph2Word6 {
         let dword = dword >> GPS_PARITY_SIZE;
 
         let cuc = ((dword & WORD6_CUC_MASK) >> WORD6_CUC_SHIFT) as u32;
-        let cuc = twos_complement(cuc, 0xffff, 16);
+        let cuc = twos_complement(cuc, 0xffff, 0x8000);
 
         let e_msb = ((dword & WORD6_E_MSB_MASK) >> WORD6_E_MSB_SHIFT) as u8;
 
@@ -132,7 +132,7 @@ impl GpsUnscaledEph2Word8 {
         let dword = dword >> GPS_PARITY_SIZE;
 
         let cus = ((dword & WORD8_CUS_MASK) >> WORD8_CUS_SHIFT) as u32;
-        let cus = twos_complement(cus, 0xffff, 16);
+        let cus = twos_complement(cus, 0xffff, 0x8000);
 
         let sqrt_a_msb = ((dword & WORD8_SQRTA_MSB_MASK) >> WORD8_SQRTA_MSB_SHIFT) as u8;
         Self { cus, sqrt_a_msb }
