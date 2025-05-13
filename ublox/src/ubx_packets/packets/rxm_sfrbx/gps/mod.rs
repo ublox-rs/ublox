@@ -23,13 +23,6 @@ const GPS_HOW_ANTI_SPOOFING_BIT_MASK: u32 = 0x000008;
 const GPS_HOW_FRAME_ID_MASK: u32 = 0x000007;
 const GPS_HOW_FRAME_ID_SHIFT: u32 = 0;
 
-// const GPS_HOW_TOW_MASK: u32 = 0x0001c0;
-// const GPS_HOW_TOW_SHIFT: u32 = 5; // remaining payload bits
-// const GPS_HOW_ALERT_BIT_MASK: u32 = 0x000040;
-// const GPS_HOW_ANTI_SPOOFING_BIT_MASK: u32 = 0x000020;
-// const GPS_HOW_FRAME_ID_MASK: u32 = 0x00001c;
-// const GPS_HOW_FRAME_ID_SHIFT: u32 = 2;
-
 pub(crate) fn twos_complement(value: u32, bits_mask: u32, sign_bit_mask: u32) -> i32 {
     let value = value & bits_mask;
 

@@ -89,6 +89,8 @@ impl GpsUnscaledEph2 {
 
                 (sqrt_a as f64) / 2.0_f64.powi(19)
             },
+            fit_int_flag: self.word10.fitint,
+            aodo: self.word10.aodo,
         }
     }
 }

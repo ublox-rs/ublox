@@ -130,6 +130,12 @@ pub struct GpsEphFrame2 {
 
     /// Sqrt(a)
     pub sqrt_a: f64,
+
+    /// Fit interval flag
+    pub fit_int_flag: bool,
+
+    /// 5-bit AODO
+    pub aodo: u8,
 }
 
 #[derive(Debug, Default, Clone)]
