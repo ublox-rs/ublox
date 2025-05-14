@@ -56,7 +56,7 @@ impl GpsUnscaledEph2Word3 {
 
 #[derive(Debug, Default, Clone)]
 pub struct GpsUnscaledEph2Word4 {
-    pub delta_n: i16,
+    pub dn: i16,
 
     /// M0 (8) msb, you need to associate this to Subframe #2 Word #5
     pub m0_msb: u8,
@@ -65,9 +65,9 @@ pub struct GpsUnscaledEph2Word4 {
 impl GpsUnscaledEph2Word4 {
     pub(crate) fn decode(dword: u32) -> Self {
         let dword = dword >> GPS_PARITY_SIZE;
-        let delta_n = ((dword & WORD4_DELTAN_MASK) >> WORD4_DELTAN_SHIFT) as i16;
+        let dn = ((dword & WORD4_DELTAN_MASK) >> WORD4_DELTAN_SHIFT) as i16;
         let m0_msb = ((dword & WORD4_M0_MSB_MASK) >> WORD4_M0_MSB_SHIFT) as u8;
-        Self { delta_n, m0_msb }
+        Self { dn, m0_msb }
     }
 }
 #[derive(Debug, Default, Clone)]
@@ -156,7 +156,7 @@ impl GpsUnscaledEph2Word9 {
 #[derive(Debug, Default, Clone)]
 pub struct GpsUnscaledEph2Word10 {
     /// Time of issue of Ephemeris (u16)
-    pub toe: u16,
+    pub toe_s: u16,
     pub fitint: bool,
     pub aodo: u8,
 }
@@ -164,9 +164,13 @@ pub struct GpsUnscaledEph2Word10 {
 impl GpsUnscaledEph2Word10 {
     pub(crate) fn decode(dword: u32) -> Self {
         let dword = dword >> (GPS_PARITY_SIZE + 2);
-        let toe = ((dword & WORD10_TOE_MASK) >> WORD10_TOE_SHIFT) as u16;
+        let toe_s = ((dword & WORD10_TOE_MASK) >> WORD10_TOE_SHIFT) as u16;
         let fitint = (dword & WORD10_FITINT_MASK) > 0;
         let aodo = ((dword & WORD10_AODO_MASK) >> WORD10_AODO_SHIFT) as u8;
-        Self { toe, fitint, aodo }
+        Self {
+            toe_s,
+            fitint,
+            aodo,
+        }
     }
 }

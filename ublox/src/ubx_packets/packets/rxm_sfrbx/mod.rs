@@ -1,7 +1,9 @@
 #[cfg(feature = "serde")]
 use super::SerializeUbxPacketFields;
+
 #[cfg(feature = "serde")]
 use crate::serde::ser::SerializeMap;
+
 #[allow(unused_imports, reason = "It's only unused in some feature sets")]
 use crate::FieldIter;
 
@@ -56,12 +58,12 @@ impl core::iter::Iterator for DwrdIter<'_> {
 
 #[derive(Debug, Clone)]
 pub enum RxmSfrbxInterpreted {
-    /// [gps::GpsFrame]. Supported:
+    /// [gps::RxmSfrbxGpsQzssFrame], applies to both Constellations.
+    /// We support:
     /// - Ephemeris #1
     /// - Ephemeris #2
     /// - Ephemeris #3
-    /// - Almanac frames interpretation not available yet
-    GPS(gps::GpsFrame),
+    GpsQzss(gps::RxmSfrbxGpsQzssFrame),
 }
 
 struct RxmSfrbxInterpretor<'a> {
@@ -86,8 +88,10 @@ impl RxmSfrbxInterpretor<'_> {
             self.ptr += 1; // increment position within frame
 
             match self.gnss_id {
-                0 => {
-                    if self.gps_interpretion(dword, &mut gps).is_none() {
+                0 | 5 => {
+                    // 0: GPS
+                    // 5: QZSS applies similarly
+                    if self.gps_decoding(dword, &mut gps).is_none() {
                         // no need to continue interpretation prcess
                         break;
                     }
@@ -98,10 +102,12 @@ impl RxmSfrbxInterpretor<'_> {
 
         // final scaling & wrapping
         match self.gnss_id {
-            0 => {
+            0 | 5 => {
+                // 0: GPS
+                // 5: QZSS applies similarly
                 let gps = gps?; // decoding went well
                 let scaled = gps.scale()?; // scaling went well
-                Some(RxmSfrbxInterpreted::GPS(scaled))
+                Some(RxmSfrbxInterpreted::GpsQzss(scaled))
             },
             _ => {
                 // not supported yet
@@ -110,7 +116,7 @@ impl RxmSfrbxInterpretor<'_> {
         }
     }
 
-    fn gps_interpretion(
+    fn gps_decoding(
         &mut self,
         dword: u32,
         interpreted: &mut Option<gps::GpsUnscaledFrame>,
@@ -118,7 +124,7 @@ impl RxmSfrbxInterpretor<'_> {
         match self.ptr {
             1 => {
                 // TLM word (must be valid)
-                let telemetry = gps::GpsTelemetryWord::decode(dword)?;
+                let telemetry = gps::RxmSfrbxGpsQzssTelemetry::decode(dword)?;
                 let mut frame = GpsUnscaledFrame::default();
                 frame.telemetry = telemetry;
                 *interpreted = Some(frame);
@@ -127,7 +133,7 @@ impl RxmSfrbxInterpretor<'_> {
                 // HOW word (must follow TLM).
                 // After this step, the interpretation cannot fail.
                 // It just must be wrapped correctly (many cases, basically indexed on frame_id & ptr).
-                let how = gps::GpsHowWord::decode(dword);
+                let how = gps::RxmSfrbxGpsQzssHow::decode(dword);
                 if let Some(interpreted) = interpreted {
                     interpreted.how = how;
                 }

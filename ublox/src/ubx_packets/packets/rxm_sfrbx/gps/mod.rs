@@ -1,3 +1,5 @@
+//! GPS / QZSS frames
+
 //////////////////////////////////////////////////////////////
 // NB(1): Parity bits are always truncated by the UBX firmware
 // See UBX-AID section of the UBX docs
@@ -23,6 +25,11 @@ const GPS_HOW_ANTI_SPOOFING_BIT_MASK: u32 = 0x000008;
 const GPS_HOW_FRAME_ID_MASK: u32 = 0x000007;
 const GPS_HOW_FRAME_ID_SHIFT: u32 = 0;
 
+/// Two's complement parsing & interpretation.
+/// ## Input
+/// - raw bytes as [u32]
+/// - bits_mask: masking u32
+/// - sign_bit_mask: sign bit
 pub(crate) fn twos_complement(value: u32, bits_mask: u32, sign_bit_mask: u32) -> i32 {
     let value = value & bits_mask;
 
@@ -35,10 +42,9 @@ pub(crate) fn twos_complement(value: u32, bits_mask: u32, sign_bit_mask: u32) ->
     }
 }
 
-/// [GpsTelemetryWord] marks the beginning of each frame
+/// [RxmSfrbxGpsQzssTelemetry] marks the beginning of each frame
 #[derive(Debug, Default, Clone)]
-/// [GpsTelemetryWord]
-pub struct GpsTelemetryWord {
+pub struct RxmSfrbxGpsQzssTelemetry {
     /// TLM Message
     pub tlm_message: u16,
 
@@ -50,7 +56,7 @@ pub struct GpsTelemetryWord {
     pub reserved: bool,
 }
 
-impl GpsTelemetryWord {
+impl RxmSfrbxGpsQzssTelemetry {
     pub(crate) fn decode(dword: u32) -> Option<Self> {
         let dword = dword >> GPS_PARITY_SIZE;
 
@@ -72,12 +78,15 @@ impl GpsTelemetryWord {
     }
 }
 
-/// [GpsHowWord] marks the beginning of each frame, following [GpsTelemetryWord]
+/// [RxmSfrbxGpsQzssHow] marks the beginning of each frame, following [RxmSfrbxGpsTelemetry]
 #[derive(Debug, Default, Clone)]
 /// [GpsHowWord]
-pub struct GpsHowWord {
-    /// Elapsed seconds in GPST week
-    pub tow: u32,
+pub struct RxmSfrbxGpsQzssHow {
+    /// Transmission time (s)
+    pub ttm_s: u32,
+
+    /// Following Frame ID (to decoding following data words)
+    pub frame_id: u8,
 
     /// When alert is asserted, the SV URA may be worse than indicated in subframe 1
     /// and user shall use this SV at their own risk.
@@ -85,17 +94,14 @@ pub struct GpsHowWord {
 
     /// A-S mode is ON in that SV
     pub anti_spoofing: bool,
-
-    /// Following Frame ID (to decoding following data words)
-    pub frame_id: u8,
 }
 
-impl GpsHowWord {
+impl RxmSfrbxGpsQzssHow {
     pub(crate) fn decode(dword: u32) -> Self {
         // stripped parity bits..
         let dword = dword >> (GPS_PARITY_SIZE + 2);
 
-        let tow = (dword & GPS_HOW_TOW_MASK) >> GPS_HOW_TOW_SHIFT;
+        let ttm_s = ((dword & GPS_HOW_TOW_MASK) >> GPS_HOW_TOW_SHIFT) * 6;
 
         let alert = (dword & GPS_HOW_ALERT_BIT_MASK) > 0;
         let anti_spoofing = (dword & GPS_HOW_ANTI_SPOOFING_BIT_MASK) > 0;
@@ -103,7 +109,7 @@ impl GpsHowWord {
         let frame_id = ((dword & GPS_HOW_FRAME_ID_MASK) >> GPS_HOW_FRAME_ID_SHIFT) as u8;
 
         Self {
-            tow,
+            ttm_s,
             alert,
             frame_id,
             anti_spoofing,
