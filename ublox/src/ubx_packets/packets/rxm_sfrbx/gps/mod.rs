@@ -10,6 +10,7 @@ pub(crate) use unscaled::*;
 pub mod scaled;
 pub use scaled::*;
 
+const GPS_BITMASK: u32 = 0x3fffffff;
 const GPS_PARITY_SIZE: u32 = 6;
 
 const GPS_TLM_PREAMBLE_MASK: u32 = 0x8b0000;
@@ -24,6 +25,12 @@ const GPS_HOW_ALERT_BIT_MASK: u32 = 0x000010;
 const GPS_HOW_ANTI_SPOOFING_BIT_MASK: u32 = 0x000008;
 const GPS_HOW_FRAME_ID_MASK: u32 = 0x000007;
 const GPS_HOW_FRAME_ID_SHIFT: u32 = 0;
+
+/// Grab GPS (and QZSS) frame bits
+pub(crate) fn gps_qzss_bitmask(dword: u32) -> u32 {
+    // 2-MSB Padding (30->32bits) and stripped 6 LSB parity
+    (dword & GPS_BITMASK) >> GPS_PARITY_SIZE
+}
 
 /// Two's complement parsing & interpretation.
 /// ## Input
@@ -58,23 +65,23 @@ pub struct RxmSfrbxGpsQzssTelemetry {
 
 impl RxmSfrbxGpsQzssTelemetry {
     pub(crate) fn decode(dword: u32) -> Option<Self> {
-        let dword = dword >> GPS_PARITY_SIZE;
+        let dword = gps_qzss_bitmask(dword);
 
         // preamble verification
-        if dword & GPS_TLM_PREAMBLE_MASK == 0 {
-            // invalid GPS frame
-            return None;
+        if dword & GPS_TLM_PREAMBLE_MASK == GPS_TLM_PREAMBLE_MASK {
+            let tlm_message = ((dword & GPS_TLM_MESSAGE_MASK) >> GPS_TLM_MESSAGE_SHIFT) as u16;
+            let integrity = (dword & GPS_TLM_INTEGRITY_BIT_MASK) > 0;
+            let reserved = (dword & GPS_TLM_RESERVED_BIT_MASK) > 0;
+
+            Some(Self {
+                tlm_message,
+                integrity,
+                reserved,
+            })
+        } else {
+            // Invalid frame
+            None
         }
-
-        let tlm_message = ((dword & GPS_TLM_MESSAGE_MASK) >> GPS_TLM_MESSAGE_SHIFT) as u16;
-        let integrity = (dword & GPS_TLM_INTEGRITY_BIT_MASK) > 0;
-        let reserved = (dword & GPS_TLM_RESERVED_BIT_MASK) > 0;
-
-        Some(Self {
-            tlm_message,
-            integrity,
-            reserved,
-        })
     }
 }
 
@@ -82,8 +89,8 @@ impl RxmSfrbxGpsQzssTelemetry {
 #[derive(Debug, Default, Clone)]
 /// [GpsHowWord]
 pub struct RxmSfrbxGpsQzssHow {
-    /// Transmission time (s)
-    pub ttm_s: u32,
+    /// TOW
+    pub tow: u32,
 
     /// Following Frame ID (to decoding following data words)
     pub frame_id: u8,
@@ -98,21 +105,31 @@ pub struct RxmSfrbxGpsQzssHow {
 
 impl RxmSfrbxGpsQzssHow {
     pub(crate) fn decode(dword: u32) -> Self {
-        // stripped parity bits..
-        let dword = dword >> (GPS_PARITY_SIZE + 2);
+        // strip two more bits here
+        let dword = gps_qzss_bitmask(dword) >> 2;
 
-        let ttm_s = ((dword & GPS_HOW_TOW_MASK) >> GPS_HOW_TOW_SHIFT) * 6;
-
-        let alert = (dword & GPS_HOW_ALERT_BIT_MASK) > 0;
-        let anti_spoofing = (dword & GPS_HOW_ANTI_SPOOFING_BIT_MASK) > 0;
-
-        let frame_id = ((dword & GPS_HOW_FRAME_ID_MASK) >> GPS_HOW_FRAME_ID_SHIFT) as u8;
+        let frame_id = (dword & 0x7) as u8;
+        let anti_spoofing = (dword & 0x08) > 0;
+        let alert = (dword & 0x10) > 0;
+        let tow = ((dword >> 5) & 0x1ffff) * 6;
 
         Self {
-            ttm_s,
+            tow,
             alert,
             frame_id,
             anti_spoofing,
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::twos_complement;
+
+    #[test]
+    fn test_twos_complement() {
+        let value = 0x3fff;
+        let parsed = twos_complement(value, 0x3fff, 0x2000);
+        assert_eq!(parsed, 0xffffffffu32 as i32);
     }
 }

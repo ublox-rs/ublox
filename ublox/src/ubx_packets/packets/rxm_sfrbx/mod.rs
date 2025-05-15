@@ -16,14 +16,31 @@ pub use gps::*;
 #[ubx_packet_recv]
 #[ubx(class = 0x02, id = 0x13, max_payload_len = 72)]
 struct RxmSfrbx {
+    /// GNSS identifier
     gnss_id: u8,
+
+    /// Satellite identifier
     sv_id: u8,
+
+    /// Reserved
     reserved1: u8,
+
+    /// Only used for GLonass: this is the frequency slot +7
     freq_id: u8,
+
+    /// Number of data words
     num_words: u8,
+
+    /// Reserved
     reserved2: u8,
+
+    /// Message version
     version: u8,
+
+    /// Reserved
     reserved3: u8,
+
+    /// Data words
     #[ubx(
         map_type = DwrdIter,
         from = DwrdIter::new,

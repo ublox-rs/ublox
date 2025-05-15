@@ -1,4 +1,4 @@
-use super::super::{twos_complement, GPS_PARITY_SIZE};
+use super::super::{gps_qzss_bitmask, twos_complement};
 
 const WORD3_WEEK_MASK: u32 = 0xffC000;
 const WORD3_WEEK_SHIFT: u32 = 14; // remaining payload bits
@@ -57,7 +57,7 @@ pub struct GpsUnscaledEph1Word3 {
 
 impl GpsUnscaledEph1Word3 {
     pub(crate) fn decode(dword: u32) -> Self {
-        let dword = dword >> GPS_PARITY_SIZE;
+        let dword = gps_qzss_bitmask(dword);
 
         let week = ((dword & WORD3_WEEK_MASK) >> WORD3_WEEK_SHIFT) as u16;
 
@@ -84,7 +84,7 @@ pub struct GpsUnscaledEph1Word4 {
 
 impl GpsUnscaledEph1Word4 {
     pub(crate) fn decode(dword: u32) -> Self {
-        let dword = dword >> GPS_PARITY_SIZE;
+        let dword = gps_qzss_bitmask(dword);
         let l2_p_data_flag = (dword & WORD4_L2P_DATA_MASK) > 0;
         let reserved = ((dword & WORD4_RESERVED_MASK) >> WORD4_RESERVED_SHIFT) as u32;
         Self {
@@ -102,7 +102,7 @@ pub struct GpsUnscaledEph1Word5 {
 
 impl GpsUnscaledEph1Word5 {
     pub(crate) fn decode(dword: u32) -> Self {
-        let dword = dword >> GPS_PARITY_SIZE;
+        let dword = gps_qzss_bitmask(dword);
         let reserved = dword & WORD5_RESERVED_MASK;
         Self { reserved }
     }
@@ -116,7 +116,7 @@ pub struct GpsUnscaledEph1Word6 {
 
 impl GpsUnscaledEph1Word6 {
     pub(crate) fn decode(dword: u32) -> Self {
-        let dword = dword >> GPS_PARITY_SIZE;
+        let dword = gps_qzss_bitmask(dword);
         let reserved = dword & WORD6_RESERVED_MASK;
         Self { reserved }
     }
@@ -133,7 +133,7 @@ pub struct GpsUnscaledEph1Word7 {
 
 impl GpsUnscaledEph1Word7 {
     pub(crate) fn decode(dword: u32) -> Self {
-        let dword = dword >> GPS_PARITY_SIZE;
+        let dword = gps_qzss_bitmask(dword);
         let reserved = ((dword & WORD7_RESERVED_MASK) >> WORD7_RESERVED_SHIFT) as u16;
         let tgd = ((dword & WORD7_TGD_MASK) >> WORD7_TGD_SHIFT) as i8;
         Self { reserved, tgd }
@@ -151,7 +151,7 @@ pub struct GpsUnscaledEph1Word8 {
 
 impl GpsUnscaledEph1Word8 {
     pub(crate) fn decode(dword: u32) -> Self {
-        let dword = dword >> GPS_PARITY_SIZE;
+        let dword = gps_qzss_bitmask(dword);
         let iodc_lsb = ((dword & WORD8_IODC_MASK) >> WORD8_IODC_SHIFT) as u8;
         let toc = ((dword & WORD8_TOC_MASK) >> WORD8_TOC_SHIFT) as u16;
         Self { iodc_lsb, toc }
@@ -169,7 +169,7 @@ pub struct GpsUnscaledEph1Word9 {
 
 impl GpsUnscaledEph1Word9 {
     pub(crate) fn decode(dword: u32) -> Self {
-        let dword = dword >> GPS_PARITY_SIZE;
+        let dword = gps_qzss_bitmask(dword);
         let af2 = ((dword & WORD9_AF2_MASK) >> WORD9_AF2_SHIFT) as i8;
         let af1 = ((dword & WORD9_AF1_MASK) >> WORD9_AF1_SHIFT) as i16;
         Self { af2, af1 }
@@ -184,7 +184,7 @@ pub struct GpsUnscaledEph1Word10 {
 
 impl GpsUnscaledEph1Word10 {
     pub(crate) fn decode(dword: u32) -> Self {
-        let dword = dword >> (GPS_PARITY_SIZE + 2);
+        let dword = gps_qzss_bitmask(dword) >> 2;
         let af0 = ((dword & WORD10_AF0_MASK) >> WORD10_AF0_SHIFT) as u32;
 
         let af0 = twos_complement(af0, 0x3fffff, 0x200000);

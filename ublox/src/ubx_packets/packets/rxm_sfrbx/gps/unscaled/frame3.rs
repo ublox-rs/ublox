@@ -1,4 +1,4 @@
-use super::super::{twos_complement, GPS_PARITY_SIZE};
+use super::super::{gps_qzss_bitmask, twos_complement};
 
 const WORD3_CIC_MASK: u32 = 0xffff00;
 const WORD3_CIC_SHIFT: u32 = 8; // remaining payload bits
@@ -42,7 +42,7 @@ pub struct GpsUnscaledEph3Word3 {
 
 impl GpsUnscaledEph3Word3 {
     pub(crate) fn decode(dword: u32) -> Self {
-        let dword = dword >> GPS_PARITY_SIZE;
+        let dword = gps_qzss_bitmask(dword);
         let cic = ((dword & WORD3_CIC_MASK) >> WORD3_CIC_SHIFT) as i16;
         let omega0_msb = ((dword & WORD3_OMEGA0_MASK) >> WORD3_OMEGA0_SHIFT) as u8;
         Self { cic, omega0_msb }
@@ -57,7 +57,7 @@ pub struct GpsUnscaledEph3Word4 {
 
 impl GpsUnscaledEph3Word4 {
     pub(crate) fn decode(dword: u32) -> Self {
-        let dword = dword >> GPS_PARITY_SIZE;
+        let dword = gps_qzss_bitmask(dword);
         let omega0_lsb = ((dword & WORD4_OMEGA0_MASK) >> WORD4_OMEGA0_SHIFT) as u32;
         Self { omega0_lsb }
     }
@@ -72,7 +72,7 @@ pub struct GpsUnscaledEph3Word5 {
 
 impl GpsUnscaledEph3Word5 {
     pub(crate) fn decode(dword: u32) -> Self {
-        let dword = dword >> GPS_PARITY_SIZE;
+        let dword = gps_qzss_bitmask(dword);
         let cis = ((dword & WORD5_CIS_MASK) >> WORD5_CIS_SHIFT) as i16;
         let i0_msb = ((dword & WORD5_I0_MASK) >> WORD5_I0_SHIFT) as u8;
         Self { cis, i0_msb }
@@ -87,7 +87,7 @@ pub struct GpsUnscaledEph3Word6 {
 
 impl GpsUnscaledEph3Word6 {
     pub(crate) fn decode(dword: u32) -> Self {
-        let dword = dword >> GPS_PARITY_SIZE;
+        let dword = gps_qzss_bitmask(dword);
         let i0_lsb = ((dword & WORD6_I0_MASK) >> WORD6_I0_SHIFT) as u32;
         Self { i0_lsb }
     }
@@ -103,7 +103,7 @@ pub struct GpsUnscaledEph3Word7 {
 
 impl GpsUnscaledEph3Word7 {
     pub(crate) fn decode(dword: u32) -> Self {
-        let dword = dword >> GPS_PARITY_SIZE;
+        let dword = gps_qzss_bitmask(dword);
         let crc = ((dword & WORD7_CRC_MASK) >> WORD7_CRC_SHIFT) as i16;
         let omega_msb = ((dword & WORD7_OMEGA_MASK) >> WORD7_OMEGA_SHIFT) as u8;
         Self { crc, omega_msb }
@@ -118,7 +118,7 @@ pub struct GpsUnscaledEph3Word8 {
 
 impl GpsUnscaledEph3Word8 {
     pub(crate) fn decode(dword: u32) -> Self {
-        let dword = dword >> GPS_PARITY_SIZE;
+        let dword = gps_qzss_bitmask(dword);
         let omega_lsb = ((dword & WORD8_OMEGA_MASK) >> WORD8_OMEGA_SHIFT) as u32;
         Self { omega_lsb }
     }
@@ -132,7 +132,7 @@ pub struct GpsUnscaledEph3Word9 {
 
 impl GpsUnscaledEph3Word9 {
     pub(crate) fn decode(dword: u32) -> Self {
-        let dword = dword >> GPS_PARITY_SIZE;
+        let dword = gps_qzss_bitmask(dword);
         let omega_dot = ((dword & WORD9_OMEGADOT_MASK) >> WORD9_OMEGADOT_SHIFT) as u32;
         let omega_dot = twos_complement(omega_dot, 0xffffff, 0x800000);
         Self { omega_dot }
@@ -150,7 +150,7 @@ pub struct GpsUnscaledEph3Word10 {
 
 impl GpsUnscaledEph3Word10 {
     pub(crate) fn decode(dword: u32) -> Self {
-        let dword = dword >> (GPS_PARITY_SIZE + 2);
+        let dword = gps_qzss_bitmask(dword) >> 2;
         let iode = ((dword & WORD10_IODE_MASK) >> WORD10_IODE_SHIFT) as u8;
 
         // 14-bit signed 2's
