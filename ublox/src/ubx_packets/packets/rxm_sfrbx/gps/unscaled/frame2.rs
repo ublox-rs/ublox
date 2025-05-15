@@ -29,7 +29,7 @@ const WORD8_SQRTA_MSB_SHIFT: u32 = 0;
 const WORD9_SQRTA_LSB_MASK: u32 = 0xffffff;
 const WORD9_SQRTA_LSB_SHIFT: u32 = 0;
 
-const WORD10_TOE_MASK: u32 = 0x3fffc0;
+const WORD10_TOE_MASK: u32 = 0x03fffc0;
 const WORD10_TOE_SHIFT: u32 = 6;
 const WORD10_FITINT_MASK: u32 = 0x000020;
 const WORD10_AODO_MASK: u32 = 0x00001f;
@@ -156,21 +156,21 @@ impl GpsUnscaledEph2Word9 {
 #[derive(Debug, Default, Clone)]
 pub struct GpsUnscaledEph2Word10 {
     /// Time of issue of Ephemeris (u16)
-    pub toe_s: u16,
+    pub toe: u16,
+
+    /// Fit interval. Differs between GPS and QZSS.
     pub fitint: bool,
+
+    /// AODO
     pub aodo: u8,
 }
 
 impl GpsUnscaledEph2Word10 {
     pub(crate) fn decode(dword: u32) -> Self {
         let dword = dword >> (GPS_PARITY_SIZE + 2);
-        let toe_s = ((dword & WORD10_TOE_MASK) >> WORD10_TOE_SHIFT) as u16;
+        let toe = ((dword & WORD10_TOE_MASK) >> WORD10_TOE_SHIFT) as u16;
         let fitint = (dword & WORD10_FITINT_MASK) > 0;
         let aodo = ((dword & WORD10_AODO_MASK) >> WORD10_AODO_SHIFT) as u8;
-        Self {
-            toe_s,
-            fitint,
-            aodo,
-        }
+        Self { toe, fitint, aodo }
     }
 }

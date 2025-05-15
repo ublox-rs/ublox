@@ -68,7 +68,7 @@ impl GpsUnscaledEph2 {
     pub fn scale(&self) -> RxmSfrbxGpsQzssFrame2 {
         RxmSfrbxGpsQzssFrame2 {
             iode: self.word3.iode,
-            toe_s: (self.word10.toe_s as u32) * 16,
+            toe_s: (self.word10.toe as u32) * 16,
             crs: (self.word3.crs as f64) / 2.0_f64.powi(5),
             cus: (self.word8.cus as f64) / 2.0_f64.powi(29),
             cuc: (self.word6.cuc as f64) / 2.0_f64.powi(29),
@@ -80,9 +80,9 @@ impl GpsUnscaledEph2 {
             },
 
             m0_rad: {
-                let mut m0 = self.word5.m0_lsb;
+                let mut m0 = self.word4.m0_msb as u32;
                 m0 <<= 24;
-                m0 |= self.word4.m0_msb as u32;
+                m0 |= self.word5.m0_lsb as u32;
 
                 let mut m0 = (m0 as i32) as f64;
                 m0 /= 2.0_f64.powi(31);
@@ -94,7 +94,7 @@ impl GpsUnscaledEph2 {
                 e <<= 24;
                 e |= self.word7.e_lsb;
 
-                (e as i32) as f64 / 2.0_f64.powi(33)
+                (e as f64) / 2.0_f64.powi(33)
             },
 
             sqrt_a: {

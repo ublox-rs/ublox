@@ -136,6 +136,9 @@ impl RxmSfrbxInterpretor<'_> {
                 let how = gps::RxmSfrbxGpsQzssHow::decode(dword);
                 if let Some(interpreted) = interpreted {
                     interpreted.how = how;
+                } else {
+                    // should never happen
+                    return None;
                 }
             },
             3 => {
@@ -172,7 +175,7 @@ impl RxmSfrbxInterpretor<'_> {
                         // 5 => {
                         //     // frame # 5 is paginated.
                         // },
-                        _ => {}, // does not exist
+                        _ => return None, // does not exist
                     }
                 }
             },
@@ -186,7 +189,10 @@ impl RxmSfrbxInterpretor<'_> {
                                 gps::GpsUnscaledSubframe::Eph1(subframe) => {
                                     subframe.word4 = word4;
                                 },
-                                _ => {}, // not applicable
+                                _ => {
+                                    // not applicable
+                                    return None;
+                                },
                             }
                         },
                         2 => {
@@ -195,7 +201,10 @@ impl RxmSfrbxInterpretor<'_> {
                                 gps::GpsUnscaledSubframe::Eph2(subframe) => {
                                     subframe.word4 = word4;
                                 },
-                                _ => {}, // not applicable
+                                _ => {
+                                    // not applicable
+                                    return None;
+                                },
                             }
                         },
                         3 => {
@@ -204,7 +213,10 @@ impl RxmSfrbxInterpretor<'_> {
                                 gps::GpsUnscaledSubframe::Eph3(subframe) => {
                                     subframe.word4 = word4;
                                 },
-                                _ => {}, // not applicable
+                                _ => {
+                                    // not applicable
+                                    return None;
+                                },
                             }
                         },
                         // Almanac #4 not supported yet
@@ -215,7 +227,7 @@ impl RxmSfrbxInterpretor<'_> {
                         // 5 => {
                         //     // frame # 5 is paginated.
                         // },
-                        _ => {}, // does not exist
+                        _ => return None, // does not exist
                     }
                 }
             },
@@ -229,7 +241,10 @@ impl RxmSfrbxInterpretor<'_> {
                                 gps::GpsUnscaledSubframe::Eph1(subframe) => {
                                     subframe.word5 = word5;
                                 },
-                                _ => {}, // not applicable
+                                _ => {
+                                    // not applicable
+                                    return None;
+                                },
                             }
                         },
                         2 => {
@@ -238,7 +253,10 @@ impl RxmSfrbxInterpretor<'_> {
                                 gps::GpsUnscaledSubframe::Eph2(subframe) => {
                                     subframe.word5 = word5;
                                 },
-                                _ => {}, // not applicable
+                                _ => {
+                                    // not applicable
+                                    return None;
+                                },
                             }
                         },
                         3 => {
@@ -247,7 +265,10 @@ impl RxmSfrbxInterpretor<'_> {
                                 gps::GpsUnscaledSubframe::Eph3(subframe) => {
                                     subframe.word5 = word5;
                                 },
-                                _ => {}, // not applicable
+                                _ => {
+                                    // not applicable
+                                    return None;
+                                },
                             }
                         },
                         // Almanac #4 not supported yet
@@ -258,7 +279,7 @@ impl RxmSfrbxInterpretor<'_> {
                         // 5 => {
                         //     // frame # 5 is paginated.
                         // },
-                        _ => {}, // does not exist
+                        _ => return None, // does not exist
                     }
                 }
             },
@@ -272,7 +293,10 @@ impl RxmSfrbxInterpretor<'_> {
                                 gps::GpsUnscaledSubframe::Eph1(subframe) => {
                                     subframe.word6 = word6;
                                 },
-                                _ => {}, // not applicable
+                                _ => {
+                                    // not applicable
+                                    return None;
+                                },
                             }
                         },
                         2 => {
@@ -281,7 +305,10 @@ impl RxmSfrbxInterpretor<'_> {
                                 gps::GpsUnscaledSubframe::Eph2(subframe) => {
                                     subframe.word6 = word6;
                                 },
-                                _ => {}, // not applicable
+                                _ => {
+                                    // not applicable
+                                    return None;
+                                },
                             }
                         },
                         3 => {
@@ -290,7 +317,10 @@ impl RxmSfrbxInterpretor<'_> {
                                 gps::GpsUnscaledSubframe::Eph3(subframe) => {
                                     subframe.word6 = word6;
                                 },
-                                _ => {}, // not applicable
+                                _ => {
+                                    // not applicable
+                                    return None;
+                                },
                             }
                         },
                         // Almanac #4 not supported yet
@@ -301,7 +331,7 @@ impl RxmSfrbxInterpretor<'_> {
                         // 5 => {
                         //     // frame # 5 is paginated.
                         // },
-                        _ => {}, // does not exist
+                        _ => return None, // does not exist
                     }
                 }
             },
@@ -315,7 +345,10 @@ impl RxmSfrbxInterpretor<'_> {
                                 gps::GpsUnscaledSubframe::Eph1(subframe) => {
                                     subframe.word7 = word7;
                                 },
-                                _ => {}, // not applicable
+                                _ => {
+                                    // not applicable
+                                    return None;
+                                },
                             }
                         },
                         2 => {
@@ -324,7 +357,10 @@ impl RxmSfrbxInterpretor<'_> {
                                 gps::GpsUnscaledSubframe::Eph2(subframe) => {
                                     subframe.word7 = word7;
                                 },
-                                _ => {}, // not applicable
+                                _ => {
+                                    // not applicable
+                                    return None;
+                                },
                             }
                         },
                         3 => {
@@ -333,7 +369,10 @@ impl RxmSfrbxInterpretor<'_> {
                                 gps::GpsUnscaledSubframe::Eph3(subframe) => {
                                     subframe.word7 = word7;
                                 },
-                                _ => {}, // not applicable
+                                _ => {
+                                    // not applicable
+                                    return None;
+                                },
                             }
                         },
                         // Almanac #4 not supported yet
@@ -344,7 +383,7 @@ impl RxmSfrbxInterpretor<'_> {
                         // 5 => {
                         //     // frame # 5 is paginated.
                         // },
-                        _ => {}, // does not exist
+                        _ => return None, // does not exist
                     }
                 }
             },
@@ -358,7 +397,10 @@ impl RxmSfrbxInterpretor<'_> {
                                 gps::GpsUnscaledSubframe::Eph1(subframe) => {
                                     subframe.word8 = word8;
                                 },
-                                _ => {}, // not applicable
+                                _ => {
+                                    // not applicable
+                                    return None;
+                                },
                             }
                         },
                         2 => {
@@ -367,7 +409,10 @@ impl RxmSfrbxInterpretor<'_> {
                                 gps::GpsUnscaledSubframe::Eph2(subframe) => {
                                     subframe.word8 = word8;
                                 },
-                                _ => {}, // not applicable
+                                _ => {
+                                    // not applicable
+                                    return None;
+                                },
                             }
                         },
                         3 => {
@@ -376,7 +421,10 @@ impl RxmSfrbxInterpretor<'_> {
                                 gps::GpsUnscaledSubframe::Eph3(subframe) => {
                                     subframe.word8 = word8;
                                 },
-                                _ => {}, // not applicable
+                                _ => {
+                                    // not applicable
+                                    return None;
+                                },
                             }
                         },
                         // Almanac #4 not supported yet
@@ -387,7 +435,7 @@ impl RxmSfrbxInterpretor<'_> {
                         // 5 => {
                         //     // frame # 5 is paginated.
                         // },
-                        _ => {}, // does not exist
+                        _ => return None, // does not exist
                     }
                 }
             },
@@ -401,7 +449,10 @@ impl RxmSfrbxInterpretor<'_> {
                                 gps::GpsUnscaledSubframe::Eph1(subframe) => {
                                     subframe.word9 = word9;
                                 },
-                                _ => {}, // not applicable
+                                _ => {
+                                    // not applicable
+                                    return None;
+                                },
                             }
                         },
                         2 => {
@@ -410,7 +461,10 @@ impl RxmSfrbxInterpretor<'_> {
                                 gps::GpsUnscaledSubframe::Eph2(subframe) => {
                                     subframe.word9 = word9;
                                 },
-                                _ => {}, // not applicable
+                                _ => {
+                                    // not applicable
+                                    return None;
+                                },
                             }
                         },
                         3 => {
@@ -419,7 +473,10 @@ impl RxmSfrbxInterpretor<'_> {
                                 gps::GpsUnscaledSubframe::Eph3(subframe) => {
                                     subframe.word9 = word9;
                                 },
-                                _ => {}, // not applicable
+                                _ => {
+                                    // not applicable
+                                    return None;
+                                },
                             }
                         },
                         // Almanac #4 not supported yet
@@ -430,7 +487,7 @@ impl RxmSfrbxInterpretor<'_> {
                         // 5 => {
                         //     // frame # 5 is paginated.
                         // },
-                        _ => {}, // does not exist
+                        _ => return None, // does not exist
                     }
                 }
             },
@@ -444,7 +501,10 @@ impl RxmSfrbxInterpretor<'_> {
                                 gps::GpsUnscaledSubframe::Eph1(subframe) => {
                                     subframe.word10 = word10;
                                 },
-                                _ => {}, // not applicable
+                                _ => {
+                                    // not applicable
+                                    return None;
+                                },
                             }
                         },
                         2 => {
@@ -453,7 +513,10 @@ impl RxmSfrbxInterpretor<'_> {
                                 gps::GpsUnscaledSubframe::Eph2(subframe) => {
                                     subframe.word10 = word10;
                                 },
-                                _ => {}, // not applicable
+                                _ => {
+                                    // not applicable
+                                    return None;
+                                },
                             }
                         },
                         3 => {
@@ -462,7 +525,10 @@ impl RxmSfrbxInterpretor<'_> {
                                 gps::GpsUnscaledSubframe::Eph3(subframe) => {
                                     subframe.word10 = word10;
                                 },
-                                _ => {}, // not applicable
+                                _ => {
+                                    // not applicable
+                                    return None;
+                                },
                             }
                         },
                         // Almanac #4 not supported yet
@@ -473,11 +539,14 @@ impl RxmSfrbxInterpretor<'_> {
                         // 5 => {
                         //     // frame # 5 is paginated.
                         // },
-                        _ => {}, // does not exist
+                        _ => return None, // does not exist
                     }
                 }
             },
-            _ => {}, // not applicable
+            _ => {
+                // does not exist in GPS
+                return None;
+            },
         }
 
         Some(())
