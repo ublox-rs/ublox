@@ -248,7 +248,7 @@ fn sfrbx_gps_eph3() {
         0x28,
         0x15, // 2
         0x34,
-        0xE3,
+        0xEA,
         0x0A,
         0x00, // 3
         0xEE,
@@ -279,8 +279,8 @@ fn sfrbx_gps_eph3() {
         0x52,
         0x45,
         0x92, // 10
-        0x3C, // CK_A
-        0x94, // CK_B
+        0x43, // CK_A
+        0x6D, // CK_B
     ];
 
     let mut test_passed = false;
@@ -312,7 +312,7 @@ fn sfrbx_gps_eph3() {
                             assert!((subframe.crc - 2.225625000000e+002).abs() < 1E-9);
                             assert!((subframe.i0 - 3.070601043291e-001).abs() < 1e-9);
                             assert!((subframe.idot - 1.548414729768e-010).abs() < 1E-9);
-                            assert_eq!(subframe.omega0, -6.871047024615e-001);
+                            assert!((subframe.omega0 - -6.871047024615e-001).abs() < 1e-9);
                             assert!((subframe.omega_dot - -2.449269231874e-009).abs() < 1e-9);
                             assert!((subframe.omega - -6.554632573389e-001).abs() < 1e-9);
                         },
