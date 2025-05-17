@@ -19,12 +19,6 @@ const GPS_TLM_MESSAGE_SHIFT: u32 = 3;
 const GPS_TLM_INTEGRITY_BIT_MASK: u32 = 0x000004;
 const GPS_TLM_RESERVED_BIT_MASK: u32 = 0x000002;
 
-const GPS_HOW_TOW_MASK: u32 = 0x3fffe0;
-const GPS_HOW_TOW_SHIFT: u32 = 5; // remaining payload bits
-const GPS_HOW_ALERT_BIT_MASK: u32 = 0x000010;
-const GPS_HOW_ANTI_SPOOFING_BIT_MASK: u32 = 0x000008;
-const GPS_HOW_FRAME_ID_MASK: u32 = 0x000007;
-
 /// Grab GPS (and QZSS) frame bits
 pub(crate) fn gps_qzss_bitmask(dword: u32) -> u32 {
     // 2-MSB Padding (30->32bits) and stripped 6 LSB parity

@@ -1,9 +1,4 @@
-use core::f64::consts::PI;
-
-use ublox::{
-    PacketRef, Parser, ParserError, RxmSfrbx, RxmSfrbxGpsQzssSubframe, RxmSfrbxInterpreted,
-    UbxParserIter,
-};
+use ublox::{PacketRef, Parser, RxmSfrbxGpsQzssSubframe, RxmSfrbxInterpreted};
 
 #[test]
 #[cfg(feature = "ubx_proto23")]

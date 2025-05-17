@@ -29,12 +29,6 @@ const WORD8_SQRTA_MSB_SHIFT: u32 = 0;
 const WORD9_SQRTA_LSB_MASK: u32 = 0xffffff;
 const WORD9_SQRTA_LSB_SHIFT: u32 = 0;
 
-const WORD10_TOE_MASK: u32 = 0x03fffc0;
-const WORD10_TOE_SHIFT: u32 = 6;
-const WORD10_FITINT_MASK: u32 = 0x000020;
-const WORD10_AODO_MASK: u32 = 0x00001f;
-const WORD10_AODO_SHIFT: u32 = 0;
-
 #[derive(Debug, Default, Clone)]
 pub struct GpsUnscaledEph2Word3 {
     pub iode: u8,
@@ -170,7 +164,6 @@ impl GpsUnscaledEph2Word10 {
         let toe = ((dword & 0x3fffc000) >> 14) as u16;
         let fitint = (dword & 0x00002000) > 0;
         let aodo = ((dword & 0x00001f00) >> 8) as u8;
-
         Self { toe, fitint, aodo }
     }
 }
