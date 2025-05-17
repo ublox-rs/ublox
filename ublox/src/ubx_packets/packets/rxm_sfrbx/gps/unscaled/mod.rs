@@ -1,5 +1,3 @@
-use core::f64::consts::PI;
-
 pub(crate) mod frame1;
 pub(crate) mod frame2;
 pub(crate) mod frame3;
@@ -73,20 +71,18 @@ impl GpsUnscaledEph2 {
             cus: (self.word8.cus as f64) / 2.0_f64.powi(29),
             cuc: (self.word6.cuc as f64) / 2.0_f64.powi(29),
 
-            dn_rad: {
-                let mut dn = self.word4.dn as f64;
-                dn /= 2.0_f64.powi(43);
-                dn * PI
+            dn: {
+                let dn = self.word4.dn as f64;
+                dn / 2.0_f64.powi(43)
             },
 
-            m0_rad: {
+            m0: {
                 let mut m0 = self.word4.m0_msb as u32;
                 m0 <<= 24;
                 m0 |= self.word5.m0_lsb as u32;
 
-                let mut m0 = (m0 as i32) as f64;
-                m0 /= 2.0_f64.powi(31);
-                m0 * PI
+                let m0 = (m0 as i32) as f64;
+                m0 / 2.0_f64.powi(31)
             },
 
             e: {
@@ -130,46 +126,43 @@ impl GpsUnscaledEph3 {
             cic: (self.word3.cic as f64) / 2.0_f64.powi(29),
             cis: (self.word5.cis as f64) / 2.0_f64.powi(29),
             crc: (self.word7.crc as f64) / 2.0_f64.powi(5),
-            i0_rad: {
+
+            i0: {
                 let mut i0 = self.word5.i0_msb as u32;
                 i0 <<= 24;
                 i0 |= self.word6.i0_lsb;
 
-                let mut i0 = (i0 as i32) as f64;
-                i0 /= 2.0_f64.powi(31);
-                i0 * PI
+                let i0 = (i0 as i32) as f64;
+                i0 / 2.0_f64.powi(31)
             },
-            omega0_rad: {
+
+            omega0: {
                 let mut omega0 = self.word3.omega0_msb as u32;
                 omega0 <<= 24;
                 omega0 |= self.word4.omega0_lsb;
 
-                let mut omega0 = (omega0 as i32) as f64;
-                omega0 /= 2.0_f64.powi(31);
-                omega0 * PI
+                let omega0 = (omega0 as i32) as f64;
+                omega0 / 2.0_f64.powi(31)
             },
 
-            idot_rad_s: {
-                let mut idot = self.word10.idot as f64;
-                idot /= 2.0_f64.powi(43);
-                idot * PI
+            idot: {
+                let idot = self.word10.idot as f64;
+                idot / 2.0_f64.powi(43)
             },
 
-            omega_dot_rad_s: {
-                let mut omega_dot = self.word9.omega_dot as f64;
-                omega_dot /= 2.0_f64.powi(43);
-                omega_dot * PI
+            omega_dot: {
+                let omega_dot = self.word9.omega_dot as f64;
+                omega_dot / 2.0_f64.powi(43)
             },
 
-            omega_rad: {
+            omega: {
                 // form the u32 raw word
                 let mut omega = self.word7.omega_msb as u32;
                 omega <<= 24;
                 omega |= self.word8.omega_lsb;
 
-                let mut omega = (omega as i32) as f64;
-                omega /= 2.0_f64.powi(31);
-                omega * PI
+                let omega = (omega as i32) as f64;
+                omega / 2.0_f64.powi(31)
             },
         }
     }

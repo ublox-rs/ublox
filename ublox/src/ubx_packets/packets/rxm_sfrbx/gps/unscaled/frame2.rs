@@ -167,11 +167,10 @@ pub struct GpsUnscaledEph2Word10 {
 
 impl GpsUnscaledEph2Word10 {
     pub(crate) fn decode(dword: u32) -> Self {
-        let dword = gps_qzss_bitmask(dword) >> 2;
+        let toe = ((dword & 0x3fffc000) >> 14) as u16;
+        let fitint = (dword & 0x00002000) > 0;
+        let aodo = ((dword & 0x00001f00) >> 8) as u8;
 
-        let aodo = (dword & 0x1f) as u8;
-        let fitint = (dword & 0x20) > 0;
-        let toe = ((dword >> 6) & 0xffff) as u16;
         Self { toe, fitint, aodo }
     }
 }

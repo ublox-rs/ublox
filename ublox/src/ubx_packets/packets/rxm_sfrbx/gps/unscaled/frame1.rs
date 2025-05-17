@@ -186,8 +186,11 @@ impl GpsUnscaledEph1Word10 {
     pub(crate) fn decode(dword: u32) -> Self {
         let dword = gps_qzss_bitmask(dword) >> 2;
         let af0 = ((dword & WORD10_AF0_MASK) >> WORD10_AF0_SHIFT) as u32;
-
         let af0 = twos_complement(af0, 0x3fffff, 0x200000);
+
+        // let af0 = (dword & 0x3fffff00) >> 8;
+        // let af0 = twos_complement(af0, 0x3fffff, 0x200000);
+
         Self { af0 }
     }
 }

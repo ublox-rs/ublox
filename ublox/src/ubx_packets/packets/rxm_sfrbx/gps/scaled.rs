@@ -110,11 +110,11 @@ pub struct RxmSfrbxGpsQzssFrame2 {
     /// IODE: Issue of Data (Ephemeris)
     pub iode: u8,
 
-    /// Mean anomaly at reference time
-    pub m0_rad: f64,
+    /// Mean anomaly at reference time (in semi circles)
+    pub m0: f64,
 
-    /// Mean motion difference from computed value
-    pub dn_rad: f64,
+    /// Mean motion difference from computed value (in semi circles)
+    pub dn: f64,
 
     /// Latitude cosine harmonic correction term
     pub cuc: f64,
@@ -150,21 +150,21 @@ pub struct RxmSfrbxGpsQzssFrame3 {
     /// Orbit radius cosine harmonic correction term
     pub crc: f64,
 
-    /// Inclination angle at reference time
-    pub i0_rad: f64,
+    /// Inclination angle at reference time  (in semi circles)
+    pub i0: f64,
 
     /// IODE: Issue of Data (Ephemeris)
     pub iode: u8,
 
-    /// Rate of inclination angle
-    pub idot_rad_s: f64,
+    /// Rate of inclination angle (in semi circles.s⁻¹)
+    pub idot: f64,
 
-    /// Longitude of ascending node of orbit plane at weekly epoch
-    pub omega0_rad: f64,
+    /// Longitude of ascending node of orbit plane at weekly epoch (in semi circles)
+    pub omega0: f64,
 
-    /// Omega:
-    pub omega_rad: f64,
+    /// Omega (in semi circles)
+    pub omega: f64,
 
-    /// Omega_dot
-    pub omega_dot_rad_s: f64,
+    /// Omega_dot (in semi circles.s⁻¹)
+    pub omega_dot: f64,
 }

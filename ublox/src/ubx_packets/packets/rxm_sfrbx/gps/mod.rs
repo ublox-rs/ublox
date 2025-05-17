@@ -24,7 +24,6 @@ const GPS_HOW_TOW_SHIFT: u32 = 5; // remaining payload bits
 const GPS_HOW_ALERT_BIT_MASK: u32 = 0x000010;
 const GPS_HOW_ANTI_SPOOFING_BIT_MASK: u32 = 0x000008;
 const GPS_HOW_FRAME_ID_MASK: u32 = 0x000007;
-const GPS_HOW_FRAME_ID_SHIFT: u32 = 0;
 
 /// Grab GPS (and QZSS) frame bits
 pub(crate) fn gps_qzss_bitmask(dword: u32) -> u32 {
@@ -89,8 +88,8 @@ impl RxmSfrbxGpsQzssTelemetry {
 #[derive(Debug, Default, Clone)]
 /// [GpsHowWord]
 pub struct RxmSfrbxGpsQzssHow {
-    /// TOW
-    pub tow: u32,
+    /// TOW in seconds
+    pub tow_s: u32,
 
     /// Following Frame ID (to decoding following data words)
     pub frame_id: u8,
@@ -105,19 +104,17 @@ pub struct RxmSfrbxGpsQzssHow {
 
 impl RxmSfrbxGpsQzssHow {
     pub(crate) fn decode(dword: u32) -> Self {
-        // strip two more bits here
-        let dword = gps_qzss_bitmask(dword) >> 2;
+        let tow = ((dword & 0x3fffe000) >> 13) as u32;
 
-        let frame_id = (dword & 0x7) as u8;
+        let frame_id = ((dword >> 8) & 0x07) as u8;
         let anti_spoofing = (dword & 0x08) > 0;
         let alert = (dword & 0x10) > 0;
-        let tow = ((dword >> 5) & 0x1ffff) * 6;
 
         Self {
-            tow,
             alert,
             frame_id,
             anti_spoofing,
+            tow_s: tow * 6,
         }
     }
 }

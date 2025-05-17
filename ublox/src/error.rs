@@ -45,7 +45,7 @@ impl fmt::Display for ParserError {
         match self {
             ParserError::InvalidChecksum { expect, got } => write!(
                 f,
-                "Not valid packet's checksum, expect {:x}, got {:x}",
+                "Not valid packet's checksum, expect 0x{:02x}, got 0x{:02x}",
                 expect, got
             ),
             ParserError::InvalidField { packet, field } => {
