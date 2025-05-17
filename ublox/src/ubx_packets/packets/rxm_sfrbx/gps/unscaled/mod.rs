@@ -1,3 +1,6 @@
+#[cfg(not(feature = "std"))]
+use num_traits::float::FloatCore;
+
 pub(crate) mod frame1;
 pub(crate) mod frame2;
 pub(crate) mod frame3;
