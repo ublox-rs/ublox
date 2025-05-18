@@ -97,7 +97,7 @@ struct RxmSfrbxInterpretor<'a> {
 impl RxmSfrbxInterpretor<'_> {
     /// Consumes all data words, trying to obtain an [RxmSfrbxInterpreted],
     /// for supported frames.
-    pub fn interprete(&mut self) -> Option<RxmSfrbxInterpreted> {
+    pub fn interpret(&mut self) -> Option<RxmSfrbxInterpreted> {
         // GPS Frame possibly constructed
         let mut gps = Option::<gps::GpsUnscaledFrame>::None;
 
@@ -572,8 +572,8 @@ impl RxmSfrbxInterpretor<'_> {
 
 impl RxmSfrbxRef<'_> {
     /// Try to interprete the RXM-SFRBX inner frame (when supported/known).
-    pub fn interprete(&self) -> Option<RxmSfrbxInterpreted> {
-        self.interpretor().interprete()
+    pub fn interpret(&self) -> Option<RxmSfrbxInterpreted> {
+        self.interpretor().interpret()
     }
 
     /// Builds the [RxmSfrbxInterpretor] that can interpreta

@@ -80,7 +80,7 @@ fn sfrbx_gps_eph1() {
 
                 // GPS interpretation
                 let interpreted = packet
-                    .interprete()
+                    .interpret()
                     .unwrap_or_else(|| panic!("UBX-SFRBX (GPS/QZSS) interpretation failed!"));
 
                 match interpreted {
@@ -186,7 +186,7 @@ fn sfrbx_gps_eph2() {
 
                 // GPS interpretation
                 let interpreted = packet
-                    .interprete()
+                    .interpret()
                     .unwrap_or_else(|| panic!("UBX-SFRBX (GPS/QZSS) interpretation failed!"));
 
                 match interpreted {
@@ -296,7 +296,7 @@ fn sfrbx_gps_eph3() {
 
                 // GPS interpretation
                 let interpreted = packet
-                    .interprete()
+                    .interpret()
                     .unwrap_or_else(|| panic!("UBX-SFRBX (GPS/QZSS) interpretation failed!"));
 
                 match interpreted {
