@@ -42,7 +42,7 @@ pub struct RxmSfrbxGpsQzssFrame1 {
     /// When asserted, indicates the NAV data stream was commanded OFF on the L2 channel P-code.
     pub ca_or_p_l2: u8,
 
-    /// 4-bit URA index. The lower the better, interprate as follow (error in meters)
+    /// 4-bit URA index. The lower the better, interpret as follow (error in meters)
     /// - 0:  0 < ura <= 2.4m
     /// - 1:  2.4 < ura <= 3.4m
     /// - 2:  3.4 < ura <= 4.85

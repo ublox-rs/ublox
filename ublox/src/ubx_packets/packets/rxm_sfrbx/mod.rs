@@ -109,7 +109,7 @@ impl RxmSfrbxInterpretor<'_> {
                     // 0: GPS
                     // 5: QZSS applies similarly
                     if self.gps_decoding(dword, &mut gps).is_none() {
-                        // no need to continue interpretation prcess
+                        // no need to continue interpretation process
                         break;
                     }
                 },
@@ -571,7 +571,7 @@ impl RxmSfrbxInterpretor<'_> {
 }
 
 impl RxmSfrbxRef<'_> {
-    /// Try to interprete the RXM-SFRBX inner frame (when supported/known).
+    /// Try to interpret the RXM-SFRBX inner frame (when supported/known).
     pub fn interpret(&self) -> Option<RxmSfrbxInterpreted> {
         self.interpretor().interpret()
     }

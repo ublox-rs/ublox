@@ -171,7 +171,7 @@ impl GpsUnscaledEph3 {
     }
 }
 
-/// Interprated [GpsUnscaledSubframe]s (not scaled yet)
+/// Interpreted [GpsUnscaledSubframe]s (not scaled yet)
 #[derive(Debug, Clone)]
 pub(crate) enum GpsUnscaledSubframe {
     /// GPS Ephemeris #1 frame

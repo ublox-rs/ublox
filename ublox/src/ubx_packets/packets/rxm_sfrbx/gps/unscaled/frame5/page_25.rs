@@ -1,4 +1,4 @@
-/// Interpratation that prevails for Frame #5 page 25 (last)
+/// Interpretation that prevails for Frame #5 page 25 (last)
 use super::super::super::GPS_PARITY_SIZE;
 
 const WORD3_DID_MASK: u32 = 0xc00000;

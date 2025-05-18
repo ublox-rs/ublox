@@ -1,4 +1,4 @@
-/// Interpratation that prevails for Frame #5 page 1-24 (included)
+/// Interpretation that prevails for Frame #5 page 1-24 (included)
 use super::super::super::GPS_PARITY_SIZE;
 
 const WORD3_DATAID_MASK: u32 = 0xc00000;
