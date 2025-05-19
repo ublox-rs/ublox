@@ -35,7 +35,7 @@ ublox_derive = { path = "../ublox_derive", version = "=0.2.0" }
 [dev-dependencies]
 cpu-time = "1.0"
 cpuprofiler = "0.0"
-criterion = "0.5"
+criterion = "0.6"
 rand = "0.9"
 serde_json = "1.0"
 
