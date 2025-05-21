@@ -4,7 +4,7 @@ default-members = ["ublox", "ublox_derive"]
 resolver = "2"
 
 [workspace.package]
-rust-version = "1.81.0"
+rust-version = "1.82.0"
 edition = "2021"
 license = "MIT"
 documentation = "https://docs.rs/ublox/latest/ublox/"
