@@ -58,7 +58,7 @@ All notable changes to this project will be documented in this file.
   - add extra NAV-PVT mapping functions
   - make itow field naming uniform across packages
   - implemented decoding of sensor measurement for ESF-MEAS
-  - bump MSRV to 1.81
+  - bump MSRV to 1.82
 - Packets.rs: introduce NavClock and TimTos ([#45](https://github.com/ublox-rs/ublox/pull/45))
 - Packets.rs: introduce CfgSmgr synchronization core configuration frame ([#46](https://github.com/ublox-rs/ublox/pull/46))
 - Add NavRelPosNed ([#24](https://github.com/ublox-rs/ublox/pull/24))
