@@ -1,4 +1,6 @@
-use ublox::{PacketRef, Parser, RxmSfrbxGpsQzssSubframe, RxmSfrbxInterpreted};
+use ublox::{PacketRef, Parser, RxmSfrbxInterpreted};
+
+use gnss_protos::GpsQzssSubframe;
 
 #[test]
 #[cfg(feature = "ubx_proto23")]
@@ -85,12 +87,12 @@ fn sfrbx_gps_eph1() {
 
                 match interpreted {
                     RxmSfrbxInterpreted::GpsQzss(frame) => match frame.subframe {
-                        RxmSfrbxGpsQzssSubframe::Eph1(subframe) => {
-                            assert_eq!(subframe.af2_s_s2, 0.0);
-                            assert!((subframe.af1_s_s - 1.023181539495e-011).abs() < 1e-14);
-                            assert!((subframe.af0_s - -4.524961113930e-004).abs() < 1.0e-11);
+                        GpsQzssSubframe::Ephemeris1(subframe) => {
+                            assert_eq!(subframe.af2, 0.0);
+                            assert!((subframe.af1 - 1.023181539495e-011).abs() < 1e-14);
+                            assert!((subframe.af0 - -4.524961113930e-004).abs() < 1.0e-11);
                             assert_eq!(subframe.week, 318);
-                            assert_eq!(subframe.toc_s, 266_400);
+                            assert_eq!(subframe.toc, 266_400);
                             assert_eq!(subframe.health, 0);
                         },
                         _ => panic!("UBX-SFRBX (GPS/QZSS) invalid subframe interpretation!"),
@@ -191,8 +193,8 @@ fn sfrbx_gps_eph2() {
 
                 match interpreted {
                     RxmSfrbxInterpreted::GpsQzss(frame) => match frame.subframe {
-                        RxmSfrbxGpsQzssSubframe::Eph2(subframe) => {
-                            assert_eq!(subframe.toe_s, 266_400);
+                        GpsQzssSubframe::Ephemeris2(subframe) => {
+                            assert_eq!(subframe.toe, 266_400);
                             assert_eq!(subframe.crs, -1.843750000000e+000);
                             assert!((subframe.sqrt_a - 5.153602432251e+003).abs() < 1e-9);
                             assert!((subframe.m0 - 9.768415465951e-001).abs() < 1e-9);
@@ -301,7 +303,7 @@ fn sfrbx_gps_eph3() {
 
                 match interpreted {
                     RxmSfrbxInterpreted::GpsQzss(frame) => match frame.subframe {
-                        RxmSfrbxGpsQzssSubframe::Eph3(subframe) => {
+                        GpsQzssSubframe::Ephemeris3(subframe) => {
                             assert!((subframe.cic - 8.009374141693e-008).abs() < 1e-9);
                             assert!((subframe.cis - -1.955777406693e-007).abs() < 1E-9);
                             assert!((subframe.crc - 2.225625000000e+002).abs() < 1E-9);
