@@ -27,7 +27,7 @@ jobs:
           - --no-default-features --features ubx_proto23
           - --no-default-features --features ubx_proto27
           - --no-default-features --features ubx_proto31
-          - --no-default-features --features ubx_proto23 sfrbx-gps
+          - --no-default-features --features "ubx_proto23 sfrbx-gps"
     steps:
     - uses: actions/checkout@v4
     - name: Install libudev
