@@ -149,6 +149,10 @@ Enable support for uBlox protocol 27 messages.
 
 Enable support for uBlox protocol 31 messages. 
 
+### `sfrbx-gps`
+
+Enable `RXM-SFRBX` GPS raw data interpretation.
+
 # Minimum Supported Rust Version
 
 The library crate will support at least the previous year's Rust compilers. Currently, the MSRV is `1.82.0`. Note that, as we are pre-1.0, breaking the MSRV will not force a minor update - the MSRV can change in a patch update.
