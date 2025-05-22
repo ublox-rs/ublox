@@ -305,10 +305,10 @@ fn sfrbx_gps_eph3() {
                     RxmSfrbxInterpreted::GpsQzss(frame) => match frame.subframe {
                         GpsQzssSubframe::Ephemeris3(subframe) => {
                             assert!((subframe.cic - 8.009374141693e-008).abs() < 1e-9);
-                            assert!((subframe.cis - -1.955777406693e-007).abs() < 1E-9);
-                            assert!((subframe.crc - 2.225625000000e+002).abs() < 1E-9);
+                            assert!((subframe.cis - -1.955777406693e-007).abs() < 1e-9);
+                            assert!((subframe.crc - 2.225625000000e+002).abs() < 1e-9);
                             assert!((subframe.i0 - 3.070601043291e-001).abs() < 1e-9);
-                            assert!((subframe.idot - 1.548414729768e-010).abs() < 1E-9);
+                            assert!((subframe.idot - 1.548414729768e-010).abs() < 1e-9);
                             assert!((subframe.omega0 - -6.871047024615e-001).abs() < 1e-9);
                             assert!((subframe.omega_dot - -2.449269231874e-009).abs() < 1e-9);
                             assert!((subframe.omega - -6.554632573389e-001).abs() < 1e-9);
