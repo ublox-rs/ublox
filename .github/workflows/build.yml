@@ -22,7 +22,7 @@ jobs:
       matrix:
         feature-args:
           - --features "alloc std ubx_proto23" 
-          - --no-default-features --features "alloc ubx_proto23" 
+          - --no-default-features --features "alloc ubx_proto23 sfrbx-gps"
           - --no-default-features --features ubx_proto14
           - --no-default-features --features ubx_proto23
           - --no-default-features --features ubx_proto27
@@ -138,6 +138,8 @@ jobs:
             feature: ubx_proto27 
           - feature-group: only-explicit-features
             feature: ubx_proto31 
+          - feature-group: only-explicit-features
+            feature: ubx_proto31 sfrbx-gps
     steps:
       - uses: actions/checkout@v4
       - name: SemVer Check 
