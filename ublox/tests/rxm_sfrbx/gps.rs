@@ -2,6 +2,9 @@ use ublox::{PacketRef, Parser, RxmSfrbxInterpreted};
 
 use gnss_protos::GpsQzssSubframe;
 
+/**
+ * UBX-RXM-SFRBX GPS Eph#1 L1/CA parsing and interpretation
+ */
 #[test]
 #[cfg(feature = "ubx_proto23")]
 fn sfrbx_gps_eph1() {
@@ -108,6 +111,9 @@ fn sfrbx_gps_eph1() {
     assert!(test_passed, "UBX-SFRBX test failed");
 }
 
+/**
+ * UBX-RXM-SFRBX GPS Eph#2 L1/CA parsing and interpretation
+ */
 #[test]
 #[cfg(feature = "ubx_proto23")]
 fn sfrbx_gps_eph2() {
@@ -218,6 +224,9 @@ fn sfrbx_gps_eph2() {
     assert!(test_passed, "UBX-SFRBX test failed");
 }
 
+/**
+ * UBX-RXM-SFRBX GPS Eph#3 L1/CA parsing and interpretation
+ */
 #[test]
 #[cfg(feature = "ubx_proto23")]
 fn sfrbx_gps_eph3() {
