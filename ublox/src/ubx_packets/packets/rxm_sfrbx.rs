@@ -22,7 +22,7 @@ struct RxmSfrbx {
     /// Reserved
     reserved1: u8,
 
-    /// Only used for GLonass: this is the frequency slot +7
+    /// Only used for Glonass: this is the frequency slot +7
     freq_id: u8,
 
     /// Number of data words
@@ -77,6 +77,7 @@ use gnss_protos::{GpsDataByte, GpsQzssDecoder, GpsQzssFrame};
 pub enum RxmSfrbxInterpreted {
     /// [GpsQzssFrame]
     #[cfg(feature = "sfrbx-gps")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "sfrbx-gps")))]
     GpsQzss(GpsQzssFrame),
 }
 
