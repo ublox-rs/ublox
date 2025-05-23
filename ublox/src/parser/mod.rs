@@ -3,7 +3,7 @@ use alloc::vec::Vec;
 
 use crate::{
     error::ParserError,
-    ubx_packets::{PacketRef, RTCM_SYNC_CHAR, SYNC_CHAR_1},
+    ubx_packets::{RTCM_SYNC_CHAR, SYNC_CHAR_1},
 };
 
 // UBX (only) parser
@@ -12,7 +12,7 @@ pub(crate) mod ubx;
 // Adaptative UBX + RTCM parser
 mod ubx_rtcm;
 
-pub use ubx_rtcm::{RtcmPacketRef, UbxRtcmParserIter};
+pub use ubx_rtcm::{AnyPacketRef, RtcmPacketRef, UbxRtcmParserIter};
 
 pub use ubx::UbxParserIter;
 
@@ -416,19 +416,6 @@ impl<T: UnderlyingBuffer> Drop for DualBuffer<'_, T> {
         self.buf
             .extend_from_slice(&self.new_buf[self.new_buf_offset..]);
     }
-}
-
-#[derive(Debug, PartialEq, Eq)]
-enum NextSync {
-    Ubx(usize),
-    Rtcm(usize),
-    None,
-}
-
-#[derive(Debug)]
-pub enum AnyPacketRef<'a> {
-    Ubx(PacketRef<'a>),
-    Rtcm(RtcmPacketRef<'a>),
 }
 
 #[cfg(test)]
