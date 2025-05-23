@@ -2,15 +2,34 @@
 
 use crate::{
     error::ParserError,
-    parser::{ubx::extract_packet_ubx, AnyPacketRef, DualBuffer, NextSync, UnderlyingBuffer},
-    ubx_packets::{MAX_PAYLOAD_LEN, RTCM_SYNC_CHAR, SYNC_CHAR_1, SYNC_CHAR_2},
+    parser::{ubx::extract_packet_ubx, DualBuffer, UnderlyingBuffer},
+    ubx_packets::{PacketRef, MAX_PAYLOAD_LEN, RTCM_SYNC_CHAR, SYNC_CHAR_1, SYNC_CHAR_2},
 };
 
 #[cfg(feature = "rtcm")]
 use rtcm_rs::{next_msg_frame as find_next_rtcm_frame, MessageFrame as RtcmMessageFrame};
 
+#[derive(Debug, PartialEq, Eq)]
+enum NextSync {
+    Ubx(usize),
+    Rtcm(usize),
+    None,
+}
+
+/// [AnyPacketRef] allows identifying UBX [PacketRef]s and RTCM packets on the fly.
+pub enum AnyPacketRef<'a> {
+    Ubx(PacketRef<'a>),
+
+    #[cfg(feature = "rtcm")]
+    Rtcm(RtcmMessageFrame<'a>),
+
+    #[cfg(not(feature = "rtcm"))]
+    /// Reference to underlying RTCM bytes, "as is".
+    Rtcm(RtcmPacketRef<'a>),
+}
+
 /// Iterator over data stored in `Parser` buffer. Both UBX and RTCM
-/// packets will be parser on the fly.
+/// packets will be identified on the fly.
 pub struct UbxRtcmParserIter<'a, T: UnderlyingBuffer> {
     pub(crate) buf: DualBuffer<'a, T>,
 }
@@ -40,9 +59,23 @@ fn extract_packet_rtcm<'a, 'b, T: UnderlyingBuffer>(
     }
 
     let maybe_data = buf.take(pack_len + 3);
-    match maybe_data {
-        Ok(data) => Some(Ok(AnyPacketRef::Rtcm(RtcmPacketRef::<'b> { data }))),
-        Err(e) => Some(Err(e)),
+
+    let (consumed, msg_frame) = match maybe_data {
+        Ok(data) => find_next_rtcm_frame(data),
+        Err(e) => {
+            return Some(Err(e));
+        },
+    };
+
+    if consumed > 0 {
+        // remove bytes that have been consumed by RTCM identification attempt
+    }
+
+    if let Some(msg_frame) = msg_frame {
+        // RTCM did find something
+        Some(Ok(AnyPacketRef::Rtcm(msg_frame)))
+    } else {
+        None
     }
 }
 
