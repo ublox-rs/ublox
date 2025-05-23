@@ -9,11 +9,13 @@ extern crate serde;
 
 pub use crate::{
     error::{DateTimeError, MemWriterError, ParserError},
-    parser::{
-        AnyPacketRef, FixedLinearBuffer, Parser, RtcmPacketRef, UbxParserIter, UnderlyingBuffer,
-    },
+    parser::{AnyPacketRef, FixedLinearBuffer, Parser, UbxParserIter, UnderlyingBuffer},
     ubx_packets::*,
 };
+
+// Reference to raw (underlying) RTCM bytes (as is)
+#[cfg(not(feature = "rtcm"))]
+pub use crate::parser::RtcmPacketRef;
 
 mod error;
 mod parser;

@@ -12,7 +12,11 @@ pub(crate) mod ubx;
 // Adaptative UBX + RTCM parser
 mod ubx_rtcm;
 
-pub use ubx_rtcm::{AnyPacketRef, RtcmPacketRef, UbxRtcmParserIter};
+pub use ubx_rtcm::{AnyPacketRef, UbxRtcmParserIter};
+
+// Reference to raw (underlying) RTCM bytes
+#[cfg(not(feature = "rtcm"))]
+pub use ubx_rtcm::RtcmPacketRef;
 
 pub use ubx::UbxParserIter;
 

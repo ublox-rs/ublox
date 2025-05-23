@@ -21,9 +21,11 @@ pub enum AnyPacketRef<'a> {
     Ubx(PacketRef<'a>),
 
     #[cfg(feature = "rtcm")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "rtcm")))]
     Rtcm(RtcmMessageFrame<'a>),
 
     #[cfg(not(feature = "rtcm"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "rtcm"))))]
     /// Reference to underlying RTCM bytes, "as is".
     Rtcm(RtcmPacketRef<'a>),
 }
@@ -37,11 +39,14 @@ pub struct UbxRtcmParserIter<'a, T: UnderlyingBuffer> {
 /// Reference to RTCM content, "as is".
 /// When compiled with `rtcm` feature, we can forward this content to
 /// the RTCM parser.
+#[cfg(not(feature = "rtcm"))]
+#[cfg_attr(docsrs, doc(cfg(not(feature = "rtcm"))))]
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct RtcmPacketRef<'a> {
     pub data: &'a [u8],
 }
 
+#[cfg(feature = "rtcm")]
 fn extract_packet_rtcm<'a, 'b, T: UnderlyingBuffer>(
     buf: &'b mut DualBuffer<'a, T>,
     pack_len: usize,
@@ -76,6 +81,32 @@ fn extract_packet_rtcm<'a, 'b, T: UnderlyingBuffer>(
         Some(Ok(AnyPacketRef::Rtcm(msg_frame)))
     } else {
         None
+    }
+}
+
+#[cfg(not(feature = "rtcm"))]
+fn extract_packet_rtcm<'a, 'b, T: UnderlyingBuffer>(
+    buf: &'b mut DualBuffer<'a, T>,
+    pack_len: usize,
+) -> Option<Result<AnyPacketRef<'b>, ParserError>> {
+    if !buf.can_drain_and_take(0, pack_len + 3) {
+        if buf.potential_lost_bytes() > 0 {
+            // We ran out of space, drop this packet and move on
+            // TODO: shouldn't we drain pack_len + 3?
+            buf.drain(2);
+            return Some(Err(ParserError::OutOfMemory {
+                required_size: pack_len + 2,
+            }));
+        }
+        return None;
+    }
+
+    let maybe_data = buf.take(pack_len + 3);
+
+    // reference to underlying RTCM bytes (as is)
+    match maybe_data {
+        Ok(data) => Some(Ok(AnyPacketRef::Rtcm(RtcmPacketRef::<'b> { data }))),
+        Err(e) => Some(Err(e)),
     }
 }
 
@@ -145,18 +176,5 @@ impl<T: UnderlyingBuffer> UbxRtcmParserIter<'_, T> {
             };
         }
         None
-    }
-}
-
-#[cfg(feature = "rtcm")]
-#[cfg_attr(docsrs, doc(cfg(feature = "rtcm")))]
-impl<'a> RtcmPacketRef<'a> {
-    /// [RtcmMessageFrame] decoding attempt, from pre-identified RTCM packet content.
-    pub fn interpret(&self) -> Option<RtcmMessageFrame> {
-        // we're already pointing to the first byte, thanks to previous work.
-        // Simply grab one frame from that content
-        let (_, msg_frame) = find_next_rtcm_frame(&self.data);
-        let msg_frame = msg_frame?;
-        Some(msg_frame)
     }
 }
