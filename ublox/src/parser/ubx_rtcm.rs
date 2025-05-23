@@ -119,7 +119,7 @@ impl<T: UnderlyingBuffer> UbxRtcmParserIter<'_, T> {
 #[cfg_attr(docsrs, doc(cfg(feature = "rtcm")))]
 impl<'a> RtcmPacketRef<'a> {
     /// [RtcmMessageFrame] decoding attempt, from pre-identified RTCM packet content.
-    pub fn interprete(&self) -> Option<RtcmMessageFrame> {
+    pub fn interpret(&self) -> Option<RtcmMessageFrame> {
         // we're already pointing to the first byte, thanks to previous work.
         // Simply grab one frame from that content
         let (_, msg_frame) = find_next_rtcm_frame(&self.data);
