@@ -164,18 +164,13 @@ impl UnderlyingBuffer for FixedLinearBuffer<'_> {
     }
 }
 
-/// Streaming parser for U-Blox protocols with a buffer. The default constructor will build
+/// Streaming parser for UBX protocol with buffer. The default constructor will build
 /// a parser containing a Vec, but you can pass your own underlying buffer by passing it
 /// to Parser::new().
 ///
 /// If you pass your own buffer, it should be able to store at _least_ 4 bytes. In practice,
 /// you won't be able to do anything useful unless it's at least 36 bytes long (the size
 /// of a NavPosLlh packet).
-///
-/// [Parser] handles both UBX and RTCM packets. Both are extracted,
-/// UBX packets are handled internally. RTCM packets are also extracted,
-/// exposed "as is" or can be handed over to their dedicated external parser
-/// on crate feature.
 pub struct Parser<T>
 where
     T: UnderlyingBuffer,
