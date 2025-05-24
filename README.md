@@ -149,6 +149,12 @@ Enable support for uBlox protocol 27 messages.
 
 Enable support for uBlox protocol 31 messages. 
 
+### `rtcm`
+
+We propose an UbxRtcm Parser iterator that handles both packet types on the fly.
+When built with dedicated option, we can hand over the RTCM payload to their dedicated parser, to continue the decoding process.  
+In any case, RTCM packet bytes are extracted and accessible, using this parser.
+
 # Minimum Supported Rust Version
 
 The library crate will support at least the previous year's Rust compilers. Currently, the MSRV is `1.82.0`. Note that, as we are pre-1.0, breaking the MSRV will not force a minor update - the MSRV can change in a patch update.
