@@ -1,5 +1,3 @@
-use chrono::prelude::*;
-use std::convert::TryInto;
 use ublox_device::ublox::*;
 
 fn main() {
@@ -35,6 +33,35 @@ fn main() {
         .write_all(&UbxPacketRequest::request_for::<MonVer>().into_packet_bytes())
         .expect("Failed to send poll/request for UBX-MON-VER message");
 
+    device
+        .write_all(&UbxPacketRequest::request_for::<CfgGnss>().into_packet_bytes())
+        .expect("Failed to send poll/request for UBX-CFG-GNSS message");
+
+    let mut buffer = Vec::new();
+
+    CfgGnssBuilder {
+        msg_version: 0,
+        num_trk_ch_hw: 0,
+        num_trk_ch_use: 0,
+        num_config_blocks: 2,
+        blocks: &[
+            GnssConfigBlock {
+                gnss_id: GnssId::GPS,
+                ..Default::default()
+            },
+            GnssConfigBlock {
+                gnss_id: GnssId::GALILEO,
+                ..Default
+            },
+        ],
+    }
+    .extend_to(&mut buffer);
+
+    // Send the packet
+    device
+        .write_all(&buffer)
+        .expect("Failed to send CFG-GNSS packet");
+
     // Start reading data
     println!("Opened uBlox device, waiting for messages...");
     loop {
@@ -49,33 +76,11 @@ fn main() {
                     );
                     println!("{:?}", packet);
                 },
-                PacketRef::NavPvt(pvt) => {
-                    let has_time = pvt.fix_type() == GnssFixType::Fix3D
-                        || pvt.fix_type() == GnssFixType::GPSPlusDeadReckoning
-                        || pvt.fix_type() == GnssFixType::TimeOnlyFix;
-                    let has_posvel = pvt.fix_type() == GnssFixType::Fix3D
-                        || pvt.fix_type() == GnssFixType::GPSPlusDeadReckoning;
-
-                    if has_posvel {
-                        let pos: Position = (&pvt).into();
-                        let vel: Velocity = (&pvt).into();
-                        println!(
-                            "NavPvt: Latitude: {:.5} Longitude: {:.5} Altitude: {:.2} m, Speed: {:.2} m/s Heading: {:.2} degrees",
-                            pos.lat, pos.lon, pos.alt
-                            ,vel.speed, vel.heading
-                        );
-                        println!("NavPvt full: {:?}", pvt);
-                    }
-
-                    if has_time {
-                        let time: DateTime<Utc> = (&pvt)
-                            .try_into()
-                            .expect("Could not parse NAV-PVT time field to UTC");
-                        println!("Time: {:?}", time);
-                    }
+                PacketRef::CfgGnss(pkg) => {
+                    println!("CfgGnss: {:?}", pkg);
                 },
                 _ => {
-                    println!("{:?}", packet);
+                    // println!("{:?}", packet);
                 },
             })
             .unwrap();
