@@ -27,7 +27,7 @@ std = []
 
 [package.metadata.docs.rs]
 all-features = false
-rustdoc-args = ["--cfg", "docrs", "--generate-link-to-definition"]
+rustdoc-args = ["--cfg", "docrs", "--features sfrbx-gps", "--generate-link-to-definition"]
 
 [dependencies]
 bitflags = "2.3"
