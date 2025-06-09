@@ -25,5 +25,5 @@ syntect = { version = "5.2.0", optional = true }               # For syntax high
 
 [dev-dependencies]
 proc-macro2 = { version = "1.0", features = ["span-locations"] }
-which = { version = "7.0.2", default-features = false }
+which = { version = "8.0.0", default-features = false }
 pretty_assertions = "1.4.1"
