@@ -72,12 +72,8 @@ jobs:
     - name: Install embedded targets
       run: rustup target add thumbv6m-none-eabi thumbv7m-none-eabi thumbv7em-none-eabihf
     - name: Build ${{ matrix.features }}
-      run: cargo build --verbose \
-                      --no-default-features \
-                      --target thumbv6m-none-eabi \
-                      --target thumbv7m-none-eabi \
-                      --target thumbv7em-none-eabihf \
-                      --features ${{ matrix.features }}
+      run: cargo build --verbose --no-default-features --features ${{ matrix.features }} --target thumbv6m-none-eabi --target thumbv7m-none-eabi --target thumbv7em-none-eabihf
+
 
   build_examples:
     runs-on: ubuntu-latest
