@@ -149,11 +149,11 @@ jobs:
           - feature-group: only-explicit-features
             feature: ubx_proto27 
           - feature-group: only-explicit-features
-            feature: ubx_proto27 serde std
+            feature: ubx_proto27,serde,std
           - feature-group: only-explicit-features
             feature: ubx_proto31 
           - feature-group: only-explicit-features
-            feature: ubx_proto31 sfrbx-gps
+            feature: ubx_proto31,sfrbx-gps
     steps:
       - uses: actions/checkout@v4
       - name: SemVer Check 
