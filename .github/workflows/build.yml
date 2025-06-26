@@ -25,8 +25,12 @@ jobs:
           - --no-default-features --features "alloc ubx_proto23 sfrbx-gps"
           - --no-default-features --features ubx_proto14
           - --no-default-features --features ubx_proto23
+          - --no-default-features --features "ubx_proto23 std"
+          - --no-default-features --features "ubx_proto23 std serde"
           - --no-default-features --features ubx_proto27
           - --no-default-features --features ubx_proto31
+          - --no-default-features --features "ubx_proto31 std"
+          - --no-default-features --features "ubx_proto31 std serde"
     steps:
     - uses: actions/checkout@v4
     - name: Install libudev
@@ -55,6 +59,9 @@ jobs:
           - ubx_proto23
           - alloc,ubx_proto23
           - serde,ubx_proto23
+          - ubx_proto27
+          - alloc,ubx_proto27
+          - serde,ubx_proto27
     steps:
     - uses: actions/checkout@v4
     - name: Install MSRV
@@ -65,7 +72,12 @@ jobs:
     - name: Install embedded targets
       run: rustup target add thumbv6m-none-eabi thumbv7m-none-eabi thumbv7em-none-eabihf
     - name: Build ${{ matrix.features }}
-      run: cargo build --verbose --no-default-features --target thumbv6m-none-eabi --target thumbv7m-none-eabi --target thumbv7em-none-eabihf --features ${{ matrix.features }}
+      run: cargo build --verbose \
+                      --no-default-features \
+                      --target thumbv6m-none-eabi \
+                      --target thumbv7m-none-eabi \
+                      --target thumbv7em-none-eabihf \
+                      --features ${{ matrix.features }}
 
   build_examples:
     runs-on: ubuntu-latest
@@ -136,6 +148,8 @@ jobs:
             feature: ubx_proto23 
           - feature-group: only-explicit-features
             feature: ubx_proto27 
+          - feature-group: only-explicit-features
+            feature: ubx_proto27 serde std
           - feature-group: only-explicit-features
             feature: ubx_proto31 
           - feature-group: only-explicit-features
