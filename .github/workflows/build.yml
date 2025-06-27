@@ -25,8 +25,12 @@ jobs:
           - --no-default-features --features "alloc ubx_proto23 sfrbx-gps"
           - --no-default-features --features ubx_proto14
           - --no-default-features --features ubx_proto23
+          - --no-default-features --features "ubx_proto23 std"
+          - --no-default-features --features "ubx_proto23 std serde"
           - --no-default-features --features ubx_proto27
           - --no-default-features --features ubx_proto31
+          - --no-default-features --features "ubx_proto31 std"
+          - --no-default-features --features "ubx_proto31 std serde"
     steps:
     - uses: actions/checkout@v4
     - name: Install libudev
@@ -37,6 +41,7 @@ jobs:
         toolchain: 1.82.0
         override: true
         components: rustfmt, clippy
+    - uses: Swatinem/rust-cache@v2
     - name: Build
       run: cargo build --verbose ${{ matrix.feature-args }}
     - name: Run tests
@@ -55,6 +60,9 @@ jobs:
           - ubx_proto23
           - alloc,ubx_proto23
           - serde,ubx_proto23
+          - ubx_proto27
+          - alloc,ubx_proto27
+          - serde,ubx_proto27
     steps:
     - uses: actions/checkout@v4
     - name: Install MSRV
@@ -64,8 +72,10 @@ jobs:
         override: true
     - name: Install embedded targets
       run: rustup target add thumbv6m-none-eabi thumbv7m-none-eabi thumbv7em-none-eabihf
+    - uses: Swatinem/rust-cache@v2
     - name: Build ${{ matrix.features }}
-      run: cargo build --verbose --no-default-features --target thumbv6m-none-eabi --target thumbv7m-none-eabi --target thumbv7em-none-eabihf --features ${{ matrix.features }}
+      run: cargo build --verbose --no-default-features --features ${{ matrix.features }} --target thumbv6m-none-eabi --target thumbv7m-none-eabi --target thumbv7em-none-eabihf
+
 
   build_examples:
     runs-on: ubuntu-latest
@@ -79,6 +89,7 @@ jobs:
         toolchain: 1.82.0
         override: true
         components: rustfmt, clippy
+    - uses: Swatinem/rust-cache@v2
     - name: Build
       run: cargo build --release --all
     - name: Coding style
@@ -117,6 +128,7 @@ jobs:
       - uses: taiki-e/install-action@cargo-hack
       - name: Install libudev
         run: sudo apt-get update && sudo apt-get install -y libudev-dev
+      - uses: Swatinem/rust-cache@v2
       - name: Check MSRV for examples
         run: cargo hack check --rust-version --workspace
 
@@ -137,9 +149,11 @@ jobs:
           - feature-group: only-explicit-features
             feature: ubx_proto27 
           - feature-group: only-explicit-features
+            feature: ubx_proto27,serde,std
+          - feature-group: only-explicit-features
             feature: ubx_proto31 
           - feature-group: only-explicit-features
-            feature: ubx_proto31 sfrbx-gps
+            feature: ubx_proto31,sfrbx-gps
     steps:
       - uses: actions/checkout@v4
       - name: SemVer Check 
