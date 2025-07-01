@@ -19,7 +19,7 @@ use ratatui::{
 };
 
 use anyhow::Result;
-use tracing::{debug, info, instrument};
+use tracing::info;
 use ublox_device::ublox::{self, SensorData};
 
 use crate::{
@@ -157,17 +157,4 @@ fn update_states(app: &mut App, receiver: &Receiver<UbxStatus>) {
         },
         _ => {}, // Err(e) => println!("Not value from channel"),
     }
-}
-
-/// Handle events and insert them into the events vector keeping only the last 10 events
-#[instrument(skip(events))]
-fn handle_events(events: &mut Vec<Event>) -> Result<()> {
-    // Render the UI at least once every 100ms
-    if event::poll(Duration::from_millis(100))? {
-        let event = event::read()?;
-        debug!(?event);
-        events.insert(0, event);
-    }
-    events.truncate(10);
-    Ok(())
 }

@@ -1,11 +1,9 @@
 use bitflags::bitflags;
 
-#[cfg(feature = "serde")]
-use super::SerializeUbxPacketFields;
-#[cfg(feature = "serde")]
-use crate::serde::ser::SerializeMap;
 #[allow(unused_imports, reason = "It's only unused in some feature sets")]
 use crate::FieldIter;
+#[cfg(feature = "serde")]
+use {super::SerializeUbxPacketFields, crate::serde::ser::SerializeMap};
 
 use crate::{error::ParserError, UbxPacketMeta};
 use ublox_derive::{ubx_extend_bitflags, ubx_packet_recv};

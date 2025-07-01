@@ -1,10 +1,9 @@
 #![cfg(any(feature = "ubx_proto27", feature = "ubx_proto31"))]
+use crate::FieldIter;
 use core::fmt;
 
 #[cfg(feature = "serde")]
-use super::SerializeUbxPacketFields;
-#[cfg(feature = "serde")]
-use crate::serde::ser::SerializeMap;
+use {super::SerializeUbxPacketFields, crate::serde::ser::SerializeMap};
 
 use crate::{error::ParserError, NavSatSvHealth, UbxPacketMeta};
 use ublox_derive::ubx_packet_recv;

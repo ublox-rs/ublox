@@ -1,13 +1,11 @@
 use bitflags::bitflags;
 
-#[cfg(feature = "serde")]
-use super::SerializeUbxPacketFields;
-#[cfg(feature = "serde")]
-use crate::serde::ser::SerializeMap;
 #[allow(unused_imports, reason = "It's only unused in some feature sets")]
 use crate::FieldIter;
 #[cfg(feature = "alloc")]
 use alloc::vec::Vec;
+#[cfg(feature = "serde")]
+use {super::SerializeUbxPacketFields, crate::serde::ser::SerializeMap};
 
 use crate::{
     cfg_val::{CfgKey, CfgVal},

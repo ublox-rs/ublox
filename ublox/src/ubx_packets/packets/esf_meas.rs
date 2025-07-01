@@ -7,12 +7,10 @@ use core::fmt;
 #[allow(unused_imports, reason = "It's only unused in some feature sets")]
 use num_traits::float::FloatCore;
 
-#[cfg(feature = "serde")]
-use super::SerializeUbxPacketFields;
-#[cfg(feature = "serde")]
-use crate::serde::ser::SerializeMap;
 #[allow(unused_imports, reason = "It's only unused in some feature sets")]
 use crate::FieldIter;
+#[cfg(feature = "serde")]
+use {super::SerializeUbxPacketFields, crate::serde::ser::SerializeMap};
 
 use crate::{error::ParserError, EsfSensorType, UbxPacketMeta};
 use ublox_derive::ubx_packet_recv;
