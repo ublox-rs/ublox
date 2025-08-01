@@ -128,4 +128,43 @@ mod test {
         assert_eq!("SBAS;IMES;QZSS", it.next().unwrap());
         assert_eq!(None, it.next());
     }
+
+    #[test]
+    fn mon_ver_to_owned() {
+        let payload: [u8; 160] = [
+            82, 79, 77, 32, 67, 79, 82, 69, 32, 51, 46, 48, 49, 32, 40, 49, 48, 55, 56, 56, 56, 41,
+            0, 0, 0, 0, 0, 0, 0, 0, 48, 48, 48, 56, 48, 48, 48, 48, 0, 0, 70, 87, 86, 69, 82, 61,
+            83, 80, 71, 32, 51, 46, 48, 49, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 80, 82,
+            79, 84, 86, 69, 82, 61, 49, 56, 46, 48, 48, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 71, 80, 83, 59, 71, 76, 79, 59, 71, 65, 76, 59, 66, 68, 83, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 83, 66, 65, 83, 59, 73, 77, 69, 83, 59, 81, 90, 83, 83, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        ];
+        assert_eq!(Ok(()), <MonVerRef>::validate(&payload));
+        let ver = MonVerRef(&payload);
+        let sw = ver.software_version();
+        let sw_raw = ver.software_version_raw();
+        let hw = ver.hardware_version();
+        let hw_raw = ver.hardware_version_raw();
+        let ext = ver
+            .extension()
+            .map(|s| s.to_owned())
+            .collect::<Vec<String>>();
+
+        let owned = ver.to_owned();
+        let owned_sw = owned.software_version();
+        let owned_sw_raw = owned.software_version_raw();
+        let owned_hw = owned.hardware_version();
+        let owned_hw_raw = owned.hardware_version_raw();
+        let owned_ext = owned
+            .extension()
+            .map(|s| s.to_owned())
+            .collect::<Vec<String>>();
+
+        assert_eq!(sw, owned_sw);
+        assert_eq!(sw_raw, owned_sw_raw);
+        assert_eq!(hw, owned_hw);
+        assert_eq!(hw_raw, owned_hw_raw);
+        assert_eq!(ext, owned_ext);
+    }
 }
