@@ -151,7 +151,8 @@ fn generate_from_ref_impl(
         impl<'a> From<&#ref_name<'a>> for #owned_name {
             fn from(packet: &#ref_name<'a>) -> Self {
                 let mut bytes = [0u8; #packet_size];
-                bytes.clone_from_slice(packet.as_bytes());
+                let from_bytes = packet.as_bytes();
+                bytes[..from_bytes.len()].clone_from_slice(from_bytes);
                 Self(bytes)
             }
         }
