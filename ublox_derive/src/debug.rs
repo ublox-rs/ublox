@@ -21,7 +21,7 @@ impl DebugContext {
     /// ```
 
     pub fn print_at(&self, file: &str, line: u32, args: std::fmt::Arguments) {
-        #[cfg(debug_assertions)]
+        #[cfg(all(debug_assertions, feature = "_internal_debug"))]
         if self.enabled {
             println!("[{}:{}] {}", file, line, args);
         }
@@ -29,7 +29,7 @@ impl DebugContext {
 
     /// Prints as is
     pub fn print(&self, msg: impl std::fmt::Display) {
-        #[cfg(debug_assertions)]
+        #[cfg(all(debug_assertions, feature = "_internal_debug"))]
         if self.enabled {
             println!("{msg}");
         }
@@ -37,7 +37,7 @@ impl DebugContext {
 
     /// Prints formatted code or an error if the code couldn't be formatted
     pub fn print_code(&self, code: impl std::fmt::Display) {
-        #[cfg(debug_assertions)]
+        #[cfg(all(debug_assertions, feature = "_internal_debug"))]
         if self.enabled {
             match debug_only::format_rust_code(&code) {
                 Ok(formatted_code) => debug_only::print_highlighted(&formatted_code),
@@ -47,7 +47,7 @@ impl DebugContext {
     }
 }
 
-#[cfg(debug_assertions)]
+#[cfg(all(debug_assertions, feature = "_internal_debug"))]
 mod debug_only {
     // Spawns rustfmt, runs code through it and returns the formatted code
     pub(super) fn format_rust_code(
