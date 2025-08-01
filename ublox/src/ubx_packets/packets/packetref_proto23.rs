@@ -12,6 +12,8 @@ define_recv_packets!(
         CfgAnt,
         CfgEsfAlg,
         CfgEsfWt,
+        CfgGnss,
+        CfgInf,
         CfgItfm,
         CfgNav5,
         CfgOdo,
