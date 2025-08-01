@@ -140,6 +140,7 @@ mod test {
     }
 
     #[test]
+    #[cfg(feature = "std")]
     fn mon_ver_to_owned() {
         let payload: [u8; 160] = [
             82, 79, 77, 32, 67, 79, 82, 69, 32, 51, 46, 48, 49, 32, 40, 49, 48, 55, 56, 56, 56, 41,
