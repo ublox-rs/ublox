@@ -63,13 +63,23 @@ impl<'a> core::iter::Iterator for MonVerExtensionIter<'a> {
     type Item = &'a str;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.offset < self.data.len() {
+        while self.offset < self.data.len() {
             let data = &self.data[self.offset..self.offset + 30];
             self.offset += 30;
-            Some(convert_to_str_unchecked(data))
-        } else {
-            None
+
+            if is_cstr_valid(data) {
+                let str_result = convert_to_str_unchecked(data);
+                // Only return non-empty strings
+                if !str_result.is_empty() {
+                    return Some(str_result);
+                }
+            } else {
+                // If we hit invalid data, stop iteration entirely
+                // This handles cases where remaining data is just padding
+                return None;
+            }
         }
+        None
     }
 }
 
