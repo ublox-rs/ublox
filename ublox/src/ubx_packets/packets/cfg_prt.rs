@@ -244,7 +244,7 @@ bitflags! {
     /// Each bit of this mask is used for a protocol.
     /// Through that, multiple protocols can be defined on a single port
     /// Used in `CfgPrtSpi` and `CfgPrtI2c`
-    #[derive(Default, Debug)]
+    #[derive(Default, Debug, Clone, Copy)]
     pub struct InProtoMask: u16 {
         const UBLOX = 1;
         const NMEA = 2;
@@ -262,7 +262,7 @@ bitflags! {
     /// Each bit of this mask is used for a protocol.
     /// Through that, multiple protocols can be defined on a single port
     /// Used in `CfgPrtSpi` and `CfgPrtI2c`
-    #[derive(Default, Debug)]
+    #[derive(Default, Debug, Clone, Copy)]
     pub struct OutProtoMask: u16 {
         const UBLOX = 1;
         const NMEA = 2;

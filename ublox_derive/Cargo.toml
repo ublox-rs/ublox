@@ -12,8 +12,8 @@ proc-macro = true
 
 [features]
 default = ["std"]
-std = ["syntect"]
-
+std = []
+_internal_debug = ["syntect", "std"]
 
 [dependencies]
 proc-macro2 = "1.0"
@@ -21,9 +21,9 @@ quote = "1.0"
 # cannot be bumped to major relese:
 # see API changes at https://github.com/dtolnay/syn/releases/tag/2.0.0
 syn = { version = "1.0", features = ["extra-traits", "full"] }
-syntect = { version = "5.2.0", optional = true }               # For syntax highlighting of printed code
+syntect = { version = "5.2", optional = true }                 # For syntax highlighting of printed code
 
 [dev-dependencies]
 proc-macro2 = { version = "1.0", features = ["span-locations"] }
-which = { version = "7.0.2", default-features = false }
-pretty_assertions = "1.4.1"
+which = { version = "8.0", default-features = false, features = ["real-sys"] }
+pretty_assertions = "1.4"

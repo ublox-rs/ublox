@@ -150,9 +150,10 @@ fn generate_from_ref_impl(
     quote! {
         impl<'a> From<&#ref_name<'a>> for #owned_name {
             fn from(packet: &#ref_name<'a>) -> Self {
-                let mut bytes = [0u8; #packet_size];
-                bytes.clone_from_slice(packet.as_bytes());
-                Self(bytes)
+                let src = packet.as_bytes();
+                let mut dst = [0u8; #packet_size];
+                dst[..src.len()].clone_from_slice(src);
+                Self(dst)
             }
         }
 

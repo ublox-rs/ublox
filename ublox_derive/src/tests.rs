@@ -265,9 +265,10 @@ fn test_ubx_packet_recv_simple() {
             }
             impl<'a> From<&TestRef<'a>> for TestOwned {
                 fn from(packet: &TestRef<'a>) -> Self {
-                    let mut bytes = [0u8; 16usize];
-                    bytes.clone_from_slice(packet.as_bytes());
-                    Self(bytes)
+                    let src = packet.as_bytes();
+                    let mut dst = [0u8; 16usize];
+                    dst[..src.len()].clone_from_slice(src);
+                    Self(dst)
                 }
             }
             impl<'a> From<TestRef<'a>> for TestOwned {
@@ -454,9 +455,10 @@ fn test_ubx_packet_recv_dyn_len() {
             }
             impl<'a> From<&TestRef<'a>> for TestOwned {
                 fn from(packet: &TestRef<'a>) -> Self {
-                    let mut bytes = [0u8; 38usize];
-                    bytes.clone_from_slice(packet.as_bytes());
-                    Self(bytes)
+                    let src = packet.as_bytes();
+                    let mut dst = [0u8; 38usize];
+                    dst[..src.len()].clone_from_slice(src);
+                    Self(dst)
                 }
             }
             impl<'a> From<TestRef<'a>> for TestOwned {
