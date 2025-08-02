@@ -2,8 +2,9 @@
 authors = ["Lane Kolbly <lane@rscheme.org>"]
 description = "A crate to communicate with u-blox GPS devices using the UBX protocol"
 name = "ublox"
-repository = "https://github.com/lkolbly/ublox"
-version = "0.5.0"
+homepage = "https://github.com/ublox-rs"
+repository = "https://github.com/ublox-rs/ublox"
+version = "0.6.0"
 rust-version.workspace = true
 license.workspace = true
 readme.workspace = true
