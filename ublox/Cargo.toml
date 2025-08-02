@@ -2,8 +2,9 @@
 authors = ["Lane Kolbly <lane@rscheme.org>"]
 description = "A crate to communicate with u-blox GPS devices using the UBX protocol"
 name = "ublox"
-repository = "https://github.com/lkolbly/ublox"
-version = "0.5.0"
+homepage = "https://github.com/ublox-rs"
+repository = "https://github.com/ublox-rs/ublox"
+version = "0.6.0"
 rust-version.workspace = true
 license.workspace = true
 readme.workspace = true
@@ -36,7 +37,7 @@ num-traits = { version = "0.2", default-features = false }
 serde = { version = "1.0", optional = true, default-features = false, features = [
     "derive",
 ] }
-ublox_derive = { path = "../ublox_derive", version = "=0.2.0" }
+ublox_derive = { path = "../ublox_derive", version = "=0.3.0" }
 
 gnss-protos = { version = "0.0.2", optional = true }
 
