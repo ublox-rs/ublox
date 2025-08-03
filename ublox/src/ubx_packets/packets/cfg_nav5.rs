@@ -28,7 +28,7 @@ struct CfgNav5 {
     mask: u16,
     #[ubx(map_type = CfgNav5DynModel, may_fail)]
     dyn_model: u8,
-    #[ubx(map_type = CfgNav5FixMode, may_fail)]
+    #[ubx(map_type = NavFixMode, may_fail)]
     fix_mode: u8,
 
     /// Fixed altitude (mean sea level) for 2D fixmode [m]
@@ -141,9 +141,12 @@ pub enum CfgNav5DynModel {
 #[ubx(from_unchecked, into_raw, rest_error)]
 #[repr(u8)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub enum CfgNav5FixMode {
+pub enum NavFixMode {
+    /// 2D only
     Only2D = 1,
+    /// 3D only
     Only3D = 2,
     #[default]
+    /// Auto 2D/3D
     Auto2D3D = 3,
 }

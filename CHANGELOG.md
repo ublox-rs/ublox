@@ -24,6 +24,7 @@ All notable changes to this project will be documented in this file.
 - Replaced `CfgLayer` by `CfgLayerSet` to differentiate it from `CfgLayerGet` ([#106](https://github.com/ublox-rs/ublox/pull/106))
 - Renamed `NavSolution` to `NavSol` ([#129])(https://github.com/ublox-rs/ublox/pull/129)
 - Removed `AlpSrv` from protocol versions 27 and 31 ([#129])(https://github.com/ublox-rs/ublox/pull/129)
+- Rename `CfgNav5FixMode` to `NavFixMode` as it is also used in `CfgVal` messages
 
 ### CI
 

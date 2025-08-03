@@ -921,7 +921,7 @@ mod test {
         let bytes = CfgNav5Builder {
             mask: CfgNav5Params::DYN,
             dyn_model: CfgNav5DynModel::AirborneWithLess1gAcceleration,
-            fix_mode: CfgNav5FixMode::Only3D,
+            fix_mode: NavFixMode::Only3D,
             fixed_alt: 100.17,
             fixed_alt_var: 0.0017,
             min_elev_degrees: 17,
@@ -971,7 +971,7 @@ mod test {
         let bytes = CfgNav5Builder {
             mask: CfgNav5Params::DYN,
             dyn_model: CfgNav5DynModel::AirborneWithLess1gAcceleration,
-            fix_mode: CfgNav5FixMode::Only3D,
+            fix_mode: NavFixMode::Only3D,
             fixed_alt: 100.17,
             fixed_alt_var: 0.0017,
             min_elev_degrees: 17,
@@ -1003,7 +1003,7 @@ mod test {
         let bytes = CfgNav5Builder {
             mask: CfgNav5Params::DYN,
             dyn_model: CfgNav5DynModel::AirborneWithLess1gAcceleration,
-            fix_mode: CfgNav5FixMode::Only3D,
+            fix_mode: NavFixMode::Only3D,
             fixed_alt: 100.17,
             fixed_alt_var: 0.0017,
             min_elev_degrees: 17,

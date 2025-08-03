@@ -1,4 +1,4 @@
-use crate::UtcStandardIdentifier;
+use crate::{NavFixMode, UtcStandardIdentifier};
 
 use super::{AlignmentToReferenceTime, CfgInfMask, CfgTModeModes, DataBits, Parity, StopBits};
 
@@ -160,11 +160,11 @@ macro_rules! from_cfg_v_bytes {
             _ => unreachable!("CFG-TMODE-POS_TYPE value not supported by protocol specification"),
         }
     };
-    ($buf:expr, NavSpgFixMode) => {
+    ($buf:expr, NavFixMode) => {
         match $buf[0] {
-            1 => NavSpgFixMode::Only2D,
-            2 => NavSpgFixMode::Only3D,
-            3 => NavSpgFixMode::Auto,
+            1 => NavFixMode::Only2D,
+            2 => NavFixMode::Only3D,
+            3 => NavFixMode::Auto2D3D,
             _ => unreachable!(
                 "CFG-NAVSPG-FIXMODE_TYPE value not supported by protocol specification"
             ),
@@ -296,7 +296,7 @@ macro_rules! into_cfg_kv_bytes {
           $this.0 as u8
       ])
     };
-    ($this:expr, NavSpgFixMode) => {
+    ($this:expr, NavFixMode) => {
       into_cfg_kv_bytes!(@inner [
           $this.0 as u8
       ])
@@ -1318,7 +1318,7 @@ cfg_val! {
   /// CFG-NAVSPG -*: Standard Precision Navigation Configuration
 
   /// Position fix mode
-  NavSpgFixModeDef, 0x20110011, NavSpgFixMode,
+  NavSpgFixMode, 0x20110011, NavFixMode,
   /// Initial fix must be a 3d fix
   NavSpgIniFix3D, 0x10110013, bool,
   /// GPS week rollover number
@@ -1363,18 +1363,6 @@ pub enum TModePosType {
     ECEF = 0,
     /// Lat/Lon/Height position
     LLH = 1,
-}
-
-#[derive(Debug, Default, Clone, Copy, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub enum NavSpgFixMode {
-    /// 2D only
-    Only2D = 1,
-    /// 3D only
-    Only3D = 2,
-    /// Auto 2D/3D
-    #[default]
-    Auto = 3,
 }
 
 /// Dynamic platform model
