@@ -1,3 +1,5 @@
+use crate::{NavDynamicModel, NavFixMode, UtcStandardIdentifier};
+
 use super::{AlignmentToReferenceTime, CfgInfMask, CfgTModeModes, DataBits, Parity, StopBits};
 
 /// Supported storage size identiﬁers for the Configuration Value
@@ -158,38 +160,41 @@ macro_rules! from_cfg_v_bytes {
             _ => unreachable!("CFG-TMODE-POS_TYPE value not supported by protocol specification"),
         }
     };
-    ($buf:expr, NavSpgFixMode) => {
+    ($buf:expr, NavFixMode) => {
         match $buf[0] {
-            1 => NavSpgFixMode::Only2D,
-            2 => NavSpgFixMode::Only3D,
-            3 => NavSpgFixMode::Auto,
+            1 => NavFixMode::Only2D,
+            2 => NavFixMode::Only3D,
+            3 => NavFixMode::Auto2D3D,
             _ => unreachable!(
                 "CFG-NAVSPG-FIXMODE_TYPE value not supported by protocol specification"
             ),
         }
     };
-    ($buf:expr, NavSpgUtcStandard) => {
+    ($buf:expr, UtcStandardIdentifier) => {
         match $buf[0] {
-            0 => NavSpgUtcStandard::Auto,
-            3 => NavSpgUtcStandard::USNO,
-            6 => NavSpgUtcStandard::SU,
-            7 => NavSpgUtcStandard::NTSC,
+            0 => UtcStandardIdentifier::Automatic,
+            3 => UtcStandardIdentifier::Usno,
+            6 => UtcStandardIdentifier::UtcSu,
+            7 => UtcStandardIdentifier::UtcChina,
             _ => unreachable!(
                 "CFG-NAVSPG-UTCSTANDARD_TYPE value not supported by protocol specification"
             ),
         }
     };
-    ($buf:expr, NavSpgDynamicModel) => {
+    ($buf:expr, NavDynamicModel) => {
         match $buf[0] {
-            0 => NavSpgDynamicModel::Portable,
-            2 => NavSpgDynamicModel::Stationary,
-            3 => NavSpgDynamicModel::Pedestrian,
-            4 => NavSpgDynamicModel::Automotive,
-            5 => NavSpgDynamicModel::Sea,
-            6 => NavSpgDynamicModel::AirborneWithLess1gAcceleration,
-            7 => NavSpgDynamicModel::AirborneWithLess2gAcceleration,
-            8 => NavSpgDynamicModel::AirborneWithLess4gAcceleration,
-            9 => NavSpgDynamicModel::WristWornWatch,
+            0 => NavDynamicModel::Portable,
+            2 => NavDynamicModel::Stationary,
+            3 => NavDynamicModel::Pedestrian,
+            4 => NavDynamicModel::Automotive,
+            5 => NavDynamicModel::Sea,
+            6 => NavDynamicModel::AirborneWithLess1gAcceleration,
+            7 => NavDynamicModel::AirborneWithLess2gAcceleration,
+            8 => NavDynamicModel::AirborneWithLess4gAcceleration,
+            #[cfg(any(feature = "ubx_proto27", feature = "ubx_proto31"))]
+            9 => NavDynamicModel::WristWornWatch,
+            #[cfg(feature = "ubx_proto31")]
+            10 => NavDynamicModel::Bike,
             _ => unreachable!(
                 "CFG-NAVSPG-DYNMODEL_TYPE value not supported by protocol specification"
             ),
@@ -294,17 +299,17 @@ macro_rules! into_cfg_kv_bytes {
           $this.0 as u8
       ])
     };
-    ($this:expr, NavSpgFixMode) => {
+    ($this:expr, NavFixMode) => {
       into_cfg_kv_bytes!(@inner [
           $this.0 as u8
       ])
     };
-    ($this:expr, NavSpgUtcStandard) => {
+    ($this:expr, UtcStandardIdentifier) => {
       into_cfg_kv_bytes!(@inner [
           $this.0 as u8
       ])
     };
-    ($this:expr, NavSpgDynamicModel) => {
+    ($this:expr, NavDynamicModel) => {
       into_cfg_kv_bytes!(@inner [
           $this.0 as u8
       ])
@@ -1316,7 +1321,7 @@ cfg_val! {
   /// CFG-NAVSPG -*: Standard Precision Navigation Configuration
 
   /// Position fix mode
-  NavSpgFixModeDef, 0x20110011, NavSpgFixMode,
+  NavSpgFixMode, 0x20110011, NavFixMode,
   /// Initial fix must be a 3d fix
   NavSpgIniFix3D, 0x10110013, bool,
   /// GPS week rollover number
@@ -1329,9 +1334,9 @@ cfg_val! {
   /// Only available with the PPP product variant.
   NavSpgUsePPP, 0x10110019, bool,
   /// UTC standard to be used
-  NavSpgUtcStandardDef, 0x2011001c, NavSpgUtcStandard,
+  NavSpgUtcStandard, 0x2011001c, UtcStandardIdentifier,
   /// Dynamic platform model
-  NavSpgDynModel, 0x20110021, NavSpgDynamicModel,
+  NavSpgDynModel, 0x20110021, NavDynamicModel,
 }
 
 // TODO: Add the rest of the NAVSPG messages
