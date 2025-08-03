@@ -16,14 +16,20 @@ ubx_proto27 = []
 ubx_proto31 = []
 default = ["std", "serde", "ubx_proto23"]
 
+alloc = []
+std = []
+
 # Unlock RXM-SFRBX GPS and QZSS interpretation
 sfrbx-gps = [
     "gnss-protos",
     "gnss-protos/gps",
 ]
 
-alloc = []
-std = []
+# Unlock interpretation of RTCM packets
+# when using dual UBX + RTCM decoder
+rtcm = [
+    "dep:rtcm-rs"
+]
 
 [package.metadata.docs.rs]
 all-features = false
@@ -39,6 +45,7 @@ serde = { version = "1.0", optional = true, default-features = false, features =
 ublox_derive = { path = "../ublox_derive", version = "=0.2.0" }
 
 gnss-protos = { version = "0.0.2", optional = true }
+rtcm-rs = { version = "0.11", optional = true }
 
 [dev-dependencies]
 cpu-time = "1.0"
