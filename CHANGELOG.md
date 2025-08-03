@@ -25,6 +25,7 @@ All notable changes to this project will be documented in this file.
 - Renamed `NavSolution` to `NavSol` ([#129])(https://github.com/ublox-rs/ublox/pull/129)
 - Removed `AlpSrv` from protocol versions 27 and 31 ([#129])(https://github.com/ublox-rs/ublox/pull/129)
 - Rename `CfgNav5FixMode` to `NavFixMode` as it is also used in `CfgVal` messages
+- Rename `CfgNav5DynModel` to `NavDynamicModel` as it is also used in `CfgVal` messages, and changed the default to `Portable` as specified in the documentation
 
 ### CI
 

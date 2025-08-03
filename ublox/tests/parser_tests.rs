@@ -1,7 +1,7 @@
 #![cfg(feature = "alloc")]
 
 use ublox::{
-    CfgNav5Builder, CfgNav5DynModel, CfgNav5Params, NavFixMode, PacketRef, Parser, ParserError,
+    CfgNav5Builder, CfgNav5Params, NavDynamicModel, NavFixMode, PacketRef, Parser, ParserError,
     UbxParserIter, UtcStandardIdentifier,
 };
 
@@ -141,7 +141,7 @@ fn test_parse_ack_ack_garbage_before() {
 fn test_parse_cfg_nav5() {
     let bytes = CfgNav5Builder {
         mask: CfgNav5Params::DYN,
-        dyn_model: CfgNav5DynModel::AirborneWithLess1gAcceleration,
+        dyn_model: NavDynamicModel::AirborneWithLess1gAcceleration,
         fix_mode: NavFixMode::Only3D,
         fixed_alt: 100.17,
         fixed_alt_var: 0.0017,
@@ -170,7 +170,7 @@ fn test_parse_cfg_nav5() {
 
                 assert_eq!(CfgNav5Params::DYN, pack.mask());
                 assert_eq!(
-                    CfgNav5DynModel::AirborneWithLess1gAcceleration,
+                    NavDynamicModel::AirborneWithLess1gAcceleration,
                     pack.dyn_model()
                 );
                 assert_eq!(NavFixMode::Only3D, pack.fix_mode());

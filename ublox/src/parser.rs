@@ -920,7 +920,7 @@ mod test {
     fn parser_oom_clears_buffer() {
         let bytes = CfgNav5Builder {
             mask: CfgNav5Params::DYN,
-            dyn_model: CfgNav5DynModel::AirborneWithLess1gAcceleration,
+            dyn_model: NavDynamicModel::AirborneWithLess1gAcceleration,
             fix_mode: NavFixMode::Only3D,
             fixed_alt: 100.17,
             fixed_alt_var: 0.0017,
@@ -970,7 +970,7 @@ mod test {
     fn parser_accepts_packet_array_underlying() {
         let bytes = CfgNav5Builder {
             mask: CfgNav5Params::DYN,
-            dyn_model: CfgNav5DynModel::AirborneWithLess1gAcceleration,
+            dyn_model: NavDynamicModel::AirborneWithLess1gAcceleration,
             fix_mode: NavFixMode::Only3D,
             fixed_alt: 100.17,
             fixed_alt_var: 0.0017,
@@ -1002,7 +1002,7 @@ mod test {
     fn parser_accepts_packet_vec_underlying() {
         let bytes = CfgNav5Builder {
             mask: CfgNav5Params::DYN,
-            dyn_model: CfgNav5DynModel::AirborneWithLess1gAcceleration,
+            dyn_model: NavDynamicModel::AirborneWithLess1gAcceleration,
             fix_mode: NavFixMode::Only3D,
             fixed_alt: 100.17,
             fixed_alt_var: 0.0017,

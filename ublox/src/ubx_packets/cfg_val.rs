@@ -1,4 +1,4 @@
-use crate::{NavFixMode, UtcStandardIdentifier};
+use crate::{NavDynamicModel, NavFixMode, UtcStandardIdentifier};
 
 use super::{AlignmentToReferenceTime, CfgInfMask, CfgTModeModes, DataBits, Parity, StopBits};
 
@@ -181,17 +181,20 @@ macro_rules! from_cfg_v_bytes {
             ),
         }
     };
-    ($buf:expr, NavSpgDynamicModel) => {
+    ($buf:expr, NavDynamicModel) => {
         match $buf[0] {
-            0 => NavSpgDynamicModel::Portable,
-            2 => NavSpgDynamicModel::Stationary,
-            3 => NavSpgDynamicModel::Pedestrian,
-            4 => NavSpgDynamicModel::Automotive,
-            5 => NavSpgDynamicModel::Sea,
-            6 => NavSpgDynamicModel::AirborneWithLess1gAcceleration,
-            7 => NavSpgDynamicModel::AirborneWithLess2gAcceleration,
-            8 => NavSpgDynamicModel::AirborneWithLess4gAcceleration,
-            9 => NavSpgDynamicModel::WristWornWatch,
+            0 => NavDynamicModel::Portable,
+            2 => NavDynamicModel::Stationary,
+            3 => NavDynamicModel::Pedestrian,
+            4 => NavDynamicModel::Automotive,
+            5 => NavDynamicModel::Sea,
+            6 => NavDynamicModel::AirborneWithLess1gAcceleration,
+            7 => NavDynamicModel::AirborneWithLess2gAcceleration,
+            8 => NavDynamicModel::AirborneWithLess4gAcceleration,
+            #[cfg(any(feature = "ubx_proto27", feature = "ubx_proto31"))]
+            9 => NavDynamicModel::WristWornWatch,
+            #[cfg(feature = "ubx_proto31")]
+            10 => NavDynamicModel::Bike,
             _ => unreachable!(
                 "CFG-NAVSPG-DYNMODEL_TYPE value not supported by protocol specification"
             ),
@@ -306,7 +309,7 @@ macro_rules! into_cfg_kv_bytes {
           $this.0 as u8
       ])
     };
-    ($this:expr, NavSpgDynamicModel) => {
+    ($this:expr, NavDynamicModel) => {
       into_cfg_kv_bytes!(@inner [
           $this.0 as u8
       ])
@@ -1333,7 +1336,7 @@ cfg_val! {
   /// UTC standard to be used
   NavSpgUtcStandard, 0x2011001c, UtcStandardIdentifier,
   /// Dynamic platform model
-  NavSpgDynModel, 0x20110021, NavSpgDynamicModel,
+  NavSpgDynModel, 0x20110021, NavDynamicModel,
 }
 
 // TODO: Add the rest of the NAVSPG messages
@@ -1363,24 +1366,4 @@ pub enum TModePosType {
     ECEF = 0,
     /// Lat/Lon/Height position
     LLH = 1,
-}
-
-/// Dynamic platform model
-#[derive(Debug, Default, Copy, Clone, PartialEq, Eq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub enum NavSpgDynamicModel {
-    #[default]
-    Portable = 0,
-    Stationary = 2,
-    Pedestrian = 3,
-    Automotive = 4,
-    Sea = 5,
-    /// Airborne with <1g acceleration
-    AirborneWithLess1gAcceleration = 6,
-    /// Airborne with <2g acceleration
-    AirborneWithLess2gAcceleration = 7,
-    /// Airborne with <4g acceleration
-    AirborneWithLess4gAcceleration = 8,
-    /// Not supported in protocol versions <18
-    WristWornWatch = 9,
 }
