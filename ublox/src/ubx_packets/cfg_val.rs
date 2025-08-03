@@ -1,3 +1,5 @@
+use crate::UtcStandardIdentifier;
+
 use super::{AlignmentToReferenceTime, CfgInfMask, CfgTModeModes, DataBits, Parity, StopBits};
 
 /// Supported storage size identiﬁers for the Configuration Value
@@ -168,12 +170,12 @@ macro_rules! from_cfg_v_bytes {
             ),
         }
     };
-    ($buf:expr, NavSpgUtcStandard) => {
+    ($buf:expr, UtcStandardIdentifier) => {
         match $buf[0] {
-            0 => NavSpgUtcStandard::Auto,
-            3 => NavSpgUtcStandard::USNO,
-            6 => NavSpgUtcStandard::SU,
-            7 => NavSpgUtcStandard::NTSC,
+            0 => UtcStandardIdentifier::Automatic,
+            3 => UtcStandardIdentifier::Usno,
+            6 => UtcStandardIdentifier::UtcSu,
+            7 => UtcStandardIdentifier::UtcChina,
             _ => unreachable!(
                 "CFG-NAVSPG-UTCSTANDARD_TYPE value not supported by protocol specification"
             ),
@@ -299,7 +301,7 @@ macro_rules! into_cfg_kv_bytes {
           $this.0 as u8
       ])
     };
-    ($this:expr, NavSpgUtcStandard) => {
+    ($this:expr, UtcStandardIdentifier) => {
       into_cfg_kv_bytes!(@inner [
           $this.0 as u8
       ])
@@ -1329,7 +1331,7 @@ cfg_val! {
   /// Only available with the PPP product variant.
   NavSpgUsePPP, 0x10110019, bool,
   /// UTC standard to be used
-  NavSpgUtcStandardDef, 0x2011001c, NavSpgUtcStandard,
+  NavSpgUtcStandard, 0x2011001c, UtcStandardIdentifier,
   /// Dynamic platform model
   NavSpgDynModel, 0x20110021, NavSpgDynamicModel,
 }
@@ -1373,20 +1375,6 @@ pub enum NavSpgFixMode {
     /// Auto 2D/3D
     #[default]
     Auto = 3,
-}
-
-#[derive(Debug, Default, Clone, Copy, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub enum NavSpgUtcStandard {
-    /// Automatic; receiver selects based on GNSS configuration
-    #[default]
-    Auto = 0,
-    /// UTC as operated by the U.S. Naval Observatory (USNO); derived from GPS time
-    USNO = 3,
-    /// UTC as operated by the former Soviet Union; derived from GLONASS time
-    SU = 6,
-    /// UTC as operated by the National Time Service Center, China; derived from BeiDou time
-    NTSC = 7,
 }
 
 /// Dynamic platform model
