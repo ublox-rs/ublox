@@ -158,6 +158,43 @@ macro_rules! from_cfg_v_bytes {
             _ => unreachable!("CFG-TMODE-POS_TYPE value not supported by protocol specification"),
         }
     };
+    ($buf:expr, NavSpgFixMode) => {
+        match $buf[0] {
+            1 => NavSpgFixMode::Only2D,
+            2 => NavSpgFixMode::Only3D,
+            3 => NavSpgFixMode::Auto,
+            _ => unreachable!(
+                "CFG-NAVSPG-FIXMODE_TYPE value not supported by protocol specification"
+            ),
+        }
+    };
+    ($buf:expr, NavSpgUtcStandard) => {
+        match $buf[0] {
+            0 => NavSpgUtcStandard::Auto,
+            3 => NavSpgUtcStandard::USNO,
+            6 => NavSpgUtcStandard::SU,
+            7 => NavSpgUtcStandard::NTSC,
+            _ => unreachable!(
+                "CFG-NAVSPG-UTCSTANDARD_TYPE value not supported by protocol specification"
+            ),
+        }
+    };
+    ($buf:expr, NavSpgDynamicModel) => {
+        match $buf[0] {
+            0 => NavSpgDynamicModel::Portable,
+            2 => NavSpgDynamicModel::Stationary,
+            3 => NavSpgDynamicModel::Pedestrian,
+            4 => NavSpgDynamicModel::Automotive,
+            5 => NavSpgDynamicModel::Sea,
+            6 => NavSpgDynamicModel::AirborneWithLess1gAcceleration,
+            7 => NavSpgDynamicModel::AirborneWithLess2gAcceleration,
+            8 => NavSpgDynamicModel::AirborneWithLess4gAcceleration,
+            9 => NavSpgDynamicModel::WristWornWatch,
+            _ => unreachable!(
+                "CFG-NAVSPG-DYNMODEL_TYPE value not supported by protocol specification"
+            ),
+        }
+    };
 }
 
 macro_rules! into_cfg_kv_bytes {
@@ -253,6 +290,21 @@ macro_rules! into_cfg_kv_bytes {
       ])
     };
     ($this:expr, TModePosType) => {
+      into_cfg_kv_bytes!(@inner [
+          $this.0 as u8
+      ])
+    };
+    ($this:expr, NavSpgFixMode) => {
+      into_cfg_kv_bytes!(@inner [
+          $this.0 as u8
+      ])
+    };
+    ($this:expr, NavSpgUtcStandard) => {
+      into_cfg_kv_bytes!(@inner [
+          $this.0 as u8
+      ])
+    };
+    ($this:expr, NavSpgDynamicModel) => {
       into_cfg_kv_bytes!(@inner [
           $this.0 as u8
       ])
@@ -1260,7 +1312,29 @@ cfg_val! {
   /// Survey-in position accuracy limit in [mm]
   /// This will only be used if CfgTModeModes=SurveyIn.
   TModeSvInAccLimit, 0x40030011,  u32,
+
+  /// CFG-NAVSPG -*: Standard Precision Navigation Configuration
+
+  /// Position fix mode
+  NavSpgFixModeDef, 0x20110011, NavSpgFixMode,
+  /// Initial fix must be a 3d fix
+  NavSpgIniFix3D, 0x10110013, bool,
+  /// GPS week rollover number
+  ///
+  /// GPS week numbers will be set correctly from this week up to 1024 weeks after this week.
+  /// Range is from 1 to 4096.
+  NavSpgWknRollover, 0x30110017, u16,
+  /// Use Precise Point Positioning
+  ///
+  /// Only available with the PPP product variant.
+  NavSpgUsePPP, 0x10110019, bool,
+  /// UTC standard to be used
+  NavSpgUtcStandardDef, 0x2011001c, NavSpgUtcStandard,
+  /// Dynamic platform model
+  NavSpgDynModel, 0x20110021, NavSpgDynamicModel,
 }
+
+// TODO: Add the rest of the NAVSPG messages
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -1287,4 +1361,50 @@ pub enum TModePosType {
     ECEF = 0,
     /// Lat/Lon/Height position
     LLH = 1,
+}
+
+#[derive(Debug, Default, Clone, Copy, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub enum NavSpgFixMode {
+    /// 2D only
+    Only2D = 1,
+    /// 3D only
+    Only3D = 2,
+    /// Auto 2D/3D
+    #[default]
+    Auto = 3,
+}
+
+#[derive(Debug, Default, Clone, Copy, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub enum NavSpgUtcStandard {
+    /// Automatic; receiver selects based on GNSS configuration
+    #[default]
+    Auto = 0,
+    /// UTC as operated by the U.S. Naval Observatory (USNO); derived from GPS time
+    USNO = 3,
+    /// UTC as operated by the former Soviet Union; derived from GLONASS time
+    SU = 6,
+    /// UTC as operated by the National Time Service Center, China; derived from BeiDou time
+    NTSC = 7,
+}
+
+/// Dynamic platform model
+#[derive(Debug, Default, Copy, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub enum NavSpgDynamicModel {
+    #[default]
+    Portable = 0,
+    Stationary = 2,
+    Pedestrian = 3,
+    Automotive = 4,
+    Sea = 5,
+    /// Airborne with <1g acceleration
+    AirborneWithLess1gAcceleration = 6,
+    /// Airborne with <2g acceleration
+    AirborneWithLess2gAcceleration = 7,
+    /// Airborne with <4g acceleration
+    AirborneWithLess4gAcceleration = 8,
+    /// Not supported in protocol versions <18
+    WristWornWatch = 9,
 }

@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 
 - Add owned variants of `PacketRef` ([#103](https://github.com/ublox-rs/ublox/pull/103))
 - Split large file that defined all packets definition into individual files ([#129])(https://github.com/ublox-rs/ublox/pull/129)
+- Some of the new `CFG-NAVSPG-*` messages
 
 ### Breaking
 
