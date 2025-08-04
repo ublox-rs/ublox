@@ -13,7 +13,10 @@ struct NavHpPosLlh {
     /// Message version (0 for protocol version 27)
     version: u8,
 
-    reserved1: [u8; 3],
+    reserved1: [u8; 2],
+
+    #[ubx(map_type = flags::NavHpPosLlhFlags)]
+    flags: u8,
 
     /// GPS Millisecond Time of Week
     itow: u32,
@@ -65,4 +68,42 @@ struct NavHpPosLlh {
     /// Vertical accuracy estimate (mm)
     #[ubx(map_type = f64, scale = 1e-1)]
     vertical_accuracy: u32,
+}
+
+#[cfg(not(any(feature = "ubx_proto27", feature = "ubx_proto31")))]
+pub(crate) mod flags {
+    #[derive(Debug, Clone, Copy)]
+    #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+    pub struct NavHpPosLlhFlags {}
+
+    impl From<u8> for NavHpPosLlhFlags {
+        fn from(_val: u8) -> Self {
+            Self {}
+        }
+    }
+}
+
+#[cfg(any(feature = "ubx_proto27", feature = "ubx_proto31"))]
+pub(crate) mod flags {
+    #[derive(Debug, Clone, Copy)]
+    #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+    pub struct NavHpPosLlhFlags {
+        invalid_llh: bool,
+    }
+
+    impl NavHpPosLlhFlags {
+        /// 1 = Invalid lon, lat, height, hMSL, lonHp, latHp, heightHp and hMSLHp
+        pub fn invalid_llh(&self) -> bool {
+            self.invalid_llh
+        }
+    }
+
+    impl From<u8> for NavHpPosLlhFlags {
+        fn from(val: u8) -> Self {
+            let invalid = val & 0x01 == 1;
+            Self {
+                invalid_llh: invalid,
+            }
+        }
+    }
 }

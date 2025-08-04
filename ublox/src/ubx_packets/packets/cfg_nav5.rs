@@ -26,9 +26,9 @@ struct CfgNav5 {
     /// Only the masked parameters will be applied
     #[ubx(map_type = CfgNav5Params)]
     mask: u16,
-    #[ubx(map_type = CfgNav5DynModel, may_fail)]
+    #[ubx(map_type = NavDynamicModel, may_fail)]
     dyn_model: u8,
-    #[ubx(map_type = CfgNav5FixMode, may_fail)]
+    #[ubx(map_type = NavFixMode, may_fail)]
     fix_mode: u8,
 
     /// Fixed altitude (mean sea level) for 2D fixmode [m]
@@ -119,7 +119,8 @@ bitflags! {
 #[ubx(from_unchecked, into_raw, rest_error)]
 #[repr(u8)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub enum CfgNav5DynModel {
+pub enum NavDynamicModel {
+    #[default]
     Portable = 0,
     Stationary = 2,
     Pedestrian = 3,
@@ -127,10 +128,11 @@ pub enum CfgNav5DynModel {
     Sea = 5,
     AirborneWithLess1gAcceleration = 6,
     AirborneWithLess2gAcceleration = 7,
-    #[default]
-    AirborneWith4gAcceleration = 8,
+    AirborneWithLess4gAcceleration = 8,
+    #[cfg(any(feature = "ubx_proto27", feature = "ubx_proto31"))]
     /// not supported in protocol versions less than 18
     WristWornWatch = 9,
+    #[cfg(feature = "ubx_proto31")]
     /// supported in protocol versions 19.2
     Bike = 10,
 }
@@ -141,9 +143,12 @@ pub enum CfgNav5DynModel {
 #[ubx(from_unchecked, into_raw, rest_error)]
 #[repr(u8)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub enum CfgNav5FixMode {
+pub enum NavFixMode {
+    /// 2D only
     Only2D = 1,
+    /// 3D only
     Only3D = 2,
     #[default]
+    /// Auto 2D/3D
     Auto2D3D = 3,
 }

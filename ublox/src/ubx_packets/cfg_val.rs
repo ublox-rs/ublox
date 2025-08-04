@@ -1,3 +1,5 @@
+use crate::{NavDynamicModel, NavFixMode, UtcStandardIdentifier};
+
 use super::{AlignmentToReferenceTime, CfgInfMask, CfgTModeModes, DataBits, Parity, StopBits};
 
 /// Supported storage size identiﬁers for the Configuration Value
@@ -158,6 +160,46 @@ macro_rules! from_cfg_v_bytes {
             _ => unreachable!("CFG-TMODE-POS_TYPE value not supported by protocol specification"),
         }
     };
+    ($buf:expr, NavFixMode) => {
+        match $buf[0] {
+            1 => NavFixMode::Only2D,
+            2 => NavFixMode::Only3D,
+            3 => NavFixMode::Auto2D3D,
+            _ => unreachable!(
+                "CFG-NAVSPG-FIXMODE_TYPE value not supported by protocol specification"
+            ),
+        }
+    };
+    ($buf:expr, UtcStandardIdentifier) => {
+        match $buf[0] {
+            0 => UtcStandardIdentifier::Automatic,
+            3 => UtcStandardIdentifier::Usno,
+            6 => UtcStandardIdentifier::UtcSu,
+            7 => UtcStandardIdentifier::UtcChina,
+            _ => unreachable!(
+                "CFG-NAVSPG-UTCSTANDARD_TYPE value not supported by protocol specification"
+            ),
+        }
+    };
+    ($buf:expr, NavDynamicModel) => {
+        match $buf[0] {
+            0 => NavDynamicModel::Portable,
+            2 => NavDynamicModel::Stationary,
+            3 => NavDynamicModel::Pedestrian,
+            4 => NavDynamicModel::Automotive,
+            5 => NavDynamicModel::Sea,
+            6 => NavDynamicModel::AirborneWithLess1gAcceleration,
+            7 => NavDynamicModel::AirborneWithLess2gAcceleration,
+            8 => NavDynamicModel::AirborneWithLess4gAcceleration,
+            #[cfg(any(feature = "ubx_proto27", feature = "ubx_proto31"))]
+            9 => NavDynamicModel::WristWornWatch,
+            #[cfg(feature = "ubx_proto31")]
+            10 => NavDynamicModel::Bike,
+            _ => unreachable!(
+                "CFG-NAVSPG-DYNMODEL_TYPE value not supported by protocol specification"
+            ),
+        }
+    };
 }
 
 macro_rules! into_cfg_kv_bytes {
@@ -253,6 +295,21 @@ macro_rules! into_cfg_kv_bytes {
       ])
     };
     ($this:expr, TModePosType) => {
+      into_cfg_kv_bytes!(@inner [
+          $this.0 as u8
+      ])
+    };
+    ($this:expr, NavFixMode) => {
+      into_cfg_kv_bytes!(@inner [
+          $this.0 as u8
+      ])
+    };
+    ($this:expr, UtcStandardIdentifier) => {
+      into_cfg_kv_bytes!(@inner [
+          $this.0 as u8
+      ])
+    };
+    ($this:expr, NavDynamicModel) => {
       into_cfg_kv_bytes!(@inner [
           $this.0 as u8
       ])
@@ -1260,7 +1317,29 @@ cfg_val! {
   /// Survey-in position accuracy limit in [mm]
   /// This will only be used if CfgTModeModes=SurveyIn.
   TModeSvInAccLimit, 0x40030011,  u32,
+
+  /// CFG-NAVSPG -*: Standard Precision Navigation Configuration
+
+  /// Position fix mode
+  NavSpgFixMode, 0x20110011, NavFixMode,
+  /// Initial fix must be a 3d fix
+  NavSpgIniFix3D, 0x10110013, bool,
+  /// GPS week rollover number
+  ///
+  /// GPS week numbers will be set correctly from this week up to 1024 weeks after this week.
+  /// Range is from 1 to 4096.
+  NavSpgWknRollover, 0x30110017, u16,
+  /// Use Precise Point Positioning
+  ///
+  /// Only available with the PPP product variant.
+  NavSpgUsePPP, 0x10110019, bool,
+  /// UTC standard to be used
+  NavSpgUtcStandard, 0x2011001c, UtcStandardIdentifier,
+  /// Dynamic platform model
+  NavSpgDynModel, 0x20110021, NavDynamicModel,
 }
+
+// TODO: Add the rest of the NAVSPG messages
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]

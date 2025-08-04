@@ -8,6 +8,8 @@ All notable changes to this project will be documented in this file.
 
 - Add owned variants of `PacketRef` ([#103](https://github.com/ublox-rs/ublox/pull/103))
 - Split large file that defined all packets definition into individual files ([#129])(https://github.com/ublox-rs/ublox/pull/129)
+- Some of the new `CFG-NAVSPG-*` messages
+- Add new `invalidLlh` bitflag for `UBX-NAV-HPPOSLLH` protocol 27 & 31
 
 ### Breaking
 
@@ -23,6 +25,8 @@ All notable changes to this project will be documented in this file.
 - Replaced `CfgLayer` by `CfgLayerSet` to differentiate it from `CfgLayerGet` ([#106](https://github.com/ublox-rs/ublox/pull/106))
 - Renamed `NavSolution` to `NavSol` ([#129])(https://github.com/ublox-rs/ublox/pull/129)
 - Removed `AlpSrv` from protocol versions 27 and 31 ([#129])(https://github.com/ublox-rs/ublox/pull/129)
+- Rename `CfgNav5FixMode` to `NavFixMode` as it is also used in `CfgVal` messages
+- Rename `CfgNav5DynModel` to `NavDynamicModel` as it is also used in `CfgVal` messages, and changed the default to `Portable` as specified in the documentation
 
 ### CI
 
