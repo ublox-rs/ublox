@@ -8,6 +8,10 @@ All notable changes to this project will be documented in this file.
 
 - Add remaining `CFG-NAVSPG-*` messages for protocol 27
 
+### Changed
+
+- Bump MSRV from 1.82 to 1.83 for const `.to_le_bytes()` for f32 + f64
+
 ### Misc
 
 - Fix Rust 1.89.0 clippy lints
