@@ -973,7 +973,7 @@ fn run_compare_test(output: TokenStream, expect_output: TokenStream) {
 
 fn rustfmt_cnt(source: Vec<u8>) -> io::Result<Vec<u8>> {
     let rustfmt =
-        which("rustfmt").map_err(|e| io::Error::new(io::ErrorKind::Other, format!("{}", e)))?;
+        which("rustfmt").map_err(|e| io::Error::other(format!("{e}")))?;
 
     let mut cmd = Command::new(&*rustfmt);
 
@@ -1014,8 +1014,7 @@ fn rustfmt_cnt(source: Vec<u8>) -> io::Result<Vec<u8>> {
         Arc::try_unwrap(src).expect("Internal error: rusftfmt_cnt should only one Arc reference");
     match status.code() {
         Some(0) => Ok(output),
-        Some(2) => Err(io::Error::new(
-            io::ErrorKind::Other,
+        Some(2) => Err(io::Error::other(
             "Rustfmt parsing errors.".to_string(),
         )),
         Some(3) => {
