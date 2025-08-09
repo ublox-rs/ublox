@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+### Misc
+
+- Fix Rust 1.89.0 clippy lints
+
+## [0.6.0]
+
 ### Added
 
 - Add owned variants of `PacketRef` ([#103](https://github.com/ublox-rs/ublox/pull/103))
@@ -73,11 +79,9 @@ All notable changes to this project will be documented in this file.
 ---
 
  - `NavPvt` packet: the majority of getters & aliases have been renamed (check the new packet definition for the complete list)
- - `HnrPvt` packet: renamed getters & aliases to align them with the similar `NavPvt` packet 
- - `NavSatSvInfo` packet: added extra `Invalid` enum variant to the `NavSatQualityIndicator` 
+ - `HnrPvt` packet: renamed getters & aliases to align them with the similar `NavPvt` packet
+ - `NavSatSvInfo` packet: added extra `Invalid` enum variant to the `NavSatQualityIndicator`
  - `EsfMeas` packet: renamed `time_tag` field & getter to `itow` to align with other packets and introduced `EsfSensorType` for sensor data type
  - `EsfIns` packet: renamed field & getter `bit_field` to `bitfield`
  - `HnrIns` packet: renamed field & getter `bit_field` to `bitfield`
  - `NavClock` packet: renamed fields & getters
-
-

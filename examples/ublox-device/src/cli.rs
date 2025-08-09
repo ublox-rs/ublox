@@ -220,7 +220,7 @@ impl Command {
         println!("{:?}", &builder);
         builder
             .open()
-            .with_context(|| format!("Failed to open port: {}", port))
+            .with_context(|| format!("Failed to open port: {port}"))
     }
 
     pub fn ubx_port_configuration_builder(command: clap::Command) -> Option<UbxPortConfiguration> {

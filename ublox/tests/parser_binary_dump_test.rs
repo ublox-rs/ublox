@@ -112,7 +112,7 @@ fn parse_meta_data(text: &str) -> Result<Meta, String> {
             .trim();
         let value: usize = value
             .parse()
-            .map_err(|err| format!("Can not parse integer as usize: {}", err))?;
+            .map_err(|err| format!("Can not parse integer as usize: {err}"))?;
         match name {
             "wrong_chksum" => wrong_chksum = Some(value),
             "other_errors" => other_errors = Some(value),
@@ -120,7 +120,7 @@ fn parse_meta_data(text: &str) -> Result<Meta, String> {
             "nav_stat" => nav_stat = Some(value),
             "ack_ack" => ack_ack = Some(value),
             "unknown" => unknown = Some(value),
-            _ => return Err(format!("wrong field name: '{}'", name)),
+            _ => return Err(format!("wrong field name: '{name}'")),
         }
     }
     let missed = || "missed field".to_string();

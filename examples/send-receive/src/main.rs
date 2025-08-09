@@ -53,21 +53,21 @@ fn main() {
                             "Speed: {:.2} m/s Heading: {:.2} degrees",
                             vel.speed, vel.heading
                         );
-                        println!("Sol: {:?}", pvt);
+                        println!("Sol: {pvt:?}");
                     }
 
                     if has_time {
                         let time: DateTime<Utc> = (&pvt)
                             .try_into()
                             .expect("Could not parse NAV-PVT time field to UTC");
-                        println!("Time: {:?}", time);
+                        println!("Time: {time:?}");
                     }
                 },
                 PacketRef::EsfRaw(raw) => {
-                    println!("Got raw message: {:?}", raw);
+                    println!("Got raw message: {raw:?}");
                 },
                 _ => {
-                    println!("{:?}", packet);
+                    println!("{packet:?}");
                 },
             })
             .expect("Failed to consume buffer");

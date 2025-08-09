@@ -93,7 +93,7 @@ impl NavRelPosNedFlags {
             0 => CarrierPhaseRangeSolutionStatus::NoSolution,
             1 => CarrierPhaseRangeSolutionStatus::SolutionWithFloatingAmbiguities,
             2 => CarrierPhaseRangeSolutionStatus::SolutionWithFixedAmbiguities,
-            unknown => panic!("Unexpected 2-bit bitfield value {}!", unknown),
+            unknown => panic!("Unexpected 2-bit bitfield value {unknown}!"),
         }
     }
 

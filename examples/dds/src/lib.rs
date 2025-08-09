@@ -33,11 +33,11 @@ pub fn create_writer<T: serde::Serialize + rustdds::Keyed + Default>(
     qos: &QosPolicies,
 ) -> DataWriter<T> {
     let type_name = get_type_name(&T::default());
-    info!("Creating topic '{}' with type '{}'", topic_name, type_name);
+    info!("Creating topic '{topic_name}' with type '{type_name}'");
     let topic = participant
         .create_topic(topic_name.to_string(), type_name, qos, TopicKind::WithKey)
         .unwrap();
 
-    info!("Creating DataWriter for topic '{}'", topic_name);
+    info!("Creating DataWriter for topic '{topic_name}'");
     publisher.create_datawriter_cdr::<T>(&topic, None).unwrap()
 }

@@ -9,7 +9,7 @@ impl criterion::profiler::Profiler for CpuProfiler {
         cpuprofiler::PROFILER
             .lock()
             .unwrap()
-            .start(format!("./{}.profile", benchmark_id).as_bytes())
+            .start(format!("./{benchmark_id}.profile").as_bytes())
             .unwrap();
     }
 
@@ -33,7 +33,7 @@ fn parse_all<T: UnderlyingBuffer>(mut parser: Parser<T>, data: &[u8], chunk_size
                     count += 1;
                 },
                 Some(Err(e)) => {
-                    panic!("No errors allowed! got: {:?}", e);
+                    panic!("No errors allowed! got: {e:?}");
                 },
                 None => {
                     // We've eaten all the packets we have
@@ -47,7 +47,7 @@ fn parse_all<T: UnderlyingBuffer>(mut parser: Parser<T>, data: &[u8], chunk_size
 
 pub fn criterion_benchmark(c: &mut Criterion) {
     for chunk in &[99, 100, 101, 256, 512, 1000, 1024] {
-        c.bench_function(&format!("vec_parse_pos_{}", chunk), |b| {
+        c.bench_function(&format!("vec_parse_pos_{chunk}"), |b| {
             b.iter(|| {
                 // TODO: requires pos.ubx file
                 // let data = std::include_bytes!("pos.ubx");
@@ -59,7 +59,7 @@ pub fn criterion_benchmark(c: &mut Criterion) {
     }
     for (buf_size, chunk) in &[(256, 100), (256, 256), (256, 512), (256, 1024)] {
         // let mut underlying = vec![0; *buf_size];
-        c.bench_function(&format!("array_parse_pos_{}_{}", buf_size, chunk), |b| {
+        c.bench_function(&format!("array_parse_pos_{buf_size}_{chunk}"), |b| {
             b.iter(|| {
                 // TODO: requires pos.ubx file
                 // let data = std::include_bytes!("pos.ubx");

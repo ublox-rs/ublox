@@ -117,7 +117,7 @@ where
     <T as rustdds::Keyed>::K: std::fmt::Debug + 'static,
 {
     let type_name = dds::get_type_name(&T::default());
-    info!("Creating topic '{}' with type '{}'", topic_name, type_name);
+    info!("Creating topic '{topic_name}' with type '{type_name}'");
     let topic = participant
         .create_topic(
             topic_name.clone().to_string(),
@@ -131,7 +131,7 @@ where
     let t = topic_name.clone();
 
     thread::spawn(move || loop {
-        info!("Creating a DataReader for topic: '{}'", t);
+        info!("Creating a DataReader for topic: '{t}'");
         let reader = subscriber.create_datareader_cdr::<T>(&topic, None).unwrap();
         smol::block_on(async {
             let mut datareader_stream = reader.async_sample_stream();
@@ -142,7 +142,7 @@ where
                   r=datareader_stream.select_next_some()=>{
                     match r{
                       Ok(v)=>{
-                        debug!("Sample: {:?}", v);
+                        debug!("Sample: {v:?}");
                         debug!("SampleInfo: {:?}", v.sample_info());
                         match v.value() {
                         Sample::Value(sample) => info!(
@@ -156,7 +156,7 @@ where
                       }
                     }
                       Err(e)=> {
-                        error!("Got error when reading DDS sample: {:?}", e);
+                        error!("Got error when reading DDS sample: {e:?}");
                         break;
                       }
                     }

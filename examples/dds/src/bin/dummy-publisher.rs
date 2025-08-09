@@ -68,7 +68,7 @@ fn main() -> Result<()> {
             itow: rand::random(),
             ..Default::default()
         };
-        info!("Publishing: {:?}  ", msg);
+        info!("Publishing: {msg:?}  ");
         if let Err(e) = dds::write_sample(&writer_pvt, &msg) {
             warn!("failed to write PVT message: {e} ");
         }
@@ -81,7 +81,7 @@ fn main() -> Result<()> {
             },
             sensors: Vec::new(),
         };
-        info!("Publishing: {:?}  ", msg);
+        info!("Publishing: {msg:?}  ");
         if let Err(e) = dds::write_sample(&writer_esf_status, &msg) {
             warn!("failed to write EsfStatus message: {e} ");
         }
@@ -94,7 +94,7 @@ fn main() -> Result<()> {
             ..Default::default()
         };
 
-        info!("Publishing: {:?}  ", msg);
+        info!("Publishing: {msg:?}  ");
         if let Err(e) = dds::write_sample(&writer_esf_imu_alg, &msg) {
             warn!("failed to write EsfAlg message: {e} ");
         }

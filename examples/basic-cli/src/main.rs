@@ -47,7 +47,7 @@ fn main() {
                         packet.hardware_version(),
                         packet.extension().collect::<Vec<&str>>()
                     );
-                    println!("{:?}", packet);
+                    println!("{packet:?}");
                 },
                 PacketRef::NavPvt(pvt) => {
                     let has_time = pvt.fix_type() == GnssFixType::Fix3D
@@ -64,18 +64,18 @@ fn main() {
                             pos.lat, pos.lon, pos.alt
                             ,vel.speed, vel.heading
                         );
-                        println!("NavPvt full: {:?}", pvt);
+                        println!("NavPvt full: {pvt:?}");
                     }
 
                     if has_time {
                         let time: DateTime<Utc> = (&pvt)
                             .try_into()
                             .expect("Could not parse NAV-PVT time field to UTC");
-                        println!("Time: {:?}", time);
+                        println!("Time: {time:?}");
                     }
                 },
                 _ => {
-                    println!("{:?}", packet);
+                    println!("{packet:?}");
                 },
             })
             .unwrap();

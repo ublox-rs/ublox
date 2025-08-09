@@ -61,7 +61,7 @@ impl EsfStatus {
 
 impl fmt::Display for EsfStatus {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{:?}", self)
+        write!(f, "{self:?}")
     }
 }
 
