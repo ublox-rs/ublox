@@ -134,7 +134,7 @@ impl UbxPacketHandler for PkgHandler {
     fn handle(&mut self, packet: PacketRef) {
         match packet {
             ublox::PacketRef::MonVer(packet) => {
-                debug!("{:?}", packet);
+                debug!("{packet:?}");
                 info!(
                     "MonVer: SW version: {} HW version: {}; Extensions: {:?}",
                     packet.software_version(),
@@ -143,7 +143,7 @@ impl UbxPacketHandler for PkgHandler {
                 );
             },
             ublox::PacketRef::NavPvt(pkg) => {
-                debug!("{:?}", pkg);
+                debug!("{pkg:?}");
                 let mut pvt = to_dds_pvt(&pkg);
                 pvt.key = self.dds_key.clone();
                 if let Err(e) = dds::write_sample(&self.nav_pvt_wrt, &pvt) {
@@ -158,7 +158,7 @@ impl UbxPacketHandler for PkgHandler {
                 }
             },
             ublox::PacketRef::EsfAlg(pkg) => {
-                debug!("{:?}", pkg);
+                debug!("{pkg:?}");
                 let msg = idl::ubx::esf_alg::EsfAlg {
                     key: self.dds_key.clone(),
                     itow: pkg.itow(),
@@ -174,7 +174,7 @@ impl UbxPacketHandler for PkgHandler {
                 }
             },
             ublox::PacketRef::EsfStatus(pkg) => {
-                debug!("{:?}", pkg);
+                debug!("{pkg:?}");
                 let fusion_state = idl::ubx::esf_status::EsfFusionStatus {
                     fusion_mode: pkg.fusion_mode_raw(),
                     imu_status: pkg.init_status2().imu_init_status_raw(),
@@ -206,7 +206,7 @@ impl UbxPacketHandler for PkgHandler {
                 }
             },
             _ => {
-                trace!("{:?}", packet);
+                trace!("{packet:?}");
             },
         }
     }
