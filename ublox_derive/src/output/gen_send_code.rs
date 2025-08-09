@@ -83,9 +83,7 @@ pub fn generate_send_code_for_packet(_dbg_ctx: DebugContext, pack_descr: &PackDe
     }
     let builder_attr = if pack_descr
         .header
-        .flags
-        .iter()
-        .any(|x| *x == PacketFlag::DefaultForBuilder)
+        .flags.contains(&PacketFlag::DefaultForBuilder)
     {
         quote! { #[derive(Default)] }
     } else {
