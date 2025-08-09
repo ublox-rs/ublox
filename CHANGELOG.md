@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+### Added
+
+- Add remaining `CFG-NAVSPG-*` messages for protocol 27
+
 ### Misc
 
 - Fix Rust 1.89.0 clippy lints
