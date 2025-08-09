@@ -92,6 +92,14 @@ macro_rules! from_cfg_v_bytes {
             $buf[0], $buf[1], $buf[2], $buf[3], $buf[4], $buf[5], $buf[6], $buf[7],
         ])
     };
+    ($buf:expr, f32) => {
+        f32::from_le_bytes([$buf[0], $buf[1], $buf[2], $buf[3]])
+    };
+    ($buf:expr, f64) => {
+        f64::from_le_bytes([
+            $buf[0], $buf[1], $buf[2], $buf[3], $buf[4], $buf[5], $buf[6], $buf[7],
+        ])
+    };
     ($buf:expr, CfgInfMask) => {
         CfgInfMask::from_bits_truncate($buf[0])
     };
@@ -239,6 +247,14 @@ macro_rules! into_cfg_kv_bytes {
       into_cfg_kv_bytes!(@inner [bytes[0], bytes[1], bytes[2], bytes[3]])
     }};
     ($this:expr, u64) => {{
+      let bytes = $this.0.to_le_bytes();
+      into_cfg_kv_bytes!(@inner [bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5], bytes[6], bytes[7]])
+    }};
+    ($this:expr, f32) => {{
+      let bytes = $this.0.to_le_bytes();
+      into_cfg_kv_bytes!(@inner [bytes[0], bytes[1], bytes[2], bytes[3]])
+    }};
+    ($this:expr, f64) => {{
       let bytes = $this.0.to_le_bytes();
       into_cfg_kv_bytes!(@inner [bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5], bytes[6], bytes[7]])
     }};
@@ -1337,9 +1353,105 @@ cfg_val! {
   NavSpgUtcStandard, 0x2011001c, UtcStandardIdentifier,
   /// Dynamic platform model
   NavSpgDynModel, 0x20110021, NavDynamicModel,
-}
+  /// Acknowledge assistance input messages
+  NavSpgAckAiding, 0x10110025, bool,
+  /// Use user geodetic datum parameters
+  ///
+  /// This must be set together with all CFG-NAVSPG-USERDAT_* parameters.
+  NavSpgUseUsrDat, 0x10110061, bool,
+  /// Geodetic datum semi-major axis
+  ///
+  /// Accepted range is from 6,300,000.0 to 6,500,000.0 meters.
+  /// This will only be used if CFG-NAVSPG-USE_USERDAT is set. It must be set together with all other
+  /// CFG-NAVSPG-USERDAT_* parameters.
+  NavSpgUsrDatMaja, 0x50110062, f64,
+  /// Geodetic datum 1.0 / flattening
+  ///
+  /// Accepted range is 0.0 to 500.0.
+  /// This will only be used if CFG-NAVSPG-USE_USERDAT is set. It must be set together with all other
+  /// CFG-NAVSPG-USERDAT_* parameters.
+  NavSpgUsrDatFlat, 0x50110063, f64,
+  /// Geodetic datum X axis shift at the origin
+  ///
+  /// Accepted range is +/- 5000.0 meters.
+  /// This will only be used if CFG-NAVSPG-USE_USERDAT is set. It must be set together with all other
+  /// CFG-NAVSPG-USERDAT_* parameters.
+  NavSpgUsrDatDx, 0x40110064, f32,
+  /// Geodetic datum Y axis shift at the origin
+  ///
+  /// Accepted range is +/- 5000.0 meters.
+  /// This will only be used if CFG-NAVSPG-USE_USERDAT is set. It must be set together with all other
+  /// CFG-NAVSPG-USERDAT_* parameters.
+  NavSpgUsrDatDy, 0x40110065, f32,
+  /// Geodetic datum Z axis shift at the origin
+  ///
+  /// Accepted range is +/- 5000.0 meters.
+  /// This will only be used if CFG-NAVSPG-USE_USERDAT is set. It must be set together with all other
+  /// CFG-NAVSPG-USERDAT_* parameters.
+  NavSpgUsrDatDz, 0x40110066, f32,
+  /// Geodetic datum rotation about the X axis
+  ///
+  /// Accepted range is +/- 20.0 milli arc seconds.
+  /// This will only be used if CFG-NAVSPG-USE_USERDAT is set. It must be set together with all other
+  /// CFG-NAVSPG-USERDAT_* parameters.
+  NavSpgUsrDatRotX, 0x40110067, f32,
+  /// Geodetic datum rotation about the Y axis
+  ///
+  /// Accepted range is +/- 20.0 milli arc seconds.
+  /// This will only be used if CFG-NAVSPG-USE_USERDAT is set. It must be set together with all other
+  /// CFG-NAVSPG-USERDAT_* parameters.
+  NavSpgUsrDatRotY, 0x40110068, f32,
+  /// Geodetic datum rotation about the Z axis
+  ///
+  /// Accepted range is +/- 20.0 milli-arc seconds.
+  /// This will only be used if CFG-NAVSPG-USE_USERDAT is set. It must be set together with all other
+  /// CFG-NAVSPG-USERDAT_* parameters.
+  NavSpgUsrDatRotZ, 0x40110069, f32,
 
-// TODO: Add the rest of the NAVSPG messages
+  /// Geodetic datum scale factor
+  ///
+  /// Accepted range is 0.0 to 50.0 parts per million.
+  /// This will only be used if CFG-NAVSPG-USE_USERDAT is set. It must be set together with all other
+  /// CFG-NAVSPG-USERDAT_* parameters.
+  NavSpgUsrDatScale, 0x4011006a, f32,
+  /// Minimum number of satellites for navigation
+  NavSpgInfilMinSvs, 0x201100a1, u8,
+  /// Maximum number of satellites for navigation
+  NavSpgInfilMaxSvs, 0x201100a2, u8,
+  /// Minimum satellite signal level for navigation (dBHz)
+  NavSpgInfilMinCno, 0x201100a3, u8,
+  /// Minimum elevation for a GNSS satellite to be used in navigation (degrees)
+  NavSpgInfilMinElev, 0x201100a4, i8,
+
+  /// Number of satellites required to have C/N0 above CFG-NAVSPG-INFIL_CNOTHRS for a fix to be attempted
+  NavSpgInfilNcnoThrs, 0x201100aa, u8,
+
+  /// C/N0 threshold for deciding whether to attempt a fix
+  NavSpgInfilCnoThrs, 0x201100ab, u8,
+
+  /// Output filter position DOP mask (threshold)
+  NavSpgOutfilPdop, 0x301100b1, u16,
+
+  /// Output filter time DOP mask (threshold)
+  NavSpgOutfilTdop, 0x301100b2, u16,
+
+  /// Output filter position accuracy mask (threshold) in meters
+  NavSpgOutfilPacc, 0x301100b3, u16,
+
+  /// Output filter time accuracy mask (threshold) in meters
+  NavSpgOutfilTacc, 0x301100b4, u16,
+
+  /// Output filter frequency accuracy mask (threshold) in m/s
+  NavSpgOutfilFacc, 0x301100b5, u16,
+
+  /// Fixed altitude (mean sea level) for 2D fix mode (0.01 m resolution)
+  NavSpgConstrAlt, 0x401100c1, i32,
+
+  /// Fixed altitude variance for 2D mode (0.0001 m² resolution)
+  NavSpgConstrAltVar, 0x401100c2, u32,
+  /// DGNSS timeout in seconds
+  NavSpgConstrDgnssTo, 0x201100c4, u8,
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
