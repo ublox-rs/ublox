@@ -622,9 +622,7 @@ fn render_acc_chart(frame: &mut Frame, area: Rect, app: &mut App) {
     let y = app.signals.acc_y.current();
     let z = app.signals.acc_z.current();
 
-    let title = format!(
-        "AccX: {x:7.4}, AccY: {y:7.4}, AccZ: {z:7.4} [m/s^2]  "
-    );
+    let title = format!("AccX: {x:7.4}, AccY: {y:7.4}, AccZ: {z:7.4} [m/s^2]  ");
     let chart = Chart::new(datasets)
         .block(Block::bordered())
         .x_axis(
@@ -716,9 +714,7 @@ fn render_gyro_chart(frame: &mut Frame, area: Rect, app: &mut App) {
     let y = app.signals.gyro_y.current();
     let z = app.signals.gyro_z.current();
 
-    let title = format!(
-        "GyroX: {x:7.4}, GyroY: {y:7.4}, GyroZ: {z:7.4} [deg/s]"
-    );
+    let title = format!("GyroX: {x:7.4}, GyroY: {y:7.4}, GyroZ: {z:7.4} [deg/s]");
     let chart = Chart::new(datasets)
         .block(Block::bordered())
         .x_axis(

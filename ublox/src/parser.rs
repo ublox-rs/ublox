@@ -496,7 +496,7 @@ impl<T: UnderlyingBuffer> UbxParserIter<'_, T> {
     #[allow(clippy::should_implement_trait)]
     /// Analog of `core::iter::Iterator::next`, should be switched to
     /// trait implementation after merge of `<https://github.com/rust-lang/rust/issues/44265>`
-    pub fn next(&mut self) -> Option<Result<PacketRef, ParserError>> {
+    pub fn next(&mut self) -> Option<Result<PacketRef<'_>, ParserError>> {
         while self.buf.len() > 0 {
             let pos = match self.find_sync() {
                 Some(x) => x,
