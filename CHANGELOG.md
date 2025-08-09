@@ -12,6 +12,20 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- Add remaining `CFG-NAVSPG-*` messages for protocol 27
+
+### Changed
+
+- Bump MSRV from 1.82 to 1.83 for const `.to_le_bytes()` for f32 + f64
+
+### Misc
+
+- Fix Rust 1.89.0 clippy lints
+
+## [0.6.0]
+
+### Added
+
 - Add owned variants of `PacketRef` ([#103](https://github.com/ublox-rs/ublox/pull/103))
 - Split large file that defined all packets definition into individual files ([#129])(https://github.com/ublox-rs/ublox/pull/129)
 - Some of the new `CFG-NAVSPG-*` messages
