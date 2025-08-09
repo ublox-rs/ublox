@@ -75,7 +75,7 @@ pub fn parse_ubx_enum_type(
         .ok_or_else(|| {
             Error::new(
                 enum_name.span(),
-                format!("No repr attribute for ubx_type enum {}", enum_name),
+                format!("No repr attribute for ubx_type enum {enum_name}"),
             )
         })?;
     let meta = attr.parse_meta()?;

@@ -515,7 +515,7 @@ fn render_speed_chart(frame: &mut Frame, area: Rect, app: &mut App) {
             format!("{:.2}", app.signals.speed.x_bounds[0]),
             Style::default().add_modifier(Modifier::BOLD),
         ),
-        Span::raw(format!("{:.2}", x_mean)),
+        Span::raw(format!("{x_mean:.2}")),
         Span::styled(
             format!("{:.2}", app.signals.speed.x_bounds[1]),
             Style::default().add_modifier(Modifier::BOLD),
@@ -526,7 +526,7 @@ fn render_speed_chart(frame: &mut Frame, area: Rect, app: &mut App) {
             format!("{:.2}", app.signals.speed.y_bounds[0]),
             Style::default().add_modifier(Modifier::BOLD),
         ),
-        Span::raw(format!("{:.2}", y_mean)),
+        Span::raw(format!("{y_mean:.2}")),
         Span::styled(
             format!("{:.2}", app.signals.speed.y_bounds[1]),
             Style::default().add_modifier(Modifier::BOLD),
@@ -571,12 +571,12 @@ fn render_acc_chart(frame: &mut Frame, area: Rect, app: &mut App) {
     let x_mean = (x_min_xyz + x_max_xyz) / 2.0;
     let x_labels = vec![
         Span::styled(
-            format!("{:.2}", x_min_xyz),
+            format!("{x_min_xyz:.2}"),
             Style::default().add_modifier(Modifier::BOLD),
         ),
-        Span::raw(format!("{:.2}", x_mean)),
+        Span::raw(format!("{x_mean:.2}")),
         Span::styled(
-            format!("{:.2}", x_max_xyz),
+            format!("{x_max_xyz:.2}"),
             Style::default().add_modifier(Modifier::BOLD),
         ),
     ];
@@ -591,7 +591,7 @@ fn render_acc_chart(frame: &mut Frame, area: Rect, app: &mut App) {
             format!("{:.2}", y_min_xyz * 0.9),
             Style::default().add_modifier(Modifier::BOLD),
         ),
-        Span::raw(format!("{:.2}", y_mean)),
+        Span::raw(format!("{y_mean:.2}")),
         Span::styled(
             format!("{:.2}", y_max_xyz * 1.1),
             Style::default().add_modifier(Modifier::BOLD),
@@ -623,8 +623,7 @@ fn render_acc_chart(frame: &mut Frame, area: Rect, app: &mut App) {
     let z = app.signals.acc_z.current();
 
     let title = format!(
-        "AccX: {:7.4}, AccY: {:7.4}, AccZ: {:7.4} [m/s^2]  ",
-        x, y, z
+        "AccX: {x:7.4}, AccY: {y:7.4}, AccZ: {z:7.4} [m/s^2]  "
     );
     let chart = Chart::new(datasets)
         .block(Block::bordered())
@@ -660,12 +659,12 @@ fn render_gyro_chart(frame: &mut Frame, area: Rect, app: &mut App) {
     let x_mean = (x_min_xyz + x_max_xyz) / 2.0;
     let x_labels = vec![
         Span::styled(
-            format!("{:.2}", x_min_xyz),
+            format!("{x_min_xyz:.2}"),
             Style::default().add_modifier(Modifier::BOLD),
         ),
-        Span::raw(format!("{:.2}", x_mean)),
+        Span::raw(format!("{x_mean:.2}")),
         Span::styled(
-            format!("{:.2}", x_max_xyz),
+            format!("{x_max_xyz:.2}"),
             Style::default().add_modifier(Modifier::BOLD),
         ),
     ];
@@ -683,12 +682,12 @@ fn render_gyro_chart(frame: &mut Frame, area: Rect, app: &mut App) {
     let y_mean = (y_min_xyz + y_max_xyz) / 2.0;
     let y_labels = vec![
         Span::styled(
-            format!("{:.2}", y_min_xyz),
+            format!("{y_min_xyz:.2}"),
             Style::default().add_modifier(Modifier::BOLD),
         ),
-        Span::raw(format!("{:.2}", y_mean)),
+        Span::raw(format!("{y_mean:.2}")),
         Span::styled(
-            format!("{:.2}", y_max_xyz),
+            format!("{y_max_xyz:.2}"),
             Style::default().add_modifier(Modifier::BOLD),
         ),
     ];
@@ -718,8 +717,7 @@ fn render_gyro_chart(frame: &mut Frame, area: Rect, app: &mut App) {
     let z = app.signals.gyro_z.current();
 
     let title = format!(
-        "GyroX: {:7.4}, GyroY: {:7.4}, GyroZ: {:7.4} [deg/s]",
-        x, y, z
+        "GyroX: {x:7.4}, GyroY: {y:7.4}, GyroZ: {z:7.4} [deg/s]"
     );
     let chart = Chart::new(datasets)
         .block(Block::bordered())
@@ -752,12 +750,12 @@ fn render_wheeltick_chart(frame: &mut Frame, area: Rect, app: &mut App) {
     let x_mean = (x_min_fr + x_max_fr) / 2.0;
     let x_labels = vec![
         Span::styled(
-            format!("{:.2}", x_min_fr),
+            format!("{x_min_fr:.2}"),
             Style::default().add_modifier(Modifier::BOLD),
         ),
-        Span::raw(format!("{:.2}", x_mean)),
+        Span::raw(format!("{x_mean:.2}")),
         Span::styled(
-            format!("{:.2}", x_max_fr),
+            format!("{x_max_fr:.2}"),
             Style::default().add_modifier(Modifier::BOLD),
         ),
     ];
@@ -778,12 +776,12 @@ fn render_wheeltick_chart(frame: &mut Frame, area: Rect, app: &mut App) {
     let y_mean = (y_min_fr + y_max_fr) / 2.0;
     let y_labels = vec![
         Span::styled(
-            format!("{:.2}", y_min_fr),
+            format!("{y_min_fr:.2}"),
             Style::default().add_modifier(Modifier::BOLD),
         ),
-        Span::raw(format!("{:.2}", y_mean)),
+        Span::raw(format!("{y_mean:.2}")),
         Span::styled(
-            format!("{:.2}", y_max_fr),
+            format!("{y_max_fr:.2}"),
             Style::default().add_modifier(Modifier::BOLD),
         ),
     ];

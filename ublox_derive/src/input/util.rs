@@ -23,7 +23,7 @@ pub(crate) fn parse_ubx_extend_attrs(
     let attr = attrs
         .iter()
         .find(|a| a.path.is_ident("ubx"))
-        .ok_or_else(|| Error::new(item_sp, format!("No ubx attribute for {}", ubx_extend_name)))?;
+        .ok_or_else(|| Error::new(item_sp, format!("No ubx attribute for {ubx_extend_name}")))?;
     let meta = attr.parse_meta()?;
     let mut from_fn = None;
     let mut rest_handling = None;
@@ -82,7 +82,7 @@ pub(super) fn parse_ubx_attr(attrs: &[Attribute], struct_name: &Ident) -> syn::R
         .ok_or_else(|| {
             Error::new(
                 struct_name.span(),
-                format!("No ubx attribute for struct {}", struct_name),
+                format!("No ubx attribute for struct {struct_name}"),
             )
         })?;
     let meta = attr.parse_meta()?;
@@ -302,7 +302,7 @@ fn field_size_bytes(ty: &Type) -> syn::Result<Option<NonZeroUsize>> {
         }
         Err(Error::new(
             ty.span(),
-            format!("Unsupported type, expected one of {:?}", valid_type_names),
+            format!("Unsupported type, expected one of {valid_type_names:?}"),
         ))
     }
 }

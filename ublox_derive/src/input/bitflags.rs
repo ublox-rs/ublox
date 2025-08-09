@@ -31,7 +31,7 @@ pub fn parse_bitflags(mac: syn::ItemMacro) -> syn::Result<BitFlagsMacro> {
         }
         return Err(Error::new(
             ast.repr_ty.span(),
-            format!("Not supported type, expect one of {:?}", valid_type_names),
+            format!("Not supported type, expect one of {valid_type_names:?}"),
         ));
     };
 

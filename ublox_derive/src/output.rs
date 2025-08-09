@@ -86,7 +86,7 @@ pub fn generate_code_to_extend_bitflags(bitflags: BitFlagsMacro) -> syn::Result<
         let set = user_flags.difference(&known_flags);
         return Err(syn::Error::new(
             bitflags.name.span(),
-            format!("Strange flags, not power of 2?: {:?}", set),
+            format!("Strange flags, not power of 2?: {set:?}"),
         ));
     }
 

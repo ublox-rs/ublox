@@ -10,7 +10,7 @@ impl<E: core::fmt::Display> fmt::Display for MemWriterError<E> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             MemWriterError::NotEnoughMem => f.write_str("Not enough memory error"),
-            MemWriterError::Custom(e) => write!(f, "MemWriterError: {}", e),
+            MemWriterError::Custom(e) => write!(f, "MemWriterError: {e}"),
         }
     }
 }
@@ -45,11 +45,10 @@ impl fmt::Display for ParserError {
         match self {
             ParserError::InvalidChecksum { expect, got } => write!(
                 f,
-                "Not valid packet's checksum, expect 0x{:02x}, got 0x{:02x}",
-                expect, got
+                "Not valid packet's checksum, expect 0x{expect:02x}, got 0x{got:02x}"
             ),
             ParserError::InvalidField { packet, field } => {
-                write!(f, "Invalid field {} of packet {}", field, packet)
+                write!(f, "Invalid field {field} of packet {packet}")
             },
             ParserError::InvalidPacketLen {
                 packet,
@@ -57,13 +56,11 @@ impl fmt::Display for ParserError {
                 got,
             } => write!(
                 f,
-                "Invalid packet({}) length, expect {}, got {}",
-                packet, expect, got
+                "Invalid packet({packet}) length, expect {expect}, got {got}"
             ),
             ParserError::OutOfMemory { required_size } => write!(
                 f,
-                "Insufficient parser buffer size, required {} bytes",
-                required_size
+                "Insufficient parser buffer size, required {required_size} bytes"
             ),
         }
     }
