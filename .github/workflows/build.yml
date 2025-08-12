@@ -32,7 +32,7 @@ jobs:
           - --no-default-features --features "ubx_proto31 std"
           - --no-default-features --features "ubx_proto31 std serde"
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - name: Install libudev
       run: sudo apt-get update && sudo apt-get install -y libudev-dev
     - name: Install MSRV
@@ -64,7 +64,7 @@ jobs:
           - alloc,ubx_proto27
           - serde,ubx_proto27
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - name: Install MSRV
       uses: actions-rs/toolchain@v1
       with:
@@ -80,7 +80,7 @@ jobs:
   build_examples:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - name: Install libudev
       run: sudo apt-get update && sudo apt-get install -y libudev-dev
     - name: Install MSRV
@@ -101,7 +101,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
     
       - name: Install nightly
         uses: actions-rs/toolchain@v1
@@ -124,7 +124,7 @@ jobs:
   msrv:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: taiki-e/install-action@cargo-hack
       - name: Install libudev
         run: sudo apt-get update && sudo apt-get install -y libudev-dev
@@ -155,7 +155,7 @@ jobs:
           - feature-group: only-explicit-features
             feature: ubx_proto31,sfrbx-gps
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: SemVer Check 
         uses: obi1kenobi/cargo-semver-checks-action@v2
         with:
