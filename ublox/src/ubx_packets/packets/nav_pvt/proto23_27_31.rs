@@ -1,8 +1,7 @@
-#![cfg(feature = "ubx_proto14")]
 use bitflags::bitflags;
 
 #[cfg(feature = "serde")]
-use super::SerializeUbxPacketFields;
+use super::super::SerializeUbxPacketFields;
 #[cfg(feature = "serde")]
 use crate::serde::ser::SerializeMap;
 
@@ -11,7 +10,7 @@ use ublox_derive::{ubx_extend_bitflags, ubx_packet_recv};
 
 /// Navigation Position Velocity Time Solution
 #[ubx_packet_recv]
-#[ubx(class = 1, id = 0x07, fixed_payload_len = 84)]
+#[ubx(class = 1, id = 0x07, fixed_payload_len = 92)]
 struct NavPvt {
     /// GPS Millisecond Time of Week
     itow: u32,
@@ -35,7 +34,8 @@ struct NavPvt {
     #[ubx(map_type = NavPvtFlags)]
     flags: u8,
 
-    reserved1: u8,
+    #[ubx(map_type = NavPvtFlags2)]
+    flags2: u8,
 
     num_satellites: u8,
 
@@ -95,8 +95,18 @@ struct NavPvt {
     #[ubx(map_type = f64, scale = 1e-2)]
     pdop: u16,
 
-    reserved2: [u8; 2],
-    reserved3: [u8; 4],
+    reserved1: [u8; 5],
+    #[ubx(map_type = flags::NavPvtFlags3)]
+    flags3: u8,
+
+    #[ubx(map_type = f64, scale = 1e-5, alias = heading_vehicle)]
+    head_vehicle: i32,
+
+    #[ubx(map_type = f64, scale = 1e-2, alias = magnetic_declination)]
+    magnetic_declination: i16,
+
+    #[ubx(map_type = f64, scale = 1e-2, alias = magnetic_declination_accuracy)]
+    magnetic_declination_accuracy: u16,
 }
 
 #[ubx_extend_bitflags]
@@ -164,6 +174,30 @@ pub(crate) mod flags {
             Self {
                 invalid_llh: invalid,
                 age_differential_correction,
+            }
+        }
+    }
+}
+
+#[cfg(any(feature = "ubx_proto27", feature = "ubx_proto31"))]
+pub(crate) mod flags {
+    #[derive(Debug, Clone, Copy)]
+    #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+    pub struct NavPvtFlags3 {
+        invalid_llh: bool,
+    }
+
+    impl NavPvtFlags3 {
+        pub fn invalid_llh(&self) -> bool {
+            self.invalid_llh
+        }
+    }
+
+    impl From<u8> for NavPvtFlags3 {
+        fn from(val: u8) -> Self {
+            let invalid = val & 0x01 == 1;
+            Self {
+                invalid_llh: invalid,
             }
         }
     }

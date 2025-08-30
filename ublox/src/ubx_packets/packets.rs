@@ -168,11 +168,7 @@ pub mod nav_other;
 pub use nav_other::*;
 
 pub mod nav_pvt;
-pub mod nav_pvt_proto14;
-#[cfg(not(feature = "ubx_proto14"))]
 pub use nav_pvt::*;
-#[cfg(feature = "ubx_proto14")]
-pub use nav_pvt_proto14::*;
 
 pub mod nav_rel_pos_ned_p14_23;
 pub mod nav_rel_pos_ned_p27_31;
