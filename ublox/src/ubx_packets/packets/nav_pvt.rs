@@ -1,3 +1,6 @@
+pub mod common;
+pub use common::*;
+
 #[cfg(feature = "ubx_proto14")]
 pub mod proto14;
 

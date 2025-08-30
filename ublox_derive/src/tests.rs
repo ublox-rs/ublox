@@ -935,7 +935,7 @@ fn test_extend_bitflags() {
                 }
             }
             impl Test {
-                const fn from(x: u8) -> Self {
+                pub(crate) const fn from(x: u8) -> Self {
                     Self::from_bits_truncate(x)
                 }
             }
