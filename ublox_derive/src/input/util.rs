@@ -185,7 +185,7 @@ pub(super) fn parse_ubx_attr(attrs: &[Attribute], struct_name: &Ident) -> syn::R
 }
 
 pub(super) fn extract_item_comment(attrs: &[Attribute]) -> syn::Result<String> {
-    let mut doc_comments = String::new();
+    let mut doc_comments = Vec::new();
     for a in attrs {
         if a.path.is_ident("doc") {
             let meta = a.parse_meta()?;
@@ -195,13 +195,13 @@ pub(super) fn extract_item_comment(attrs: &[Attribute]) -> syn::Result<String> {
                         syn::Lit::Str(s) => s,
                         _ => return Err(Error::new(lit.span(), "Invalid comment")),
                     };
-                    doc_comments.push_str(&lit.value());
+                    doc_comments.push(lit.value());
                 },
                 _ => return Err(Error::new(a.span(), "Invalid comments")),
             }
         }
     }
-    Ok(doc_comments)
+    Ok(doc_comments.join("\n"))
 }
 
 pub(super) fn parse_fields(fields: Fields) -> syn::Result<Vec<PackField>> {

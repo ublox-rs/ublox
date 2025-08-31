@@ -1289,48 +1289,48 @@ cfg_val! {
   TModeModeDef, 0x20030001,  CfgTModeModes,
   /// Determines whether the Antenna Reference Point (ARP) position is given in ECEF or LAT/LON/HEIGHT?
   TModePosTypeDef, 0x20030002,  TModePosType,
-  /// ECEF X coordinate of the ARP position in [cm].
+  /// ECEF X coordinate of the ARP position in \[cm\].
   /// This will only be used if CfgTModeModes=Fixed and TModePOS_TYPE=ECEF.
   TModeEcefX, 0x40030003,  i32,
-  /// ECEF Y coordinate of the ARP position in [cm].
+  /// ECEF Y coordinate of the ARP position in \[cm\].
   /// This will only be used if CfgTModeModes=Fixed and TModePOS_TYPE=ECEF.
   TModeEcefY, 0x40030004,  i32,
-  /// ECEF Z coordinate of the ARP position in [cm] .
+  /// ECEF Z coordinate of the ARP position in \[cm\] .
   /// This will only be used if CfgTModeModes=Fixed and TModePOS_TYPE=ECEF.
   TModeEcefZ, 0x40030005,  i32,
-  /// High-precision ECEF X coordinate of the ARP position, [-99 to +99] in [mm].
+  /// High-precision ECEF X coordinate of the ARP position, [-99 to +99] in \[mm\].
   /// This will only be used if CfgTModeModes=Fixed and TModePOS_TYPE=ECEF.
   TModeEcefXHp, 0x20030006,  i8,
-  /// High-precision ECEF Y coordinate of the ARP position [-99 to +99] in [mm].
+  /// High-precision ECEF Y coordinate of the ARP position [-99 to +99] in \[mm\].
   /// This will only be used if CfgTModeModes=Fixed and TModePOS_TYPE=ECEF.
   TModeEcefYHp, 0x20030007,  i8,
-  /// High-precision ECEF Z coordinate of the ARP position [-99 to +99] in [mm].
+  /// High-precision ECEF Z coordinate of the ARP position [-99 to +99] in \[mm\].
   /// This will only be used if CfgTModeModes=Fixed and TModePOS_TYPE=ECEF.
   TModeEcefZHp, 0x20030008,  i8,
-  /// Latitude of the ARP position in [deg].
+  /// Latitude of the ARP position in \[deg\].
   /// This will only be used if CfgTModeModes=Fixed and TModePOS_TYPE=LLH.
   TModeLat, 0x40030009,  i32,
-  /// Longitude of the ARP position in [deg].
+  /// Longitude of the ARP position in \[deg\].
   /// This will only be used if CfgTModeModes=Fixed and TModePOS_TYPE=LLH.
   TModeLon, 0x4003000a,  i32,
-  /// Height of the ARP position in [cm].
+  /// Height of the ARP position in \[cm\].
   /// This will only be used if CfgTModeModes=Fixed and TModePOS_TYPE=LLH.
   TModeHeight, 0x4003000b,  i32,
-  /// High-precision latitude of the ARP position [-99 to +99] in [deg].
+  /// High-precision latitude of the ARP position [-99 to +99] in \[deg\].
   /// This will only be used if CfgTModeModes=Fixed and TModePOS_TYPE=LLH.
   TModeLatHp, 0x2003000c,  i8,
-  /// High-precision longitude of the ARP position [-99 to +99] in [deg].
+  /// High-precision longitude of the ARP position [-99 to +99] in \[deg\].
   /// This will only be used if CfgTModeModes=Fixed and TModePOS_TYPE=LLH.
   TModeLonHp, 0x2003000d,  i8,
-  /// High-precision height of the ARP position [-99 to +99] in [mm].
+  /// High-precision height of the ARP position [-99 to +99] in \[mm\].
   /// This will only be used if CfgTModeModes=Fixed and TModePOS_TYPE=LLH.
   TModeHeightHp, 0x2003000e,  i8,
-  /// Fixed position 3D accuracy in [mm]
+  /// Fixed position 3D accuracy in \[mm\]
   TModeFixedPosAcc, 0x4003000f,  u32,
-  /// Survey-in minimum duration in [sec].
+  /// Survey-in minimum duration in \[sec\].
   /// This will only be used if CfgTModeModes=SurveyIn.
   TModeSvInMinDur, 0x40030010,  u32,
-  /// Survey-in position accuracy limit in [mm]
+  /// Survey-in position accuracy limit in \[mm\]
   /// This will only be used if CfgTModeModes=SurveyIn.
   TModeSvInAccLimit, 0x40030011,  u32,
 

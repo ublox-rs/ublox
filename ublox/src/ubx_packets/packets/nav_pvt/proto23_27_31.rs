@@ -11,78 +11,99 @@ use ublox_derive::ubx_packet_recv;
 #[ubx_packet_recv]
 #[ubx(class = 1, id = 0x07, fixed_payload_len = 92)]
 struct NavPvt {
-    /// GPS Millisecond Time of Week
+    /// GPS Millisecond time of week of the navigation epoch.
+    ///
+    /// Messages with the same iTOW value can be assumed to have come from the same navigation solution.
+    ///
+    /// # Note
+    ///
+    /// iTOW values may not be valid (i.e. they may have been generated with insufficient
+    /// conversion data) and therefore it is not recommended to use the iTOW field for any other purpose.
     itow: u32,
 
+    /// Year (UTC)
     year: u16,
+    /// Month, range 1..12 (UTC)
     month: u8,
+    /// Day of month, range 1..31 (UTC)
     day: u8,
+    /// Hour of day, range 0..23 (UTC)
     hour: u8,
+    /// Minute of hour, range 0..59 (UTC)
     min: u8,
+    /// Seconds of minute, range 0..60 (UTC)
     sec: u8,
 
+    /// Validity flags, see [NavPvtValidFlags]
+    #[ubx(map_type = NavPvtValidFlags)]
     valid: u8,
+
+    /// Time accuracy estimate in nanoseconds (UTC)
     time_accuracy: u32,
 
+    /// Fraction of second, range -1e9 .. 1e9 (UTC)
     nanosec: i32,
 
-    /// GNSS Fix Type
+    /// GNSS Fix Type, see [GnssFixType]
     #[ubx(map_type = GnssFixType)]
     fix_type: u8,
 
+    /// Fix status flags, see [NavPvtFlags]
     #[ubx(map_type = NavPvtFlags)]
     flags: u8,
 
+    /// Additional flags, see [NavPvtFlags2]
     #[ubx(map_type = NavPvtFlags2)]
     flags2: u8,
 
+    /// Number of satellites used in Nav Solution
     num_satellites: u8,
 
-    /// Longitude in [deg]
+    /// Longitude in \[deg\]
     #[ubx(map_type = f64, scale = 1e-7, alias = longitude)]
     lon: i32,
 
-    /// Latitude in [deg]
+    /// Latitude in \[deg\]
     #[ubx(map_type = f64, scale = 1e-7, alias = latitude)]
     lat: i32,
 
-    /// Height above reference ellipsoid in [m]
+    /// Height above reference ellipsoid in \[m\]
     #[ubx(map_type = f64, scale = 1e-3, alias = height_above_ellipsoid)]
     height: i32,
 
-    /// Height above Mean Sea Level in [m]
+    /// Height above Mean Sea Level in \[m\]
     #[ubx(map_type = f64, scale = 1e-3)]
     height_msl: i32,
 
-    /// Horizontal accuracy in [m]
+    /// Horizontal accuracy in \[m\]
     #[ubx(map_type = f64, scale = 1e-3, alias = horizontal_accuracy )]
     h_acc: u32,
 
-    /// Vertical accuracy in [m]
+    /// Vertical accuracy in \[m\]
     #[ubx(map_type = f64, scale = 1e-3, alias = vertical_accuracy )]
     v_acc: u32,
 
-    /// Velocity North component [m/s]
+    /// Velocity North component \[m/s\]
     #[ubx(map_type = f64, scale = 1e-3)]
     vel_north: i32,
 
-    /// Velocity East component [m/s]
+    /// Velocity East component \[m/s\]
     #[ubx(map_type = f64, scale = 1e-3)]
     vel_east: i32,
 
-    /// Velocity Down component [m/s]
+    /// Velocity Down component \[m/s\]
     #[ubx(map_type = f64, scale = 1e-3)]
     vel_down: i32,
 
-    /// Ground speed [m/s]
+    /// Ground speed \[m/s\]
     #[ubx(map_type = f64, scale = 1e-3, alias = ground_speed_2d)]
     g_speed: u32,
 
-    /// Heading of motion 2-D [deg]
+    /// Heading of motion 2-D \[deg\]
     #[ubx(map_type = f64, scale = 1e-5, alias = heading_motion)]
     head_motion: i32,
 
-    /// Speed Accuracy Estimate [m/s]
+    /// Speed Accuracy Estimate \[m/s\]
     #[ubx(map_type = f64, scale = 1e-3, alias = speed_accuracy)]
     s_acc: u32,
 
@@ -95,15 +116,21 @@ struct NavPvt {
     pdop: u16,
 
     reserved1: [u8; 5],
+
+    /// Additional flags
     #[ubx(map_type = flags::NavPvtFlags3)]
     flags3: u8,
 
+    /// Heading of vehicle (2-D), this is only valid when [HEAD_VEH_VALID](NavPvtFlags::HEAD_VEH_VALID) is set,
+    /// otherwise the output is set to the heading of motion
     #[ubx(map_type = f64, scale = 1e-5, alias = heading_vehicle)]
     head_vehicle: i32,
 
+    /// Magnetic declination. Only supported in ADR 4.10 and later.
     #[ubx(map_type = f64, scale = 1e-2, alias = magnetic_declination)]
     magnetic_declination: i16,
 
+    /// Magnetic declination accuracy. Only supported in ADR 4.10 and later.
     #[ubx(map_type = f64, scale = 1e-2, alias = magnetic_declination_accuracy)]
     magnetic_declination_accuracy: u16,
 }
@@ -118,6 +145,7 @@ pub(crate) mod flags {
     }
 
     impl NavPvtFlags3 {
+        /// 1 = Invalid lon, lat, height and hMSL
         pub fn invalid_llh(&self) -> bool {
             self.invalid_llh
         }
@@ -151,6 +179,7 @@ pub(crate) mod flags {
     }
 
     impl NavPvtFlags3 {
+        /// 1 = Invalid lon, lat, height and hMSL
         pub fn invalid_llh(&self) -> bool {
             self.invalid_llh
         }
