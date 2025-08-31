@@ -1,17 +1,15 @@
-#![cfg(feature = "ubx_proto14")]
-use bitflags::bitflags;
-
 #[cfg(feature = "serde")]
-use super::SerializeUbxPacketFields;
+use super::super::SerializeUbxPacketFields;
 #[cfg(feature = "serde")]
 use crate::serde::ser::SerializeMap;
 
+use super::common::*;
 use crate::{error::ParserError, GnssFixType, UbxPacketMeta};
-use ublox_derive::{ubx_extend_bitflags, ubx_packet_recv};
+use ublox_derive::ubx_packet_recv;
 
 /// Navigation Position Velocity Time Solution
 #[ubx_packet_recv]
-#[ubx(class = 1, id = 0x07, fixed_payload_len = 84)]
+#[ubx(class = 1, id = 0x07, fixed_payload_len = 92)]
 struct NavPvt {
     /// GPS Millisecond Time of Week
     itow: u32,
@@ -35,7 +33,8 @@ struct NavPvt {
     #[ubx(map_type = NavPvtFlags)]
     flags: u8,
 
-    reserved1: u8,
+    #[ubx(map_type = NavPvtFlags2)]
+    flags2: u8,
 
     num_satellites: u8,
 
@@ -95,44 +94,18 @@ struct NavPvt {
     #[ubx(map_type = f64, scale = 1e-2)]
     pdop: u16,
 
-    reserved2: [u8; 2],
-    reserved3: [u8; 4],
-}
+    reserved1: [u8; 5],
+    #[ubx(map_type = flags::NavPvtFlags3)]
+    flags3: u8,
 
-#[ubx_extend_bitflags]
-#[ubx(from, rest_reserved)]
-bitflags! {
-    /// Fix status flags for `NavPvt`
-    #[derive(Debug)]
-    pub struct NavPvtFlags: u8 {
-        /// Position and velocity valid and within DOP and ACC Masks
-        const GPS_FIX_OK = 1;
-        /// Differential corrections were applied; DGPS used
-        const DIFF_SOLN = 2;
-        /// Heading of vehicle is valid
-        const HEAD_VEH_VALID = 0x20;
-        const CARR_SOLN_FLOAT = 0x40;
-        const CARR_SOLN_FIXED = 0x80;
-    }
-}
+    #[ubx(map_type = f64, scale = 1e-5, alias = heading_vehicle)]
+    head_vehicle: i32,
 
-#[ubx_extend_bitflags]
-#[ubx(from, rest_reserved)]
-bitflags! {
-    /// Additional flags for `NavPvt`
-    #[derive(Debug)]
-    pub struct NavPvtFlags2: u8 {
-        /// 1 = information about UTC Date and Time of Day validity confirmation
-        /// is available. This flag is only supported in Protocol Versions
-        /// 19.00, 19.10, 20.10, 20.20, 20.30, 22.00, 23.00, 23.01,27 and 28.
-        const CONFIRMED_AVAI = 0x20;
-        /// 1 = UTC Date validity could be confirmed
-        /// (confirmed by using an additional independent source)
-        const CONFIRMED_DATE = 0x40;
-        /// 1 = UTC Time of Day could be confirmed
-        /// (confirmed by using an additional independent source)
-        const CONFIRMED_TIME = 0x80;
-    }
+    #[ubx(map_type = f64, scale = 1e-2, alias = magnetic_declination)]
+    magnetic_declination: i16,
+
+    #[ubx(map_type = f64, scale = 1e-2, alias = magnetic_declination_accuracy)]
+    magnetic_declination_accuracy: u16,
 }
 
 #[cfg(feature = "ubx_proto23")]
@@ -164,6 +137,30 @@ pub(crate) mod flags {
             Self {
                 invalid_llh: invalid,
                 age_differential_correction,
+            }
+        }
+    }
+}
+
+#[cfg(any(feature = "ubx_proto27", feature = "ubx_proto31"))]
+pub(crate) mod flags {
+    #[derive(Debug, Clone, Copy)]
+    #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+    pub struct NavPvtFlags3 {
+        invalid_llh: bool,
+    }
+
+    impl NavPvtFlags3 {
+        pub fn invalid_llh(&self) -> bool {
+            self.invalid_llh
+        }
+    }
+
+    impl From<u8> for NavPvtFlags3 {
+        fn from(val: u8) -> Self {
+            let invalid = val & 0x01 == 1;
+            Self {
+                invalid_llh: invalid,
             }
         }
     }

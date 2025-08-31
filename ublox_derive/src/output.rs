@@ -98,7 +98,7 @@ pub fn generate_code_to_extend_bitflags(bitflags: BitFlagsMacro) -> syn::Result<
         None => quote! {},
         Some(UbxTypeFromFn::From) => quote! {
             impl #name {
-                const fn from(x: #repr_ty) -> Self {
+                pub(crate) const fn from(x: #repr_ty) -> Self {
                     Self::from_bits_truncate(x)
                 }
             }
@@ -110,7 +110,7 @@ pub fn generate_code_to_extend_bitflags(bitflags: BitFlagsMacro) -> syn::Result<
         None => quote! {},
         Some(UbxTypeIntoFn::Raw) => quote! {
             impl #name {
-                const fn into_raw(self) -> #repr_ty {
+                pub(crate) const fn into_raw(self) -> #repr_ty {
                     self.bits()
                 }
             }
