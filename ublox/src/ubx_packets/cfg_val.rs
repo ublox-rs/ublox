@@ -1,6 +1,12 @@
-use crate::{NavDynamicModel, NavFixMode, UtcStandardIdentifier};
+use crate::UtcStandardIdentifier;
 
-use super::{AlignmentToReferenceTime, CfgInfMask, CfgTModeModes, DataBits, Parity, StopBits};
+use crate::ubx_packets::packets::{
+    cfg_inf::CfgInfMask,
+    cfg_nav5::{NavDynamicModel, NavFixMode},
+    cfg_prt::{DataBits, Parity, StopBits},
+    cfg_rate::AlignmentToReferenceTime,
+    cfg_tmode2::CfgTModeModes,
+};
 
 /// Supported storage size identiﬁers for the Configuration Value
 pub enum StorageSize {

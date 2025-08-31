@@ -1,11 +1,18 @@
 #[cfg(feature = "alloc")]
 use alloc::vec::Vec;
 
+#[cfg(feature = "ubx_proto14")]
+use crate::ubx_packets::packets::packetref_proto17::{match_packet, MAX_PAYLOAD_LEN};
+#[cfg(feature = "ubx_proto23")]
+use crate::ubx_packets::packets::packetref_proto23::{match_packet, MAX_PAYLOAD_LEN};
+#[cfg(feature = "ubx_proto27")]
+use crate::ubx_packets::packets::packetref_proto27::{match_packet, MAX_PAYLOAD_LEN};
+#[cfg(feature = "ubx_proto31")]
+use crate::ubx_packets::packets::packetref_proto31::{match_packet, MAX_PAYLOAD_LEN};
+
 use crate::{
     error::ParserError,
-    ubx_packets::{
-        match_packet, PacketRef, MAX_PAYLOAD_LEN, RTCM_SYNC_CHAR, SYNC_CHAR_1, SYNC_CHAR_2,
-    },
+    ubx_packets::{PacketRef, RTCM_SYNC_CHAR, SYNC_CHAR_1, SYNC_CHAR_2},
 };
 
 /// This trait represents an underlying buffer used for the Parser. We provide

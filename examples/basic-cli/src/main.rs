@@ -1,6 +1,11 @@
 use chrono::prelude::*;
 use std::convert::TryInto;
-use ublox_device::ublox::*;
+use ublox_device::ublox::{
+    cfg_msg::{CfgMsgAllPorts, CfgMsgAllPortsBuilder},
+    mon_ver::MonVer,
+    nav_pvt::NavPvt,
+    *,
+};
 
 fn main() {
     let mut cli = ublox_device::cli::CommandBuilder::default().build();

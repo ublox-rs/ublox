@@ -12,7 +12,8 @@ use crate::FieldIter;
 #[cfg(feature = "serde")]
 use {super::SerializeUbxPacketFields, crate::serde::ser::SerializeMap};
 
-use crate::{error::ParserError, EsfSensorType, UbxPacketMeta};
+use crate::ubx_packets::packets::esf_status::EsfSensorType;
+use crate::{error::ParserError, UbxPacketMeta};
 use ublox_derive::ubx_packet_recv;
 
 #[ubx_packet_recv]

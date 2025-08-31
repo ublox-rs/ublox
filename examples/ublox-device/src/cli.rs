@@ -2,6 +2,7 @@ use anyhow::{Context, Result};
 use clap::{value_parser, Arg};
 use serialport::{FlowControl as SerialFlowControl, SerialPort};
 use std::time::Duration;
+use ublox::cfg_prt::{DataBits, InProtoMask, OutProtoMask, Parity, StopBits, UartPortId};
 
 pub struct CommandBuilder {
     command: clap::Command,
@@ -12,13 +13,13 @@ pub struct Command;
 #[derive(Debug)]
 pub struct UbxPortConfiguration {
     pub port_name: String,
-    pub port_id: Option<ublox::UartPortId>,
+    pub port_id: Option<UartPortId>,
     pub baud_rate: u32,
-    pub stop_bits: ublox::StopBits,
-    pub data_bits: ublox::DataBits,
-    pub parity: ublox::Parity,
-    pub in_proto_mask: ublox::InProtoMask,
-    pub out_proto_mask: ublox::OutProtoMask,
+    pub stop_bits: StopBits,
+    pub data_bits: DataBits,
+    pub parity: Parity,
+    pub in_proto_mask: InProtoMask,
+    pub out_proto_mask: OutProtoMask,
 }
 
 impl Default for CommandBuilder {
@@ -224,18 +225,15 @@ impl Command {
     }
 
     pub fn ubx_port_configuration_builder(command: clap::Command) -> Option<UbxPortConfiguration> {
-        use ublox::InProtoMask;
-        use ublox::OutProtoMask;
-
         let cli = command.get_matches();
 
         // Parse cli for configuring specific uBlox UART port
         if let Some(("configure", sub_matches)) = cli.subcommand() {
             let (port_id, port_name) =
                 match sub_matches.get_one::<String>("port").map(|s| s.as_str()) {
-                    Some(x) if x == "usb" => (Some(ublox::UartPortId::Usb), x),
-                    Some(x) if x == "uart1" => (Some(ublox::UartPortId::Uart1), x),
-                    Some(x) if x == "uart2" => (Some(ublox::UartPortId::Uart2), x),
+                    Some(x) if x == "usb" => (Some(UartPortId::Usb), x),
+                    Some(x) if x == "uart1" => (Some(UartPortId::Uart1), x),
+                    Some(x) if x == "uart2" => (Some(UartPortId::Uart2), x),
                     _ => (None, ""),
                 };
 
@@ -342,29 +340,29 @@ impl Command {
     }
 }
 
-fn ublox_stopbits(s: serialport::StopBits) -> ublox::StopBits {
+fn ublox_stopbits(s: serialport::StopBits) -> StopBits {
     // Seriaport crate doesn't support the other StopBits option of uBlox
     match s {
-        serialport::StopBits::One => ublox::StopBits::One,
-        serialport::StopBits::Two => ublox::StopBits::Two,
+        serialport::StopBits::One => StopBits::One,
+        serialport::StopBits::Two => StopBits::Two,
     }
 }
 
-fn ublox_databits(d: serialport::DataBits) -> ublox::DataBits {
+fn ublox_databits(d: serialport::DataBits) -> DataBits {
     match d {
-        serialport::DataBits::Seven => ublox::DataBits::Seven,
-        serialport::DataBits::Eight => ublox::DataBits::Eight,
+        serialport::DataBits::Seven => DataBits::Seven,
+        serialport::DataBits::Eight => DataBits::Eight,
         _ => {
             println!("uBlox only supports Seven or Eight data bits");
-            ublox::DataBits::Eight
+            DataBits::Eight
         },
     }
 }
 
-fn ublox_parity(v: serialport::Parity) -> ublox::Parity {
+fn ublox_parity(v: serialport::Parity) -> Parity {
     match v {
-        serialport::Parity::Even => ublox::Parity::Even,
-        serialport::Parity::Odd => ublox::Parity::Odd,
-        serialport::Parity::None => ublox::Parity::None,
+        serialport::Parity::Even => Parity::Even,
+        serialport::Parity::Odd => Parity::Odd,
+        serialport::Parity::None => Parity::None,
     }
 }

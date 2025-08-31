@@ -3,10 +3,12 @@ use dds::{cli, idl};
 use log::{debug, error, info, trace, warn};
 use rustdds::{with_key::DataWriter, DomainParticipant};
 use std::{io::ErrorKind, time};
-use ublox_device::ublox::{
-    self, CfgMsgAllPorts, CfgMsgAllPortsBuilder, MonVer, NavPvt, NavPvtFlags2, PacketRef,
-    UbxPacketRequest,
+use ublox::{
+    cfg_msg::{CfgMsgAllPorts, CfgMsgAllPortsBuilder},
+    mon_ver::MonVer,
+    nav_pvt::{NavPvt, NavPvtFlags2, NavPvtRef},
 };
+use ublox_device::ublox::{self, PacketRef, UbxPacketRequest};
 use ublox_device::UbxPacketHandler;
 
 fn main() -> Result<()> {
@@ -212,7 +214,7 @@ impl UbxPacketHandler for PkgHandler {
     }
 }
 
-pub fn to_dds_pvt(pkg: &ublox::NavPvtRef) -> idl::ubx::nav_pvt::NavPvt {
+pub fn to_dds_pvt(pkg: &NavPvtRef) -> idl::ubx::nav_pvt::NavPvt {
     let mut pvt = idl::ubx::nav_pvt::NavPvt {
         itow: pkg.itow(),
         ..Default::default()
