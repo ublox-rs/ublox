@@ -1,4 +1,4 @@
-use ublox::{CfgMsgSinglePortBuilder, NavPosLlh, NavStatus};
+use ublox::{cfg_msg::CfgMsgSinglePortBuilder, nav_pos_llh::NavPosLlh, nav_status::NavStatus};
 
 #[test]
 fn test_cfg_msg_simple() {

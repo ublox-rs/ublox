@@ -642,6 +642,7 @@ impl<T: UnderlyingBuffer> UbxRtcmParserIter<'_, T> {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::ubx_packets::packets::cfg_nav5::*;
     use crate::ubx_packets::*;
 
     #[cfg(feature = "alloc")]
