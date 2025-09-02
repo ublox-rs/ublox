@@ -1,10 +1,19 @@
 pub mod cfg_val;
-mod packets;
+pub mod packets;
 mod types;
 
 use crate::error::MemWriterError;
 pub use packets::*;
 pub use types::*;
+
+#[cfg(feature = "ubx_proto14")]
+use packets::packetref_proto17::MAX_PAYLOAD_LEN;
+#[cfg(feature = "ubx_proto23")]
+use packets::packetref_proto23::MAX_PAYLOAD_LEN;
+#[cfg(feature = "ubx_proto27")]
+use packets::packetref_proto27::MAX_PAYLOAD_LEN;
+#[cfg(feature = "ubx_proto31")]
+use packets::packetref_proto31::MAX_PAYLOAD_LEN;
 
 /// Information about concrete UBX protocol's packet
 pub trait UbxPacketMeta {
@@ -94,7 +103,7 @@ pub struct UbxUnknownPacketRef<'a> {
 
 #[derive(Debug, Clone)]
 pub struct UbxUnknownPacketOwned {
-    pub payload: [u8; packets::MAX_PAYLOAD_LEN as usize],
+    pub payload: [u8; MAX_PAYLOAD_LEN as usize],
     pub payload_len: usize,
     pub class: u8,
     pub msg_id: u8,

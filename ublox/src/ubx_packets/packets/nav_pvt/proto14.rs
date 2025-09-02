@@ -1,5 +1,3 @@
-use bitflags::bitflags;
-
 #[cfg(feature = "serde")]
 use super::SerializeUbxPacketFields;
 #[cfg(feature = "serde")]
@@ -7,7 +5,7 @@ use crate::serde::ser::SerializeMap;
 
 use super::common::*;
 use crate::{error::ParserError, GnssFixType, UbxPacketMeta};
-use ublox_derive::{ubx_extend_bitflags, ubx_packet_recv};
+use ublox_derive::ubx_packet_recv;
 
 /// Navigation Position Velocity Time Solution
 #[ubx_packet_recv]

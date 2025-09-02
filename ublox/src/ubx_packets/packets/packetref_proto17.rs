@@ -1,8 +1,63 @@
 #![cfg(feature = "ubx_proto14")]
 
-use super::*;
 use crate::{ParserError, UbxPacketMeta, UbxUnknownPacketOwned, UbxUnknownPacketRef};
 use ublox_derive::define_recv_packets;
+
+use crate::ubx_packets::packets::{
+    ack::{AckAck, AckAckOwned, AckAckRef, AckNak, AckNakOwned, AckNakRef},
+    cfg_ant::{CfgAnt, CfgAntOwned, CfgAntRef},
+    cfg_itfm::{CfgItfm, CfgItfmOwned, CfgItfmRef},
+    cfg_nav5::{CfgNav5, CfgNav5Owned, CfgNav5Ref},
+    cfg_odo::{CfgOdo, CfgOdoOwned, CfgOdoRef},
+    cfg_prt::{
+        CfgPrtI2c, CfgPrtI2cOwned, CfgPrtI2cRef, CfgPrtSpi, CfgPrtSpiOwned, CfgPrtSpiRef,
+        CfgPrtUart, CfgPrtUartOwned, CfgPrtUartRef,
+    },
+    cfg_smgr::{CfgSmgr, CfgSmgrOwned, CfgSmgrRef},
+    cfg_tmode2::{CfgTmode2, CfgTmode2Owned, CfgTmode2Ref},
+    cfg_tmode3::{CfgTmode3, CfgTmode3Owned, CfgTmode3Ref},
+    cfg_tp5::{CfgTp5, CfgTp5Owned, CfgTp5Ref},
+    esf_raw::{EsfRaw, EsfRawOwned, EsfRawRef},
+    inf_debug::{InfDebug, InfDebugOwned, InfDebugRef},
+    inf_error::{InfError, InfErrorOwned, InfErrorRef},
+    inf_notice::{InfNotice, InfNoticeOwned, InfNoticeRef},
+    inf_test::{InfTest, InfTestOwned, InfTestRef},
+    inf_warning::{InfWarning, InfWarningOwned, InfWarningRef},
+    mga_ack::{MgaAck, MgaAckOwned, MgaAckRef},
+    mga_glo_eph::{MgaGloEph, MgaGloEphOwned, MgaGloEphRef},
+    mga_gps_eph::{MgaGpsEph, MgaGpsEphOwned, MgaGpsEphRef},
+    mga_gps_iono::{MgaGpsIono, MgaGpsIonoOwned, MgaGpsIonoRef},
+    mon_gnss::{MonGnss, MonGnssOwned, MonGnssRef},
+    mon_hw::{MonHw, MonHwOwned, MonHwRef},
+    mon_ver::{MonVer, MonVerOwned, MonVerRef},
+    nav_att::{NavAtt, NavAttOwned, NavAttRef},
+    nav_clock::{NavClock, NavClockOwned, NavClockRef},
+    nav_dop::{NavDop, NavDopOwned, NavDopRef},
+    nav_hp_pos_ecef::{NavHpPosEcef, NavHpPosEcefOwned, NavHpPosEcefRef},
+    nav_hp_pos_llh::{NavHpPosLlh, NavHpPosLlhOwned, NavHpPosLlhRef},
+    nav_other::{
+        NavEoe, NavEoeOwned, NavEoeRef, NavOdo, NavOdoOwned, NavOdoRef, NavVelECEF,
+        NavVelECEFOwned, NavVelECEFRef,
+    },
+    nav_pos_llh::{NavPosLlh, NavPosLlhOwned, NavPosLlhRef},
+    nav_pvt::{NavPvt, NavPvtOwned, NavPvtRef},
+    nav_rel_pos_ned::{NavRelPosNed, NavRelPosNedOwned, NavRelPosNedRef},
+    nav_sat::{NavSat, NavSatOwned, NavSatRef},
+    nav_sol::{NavSol, NavSolOwned, NavSolRef},
+    nav_status::{NavStatus, NavStatusOwned, NavStatusRef},
+    nav_time_ls::{NavTimeLs, NavTimeLsOwned, NavTimeLsRef},
+    nav_time_utc::{NavTimeUTC, NavTimeUTCOwned, NavTimeUTCRef},
+    nav_vel_ned::{NavVelNed, NavVelNedOwned, NavVelNedRef},
+    proto17_packets::{AlpSrv, AlpSrvOwned, AlpSrvRef},
+    rxm_rawx::{RxmRawx, RxmRawxOwned, RxmRawxRef},
+    rxm_rtcm::{RxmRtcm, RxmRtcmOwned, RxmRtcmRef},
+    rxm_sfrbx::{RxmSfrbx, RxmSfrbxOwned, RxmSfrbxRef},
+    sec_uniq_id::{SecUniqId, SecUniqIdOwned, SecUniqIdRef},
+    tim_svin::{TimSvin, TimSvinOwned, TimSvinRef},
+    tim_tm2::{TimTm2, TimTm2Owned, TimTm2Ref},
+    tim_tos::{TimTos, TimTosOwned, TimTosRef},
+    tim_tp::{TimTp, TimTpOwned, TimTpRef},
+};
 
 define_recv_packets!(
     enum Packet {

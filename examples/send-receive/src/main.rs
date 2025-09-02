@@ -3,7 +3,16 @@ use serialport::SerialPort;
 use std::convert::TryInto;
 use std::thread;
 use std::time::Duration;
+use ublox_device::ublox::mon_ver::MonVer;
 use ublox_device::ublox::*;
+use ublox_device::ublox::{
+    cfg_msg::CfgMsgAllPortsBuilder,
+    cfg_prt::{
+        CfgPrtUartBuilder, DataBits, InProtoMask, OutProtoMask, Parity, StopBits, UartMode,
+        UartPortId,
+    },
+    esf_raw::EsfRaw,
+};
 
 fn main() {
     let mut cli = ublox_device::cli::CommandBuilder::default().build();
