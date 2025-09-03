@@ -43,6 +43,9 @@ pub use cfg_esf_alg::*;
 pub mod cfg_esf_wt;
 pub use cfg_esf_wt::*;
 
+pub mod cfg_gnss;
+pub use cfg_gnss::*;
+
 pub mod cfg_inf;
 pub use cfg_inf::*;
 
