@@ -3,11 +3,17 @@ use super::SerializeUbxPacketFields;
 #[cfg(feature = "serde")]
 use crate::serde::ser::SerializeMap;
 
-use crate::{error::ParserError, UbxPacketMeta};
-use ublox_derive::ubx_packet_recv;
+use crate::{
+    error::ParserError,
+    ubx_checksum,
+    ubx_packets::{packets::ScaleBack, UbxChecksumCalc},
+    MemWriter, MemWriterError, UbxPacketCreator, UbxPacketMeta, SYNC_CHAR_1, SYNC_CHAR_2,
+};
 
-/// UBX-MGA-BDS Ephemeris packet.
-#[ubx_packet_recv]
+use ublox_derive::ubx_packet_recv_send;
+
+/// UBX-MGA-BDS EPH frame.
+#[ubx_packet_recv_send]
 #[ubx(class = 0x13, id = 0x03, fixed_payload_len = 88)]
 struct MgaBdsEph {
     /// Message type. 0x01 for this type.

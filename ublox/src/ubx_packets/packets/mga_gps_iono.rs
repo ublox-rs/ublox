@@ -3,10 +3,17 @@ use super::SerializeUbxPacketFields;
 #[cfg(feature = "serde")]
 use crate::serde::ser::SerializeMap;
 
-use crate::{error::ParserError, UbxPacketMeta};
-use ublox_derive::ubx_packet_recv;
+use crate::{
+    error::ParserError,
+    ubx_checksum,
+    ubx_packets::{packets::ScaleBack, UbxChecksumCalc},
+    MemWriter, MemWriterError, UbxPacketCreator, UbxPacketMeta, SYNC_CHAR_1, SYNC_CHAR_2,
+};
 
-#[ubx_packet_recv]
+use ublox_derive::ubx_packet_recv_send;
+
+/// UBX-MGA-GPS IONO frame.
+#[ubx_packet_recv_send]
 #[ubx(class = 0x13, id = 0x00, fixed_payload_len = 16)]
 struct MgaGpsIono {
     /// Message type: 0x06 for this type
