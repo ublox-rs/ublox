@@ -33,7 +33,7 @@ define_recv_packets!(
         MgaAck,
         MgaGpsIono,
         MgaGpsEph,
-        MgaGpsTime,
+        MgaGpsUtc,
         MgaGalEph,
         MgaGalTime,
         MgaBdsEph,
