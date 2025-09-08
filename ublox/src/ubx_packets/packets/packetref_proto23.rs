@@ -42,6 +42,8 @@ define_recv_packets!(
         MgaGpsIono,
         MgaGpsEph,
         MgaBdsEph,
+        MgaGalEph,
+        MgaGalTime,
         MgaGloEph,
         NavAtt,
         NavClock,

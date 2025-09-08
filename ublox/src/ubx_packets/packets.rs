@@ -143,6 +143,9 @@ pub use mga_gps_iono::*;
 pub mod mga_gal_eph;
 pub use mga_gal_eph::*;
 
+pub mod mga_gal_time;
+pub use mga_gal_time::*;
+
 pub mod mga_bds_eph;
 pub use mga_bds_eph::*;
 
