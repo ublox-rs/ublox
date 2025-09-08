@@ -152,6 +152,9 @@ pub use mga_gal_time::*;
 pub mod mga_bds_eph;
 pub use mga_bds_eph::*;
 
+pub mod mga_bds_iono;
+pub use mga_bds_iono::*;
+
 pub mod mga_bds_utc;
 pub use mga_bds_utc::*;
 
