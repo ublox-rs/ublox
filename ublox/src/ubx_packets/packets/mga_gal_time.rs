@@ -36,7 +36,7 @@ struct MgaGalTime {
     /// GGTO reference time in seconds
     #[ubx(map_type = f64, scale = 3600.0)]
     t0g: u8,
-    
+
     /// GGTO reference week number
     #[ubx(map_type = f64, scale = 1.0)]
     wn0g: u8,
