@@ -44,19 +44,19 @@ struct MgaGpsIono {
     /// Ionospheric parameter beta0 (in seconds)
     #[ubx(map_type = f64, scale = 2.0e11)]
     beta0: i8,
-    
+
     /// Ionospheric parameter beta1 (in seconds per semicircle)
     #[ubx(map_type = f64, scale = 2.0e14)]
     beta1: i8,
-    
+
     /// Ionospheric parameter beta2 (in seconds per squared semicircles)
     #[ubx(map_type = f64, scale = 2.0e16)]
     beta2: i8,
-    
+
     /// Ionospheric parameter beta3 (in second per cubic semicircles)
     #[ubx(map_type = f64, scale = 2.0e16)]
     beta3: i8,
-    
+
     /// Reserved
     reserved2: [u8; 4],
 }

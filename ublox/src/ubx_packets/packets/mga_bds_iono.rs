@@ -54,7 +54,7 @@ struct MgaBdsIono {
     beta2: i8,
 
     /// Ionospheric parameter beta0 (in seconds per cubic radians)
-    #[ubx(map_type = f64, scale = 2.0e16)] 
+    #[ubx(map_type = f64, scale = 2.0e16)]
     beta3: i8,
 
     /// Reserved
