@@ -140,11 +140,23 @@ pub use mga_gps_eph::*;
 pub mod mga_gps_iono;
 pub use mga_gps_iono::*;
 
+pub mod mga_gps_utc;
+pub use mga_gps_utc::*;
+
 pub mod mga_gal_eph;
 pub use mga_gal_eph::*;
 
+pub mod mga_gal_time;
+pub use mga_gal_time::*;
+
 pub mod mga_bds_eph;
 pub use mga_bds_eph::*;
+
+pub mod mga_bds_iono;
+pub use mga_bds_iono::*;
+
+pub mod mga_bds_utc;
+pub use mga_bds_utc::*;
 
 pub mod mon_gnss;
 pub use mon_gnss::*;
