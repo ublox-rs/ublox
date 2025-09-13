@@ -12,46 +12,56 @@ alias l := lint
     just --list
 
 # Run all CI checks (except semver)
+[group("all")]
 ci: typos lint build-all test-all lint-examples build-examples doc msrv
 
 # Check all feature combinations
+[group("all")]
 check-all *ARGS: (cmd-for-all-features "cargo check" ARGS)
 
 # Build all feature combinations
+[group("all")]
 build-all *ARGS: (cmd-for-all-features "cargo build" ARGS)
 
 # Test all feature combinations
+[group("all")]
 test-all *ARGS: (cmd-for-all-features "cargo test" ARGS)
 
 # Build examples
+[group("examples")]
 build-examples:
     cargo build --release --all
 
 # Format and lint examples
+[group("examples")]
 lint-examples:
     cargo fmt --all -- --check
     cargo clippy --all-targets --all -- -D warnings
 
 # Run formatting and clippy lints
+[group("misc")]
 lint *ARGS:
     cargo fmt --all
     cargo clippy --all-targets -- -D warnings
 
 # Build docs
+[group("misc")]
 doc $RUSTDOCFLAGS="--cfg docrs":
     cd ublox_derive && cargo +nightly doc --no-deps
     cd ublox        && cargo +nightly doc --no-deps
 
 # Run MSRV checks
+[group("misc")]
 msrv:
     cargo hack check --rust-version --workspace
 
 # Typo checking
+[group("misc")]
 typos:
     typos .
 
 # Run `CMD` for all feature combinations
-[no-exit-message]
+[no-exit-message, group("misc")]
 cmd-for-all-features CMD *ARGS:
     #!/usr/bin/env bash
     set -euo pipefail
