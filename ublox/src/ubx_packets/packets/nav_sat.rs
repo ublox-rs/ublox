@@ -1,7 +1,6 @@
-use core::fmt;
-
-#[allow(unused_imports, reason = "It's only unused in some feature sets")]
+#[allow(unused_imports, reason = "It is only unused in some feature sets")]
 use crate::FieldIter;
+use core::fmt;
 #[cfg(feature = "serde")]
 use {super::SerializeUbxPacketFields, crate::serde::ser::SerializeMap};
 

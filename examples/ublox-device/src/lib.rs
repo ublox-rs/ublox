@@ -3,7 +3,10 @@ use std::time::Duration;
 
 pub mod cli;
 pub use ublox;
-use ublox::{CfgPrtUart, CfgPrtUartBuilder, PacketRef, Parser, UartMode, UbxPacketMeta};
+use ublox::{
+    cfg_prt::{CfgPrtUart, CfgPrtUartBuilder, UartMode},
+    PacketRef, Parser, UbxPacketMeta,
+};
 
 pub trait UbxPacketHandler {
     fn handle(&mut self, _packet: PacketRef<'_>) {}

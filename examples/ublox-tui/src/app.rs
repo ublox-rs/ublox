@@ -2,9 +2,15 @@ use core::f64;
 use std::{path::PathBuf, vec};
 
 use ublox_device::ublox::{
-    EsfAlgStatus, EsfMeasData, EsfSensorFaults, EsfSensorStatusCalibration, EsfSensorStatusTime,
-    EsfSensorType, EsfStatusFusionMode, EsfStatusImuInit, EsfStatusInsInit, EsfStatusMountAngle,
-    EsfStatusWheelTickInit, GnssFixType, NavPvtFlags, NavPvtFlags2,
+    esf_alg::EsfAlgStatus,
+    esf_meas::EsfMeasData,
+    esf_status::{
+        EsfSensorFaults, EsfSensorStatusCalibration, EsfSensorStatusTime, EsfSensorType,
+        EsfStatusFusionMode, EsfStatusImuInit, EsfStatusInsInit, EsfStatusMountAngle,
+        EsfStatusWheelTickInit,
+    },
+    nav_pvt::{NavPvtFlags, NavPvtFlags2},
+    GnssFixType,
 };
 
 use crate::{signal::Signal, ui::LogWidget};

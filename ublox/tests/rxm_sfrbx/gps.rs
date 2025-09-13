@@ -1,6 +1,6 @@
 #![cfg(feature = "alloc")]
 
-use ublox::{PacketRef, Parser, RxmSfrbxInterpreted};
+use ublox::{rxm_sfrbx::RxmSfrbxInterpreted, PacketRef, Parser};
 
 use gnss_protos::GpsQzssSubframe;
 

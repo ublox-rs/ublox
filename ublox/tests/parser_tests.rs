@@ -1,8 +1,9 @@
 #![cfg(feature = "alloc")]
 
 use ublox::{
-    CfgNav5Builder, CfgNav5Params, NavDynamicModel, NavFixMode, PacketRef, Parser, ParserError,
-    UbxParserIter, UtcStandardIdentifier,
+    ack::{AckAckOwned, AckAckRef},
+    cfg_nav5::{CfgNav5Builder, CfgNav5Params, NavDynamicModel, NavFixMode},
+    PacketRef, Parser, ParserError, UbxParserIter, UtcStandardIdentifier,
 };
 
 macro_rules! my_vec {
@@ -334,8 +335,8 @@ fn test_ack_ack_to_owned_can_be_moved() {
     match it.next() {
         Some(Ok(PacketRef::AckAck(ack_packet))) => {
             assert_eq!(ack_packet.class(), expect_ack_payload_class_id);
-            let borrowed: ublox::AckAckRef = ack_packet;
-            let owned: ublox::AckAckOwned = borrowed.to_owned();
+            let borrowed: AckAckRef = ack_packet;
+            let owned: AckAckOwned = borrowed.to_owned();
 
             assert_eq!(borrowed.class(), owned.class());
             assert_eq!(borrowed.msg_id(), owned.msg_id());

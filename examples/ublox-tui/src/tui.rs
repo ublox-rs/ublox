@@ -20,7 +20,9 @@ use ratatui::{
 
 use anyhow::Result;
 use tracing::info;
-use ublox_device::ublox::{self, SensorData};
+use ublox::esf_meas::SensorData;
+use ublox_device::ublox::esf_status::EsfSensorType;
+use ublox_device::ublox::{self};
 
 use crate::{
     app::{App, UbxStatus},
@@ -135,19 +137,19 @@ fn update_states(app: &mut App, receiver: &Receiver<UbxStatus>) {
                 };
                 let value = (v.time_tag, value);
                 match meas.data_type {
-                    ublox::EsfSensorType::AccX => app.signals.acc_x.append(value),
-                    ublox::EsfSensorType::AccY => app.signals.acc_y.append(value),
-                    ublox::EsfSensorType::AccZ => app.signals.acc_z.append(value),
-                    ublox::EsfSensorType::GyroX => app.signals.gyro_x.append(value),
-                    ublox::EsfSensorType::GyroY => app.signals.gyro_y.append(value),
-                    ublox::EsfSensorType::GyroZ => app.signals.gyro_z.append(value),
-                    ublox::EsfSensorType::GyroTemp => app.signals.gyro_temp.append(value),
-                    ublox::EsfSensorType::FrontLeftWheelTicks => app.signals.wt_fl.append(value),
-                    ublox::EsfSensorType::FrontRightWheelTicks => app.signals.wt_fr.append(value),
-                    ublox::EsfSensorType::RearLeftWheelTicks => app.signals.wt_rl.append(value),
-                    ublox::EsfSensorType::RearRightWheelTicks => app.signals.wt_rr.append(value),
-                    ublox::EsfSensorType::Speed => app.signals.speed.append(value),
-                    ublox::EsfSensorType::SpeedTick => app.signals.speed_tick.append(value),
+                    EsfSensorType::AccX => app.signals.acc_x.append(value),
+                    EsfSensorType::AccY => app.signals.acc_y.append(value),
+                    EsfSensorType::AccZ => app.signals.acc_z.append(value),
+                    EsfSensorType::GyroX => app.signals.gyro_x.append(value),
+                    EsfSensorType::GyroY => app.signals.gyro_y.append(value),
+                    EsfSensorType::GyroZ => app.signals.gyro_z.append(value),
+                    EsfSensorType::GyroTemp => app.signals.gyro_temp.append(value),
+                    EsfSensorType::FrontLeftWheelTicks => app.signals.wt_fl.append(value),
+                    EsfSensorType::FrontRightWheelTicks => app.signals.wt_fr.append(value),
+                    EsfSensorType::RearLeftWheelTicks => app.signals.wt_rl.append(value),
+                    EsfSensorType::RearRightWheelTicks => app.signals.wt_rr.append(value),
+                    EsfSensorType::Speed => app.signals.speed.append(value),
+                    EsfSensorType::SpeedTick => app.signals.speed_tick.append(value),
                     _ => {
                         unimplemented!("Not implemented for {:?}", meas.data_type);
                     },
