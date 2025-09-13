@@ -1,5 +1,8 @@
 #![cfg(feature = "ubx_proto27")]
 
+#[cfg(feature = "serde")]
+use {super::SerializeUbxPacketFields, crate::serde::ser::SerializeMap};
+
 use crate::ubx_packets::packets::{
     ack::{AckAck, AckAckOwned, AckAckRef, AckNak, AckNakOwned, AckNakRef},
     cfg_ant::{CfgAnt, CfgAntOwned, CfgAntRef},
