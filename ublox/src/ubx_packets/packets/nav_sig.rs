@@ -5,6 +5,8 @@ use core::fmt;
 use {super::SerializeUbxPacketFields, crate::serde::ser::SerializeMap};
 
 use crate::nav_sat::NavSatSvHealth;
+#[allow(unused_imports, reason = "It is only unused in some feature sets")]
+use crate::FieldIter;
 use crate::{error::ParserError, UbxPacketMeta};
 use ublox_derive::ubx_packet_recv;
 

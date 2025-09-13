@@ -1,9 +1,7 @@
 use super::common::NavRelPosNedFlags;
 
 #[cfg(feature = "serde")]
-use super::SerializeUbxPacketFields;
-#[cfg(feature = "serde")]
-use crate::serde::ser::SerializeMap;
+use crate::{serde::ser::SerializeMap, SerializeUbxPacketFields};
 
 use crate::{error::ParserError, UbxPacketMeta};
 use ublox_derive::ubx_packet_recv;

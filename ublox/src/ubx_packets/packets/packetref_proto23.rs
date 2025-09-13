@@ -1,6 +1,8 @@
 #![cfg(feature = "ubx_proto23")]
 
+#[cfg(feature = "serde")]
 use super::{SerializeMap, SerializeUbxPacketFields};
+
 use crate::ubx_packets::packets::{
     ack::{AckAck, AckAckOwned, AckAckRef, AckNak, AckNakOwned, AckNakRef},
     cfg_ant::{CfgAnt, CfgAntOwned, CfgAntRef},
@@ -31,9 +33,14 @@ use crate::ubx_packets::packets::{
     inf_test::{InfTest, InfTestOwned, InfTestRef},
     inf_warning::{InfWarning, InfWarningOwned, InfWarningRef},
     mga_ack::{MgaAck, MgaAckOwned, MgaAckRef},
+    mga_bds_eph::{MgaBdsEph, MgaBdsEphOwned, MgaBdsEphRef},
+    mga_bds_utc::{MgaBdsUtc, MgaBdsUtcOwned, MgaBdsUtcRef},
+    mga_gal_eph::{MgaGalEph, MgaGalEphOwned, MgaGalEphRef},
+    mga_gal_time::{MgaGalTime, MgaGalTimeOwned, MgaGalTimeRef},
     mga_glo_eph::{MgaGloEph, MgaGloEphOwned, MgaGloEphRef},
     mga_gps_eph::{MgaGpsEph, MgaGpsEphOwned, MgaGpsEphRef},
     mga_gps_iono::{MgaGpsIono, MgaGpsIonoOwned, MgaGpsIonoRef},
+    mga_gps_utc::{MgaGpsUtc, MgaGpsUtcOwned, MgaGpsUtcRef},
     mon_gnss::{MonGnss, MonGnssOwned, MonGnssRef},
     mon_hw::{MonHw, MonHwOwned, MonHwRef},
     mon_ver::{MonVer, MonVerOwned, MonVerRef},
