@@ -12,6 +12,7 @@ use crate::{
 
 use ublox_derive::ubx_packet_recv_send;
 
+/// UBX-MGA-GLO EPH frame.
 #[ubx_packet_recv_send]
 #[ubx(class = 0x13, id = 0x06, fixed_payload_len = 48)]
 struct MgaGloEph {

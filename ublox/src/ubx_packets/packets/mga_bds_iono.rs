@@ -12,10 +12,10 @@ use crate::{
 
 use ublox_derive::ubx_packet_recv_send;
 
-/// UBX-MGA-GPS IONO frame.
+/// UBX-MGA-BDS IONO frame.
 #[ubx_packet_recv_send]
-#[ubx(class = 0x13, id = 0x00, fixed_payload_len = 16)]
-struct MgaGpsIono {
+#[ubx(class = 0x13, id = 0x03, fixed_payload_len = 16)]
+struct MgaBdsIono {
     /// Message type: 0x06 for this type
     msg_type: u8,
 
@@ -29,15 +29,15 @@ struct MgaGpsIono {
     #[ubx(map_type = f64, scale = 2.0e-30)]
     alpha0: i8,
 
-    /// Ionospheric parameter alpha1 (in seconds per semicircle)
+    /// Ionospheric parameter alpha1 (in seconds per radians)
     #[ubx(map_type = f64, scale = 2.0e-27)]
     alpha1: i8,
 
-    /// Ionospheric parameter alpha2 (in seconds per squared semicircles)
+    /// Ionospheric parameter alpha1 (in seconds per squared radians)
     #[ubx(map_type = f64, scale = 2.0e-24)]
     alpha2: i8,
 
-    /// Ionospheric parameter alpha3 (in seconds per cubic semicircles)
+    /// Ionospheric parameter alpha1 (in seconds per cubic radians)
     #[ubx(map_type = f64, scale = 2.0e-24)]
     alpha3: i8,
 
@@ -45,15 +45,15 @@ struct MgaGpsIono {
     #[ubx(map_type = f64, scale = 2.0e11)]
     beta0: i8,
 
-    /// Ionospheric parameter beta1 (in seconds per semicircle)
+    /// Ionospheric parameter beta0 (in seconds per radians)
     #[ubx(map_type = f64, scale = 2.0e14)]
     beta1: i8,
 
-    /// Ionospheric parameter beta2 (in seconds per squared semicircles)
-    #[ubx(map_type = f64, scale = 2.0e16)]
+    /// Ionospheric parameter beta0 (in seconds per squared radians)
+    #[ubx(map_type = f64, scale = 2.0E16)]
     beta2: i8,
 
-    /// Ionospheric parameter beta3 (in second per cubic semicircles)
+    /// Ionospheric parameter beta0 (in seconds per cubic radians)
     #[ubx(map_type = f64, scale = 2.0e16)]
     beta3: i8,
 

@@ -13,18 +13,26 @@ use ublox_derive::{ubx_extend_bitflags, ubx_packet_recv};
 struct RxmRawx {
     /// Measurement time of week in receiver local time approximately aligned to the GPS time system.
     rcv_tow: f64,
-    /// GPS week number in receiver local time.
+
+    /// GPS week number. U-Blox receivers always express this counter in GPST.
     week: u16,
+
     /// GPS leap seconds (GPS-UTC)
     leap_s: i8,
+
     /// Number of measurements to follow
     num_meas: u8,
+
     /// Receiver tracking status bitfield
     #[ubx(map_type = RecStatFlags)]
     rec_stat: u8,
+
     /// Message version
     version: u8,
+
+    /// Reserved
     reserved1: [u8; 2],
+
     /// Extended software information strings
     #[ubx(
         map_type = RxmRawxInfoIter,
@@ -38,11 +46,11 @@ struct RxmRawx {
 #[ubx_extend_bitflags]
 #[ubx(from, into_raw, rest_reserved)]
 bitflags! {
-    /// `CfgNavX5Params2` parameters bitmask
     #[derive(Default, Debug)]
     pub struct RecStatFlags: u8 {
         /// Leap seconds have been determined
         const LEAP_SEC = 0x1;
+
         /// Clock reset applied.
         const CLK_RESET = 0x2;
     }
@@ -69,29 +77,54 @@ impl<'a> core::iter::Iterator for RxmRawxInfoIter<'a> {
     }
 }
 
-/// This packet is not actually received as such, it is a block of the `RxmRawx` message
-/// The `ubx_packet_recv` macro is used here as a shortcut to generate the needed code required for the repeated block.
 #[ubx_packet_recv]
 #[ubx(class = 0x02, id = 0x15, fixed_payload_len = 32)]
 #[derive(Debug)]
 pub struct RxmRawxInfo {
+    /// Pseudo range measurement
     pr_mes: f64,
+
+    /// Carrier phase measurement
     cp_mes: f64,
+
+    /// Doppler shift
     do_mes: f32,
+
+    /// GNSS-ID of signal source
     gnss_id: u8,
+
+    /// PRN ID of signal source
     sv_id: u8,
+
+    /// Reserved
     reserved2: u8,
+
+    /// Frequency ID in case of Glonass signal source
     freq_id: u8,
+
+    /// Lock time
     lock_time: u16,
+
+    /// Measurement C/NO
     cno: u8,
+
+    /// Pseudo range standard deviation
     #[ubx(map_type = StdevFlags)]
     pr_stdev: u8,
+
+    /// Carrier phase standard deviation
     #[ubx(map_type = StdevFlags)]
     cp_stdev: u8,
+
+    /// Doppler shift standard deviation
     #[ubx(map_type = StdevFlags)]
     do_stdev: u8,
+
+    /// Tracking status
     #[ubx(map_type = TrkStatFlags)]
     trk_stat: u8,
+
+    /// Reserved
     reserved3: u8,
 }
 
