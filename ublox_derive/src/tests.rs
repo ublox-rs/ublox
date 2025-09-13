@@ -170,6 +170,9 @@ fn test_ubx_packet_recv_simple() {
                 pub fn as_bytes(&self) -> &[u8] {
                     &self.0
                 }
+                pub fn to_ref(&self) -> TestRef {
+                    self.into()
+                }
                 #[doc = ""]
                 #[inline]
                 pub fn itow(&self) -> u32 {
@@ -274,6 +277,16 @@ fn test_ubx_packet_recv_simple() {
             impl<'a> From<TestRef<'a>> for TestOwned {
                 fn from(packet: TestRef<'a>) -> Self {
                     (&packet).into()
+                }
+            }
+            impl<'a> From<TestOwned> for TestRef<'a> {
+                fn from(packet: TestOwned) -> Self {
+                    (packet).into()
+                }
+            }
+            impl<'a> From<&'a TestOwned> for TestRef<'a> {
+                fn from(packet: &'a TestOwned) -> Self {
+                    (packet).into()
                 }
             }
 
@@ -421,6 +434,9 @@ fn test_ubx_packet_recv_dyn_len() {
                 pub fn as_bytes(&self) -> &[u8] {
                     &self.0
                 }
+                pub fn to_ref(&self) -> TestRef {
+                    self.into()
+                }
                 #[doc = ""]
                 #[inline]
                 pub fn f1_raw(&self) -> &[u8] {
@@ -464,6 +480,16 @@ fn test_ubx_packet_recv_dyn_len() {
             impl<'a> From<TestRef<'a>> for TestOwned {
                 fn from(packet: TestRef<'a>) -> Self {
                     (&packet).into()
+                }
+            }
+            impl<'a> From<TestOwned> for TestRef<'a> {
+                fn from(packet: TestOwned) -> Self {
+                    (packet).into()
+                }
+            }
+            impl<'a> From<&'a TestOwned> for TestRef<'a> {
+                fn from(packet: &'a TestOwned) -> Self {
+                    (packet).into()
                 }
             }
 
