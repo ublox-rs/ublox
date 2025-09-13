@@ -16,9 +16,10 @@ ratatui = "ratatui"
 EXTINT = "EXTINT"
 NED = "NED"
 
+[default]
+extend-ignore-re = ["alias .+"]
+
 [type.md]
 # In markdown files, ignore content in the backticks between "Fixed typo:" and "to `"
 # ensures that the fixed typo is not recognized as a typo, but the word it was corrected to IS checked.
-extend-ignore-re = [
-    " Fixed typo: `.+` to `",
-]
+extend-ignore-re = [" Fixed typo: `.+` to `"]

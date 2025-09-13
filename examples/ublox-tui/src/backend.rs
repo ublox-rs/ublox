@@ -1,7 +1,15 @@
 use std::sync::mpsc::Sender;
 use std::thread;
 use tracing::{debug, error, info, trace};
-use ublox_device::ublox::*;
+use ublox_device::ublox::{
+    cfg_msg::{CfgMsgAllPorts, CfgMsgAllPortsBuilder},
+    esf_alg::{EsfAlg, EsfAlgError},
+    esf_meas::EsfMeas,
+    esf_status::EsfStatus,
+    mon_ver::MonVer,
+    nav_pvt::{NavPvt, NavPvtFlags2},
+    *,
+};
 
 use crate::app::{
     EsfAlgImuAlignmentWidgetState, EsfAlgStatusWidgetState, EsfMeasurementWidgetState,
