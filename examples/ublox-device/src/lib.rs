@@ -5,28 +5,28 @@ pub mod cli;
 pub use ublox;
 use ublox::{
     cfg_prt::{CfgPrtUart, CfgPrtUartBuilder, UartMode},
-    PacketRef, Parser, UbxPacketMeta,
+    Parser, UbxPacket, UbxPacketMeta, UbxProtocol,
 };
 
 pub trait UbxPacketHandler {
-    fn handle(&mut self, _packet: PacketRef<'_>) {}
+    fn handle(&mut self, _packet: UbxPacket) {}
 }
 
 /// Implement handler for simple callbacks / closures
-impl<F: FnMut(PacketRef)> UbxPacketHandler for F {
-    fn handle(&mut self, package: PacketRef) {
+impl<F: FnMut(UbxPacket)> UbxPacketHandler for F {
+    fn handle(&mut self, package: UbxPacket) {
         self(package)
     }
 }
 
-pub struct Device {
+pub struct Device<P: UbxProtocol> {
     port: Box<dyn serialport::SerialPort>,
-    parser: Parser<Vec<u8>>,
+    parser: Parser<Vec<u8>, P>,
 }
 
-impl Device {
-    pub fn new(port: Box<dyn serialport::SerialPort>) -> Device {
-        let parser = Parser::default();
+impl<P: UbxProtocol> Device<P> {
+    pub fn new(port: Box<dyn serialport::SerialPort>) -> Device<P> {
+        let parser = Parser::<_, P>::new(vec![]);
         Device { port, parser }
     }
 
@@ -60,7 +60,7 @@ impl Device {
         self.port.write_all(data)
     }
 
-    pub fn on_data_available<F: FnMut(ublox::PacketRef)>(
+    pub fn on_data_available<F: FnMut(ublox::UbxPacket)>(
         &mut self,
         mut callback: F,
     ) -> std::io::Result<()> {
@@ -78,7 +78,8 @@ impl Device {
 
             // parser.consume_ubx adds the buffer to its internal buffer, and
             // returns an iterator-like object we can use to process the packets
-            let mut it = self.parser.consume_ubx(&local_buf[..nbytes]);
+            let mut it: ublox::UbxParserIter<'_, Vec<u8>, P> =
+                self.parser.consume_ubx(&local_buf[..nbytes]);
             loop {
                 match it.next() {
                     Some(Ok(packet)) => {
@@ -102,12 +103,32 @@ impl Device {
         let start = std::time::SystemTime::now();
         let timeout = Duration::from_secs(3);
         while !found_packet {
-            self.on_data_available(|packet| {
-                if let PacketRef::AckAck(ack) = packet {
-                    if ack.class() == T::CLASS && ack.msg_id() == T::ID {
-                        found_packet = true;
+            self.on_data_available(|packet| match packet {
+                #[cfg(feature = "ubx_proto23")]
+                UbxPacket::Proto23(packet_ref) => {
+                    if let ublox::proto23::PacketRef::AckAck(ack) = packet_ref {
+                        if ack.class() == T::CLASS && ack.msg_id() == T::ID {
+                            found_packet = true;
+                        }
                     }
-                }
+                },
+                #[cfg(feature = "ubx_proto27")]
+                UbxPacket::Proto27(packet_ref) => {
+                    if let ublox::proto27::PacketRef::AckAck(ack) = packet_ref {
+                        if ack.class() == T::CLASS && ack.msg_id() == T::ID {
+                            found_packet = true;
+                        }
+                    }
+                },
+                #[cfg(feature = "ubx_proto31")]
+                UbxPacket::Proto31(packet_ref) => {
+                    if let ublox::proto31::PacketRef::AckAck(ack) = packet_ref {
+                        if ack.class() == T::CLASS && ack.msg_id() == T::ID {
+                            found_packet = true;
+                        }
+                    }
+                },
+                _ => unreachable!("No ubx_proto14 features"),
             })?;
 
             if start.elapsed().unwrap().as_millis() > timeout.as_millis() {
