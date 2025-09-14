@@ -69,8 +69,6 @@ pub use parser::proto31;
 #[cfg(feature = "ubx_proto31")]
 pub use parser::proto31_with_buffer;
 
-use core::marker::Sized;
-
 /// Trait for parsing UBX protocol version.
 pub trait UbxProtocol: Send + Sized {
     /// The protocol-specific PacketRef type. The `'a` lifetime is tied to the input buffer.
@@ -89,23 +87,28 @@ pub trait UbxProtocol: Send + Sized {
 
 #[cfg(feature = "ubx_proto14")]
 pub mod proto17 {
-    pub use crate::parser::Proto17;
-    pub use crate::ubx_packets::packetref_proto17::PacketRef;
+    //! Protocol 17 specific types
+    #[doc(inline)]
+    pub use crate::{parser::Proto17, ubx_packets::packetref_proto17::PacketRef};
 }
 #[cfg(feature = "ubx_proto23")]
 pub mod proto23 {
-    pub use crate::parser::Proto23;
-    pub use crate::ubx_packets::packetref_proto23::PacketRef;
+    //! Protocol 23 specific types
+    #[doc(inline)]
+    pub use crate::{parser::Proto23, ubx_packets::packetref_proto23::PacketRef};
 }
+
 #[cfg(feature = "ubx_proto27")]
 pub mod proto27 {
-    pub use crate::parser::Proto27;
-    pub use crate::ubx_packets::packetref_proto27::PacketRef;
+    //! Protocol 27 specific types
+    #[doc(inline)]
+    pub use crate::{parser::Proto27, ubx_packets::packetref_proto27::PacketRef};
 }
 #[cfg(feature = "ubx_proto31")]
 pub mod proto31 {
-    pub use crate::parser::Proto31;
-    pub use crate::ubx_packets::packetref_proto31::PacketRef;
+    //! Protocol 31 specific types
+    #[doc(inline)]
+    pub use crate::{parser::Proto31, ubx_packets::packetref_proto31::PacketRef};
 }
 
 mod error;

@@ -32,6 +32,7 @@ pub type DefaultProtocol = Proto27;
 pub type DefaultProtocol = Proto31;
 
 #[cfg(feature = "ubx_proto14")]
+/// Tag for protocol 17 packets
 pub struct Proto17;
 
 #[cfg(feature = "ubx_proto14")]
@@ -50,6 +51,7 @@ impl UbxProtocol for Proto17 {
 }
 
 #[cfg(feature = "ubx_proto23")]
+/// Tag for protocol 23 packets
 pub struct Proto23;
 
 #[cfg(feature = "ubx_proto23")]
@@ -69,6 +71,7 @@ impl UbxProtocol for Proto23 {
 }
 
 #[cfg(feature = "ubx_proto27")]
+/// Tag for protocol 27 packets
 pub struct Proto27;
 
 #[cfg(feature = "ubx_proto27")]
@@ -87,6 +90,7 @@ impl UbxProtocol for Proto27 {
 }
 
 #[cfg(feature = "ubx_proto31")]
+/// Tag for protocol 31 packets
 pub struct Proto31;
 
 #[cfg(feature = "ubx_proto31")]
