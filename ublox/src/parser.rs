@@ -629,10 +629,7 @@ pub struct UbxParserIter<'a, T: UnderlyingBuffer, P: UbxProtocol> {
 fn extract_packet_ubx<'b, T: UnderlyingBuffer, P: UbxProtocol>(
     buf: &'b mut DualBuffer<'_, T>,
     pack_len: usize,
-) -> Option<Result<UbxPacket<'b>, ParserError>>
-where
-    for<'c> UbxPacket<'c>: From<P::PacketRef<'c>>,
-{
+) -> Option<Result<UbxPacket<'b>, ParserError>> {
     if !buf.can_drain_and_take(6, pack_len + 2) {
         if buf.potential_lost_bytes() > 0 {
             // We ran out of space, drop this packet and move on
@@ -670,10 +667,7 @@ where
     Some(specific_packet_result.map(|p| p.into()))
 }
 
-impl<'a, T: UnderlyingBuffer, P: UbxProtocol> UbxParserIter<'a, T, P>
-where
-    for<'b> UbxPacket<'b>: From<P::PacketRef<'b>>,
-{
+impl<'a, T: UnderlyingBuffer, P: UbxProtocol> UbxParserIter<'a, T, P> {
     fn find_sync(&self) -> Option<usize> {
         (0..self.buf.len()).find(|&i| self.buf[i] == SYNC_CHAR_1)
     }
@@ -749,10 +743,7 @@ fn extract_packet_rtcm<'a, 'b, T: UnderlyingBuffer>(
     }
 }
 
-impl<T: UnderlyingBuffer, P: UbxProtocol> UbxRtcmParserIter<'_, T, P>
-where
-    for<'b> UbxPacket<'b>: From<P::PacketRef<'b>>,
-{
+impl<T: UnderlyingBuffer, P: UbxProtocol> UbxRtcmParserIter<'_, T, P> {
     fn find_sync(&self) -> NextSync {
         for i in 0..self.buf.len() {
             if self.buf[i] == SYNC_CHAR_1 {
