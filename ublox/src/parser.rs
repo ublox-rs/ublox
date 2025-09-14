@@ -260,7 +260,12 @@ impl core::ops::Index<core::ops::Range<usize>> for FixedLinearBuffer<'_> {
 
     fn index(&self, index: core::ops::Range<usize>) -> &Self::Output {
         if index.end > self.len {
-            panic!("Index {} is outside of our length {}", index.end, self.len);
+            // Same message style as Rust std lib
+            panic!(
+                "index out of bounds: the len is {len} but the index is {idx}",
+                len = self.len,
+                idx = index.end
+            );
         }
         self.buffer.index(index)
     }
