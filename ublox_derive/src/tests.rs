@@ -736,7 +736,7 @@ fn test_define_recv_packets() {
             pub enum PacketOwned {
                 Pack1(Pack1Owned),
                 Pack2(Pack2Owned),
-                Unknown(UnknownPacketOwned),
+                Unknown(UnknownPacketOwned<{ MAX_PAYLOAD_LEN as usize }>),
             }
             impl<'a> PacketRef<'a> {
                 pub fn class_and_msg_id(&self) -> (u8, u8) {

@@ -110,7 +110,7 @@ pub fn generate_code_for_parse(recv_packs: &RecvPackets) -> TokenStream {
         #[derive(Debug)]
         pub enum #union_enum_name_owned {
             #(#pack_enum_variants_owned),*,
-            Unknown(#unknown_var_owned)
+            Unknown(#unknown_var_owned<{MAX_PAYLOAD_LEN as usize}>)
         }
 
         impl<'a> #union_enum_name_ref<'a> {
