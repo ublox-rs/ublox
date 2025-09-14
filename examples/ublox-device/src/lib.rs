@@ -128,7 +128,8 @@ impl<P: UbxProtocol> Device<P> {
                         }
                     }
                 },
-                _ => unreachable!("No ubx_proto14 features"),
+                #[cfg(feature = "ubx_proto14")]
+                UbxPacket::Proto17(_) => unreachable!("No ubx_proto14 support"),
             })?;
 
             if start.elapsed().unwrap().as_millis() > timeout.as_millis() {

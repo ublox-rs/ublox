@@ -72,7 +72,7 @@ pub use parser::proto31_with_buffer;
 use core::marker::Sized;
 
 /// Trait for parsing UBX protocol version.
-pub trait UbxProtocol: Sized {
+pub trait UbxProtocol: Send + Sized {
     /// The protocol-specific PacketRef type. The `'a` lifetime is tied to the input buffer.
     type PacketRef<'a>: Into<UbxPacket<'a>>;
 

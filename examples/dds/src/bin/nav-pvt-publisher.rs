@@ -1,14 +1,17 @@
 use anyhow::{bail, Result};
-use dds::{cli, idl};
+use dds::{cli, idl, Proto};
 use log::{debug, error, info, trace, warn};
 use rustdds::{with_key::DataWriter, DomainParticipant};
 use std::{io::ErrorKind, time};
 use ublox::{
     cfg_msg::{CfgMsgAllPorts, CfgMsgAllPortsBuilder},
     mon_ver::MonVer,
-    nav_pvt::{NavPvt, NavPvtFlags2, NavPvtRef},
 };
-use ublox_device::ublox::{self, PacketRef, UbxPacketRequest};
+use ublox_device::ublox::{
+    self,
+    nav_pvt::{common::NavPvtFlags2, proto23_27_31::NavPvt},
+    UbxPacketRequest,
+};
 use ublox_device::UbxPacketHandler;
 
 fn main() -> Result<()> {
@@ -28,7 +31,7 @@ fn main() -> Result<()> {
 
     let serialport = ublox_device::cli::Command::serialport(cli.clone())
         .expect("Could not connect to serialport");
-    let mut device = ublox_device::Device::new(serialport);
+    let mut device: ublox_device::Device<Proto> = ublox_device::Device::new(serialport);
     let port_config = ublox_device::cli::Command::ubx_port_configuration_builder(cli.clone());
     device.configure_port(port_config).unwrap();
 
@@ -123,6 +126,7 @@ fn main() -> Result<()> {
         }
     }
 }
+use ublox::UbxPacket;
 
 pub(crate) struct PkgHandler {
     pub last_published: time::Instant,
@@ -133,9 +137,31 @@ pub(crate) struct PkgHandler {
 }
 
 impl UbxPacketHandler for PkgHandler {
-    fn handle(&mut self, packet: PacketRef) {
+    fn handle(&mut self, packet: UbxPacket) {
+        // Handle the different protocol variants
         match packet {
-            ublox::PacketRef::MonVer(packet) => {
+            #[cfg(feature = "ubx_proto14")]
+            UbxPacket::Proto17(packet_ref) => self.handle_proto17_packet(packet_ref),
+            #[cfg(feature = "ubx_proto23")]
+            UbxPacket::Proto23(packet_ref) => self.handle_proto23_packet(packet_ref),
+            #[cfg(feature = "ubx_proto27")]
+            UbxPacket::Proto27(packet_ref) => self.handle_proto27_packet(packet_ref),
+            #[cfg(feature = "ubx_proto31")]
+            UbxPacket::Proto31(packet_ref) => self.handle_proto31_packet(packet_ref),
+        }
+    }
+}
+
+impl PkgHandler {
+    #[cfg(feature = "ubx_proto14")]
+    fn handle_proto17_packet(&mut self, _packet: ublox::proto17::PacketRef) {
+        unimplemented!("not supported")
+    }
+
+    #[cfg(feature = "ubx_proto23")]
+    fn handle_proto23_packet(&mut self, packet: ublox::proto23::PacketRef) {
+        match packet {
+            ublox::proto23::PacketRef::MonVer(packet) => {
                 debug!("{packet:?}");
                 info!(
                     "MonVer: SW version: {} HW version: {}; Extensions: {:?}",
@@ -144,77 +170,134 @@ impl UbxPacketHandler for PkgHandler {
                     packet.extension().collect::<Vec<&str>>()
                 );
             },
-            ublox::PacketRef::NavPvt(pkg) => {
-                debug!("{pkg:?}");
-                let mut pvt = to_dds_pvt(&pkg);
-                pvt.key = self.dds_key.clone();
-                if let Err(e) = dds::write_sample(&self.nav_pvt_wrt, &pvt) {
-                    warn!("failed to write PVT message: {e} ");
-                } else {
-                    info!(
-                        "Published new NavPvt message on DDS at: {:.6} [sec] since start",
-                        time::Instant::now()
-                            .duration_since(self.last_published)
-                            .as_secs_f64()
-                    );
-                }
+            ublox::proto23::PacketRef::NavPvt(pkg) => {
+                self.handle_nav_pvt(&pkg);
             },
-            ublox::PacketRef::EsfAlg(pkg) => {
-                debug!("{pkg:?}");
-                let msg = idl::ubx::esf_alg::EsfAlg {
-                    key: self.dds_key.clone(),
-                    itow: pkg.itow(),
-                    roll: pkg.roll() as f32,
-                    pitch: pkg.pitch() as f32,
-                    yaw: pkg.yaw() as f32,
-                    flags: pkg.flags_raw(),
-                    errors: pkg.error_raw(),
-                };
-
-                if let Err(e) = dds::write_sample(&self.esf_alg_wrt, &msg) {
-                    warn!("failed to write EsfAlg message: {e} ");
-                }
+            ublox::proto23::PacketRef::EsfAlg(pkg) => {
+                self.handle_esf_alg(&pkg);
             },
-            ublox::PacketRef::EsfStatus(pkg) => {
-                debug!("{pkg:?}");
-                let fusion_state = idl::ubx::esf_status::EsfFusionStatus {
-                    fusion_mode: pkg.fusion_mode_raw(),
-                    imu_status: pkg.init_status2().imu_init_status_raw(),
-                    ins_status: pkg.init_status1().ins_initialization_status_raw(),
-                    wheel_tick_sensor_status: pkg.init_status1().wheel_tick_init_status_raw(),
-                    imu_mount_alignment_status: pkg.init_status1().mount_angle_status_raw(),
-                };
-
-                let mut esf_status = idl::ubx::esf_status::EsfStatus {
-                    key: self.dds_key.clone(),
-                    itow: pkg.itow(),
-                    fusion_status: fusion_state,
-                    ..Default::default()
-                };
-                for s in pkg.data() {
-                    let mut sensor_state = idl::ubx::esf_status::EsfSensorStatus::default();
-                    if s.sensor_used() {
-                        sensor_state.sensor_type = s.sensor_type_raw();
-                        sensor_state.freq = s.freq();
-                        sensor_state.faults = s.faults_raw();
-                        sensor_state.calibration_status = s.calibration_status_raw();
-                        sensor_state.timing_status = s.time_status_raw();
-                        esf_status.sensors.push(sensor_state.clone());
-                    }
-                }
-
-                if let Err(e) = dds::write_sample(&self.esf_status_wrt, &esf_status) {
-                    warn!("failed to write EsfStatus message: {e} ");
-                }
+            ublox::proto23::PacketRef::EsfStatus(pkg) => {
+                self.handle_esf_status(&pkg);
             },
             _ => {
                 trace!("{packet:?}");
             },
         }
     }
+
+    #[cfg(feature = "ubx_proto27")]
+    fn handle_proto27_packet(&mut self, packet: ublox::proto27::PacketRef) {
+        match packet {
+            ublox::proto27::PacketRef::MonVer(packet) => {
+                debug!("{packet:?}");
+                info!(
+                    "MonVer: SW version: {} HW version: {}; Extensions: {:?}",
+                    packet.software_version(),
+                    packet.hardware_version(),
+                    packet.extension().collect::<Vec<&str>>()
+                );
+            },
+            ublox::proto27::PacketRef::NavPvt(pkg) => {
+                self.handle_nav_pvt(&pkg);
+            },
+            // Add other packet types as needed
+            _ => {
+                trace!("{packet:?}");
+            },
+        }
+    }
+
+    #[cfg(feature = "ubx_proto31")]
+    fn handle_proto31_packet(&mut self, packet: ublox::proto31::PacketRef) {
+        match packet {
+            ublox::proto31::PacketRef::MonVer(packet) => {
+                debug!("{packet:?}");
+                info!(
+                    "MonVer: SW version: {} HW version: {}; Extensions: {:?}",
+                    packet.software_version(),
+                    packet.hardware_version(),
+                    packet.extension().collect::<Vec<&str>>()
+                );
+            },
+            ublox::proto31::PacketRef::NavPvt(pkg) => {
+                self.handle_nav_pvt(&pkg);
+            },
+            // Add other packet types as needed
+            _ => {
+                trace!("{packet:?}");
+            },
+        }
+    }
+
+    // Generic handler methods that work with any NavPvtRef implementation
+    fn handle_nav_pvt(&mut self, pkg: &ublox::nav_pvt::proto23_27_31::NavPvtRef) {
+        debug!("{pkg:?}");
+        let mut pvt = to_dds_pvt(pkg);
+        pvt.key = self.dds_key.clone();
+        if let Err(e) = dds::write_sample(&self.nav_pvt_wrt, &pvt) {
+            warn!("failed to write PVT message: {e} ");
+        } else {
+            info!(
+                "Published new NavPvt message on DDS at: {:.6} [sec] since start",
+                time::Instant::now()
+                    .duration_since(self.last_published)
+                    .as_secs_f64()
+            );
+        }
+    }
+
+    fn handle_esf_alg(&mut self, pkg: &ublox::esf_alg::EsfAlgRef) {
+        debug!("{pkg:?}");
+        let msg = idl::ubx::esf_alg::EsfAlg {
+            key: self.dds_key.clone(),
+            itow: pkg.itow(),
+            roll: pkg.roll() as f32,
+            pitch: pkg.pitch() as f32,
+            yaw: pkg.yaw() as f32,
+            flags: pkg.flags_raw(),
+            errors: pkg.error_raw(),
+        };
+
+        if let Err(e) = dds::write_sample(&self.esf_alg_wrt, &msg) {
+            warn!("failed to write EsfAlg message: {e} ");
+        }
+    }
+
+    fn handle_esf_status(&mut self, pkg: &ublox::esf_status::EsfStatusRef) {
+        debug!("{pkg:?}");
+        let fusion_state = idl::ubx::esf_status::EsfFusionStatus {
+            fusion_mode: pkg.fusion_mode_raw(),
+            imu_status: pkg.init_status2().imu_init_status_raw(),
+            ins_status: pkg.init_status1().ins_initialization_status_raw(),
+            wheel_tick_sensor_status: pkg.init_status1().wheel_tick_init_status_raw(),
+            imu_mount_alignment_status: pkg.init_status1().mount_angle_status_raw(),
+        };
+
+        let mut esf_status = idl::ubx::esf_status::EsfStatus {
+            key: self.dds_key.clone(),
+            itow: pkg.itow(),
+            fusion_status: fusion_state,
+            ..Default::default()
+        };
+        for s in pkg.data() {
+            let mut sensor_state = idl::ubx::esf_status::EsfSensorStatus::default();
+            if s.sensor_used() {
+                sensor_state.sensor_type = s.sensor_type_raw();
+                sensor_state.freq = s.freq();
+                sensor_state.faults = s.faults_raw();
+                sensor_state.calibration_status = s.calibration_status_raw();
+                sensor_state.timing_status = s.time_status_raw();
+                esf_status.sensors.push(sensor_state.clone());
+            }
+        }
+
+        if let Err(e) = dds::write_sample(&self.esf_status_wrt, &esf_status) {
+            warn!("failed to write EsfStatus message: {e} ");
+        }
+    }
 }
 
-pub fn to_dds_pvt(pkg: &NavPvtRef) -> idl::ubx::nav_pvt::NavPvt {
+pub fn to_dds_pvt(pkg: &ublox::nav_pvt::proto23_27_31::NavPvtRef) -> idl::ubx::nav_pvt::NavPvt {
     let mut pvt = idl::ubx::nav_pvt::NavPvt {
         itow: pkg.itow(),
         ..Default::default()
