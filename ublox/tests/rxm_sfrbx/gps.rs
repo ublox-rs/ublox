@@ -106,7 +106,6 @@ fn sfrbx_gps_eph1() {
                         },
                         _ => panic!("UBX-SFRBX (GPS/QZSS) invalid subframe interpretation!"),
                     },
-                    _ => panic!("UBX-SFRBX (GPS/QZSS) incorrect interpretation"),
                 }
                 test_passed = true;
             },
@@ -217,11 +216,10 @@ fn sfrbx_gps_eph2() {
                             assert!((subframe.cus - 8.093193173409e-006).abs() < 1e-9);
                             assert!((subframe.cuc - -5.587935447693e-008).abs() < 1e-6);
                             assert!((subframe.dn - 1.444277586415e-009).abs() < 1e-9);
-                            assert_eq!(subframe.fit_int_flag, false);
+                            assert!(!subframe.fit_int_flag);
                         },
                         _ => panic!("UBX-SFRBX (GPS/QZSS) invalid subframe interpretation!"),
                     },
-                    _ => panic!("UBX-SFRBX (GPS/QZSS) incorrect interpretation"),
                 }
                 test_passed = true;
             },
@@ -334,7 +332,6 @@ fn sfrbx_gps_eph3() {
                         },
                         _ => panic!("UBX-SFRBX (GPS/QZSS) invalid subframe interpretation!"),
                     },
-                    _ => panic!("UBX-SFRBX (GPS/QZSS) incorrect interpretation"),
                 }
                 test_passed = true;
             },

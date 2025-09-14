@@ -624,7 +624,7 @@ fn test_util_esf_meas_assert_expected_json(pack: UbxPacket) {
             let actual = serde_json::to_value(&packet_ref).unwrap();
             assert_eq!(expected_packet_json, actual);
             if let ublox::proto23::PacketRef::EsfMeas(esf_meas_ref) = &packet_ref {
-                let actual = serde_json::to_value(&esf_meas_ref).unwrap();
+                let actual = serde_json::to_value(esf_meas_ref).unwrap();
                 assert_eq!(expected_esf_meas_json, actual);
             } else {
                 panic!();
@@ -634,7 +634,7 @@ fn test_util_esf_meas_assert_expected_json(pack: UbxPacket) {
             let actual = serde_json::to_value(&packet_ref).unwrap();
             assert_eq!(expected_packet_json, actual);
             if let ublox::proto27::PacketRef::EsfMeas(esf_meas_ref) = &packet_ref {
-                let actual = serde_json::to_value(&esf_meas_ref).unwrap();
+                let actual = serde_json::to_value(esf_meas_ref).unwrap();
                 assert_eq!(expected_esf_meas_json, actual);
             } else {
                 panic!();
@@ -644,7 +644,7 @@ fn test_util_esf_meas_assert_expected_json(pack: UbxPacket) {
             let actual = serde_json::to_value(&packet_ref).unwrap();
             assert_eq!(expected_packet_json, actual);
             if let ublox::proto31::PacketRef::EsfMeas(esf_meas_ref) = &packet_ref {
-                let actual = serde_json::to_value(&esf_meas_ref).unwrap();
+                let actual = serde_json::to_value(esf_meas_ref).unwrap();
                 assert_eq!(expected_esf_meas_json, actual);
             } else {
                 panic!();

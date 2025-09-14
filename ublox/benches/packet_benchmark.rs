@@ -1,6 +1,5 @@
 use criterion::{criterion_group, criterion_main, Criterion};
 use std::path::Path;
-use ublox::*;
 
 struct CpuProfiler;
 
@@ -22,28 +21,32 @@ fn profiled() -> Criterion {
     Criterion::default().with_profiler(CpuProfiler)
 }
 
-#[allow(dead_code)]
-fn parse_all<T: UnderlyingBuffer>(mut parser: Parser<T>, data: &[u8], chunk_size: usize) -> usize {
-    let mut count = 0;
-    for chunk in data.chunks(chunk_size) {
-        let mut it = parser.consume_ubx(chunk);
-        loop {
-            match it.next() {
-                Some(Ok(_packet)) => {
-                    count += 1;
-                },
-                Some(Err(e)) => {
-                    panic!("No errors allowed! got: {e:?}");
-                },
-                None => {
-                    // We've eaten all the packets we have
-                    break;
-                },
-            }
-        }
-    }
-    count
-}
+// #[allow(dead_code)]
+// fn parse_all<T: UnderlyingBuffer, P: UbxProtocol>(
+//     mut parser: Parser<T, P>,
+//     data: &[u8],
+//     chunk_size: usize,
+// ) -> usize {
+//     let mut count = 0;
+//     for chunk in data.chunks(chunk_size) {
+//         let mut it = parser.consume_ubx(chunk);
+//         loop {
+//             match it.next() {
+//                 Some(Ok(_packet)) => {
+//                     count += 1;
+//                 },
+//                 Some(Err(e)) => {
+//                     panic!("No errors allowed! got: {e:?}");
+//                 },
+//                 None => {
+//                     // We've eaten all the packets we have
+//                     break;
+//                 },
+//             }
+//         }
+//     }
+//     count
+// }
 
 pub fn criterion_benchmark(c: &mut Criterion) {
     for chunk in &[99, 100, 101, 256, 512, 1000, 1024] {

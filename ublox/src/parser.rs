@@ -667,7 +667,7 @@ where
         },
     };
     let specific_packet_result = P::match_packet(class_id, msg_id, &msg_data[..msg_data.len() - 2]);
-    return Some(specific_packet_result.map(|p| p.into()));
+    Some(specific_packet_result.map(|p| p.into()))
 }
 
 impl<'a, T: UnderlyingBuffer, P: UbxProtocol> UbxParserIter<'a, T, P>
