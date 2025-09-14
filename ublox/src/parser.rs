@@ -9,6 +9,28 @@ use crate::{
 
 use core::marker::PhantomData;
 
+// Pick the oldest enabled protocol as the default
+#[cfg(feature = "ubx_proto14")]
+pub type DefaultProtocol = Proto17;
+
+#[cfg(all(not(feature = "ubx_proto14"), feature = "ubx_proto23"))]
+pub type DefaultProtocol = Proto23;
+
+#[cfg(all(
+    not(feature = "ubx_proto14"),
+    not(feature = "ubx_proto23"),
+    feature = "ubx_proto27"
+))]
+pub type DefaultProtocol = Proto27;
+
+#[cfg(all(
+    not(feature = "ubx_proto14"),
+    not(feature = "ubx_proto23"),
+    not(feature = "ubx_proto27"),
+    feature = "ubx_proto31"
+))]
+pub type DefaultProtocol = Proto31;
+
 #[cfg(feature = "ubx_proto14")]
 pub struct Proto17;
 
@@ -301,12 +323,22 @@ impl UnderlyingBuffer for FixedLinearBuffer<'_> {
 /// If you pass your own buffer, it should be able to store at _least_ 4 bytes. In practice,
 /// you won't be able to do anything useful unless it's at least 36 bytes long (the size
 /// of a NavPosLlh packet).
-pub struct Parser<T, P: UbxProtocol>
+pub struct Parser<T, P: UbxProtocol = DefaultProtocol>
 where
     T: UnderlyingBuffer,
 {
     buf: T,
     _phantom: PhantomData<P>,
+}
+
+#[cfg(any(feature = "std", feature = "alloc"))]
+impl Parser<Vec<u8>, DefaultProtocol> {
+    pub fn default_proto() -> Self {
+        Self {
+            buf: Vec::new(),
+            _phantom: PhantomData,
+        }
+    }
 }
 
 #[cfg(all(feature = "ubx_proto14", any(feature = "std", feature = "alloc")))]
@@ -621,7 +653,7 @@ pub enum AnyPacketRef<'a> {
 }
 
 /// Iterator over data stored in `Parser` buffer
-pub struct UbxParserIter<'a, T: UnderlyingBuffer, P: UbxProtocol> {
+pub struct UbxParserIter<'a, T: UnderlyingBuffer, P: UbxProtocol = DefaultProtocol> {
     buf: DualBuffer<'a, T>,
     _phantom: PhantomData<P>,
 }
@@ -710,7 +742,7 @@ impl<T: UnderlyingBuffer, P: UbxProtocol> UbxParserIter<'_, T, P> {
 }
 
 /// Iterator over data stored in `Parser` buffer
-pub struct UbxRtcmParserIter<'a, T: UnderlyingBuffer, P: UbxProtocol> {
+pub struct UbxRtcmParserIter<'a, T: UnderlyingBuffer, P: UbxProtocol = DefaultProtocol> {
     buf: DualBuffer<'a, T>,
     _phantom: PhantomData<P>,
 }
@@ -1088,6 +1120,17 @@ mod test {
     }
 
     const BYTES_GARBAGE: [u8; 11] = [0xb5, 0xb5, 0x62, 0x5, 0x1, 0x2, 0x0, 0x4, 0x5, 0x11, 0x38];
+
+    #[cfg(any(feature = "std", feature = "alloc"))]
+    #[test]
+    fn parser_handle_garbage_first_byte_default() {
+        let mut parser = Parser::default_proto();
+        {
+            let mut it = parser.consume_ubx(&BYTES_GARBAGE);
+            assert!(it.next().is_some());
+            assert!(it.next().is_none());
+        }
+    }
 
     #[cfg(feature = "ubx_proto14")]
     #[test]

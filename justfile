@@ -14,7 +14,7 @@ alias l := lint
 
 # Run all CI checks (except semver)
 [group("all")]
-ci: typos lint build-all build-all-embedded test-all lint-examples build-examples doc msrv
+ci: typos lint-msrv build-all build-all-embedded test-all lint-examples build-examples doc msrv
 
 # Check all feature combinations
 [group("all")]
@@ -48,6 +48,12 @@ lint-examples:
 lint *ARGS:
     cargo fmt --all
     cargo clippy --all-targets -- -D warnings
+
+# Run clippy lints with version 1.83.0 which we use in CI atm (we should use a never one!)
+[group("misc")]
+lint-msrv *ARGS:
+    cargo fmt --all
+    cargo +1.83 clippy --all-targets -- -D warnings
 
 # Build docs
 [group("misc")]
