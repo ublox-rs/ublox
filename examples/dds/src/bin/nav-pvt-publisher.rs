@@ -138,10 +138,9 @@ pub(crate) struct PkgHandler {
 
 impl UbxPacketHandler for PkgHandler {
     fn handle(&mut self, packet: UbxPacket) {
-        // Handle the different protocol variants
         match packet {
             #[cfg(feature = "ubx_proto14")]
-            UbxPacket::Proto17(packet_ref) => self.handle_proto17_packet(packet_ref),
+            UbxPacket::Proto17(_) => unimplemented!("not supported"),
             #[cfg(feature = "ubx_proto23")]
             UbxPacket::Proto23(packet_ref) => self.handle_proto23_packet(packet_ref),
             #[cfg(feature = "ubx_proto27")]
@@ -153,11 +152,6 @@ impl UbxPacketHandler for PkgHandler {
 }
 
 impl PkgHandler {
-    #[cfg(feature = "ubx_proto14")]
-    fn handle_proto17_packet(&mut self, _packet: ublox::proto17::PacketRef) {
-        unimplemented!("not supported")
-    }
-
     #[cfg(feature = "ubx_proto23")]
     fn handle_proto23_packet(&mut self, packet: ublox::proto23::PacketRef) {
         match packet {
