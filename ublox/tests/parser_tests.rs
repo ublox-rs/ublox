@@ -785,7 +785,10 @@ fn test_zero_sized_ackack_proto31() {
 #[cfg(feature = "ubx_proto14")]
 #[test]
 fn test_double_start_at_end_proto14() {
-    use ublox::proto17::PacketRef;
+    use ublox::{
+        proto17::{PacketRef, Proto17},
+        FixedLinearBuffer,
+    };
     #[rustfmt::skip]
     let bytes = [
         0xb5, 0x62, // Extraneous start header
@@ -793,7 +796,7 @@ fn test_double_start_at_end_proto14() {
     ];
 
     let mut buf = [0; 10];
-    let mut parser = ublox::proto14_with_buffer(&mut buf);
+    let mut parser = ublox::Parser::<_, Proto17>::new(FixedLinearBuffer::new(&mut buf));
 
     for byte in bytes.iter() {
         parser.consume_ubx(&[*byte]);
@@ -838,7 +841,10 @@ fn test_double_start_at_end_proto14() {
 #[cfg(feature = "ubx_proto23")]
 #[test]
 fn test_double_start_at_end_proto23() {
-    use ublox::proto23::PacketRef;
+    use ublox::{
+        proto23::{PacketRef, Proto23},
+        FixedLinearBuffer,
+    };
     #[rustfmt::skip]
     let bytes = [
         0xb5, 0x62, // Extraneous start header
@@ -846,7 +852,7 @@ fn test_double_start_at_end_proto23() {
     ];
 
     let mut buf = [0; 10];
-    let mut parser = ublox::proto23_with_buffer(&mut buf);
+    let mut parser = ublox::Parser::<_, Proto23>::new(FixedLinearBuffer::new(&mut buf));
 
     for byte in bytes.iter() {
         parser.consume_ubx(&[*byte]);
@@ -891,7 +897,10 @@ fn test_double_start_at_end_proto23() {
 #[cfg(feature = "ubx_proto27")]
 #[test]
 fn test_double_start_at_end_proto27() {
-    use ublox::proto27::PacketRef;
+    use ublox::{
+        proto27::{PacketRef, Proto27},
+        FixedLinearBuffer,
+    };
     #[rustfmt::skip]
     let bytes = [
         0xb5, 0x62, // Extraneous start header
@@ -899,7 +908,7 @@ fn test_double_start_at_end_proto27() {
     ];
 
     let mut buf = [0; 10];
-    let mut parser = ublox::proto27_with_buffer(&mut buf);
+    let mut parser = ublox::Parser::<_, Proto27>::new(FixedLinearBuffer::new(&mut buf));
 
     for byte in bytes.iter() {
         parser.consume_ubx(&[*byte]);
@@ -944,7 +953,10 @@ fn test_double_start_at_end_proto27() {
 #[cfg(feature = "ubx_proto31")]
 #[test]
 fn test_double_start_at_end_proto31() {
-    use ublox::proto31::PacketRef;
+    use ublox::{
+        proto31::{PacketRef, Proto31},
+        FixedLinearBuffer,
+    };
     #[rustfmt::skip]
     let bytes = [
         0xb5, 0x62, // Extraneous start header
@@ -952,7 +964,7 @@ fn test_double_start_at_end_proto31() {
     ];
 
     let mut buf = [0; 10];
-    let mut parser = ublox::proto31_with_buffer(&mut buf);
+    let mut parser = ublox::Parser::<_, Proto31>::new(FixedLinearBuffer::new(&mut buf));
 
     for byte in bytes.iter() {
         parser.consume_ubx(&[*byte]);

@@ -27,48 +27,6 @@ pub enum UbxPacket<'a> {
     Proto31(proto31::PacketRef<'a>),
 }
 
-#[cfg(feature = "ubx_proto14")]
-impl<'a> From<proto17::PacketRef<'a>> for UbxPacket<'a> {
-    fn from(packet: proto17::PacketRef<'a>) -> Self {
-        UbxPacket::Proto17(packet)
-    }
-}
-#[cfg(feature = "ubx_proto23")]
-impl<'a> From<proto23::PacketRef<'a>> for UbxPacket<'a> {
-    fn from(packet: proto23::PacketRef<'a>) -> Self {
-        UbxPacket::Proto23(packet)
-    }
-}
-#[cfg(feature = "ubx_proto27")]
-impl<'a> From<proto27::PacketRef<'a>> for UbxPacket<'a> {
-    fn from(packet: proto27::PacketRef<'a>) -> Self {
-        UbxPacket::Proto27(packet)
-    }
-}
-#[cfg(feature = "ubx_proto31")]
-impl<'a> From<proto31::PacketRef<'a>> for UbxPacket<'a> {
-    fn from(packet: proto31::PacketRef<'a>) -> Self {
-        UbxPacket::Proto31(packet)
-    }
-}
-
-#[cfg(all(feature = "ubx_proto14", any(feature = "std", feature = "alloc")))]
-pub use parser::proto14;
-#[cfg(feature = "ubx_proto14")]
-pub use parser::proto14_with_buffer;
-#[cfg(all(feature = "ubx_proto23", any(feature = "std", feature = "alloc")))]
-pub use parser::proto23;
-#[cfg(feature = "ubx_proto23")]
-pub use parser::proto23_with_buffer;
-#[cfg(all(feature = "ubx_proto27", any(feature = "std", feature = "alloc")))]
-pub use parser::proto27;
-#[cfg(feature = "ubx_proto27")]
-pub use parser::proto27_with_buffer;
-#[cfg(all(feature = "ubx_proto31", any(feature = "std", feature = "alloc")))]
-pub use parser::proto31;
-#[cfg(feature = "ubx_proto31")]
-pub use parser::proto31_with_buffer;
-
 /// Trait for parsing UBX protocol version.
 pub trait UbxProtocol: Send + Sized {
     /// The protocol-specific PacketRef type. The `'a` lifetime is tied to the input buffer.
@@ -88,27 +46,166 @@ pub trait UbxProtocol: Send + Sized {
 #[cfg(feature = "ubx_proto14")]
 pub mod proto17 {
     //! Protocol 17 specific types
+
+    use crate::ubx_packets::packetref_proto17::{match_packet, MAX_PAYLOAD_LEN};
+    #[cfg(feature = "alloc")]
+    use alloc::vec::Vec;
+
     #[doc(inline)]
-    pub use crate::{parser::Proto17, ubx_packets::packetref_proto17::PacketRef};
+    pub use crate::ubx_packets::packetref_proto17::PacketRef;
+
+    impl<'a> From<PacketRef<'a>> for crate::UbxPacket<'a> {
+        fn from(packet: PacketRef<'a>) -> Self {
+            crate::UbxPacket::Proto17(packet)
+        }
+    }
+
+    /// Tag for protocol 17 packets
+    pub struct Proto17;
+
+    impl crate::UbxProtocol for Proto17 {
+        type PacketRef<'a> = PacketRef<'a>;
+        const MAX_PAYLOAD_LEN: usize = MAX_PAYLOAD_LEN as usize;
+
+        fn match_packet(
+            class_id: u8,
+            msg_id: u8,
+            payload: &[u8],
+        ) -> Result<Self::PacketRef<'_>, crate::ParserError> {
+            match_packet(class_id, msg_id, payload)
+        }
+    }
+
+    #[cfg(any(feature = "std", feature = "alloc"))]
+    impl core::default::Default for crate::Parser<Vec<u8>, Proto17> {
+        fn default() -> Self {
+            Self::new(Vec::new())
+        }
+    }
 }
+
 #[cfg(feature = "ubx_proto23")]
 pub mod proto23 {
     //! Protocol 23 specific types
+
+    use crate::ubx_packets::packetref_proto23::{match_packet, MAX_PAYLOAD_LEN};
+    #[cfg(feature = "alloc")]
+    use alloc::vec::Vec;
+
     #[doc(inline)]
-    pub use crate::{parser::Proto23, ubx_packets::packetref_proto23::PacketRef};
+    pub use crate::ubx_packets::packetref_proto23::PacketRef;
+
+    impl<'a> From<PacketRef<'a>> for crate::UbxPacket<'a> {
+        fn from(packet: PacketRef<'a>) -> Self {
+            crate::UbxPacket::Proto23(packet)
+        }
+    }
+
+    /// Tag for protocol 23 packets
+    pub struct Proto23;
+
+    impl crate::UbxProtocol for Proto23 {
+        type PacketRef<'a> = PacketRef<'a>;
+
+        const MAX_PAYLOAD_LEN: usize = MAX_PAYLOAD_LEN as usize;
+
+        fn match_packet(
+            class_id: u8,
+            msg_id: u8,
+            payload: &[u8],
+        ) -> Result<Self::PacketRef<'_>, crate::ParserError> {
+            match_packet(class_id, msg_id, payload)
+        }
+    }
+
+    #[cfg(any(feature = "std", feature = "alloc"))]
+    impl core::default::Default for crate::Parser<Vec<u8>, Proto23> {
+        fn default() -> Self {
+            Self::new(Vec::new())
+        }
+    }
 }
 
 #[cfg(feature = "ubx_proto27")]
 pub mod proto27 {
     //! Protocol 27 specific types
+
+    use crate::ubx_packets::packetref_proto27::{match_packet, MAX_PAYLOAD_LEN};
+    #[cfg(feature = "alloc")]
+    use alloc::vec::Vec;
+
     #[doc(inline)]
-    pub use crate::{parser::Proto27, ubx_packets::packetref_proto27::PacketRef};
+    pub use crate::ubx_packets::packetref_proto27::PacketRef;
+
+    impl<'a> From<PacketRef<'a>> for crate::UbxPacket<'a> {
+        fn from(packet: PacketRef<'a>) -> Self {
+            crate::UbxPacket::Proto27(packet)
+        }
+    }
+
+    /// Tag for protocol 27 packets
+    pub struct Proto27;
+
+    impl crate::UbxProtocol for Proto27 {
+        type PacketRef<'a> = PacketRef<'a>;
+        const MAX_PAYLOAD_LEN: usize = MAX_PAYLOAD_LEN as usize;
+
+        fn match_packet(
+            class_id: u8,
+            msg_id: u8,
+            payload: &[u8],
+        ) -> Result<Self::PacketRef<'_>, crate::ParserError> {
+            match_packet(class_id, msg_id, payload)
+        }
+    }
+
+    #[cfg(any(feature = "std", feature = "alloc"))]
+    impl core::default::Default for crate::Parser<Vec<u8>, Proto27> {
+        fn default() -> Self {
+            Self::new(Vec::new())
+        }
+    }
 }
+
 #[cfg(feature = "ubx_proto31")]
 pub mod proto31 {
     //! Protocol 31 specific types
+
+    use crate::ubx_packets::packetref_proto31::{match_packet, MAX_PAYLOAD_LEN};
+    #[cfg(feature = "alloc")]
+    use alloc::vec::Vec;
+
     #[doc(inline)]
-    pub use crate::{parser::Proto31, ubx_packets::packetref_proto31::PacketRef};
+    pub use crate::ubx_packets::packetref_proto31::PacketRef;
+
+    impl<'a> From<PacketRef<'a>> for crate::UbxPacket<'a> {
+        fn from(packet: PacketRef<'a>) -> Self {
+            crate::UbxPacket::Proto31(packet)
+        }
+    }
+
+    /// Tag for protocol 31 packets
+    pub struct Proto31;
+
+    impl crate::UbxProtocol for Proto31 {
+        type PacketRef<'a> = PacketRef<'a>;
+        const MAX_PAYLOAD_LEN: usize = MAX_PAYLOAD_LEN as usize;
+
+        fn match_packet(
+            class_id: u8,
+            msg_id: u8,
+            payload: &[u8],
+        ) -> Result<Self::PacketRef<'_>, crate::ParserError> {
+            match_packet(class_id, msg_id, payload)
+        }
+    }
+
+    #[cfg(any(feature = "std", feature = "alloc"))]
+    impl core::default::Default for crate::Parser<Vec<u8>, Proto31> {
+        fn default() -> Self {
+            Self::new(Vec::new())
+        }
+    }
 }
 
 mod error;
