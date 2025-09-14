@@ -49,7 +49,7 @@ lint *ARGS:
     cargo fmt --all
     cargo clippy --all-targets -- -D warnings
 
-# Run clippy lints with version 1.83.0 which we use in CI atm (we should use a never one!)
+# Run clippy lints with version 1.83.0 which we use in CI atm (we should use a newer one!)
 [group("misc")]
 lint-msrv *ARGS:
     cargo fmt --all
