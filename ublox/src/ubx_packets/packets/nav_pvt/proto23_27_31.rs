@@ -135,7 +135,11 @@ struct NavPvt {
     magnetic_declination_accuracy: u16,
 }
 
-#[cfg(feature = "ubx_proto23")]
+#[cfg(any(
+    feature = "ubx_proto23",
+    feature = "ubx_proto27",
+    feature = "ubx_proto31"
+))]
 pub(crate) mod flags {
     #[derive(Debug, Clone, Copy)]
     #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -165,31 +169,6 @@ pub(crate) mod flags {
             Self {
                 invalid_llh: invalid,
                 age_differential_correction,
-            }
-        }
-    }
-}
-
-#[cfg(any(feature = "ubx_proto27", feature = "ubx_proto31"))]
-pub(crate) mod flags {
-    #[derive(Debug, Clone, Copy)]
-    #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-    pub struct NavPvtFlags3 {
-        invalid_llh: bool,
-    }
-
-    impl NavPvtFlags3 {
-        /// 1 = Invalid lon, lat, height and hMSL
-        pub fn invalid_llh(&self) -> bool {
-            self.invalid_llh
-        }
-    }
-
-    impl From<u8> for NavPvtFlags3 {
-        fn from(val: u8) -> Self {
-            let invalid = val & 0x01 == 1;
-            Self {
-                invalid_llh: invalid,
             }
         }
     }

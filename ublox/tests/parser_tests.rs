@@ -13,8 +13,8 @@ macro_rules! my_vec {
         }}
     }
 
-fn extract_only_ack_ack<T: ublox::UnderlyingBuffer>(
-    mut it: UbxParserIter<T>,
+fn extract_only_ack_ack<T: ublox::UnderlyingBuffer, P: ublox::UbxProtocol>(
+    mut it: UbxParserIter<T, P>,
 ) -> Vec<Result<(u8, u8), ParserError>> {
     let mut ret = vec![];
     while let Some(pack) = it.next() {
@@ -272,8 +272,9 @@ fn test_zero_sized_ackack() {
     assert!(it.next().is_none());
 }
 
+#[cfg(feature = "ubx_proto14")]
 #[test]
-fn test_double_start_at_end() {
+fn test_double_start_at_end_proto14() {
     #[rustfmt::skip]
     let bytes = [
         0xb5, 0x62, // Extraneous start header
@@ -281,8 +282,163 @@ fn test_double_start_at_end() {
     ];
 
     let mut buf = [0; 10];
-    let buf = ublox::FixedLinearBuffer::new(&mut buf[..]);
-    let mut parser = ublox::Parser::new(buf);
+    let mut parser = ublox::proto23_with_buffer(&mut buf);
+
+    for byte in bytes.iter() {
+        parser.consume_ubx(&[*byte]);
+    }
+
+    let ack_ack = [0xb5, 0x62, 0x5, 0x1, 0x2, 0x0, 0x4, 0x5, 0x11, 0x38];
+    {
+        let mut it = parser.consume_ubx(&ack_ack);
+        match it.next() {
+            Some(Err(_)) => {
+                // First, a buffer-too-small error
+            },
+            _ => panic!(),
+        }
+        match it.next() {
+            Some(Ok(PacketRef::Unknown(_))) => {
+                // Then an unknown packet
+            },
+            _ => panic!(),
+        }
+        match it.next() {
+            Some(Ok(PacketRef::AckAck(_))) => {
+                // Then the ackack we passed
+            },
+            _ => panic!(),
+        }
+        assert!(it.next().is_none());
+    }
+    let mut it = parser.consume_ubx(&ack_ack);
+    match it.next() {
+        Some(Ok(ublox::PacketRef::AckAck { .. })) => {
+            // This is what we expect
+        },
+        _ => {
+            // Parsing other packets or ending the iteration is a failure
+            panic!();
+        },
+    }
+    assert!(it.next().is_none());
+}
+
+#[cfg(feature = "ubx_proto23")]
+#[test]
+fn test_double_start_at_end_proto23() {
+    #[rustfmt::skip]
+    let bytes = [
+        0xb5, 0x62, // Extraneous start header
+        0xb5, 0x62, 0x05, 0x01, 0x00, 0x00, 0x06, 0x17, // Zero-sized packet
+    ];
+
+    let mut buf = [0; 10];
+    let mut parser = ublox::proto23_with_buffer(&mut buf);
+
+    for byte in bytes.iter() {
+        parser.consume_ubx(&[*byte]);
+    }
+
+    let ack_ack = [0xb5, 0x62, 0x5, 0x1, 0x2, 0x0, 0x4, 0x5, 0x11, 0x38];
+    {
+        let mut it = parser.consume_ubx(&ack_ack);
+        match it.next() {
+            Some(Err(_)) => {
+                // First, a buffer-too-small error
+            },
+            _ => panic!(),
+        }
+        match it.next() {
+            Some(Ok(PacketRef::Unknown(_))) => {
+                // Then an unknown packet
+            },
+            _ => panic!(),
+        }
+        match it.next() {
+            Some(Ok(PacketRef::AckAck(_))) => {
+                // Then the ackack we passed
+            },
+            _ => panic!(),
+        }
+        assert!(it.next().is_none());
+    }
+    let mut it = parser.consume_ubx(&ack_ack);
+    match it.next() {
+        Some(Ok(ublox::PacketRef::AckAck { .. })) => {
+            // This is what we expect
+        },
+        _ => {
+            // Parsing other packets or ending the iteration is a failure
+            panic!();
+        },
+    }
+    assert!(it.next().is_none());
+}
+
+#[cfg(feature = "ubx_proto27")]
+#[test]
+fn test_double_start_at_end_proto27() {
+    #[rustfmt::skip]
+    let bytes = [
+        0xb5, 0x62, // Extraneous start header
+        0xb5, 0x62, 0x05, 0x01, 0x00, 0x00, 0x06, 0x17, // Zero-sized packet
+    ];
+
+    let mut buf = [0; 10];
+    let mut parser = ublox::proto27_with_buffer(&mut buf);
+
+    for byte in bytes.iter() {
+        parser.consume_ubx(&[*byte]);
+    }
+
+    let ack_ack = [0xb5, 0x62, 0x5, 0x1, 0x2, 0x0, 0x4, 0x5, 0x11, 0x38];
+    {
+        let mut it = parser.consume_ubx(&ack_ack);
+        match it.next() {
+            Some(Err(_)) => {
+                // First, a buffer-too-small error
+            },
+            _ => panic!(),
+        }
+        match it.next() {
+            Some(Ok(PacketRef::Unknown(_))) => {
+                // Then an unknown packet
+            },
+            _ => panic!(),
+        }
+        match it.next() {
+            Some(Ok(PacketRef::AckAck(_))) => {
+                // Then the ackack we passed
+            },
+            _ => panic!(),
+        }
+        assert!(it.next().is_none());
+    }
+    let mut it = parser.consume_ubx(&ack_ack);
+    match it.next() {
+        Some(Ok(ublox::PacketRef::AckAck { .. })) => {
+            // This is what we expect
+        },
+        _ => {
+            // Parsing other packets or ending the iteration is a failure
+            panic!();
+        },
+    }
+    assert!(it.next().is_none());
+}
+
+#[cfg(feature = "ubx_proto31")]
+#[test]
+fn test_double_start_at_end_proto31() {
+    #[rustfmt::skip]
+    let bytes = [
+        0xb5, 0x62, // Extraneous start header
+        0xb5, 0x62, 0x05, 0x01, 0x00, 0x00, 0x06, 0x17, // Zero-sized packet
+    ];
+
+    let mut buf = [0; 10];
+    let mut parser = ublox::proto31_with_buffer(&mut buf);
 
     for byte in bytes.iter() {
         parser.consume_ubx(&[*byte]);

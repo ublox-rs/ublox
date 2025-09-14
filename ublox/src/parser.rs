@@ -1,19 +1,150 @@
 #[cfg(feature = "alloc")]
 use alloc::vec::Vec;
 
-#[cfg(feature = "ubx_proto14")]
-use crate::ubx_packets::packets::packetref_proto17::{match_packet, MAX_PAYLOAD_LEN};
-#[cfg(feature = "ubx_proto23")]
-use crate::ubx_packets::packets::packetref_proto23::{match_packet, MAX_PAYLOAD_LEN};
-#[cfg(feature = "ubx_proto27")]
-use crate::ubx_packets::packets::packetref_proto27::{match_packet, MAX_PAYLOAD_LEN};
-#[cfg(feature = "ubx_proto31")]
-use crate::ubx_packets::packets::packetref_proto31::{match_packet, MAX_PAYLOAD_LEN};
-
 use crate::{
     error::ParserError,
-    ubx_packets::{PacketRef, RTCM_SYNC_CHAR, SYNC_CHAR_1, SYNC_CHAR_2},
+    ubx_packets::{RTCM_SYNC_CHAR, SYNC_CHAR_1, SYNC_CHAR_2},
+    UbxPacket, UbxProtocol,
 };
+
+use core::marker::PhantomData;
+
+#[cfg(feature = "ubx_proto14")]
+pub struct Proto17;
+
+#[cfg(feature = "ubx_proto14")]
+impl UbxProtocol for Proto17 {
+    type PacketRef<'a> = crate::proto17::PacketRef<'a>;
+    const MAX_PAYLOAD_LEN: usize =
+        crate::ubx_packets::packets::packetref_proto17::MAX_PAYLOAD_LEN as usize;
+
+    fn match_packet(
+        class_id: u8,
+        msg_id: u8,
+        payload: &[u8],
+    ) -> Result<Self::PacketRef<'_>, ParserError> {
+        crate::ubx_packets::packets::packetref_proto17::match_packet(class_id, msg_id, payload)
+    }
+}
+
+#[cfg(feature = "ubx_proto23")]
+pub struct Proto23;
+
+#[cfg(feature = "ubx_proto23")]
+impl UbxProtocol for Proto23 {
+    type PacketRef<'a> = crate::proto23::PacketRef<'a>;
+
+    const MAX_PAYLOAD_LEN: usize =
+        crate::ubx_packets::packets::packetref_proto23::MAX_PAYLOAD_LEN as usize;
+
+    fn match_packet(
+        class_id: u8,
+        msg_id: u8,
+        payload: &[u8],
+    ) -> Result<Self::PacketRef<'_>, ParserError> {
+        crate::ubx_packets::packets::packetref_proto23::match_packet(class_id, msg_id, payload)
+    }
+}
+
+#[cfg(feature = "ubx_proto27")]
+pub struct Proto27;
+
+#[cfg(feature = "ubx_proto27")]
+impl UbxProtocol for Proto27 {
+    type PacketRef<'a> = crate::proto27::PacketRef<'a>;
+    const MAX_PAYLOAD_LEN: usize =
+        crate::ubx_packets::packets::packetref_proto27::MAX_PAYLOAD_LEN as usize;
+
+    fn match_packet(
+        class_id: u8,
+        msg_id: u8,
+        payload: &[u8],
+    ) -> Result<Self::PacketRef<'_>, ParserError> {
+        crate::ubx_packets::packets::packetref_proto27::match_packet(class_id, msg_id, payload)
+    }
+}
+
+#[cfg(feature = "ubx_proto31")]
+pub struct Proto31;
+
+#[cfg(feature = "ubx_proto31")]
+impl UbxProtocol for Proto31 {
+    type PacketRef<'a> = crate::proto31::PacketRef<'a>;
+    const MAX_PAYLOAD_LEN: usize =
+        crate::ubx_packets::packets::packetref_proto31::MAX_PAYLOAD_LEN as usize;
+
+    fn match_packet(
+        class_id: u8,
+        msg_id: u8,
+        payload: &[u8],
+    ) -> Result<Self::PacketRef<'_>, ParserError> {
+        crate::ubx_packets::packets::packetref_proto31::match_packet(class_id, msg_id, payload)
+    }
+}
+
+/// Creates a parser for UBX Protocol v14 with a `Vec<u8>` buffer.
+///
+/// Requires the `ubx_proto14` and `alloc` (or `std`) features.
+#[cfg(all(feature = "ubx_proto14", any(feature = "std", feature = "alloc")))]
+pub fn proto14() -> Parser<Vec<u8>, Proto17> {
+    Parser::new(Vec::new())
+}
+
+/// Creates a parser for UBX Protocol v14 with a fixed-size buffer.
+///
+/// Requires the `ubx_proto14` feature.
+#[cfg(feature = "ubx_proto14")]
+pub fn proto14_with_buffer(buf: &mut [u8]) -> Parser<FixedLinearBuffer<'_>, Proto17> {
+    Parser::new(FixedLinearBuffer::new(buf))
+}
+
+/// Creates a parser for UBX Protocol v23 with a `Vec<u8>` buffer.
+///
+/// Requires the `ubx_proto23` and `alloc` (or `std`) features.
+#[cfg(all(feature = "ubx_proto23", any(feature = "std", feature = "alloc")))]
+pub fn proto23() -> Parser<Vec<u8>, Proto23> {
+    Parser::new(Vec::new())
+}
+
+/// Creates a parser for UBX Protocol v23 with a fixed-size buffer.
+///
+/// Requires the `ubx_proto23` feature.
+#[cfg(feature = "ubx_proto23")]
+pub fn proto23_with_buffer(buf: &mut [u8]) -> Parser<FixedLinearBuffer<'_>, Proto23> {
+    Parser::new(FixedLinearBuffer::new(buf))
+}
+
+/// Creates a parser for UBX Protocol v27 with a `Vec<u8>` buffer.
+///
+/// Requires the `ubx_proto27` and `alloc` (or `std`) features.
+#[cfg(all(feature = "ubx_proto27", any(feature = "std", feature = "alloc")))]
+pub fn proto27() -> Parser<Vec<u8>, Proto27> {
+    Parser::new(Vec::new())
+}
+
+/// Creates a parser for UBX Protocol v27 with a fixed-size buffer.
+///
+/// Requires the `ubx_proto27` feature.
+#[cfg(feature = "ubx_proto27")]
+pub fn proto27_with_buffer(buf: &mut [u8]) -> Parser<FixedLinearBuffer<'_>, Proto27> {
+    Parser::new(FixedLinearBuffer::new(buf))
+}
+
+/// Creates a parser for UBX Protocol v31 with a `Vec<u8>` buffer.
+///
+/// Requires the `ubx_proto31` and `alloc` (or `std`) features.
+#[cfg(all(feature = "ubx_proto31", any(feature = "std", feature = "alloc")))]
+pub fn proto31() -> Parser<Vec<u8>, Proto31> {
+    Parser::new(Vec::new())
+}
+
+/// Creates a parser for UBX Protocol v31 with a fixed-size buffer.
+///
+/// Requires the `ubx_proto31` feature.
+#[cfg(feature = "ubx_proto31")]
+pub fn proto31_with_buffer(buf: &mut [u8]) -> Parser<FixedLinearBuffer<'_>, Proto31> {
+    Parser::new(FixedLinearBuffer::new(buf))
+}
 
 /// This trait represents an underlying buffer used for the Parser. We provide
 /// implementations for `Vec<u8>` and for `FixedLinearBuffer`, if you want to
@@ -170,23 +301,60 @@ impl UnderlyingBuffer for FixedLinearBuffer<'_> {
 /// If you pass your own buffer, it should be able to store at _least_ 4 bytes. In practice,
 /// you won't be able to do anything useful unless it's at least 36 bytes long (the size
 /// of a NavPosLlh packet).
-pub struct Parser<T>
+pub struct Parser<T, P: UbxProtocol>
 where
     T: UnderlyingBuffer,
 {
     buf: T,
+    _phantom: PhantomData<P>,
 }
 
-#[cfg(any(feature = "std", feature = "alloc"))]
-impl core::default::Default for Parser<Vec<u8>> {
+#[cfg(all(feature = "ubx_proto14", any(feature = "std", feature = "alloc")))]
+impl core::default::Default for Parser<Vec<u8>, Proto17> {
     fn default() -> Self {
-        Self { buf: Vec::new() }
+        Self {
+            buf: Vec::new(),
+            _phantom: PhantomData,
+        }
     }
 }
 
-impl<T: UnderlyingBuffer> Parser<T> {
+#[cfg(all(feature = "ubx_proto23", any(feature = "std", feature = "alloc")))]
+impl core::default::Default for Parser<Vec<u8>, Proto23> {
+    fn default() -> Self {
+        Self {
+            buf: Vec::new(),
+            _phantom: PhantomData,
+        }
+    }
+}
+
+#[cfg(all(feature = "ubx_proto27", any(feature = "std", feature = "alloc")))]
+impl core::default::Default for Parser<Vec<u8>, Proto27> {
+    fn default() -> Self {
+        Self {
+            buf: Vec::new(),
+            _phantom: PhantomData,
+        }
+    }
+}
+
+#[cfg(all(feature = "ubx_proto31", any(feature = "std", feature = "alloc")))]
+impl core::default::Default for Parser<Vec<u8>, Proto31> {
+    fn default() -> Self {
+        Self {
+            buf: Vec::new(),
+            _phantom: PhantomData,
+        }
+    }
+}
+
+impl<T: UnderlyingBuffer, P: UbxProtocol> Parser<T, P> {
     pub fn new(underlying: T) -> Self {
-        Self { buf: underlying }
+        Self {
+            buf: underlying,
+            _phantom: PhantomData,
+        }
     }
 
     pub fn is_buffer_empty(&self) -> bool {
@@ -197,7 +365,7 @@ impl<T: UnderlyingBuffer> Parser<T> {
         self.buf.len()
     }
 
-    pub fn consume_ubx<'a>(&'a mut self, new_data: &'a [u8]) -> UbxParserIter<'a, T> {
+    pub fn consume_ubx<'a>(&'a mut self, new_data: &'a [u8]) -> UbxParserIter<'a, T, P> {
         let mut buf = DualBuffer::new(&mut self.buf, new_data);
 
         for i in 0..buf.len() {
@@ -207,10 +375,13 @@ impl<T: UnderlyingBuffer> Parser<T> {
             }
         }
 
-        UbxParserIter { buf }
+        UbxParserIter {
+            buf,
+            _phantom: PhantomData,
+        }
     }
 
-    pub fn consume_ubx_rtcm<'a>(&'a mut self, new_data: &'a [u8]) -> UbxRtcmParserIter<'a, T> {
+    pub fn consume_ubx_rtcm<'a>(&'a mut self, new_data: &'a [u8]) -> UbxRtcmParserIter<'a, T, P> {
         let mut buf = DualBuffer::new(&mut self.buf, new_data);
 
         for i in 0..buf.len() {
@@ -220,7 +391,10 @@ impl<T: UnderlyingBuffer> Parser<T> {
             }
         }
 
-        UbxRtcmParserIter { buf }
+        UbxRtcmParserIter {
+            buf,
+            _phantom: PhantomData,
+        }
     }
 }
 
@@ -442,19 +616,23 @@ enum NextSync {
 
 #[derive(Debug)]
 pub enum AnyPacketRef<'a> {
-    Ubx(PacketRef<'a>),
+    Ubx(UbxPacket<'a>),
     Rtcm(RtcmPacketRef<'a>),
 }
 
 /// Iterator over data stored in `Parser` buffer
-pub struct UbxParserIter<'a, T: UnderlyingBuffer> {
+pub struct UbxParserIter<'a, T: UnderlyingBuffer, P: UbxProtocol> {
     buf: DualBuffer<'a, T>,
+    _phantom: PhantomData<P>,
 }
 
-fn extract_packet_ubx<'b, T: UnderlyingBuffer>(
+fn extract_packet_ubx<'b, T: UnderlyingBuffer, P: UbxProtocol>(
     buf: &'b mut DualBuffer<'_, T>,
     pack_len: usize,
-) -> Option<Result<PacketRef<'b>, ParserError>> {
+) -> Option<Result<UbxPacket<'b>, ParserError>>
+where
+    for<'c> UbxPacket<'c>: From<P::PacketRef<'c>>,
+{
     if !buf.can_drain_and_take(6, pack_len + 2) {
         if buf.potential_lost_bytes() > 0 {
             // We ran out of space, drop this packet and move on
@@ -488,14 +666,14 @@ fn extract_packet_ubx<'b, T: UnderlyingBuffer>(
             return Some(Err(e));
         },
     };
-    return Some(match_packet(
-        class_id,
-        msg_id,
-        &msg_data[..msg_data.len() - 2], // Exclude the checksum
-    ));
+    let specific_packet_result = P::match_packet(class_id, msg_id, &msg_data[..msg_data.len() - 2]);
+    return Some(specific_packet_result.map(|p| p.into()));
 }
 
-impl<T: UnderlyingBuffer> UbxParserIter<'_, T> {
+impl<'a, T: UnderlyingBuffer, P: UbxProtocol> UbxParserIter<'a, T, P>
+where
+    for<'b> UbxPacket<'b>: From<P::PacketRef<'b>>,
+{
     fn find_sync(&self) -> Option<usize> {
         (0..self.buf.len()).find(|&i| self.buf[i] == SYNC_CHAR_1)
     }
@@ -503,7 +681,7 @@ impl<T: UnderlyingBuffer> UbxParserIter<'_, T> {
     #[allow(clippy::should_implement_trait)]
     /// Analog of `core::iter::Iterator::next`, should be switched to
     /// trait implementation after merge of `<https://github.com/rust-lang/rust/issues/44265>`
-    pub fn next(&mut self) -> Option<Result<PacketRef<'_>, ParserError>> {
+    pub fn next<'b>(&'b mut self) -> Option<Result<UbxPacket<'b>, ParserError>> {
         while self.buf.len() > 0 {
             let pos = match self.find_sync() {
                 Some(x) => x,
@@ -527,19 +705,20 @@ impl<T: UnderlyingBuffer> UbxParserIter<'_, T> {
             }
 
             let pack_len: usize = u16::from_le_bytes([self.buf[4], self.buf[5]]).into();
-            if pack_len > usize::from(MAX_PAYLOAD_LEN) {
+            if pack_len > P::MAX_PAYLOAD_LEN {
                 self.buf.drain(2);
                 continue;
             }
-            return extract_packet_ubx(&mut self.buf, pack_len);
+            return extract_packet_ubx::<T, P>(&mut self.buf, pack_len);
         }
         None
     }
 }
 
 /// Iterator over data stored in `Parser` buffer
-pub struct UbxRtcmParserIter<'a, T: UnderlyingBuffer> {
+pub struct UbxRtcmParserIter<'a, T: UnderlyingBuffer, P: UbxProtocol> {
     buf: DualBuffer<'a, T>,
+    _phantom: PhantomData<P>,
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
@@ -570,7 +749,10 @@ fn extract_packet_rtcm<'a, 'b, T: UnderlyingBuffer>(
     }
 }
 
-impl<T: UnderlyingBuffer> UbxRtcmParserIter<'_, T> {
+impl<T: UnderlyingBuffer, P: UbxProtocol> UbxRtcmParserIter<'_, T, P>
+where
+    for<'b> UbxPacket<'b>: From<P::PacketRef<'b>>,
+{
     fn find_sync(&self) -> NextSync {
         for i in 0..self.buf.len() {
             if self.buf[i] == SYNC_CHAR_1 {
@@ -605,11 +787,11 @@ impl<T: UnderlyingBuffer> UbxRtcmParserIter<'_, T> {
                     }
 
                     let pack_len: usize = u16::from_le_bytes([self.buf[4], self.buf[5]]).into();
-                    if pack_len > usize::from(MAX_PAYLOAD_LEN) {
+                    if pack_len > P::MAX_PAYLOAD_LEN {
                         self.buf.drain(2);
                         continue;
                     }
-                    let maybe_packet = extract_packet_ubx(&mut self.buf, pack_len);
+                    let maybe_packet = extract_packet_ubx::<T, P>(&mut self.buf, pack_len);
                     match maybe_packet {
                         Some(Ok(packet)) => return Some(Ok(AnyPacketRef::Ubx(packet))),
                         Some(Err(e)) => return Some(Err(e)),
@@ -724,7 +906,7 @@ mod test {
             assert_eq!(dual.take(3).unwrap(), &[7, 8, 9]);
             assert_eq!(dual.take(3).unwrap(), &[10, 11, 12]);
         }
-        assert_eq!(buf, &[]);
+        assert!(buf.is_empty());
     }
 
     #[cfg(feature = "alloc")]
@@ -900,20 +1082,66 @@ mod test {
 
         let mut buffer = [0; 10];
         let buffer = FixedLinearBuffer::new(&mut buffer);
-        let mut parser = Parser::new(buffer);
+        let mut parser: Parser<FixedLinearBuffer<'_>, Proto23> = Parser::new(buffer);
 
         let mut it = parser.consume_ubx(&bytes);
         for _ in 0..5 {
-            assert!(matches!(it.next(), Some(Ok(PacketRef::AckAck(_)))));
+            assert!(matches!(
+                it.next(),
+                Some(Ok(UbxPacket::Proto23(
+                    packetref_proto23::PacketRef::AckAck(_)
+                )))
+            ));
         }
         assert!(it.next().is_none());
     }
 
+    #[cfg(feature = "ubx_proto14")]
     #[test]
-    fn parser_handle_garbage_first_byte() {
+    fn parser_handle_garbage_first_byte_proto14() {
         let mut buffer = [0; 12];
         let buffer = FixedLinearBuffer::new(&mut buffer);
-        let mut parser = Parser::new(buffer);
+        let mut parser: Parser<FixedLinearBuffer<'_>, Proto17> = Parser::new(buffer);
+
+        let bytes = [0xb5, 0xb5, 0x62, 0x5, 0x1, 0x2, 0x0, 0x4, 0x5, 0x11, 0x38];
+
+        {
+            let mut it = parser.consume_ubx(&bytes);
+            assert!(matches!(
+                it.next(),
+                Some(Ok(UbxPacket::Proto17(PacketRef::AckAck(_))))
+            ));
+            assert!(it.next().is_none());
+        }
+    }
+
+    #[cfg(feature = "ubx_proto23")]
+    #[test]
+    fn parser_handle_garbage_first_byte_proto23() {
+        let mut buffer = [0; 12];
+        let buffer = FixedLinearBuffer::new(&mut buffer);
+        let mut parser: Parser<FixedLinearBuffer<'_>, Proto23> = Parser::new(buffer);
+
+        let bytes = [0xb5, 0xb5, 0x62, 0x5, 0x1, 0x2, 0x0, 0x4, 0x5, 0x11, 0x38];
+
+        {
+            let mut it = parser.consume_ubx(&bytes);
+            assert!(matches!(
+                it.next(),
+                Some(Ok(UbxPacket::Proto23(
+                    packetref_proto23::PacketRef::AckAck(_)
+                )))
+            ));
+            assert!(it.next().is_none());
+        }
+    }
+
+    #[cfg(feature = "ubx_proto27")]
+    #[test]
+    fn parser_handle_garbage_first_byte_proto27() {
+        let mut buffer = [0; 12];
+        let buffer = FixedLinearBuffer::new(&mut buffer);
+        let mut parser: Parser<FixedLinearBuffer<'_>, Proto27> = Parser::new(buffer);
 
         let bytes = [0xb5, 0xb5, 0x62, 0x5, 0x1, 0x2, 0x0, 0x4, 0x5, 0x11, 0x38];
 
@@ -924,8 +1152,25 @@ mod test {
         }
     }
 
+    #[cfg(feature = "ubx_proto31")]
     #[test]
-    fn parser_oom_clears_buffer() {
+    fn parser_handle_garbage_first_byte_proto31() {
+        let mut buffer = [0; 12];
+        let buffer = FixedLinearBuffer::new(&mut buffer);
+        let mut parser: Parser<FixedLinearBuffer<'_>, Proto31> = Parser::new(buffer);
+
+        let bytes = [0xb5, 0xb5, 0x62, 0x5, 0x1, 0x2, 0x0, 0x4, 0x5, 0x11, 0x38];
+
+        {
+            let mut it = parser.consume_ubx(&bytes);
+            assert!(matches!(it.next(), Some(Ok(PacketRef::AckAck(_)))));
+            assert!(it.next().is_none());
+        }
+    }
+
+    #[cfg(feature = "ubx_proto14")]
+    #[test]
+    fn parser_oom_clears_buffer_proto14() {
         let bytes = CfgNav5Builder {
             mask: CfgNav5Params::DYN,
             dyn_model: NavDynamicModel::AirborneWithLess1gAcceleration,
@@ -948,8 +1193,7 @@ mod test {
         .into_packet_bytes();
 
         let mut buffer = [0; 12];
-        let buffer = FixedLinearBuffer::new(&mut buffer);
-        let mut parser = Parser::new(buffer);
+        let mut parser = proto14_with_buffer(&mut buffer);
 
         {
             let mut it = parser.consume_ubx(&bytes[0..8]);
@@ -974,8 +1218,164 @@ mod test {
         }
     }
 
+    #[cfg(feature = "ubx_proto23")]
     #[test]
-    fn parser_accepts_packet_array_underlying() {
+    fn parser_oom_clears_buffer_proto23() {
+        let bytes = CfgNav5Builder {
+            mask: CfgNav5Params::DYN,
+            dyn_model: NavDynamicModel::AirborneWithLess1gAcceleration,
+            fix_mode: NavFixMode::Only3D,
+            fixed_alt: 100.17,
+            fixed_alt_var: 0.0017,
+            min_elev_degrees: 17,
+            pdop: 1.7,
+            tdop: 1.7,
+            pacc: 17,
+            tacc: 17,
+            static_hold_thresh: 2.17,
+            dgps_time_out: 17,
+            cno_thresh_num_svs: 17,
+            cno_thresh: 17,
+            static_hold_max_dist: 0x1717,
+            utc_standard: UtcStandardIdentifier::UtcChina,
+            ..CfgNav5Builder::default()
+        }
+        .into_packet_bytes();
+
+        let mut buffer = [0; 12];
+        let mut parser = proto23_with_buffer(&mut buffer);
+
+        {
+            let mut it = parser.consume_ubx(&bytes[0..8]);
+            assert!(it.next().is_none());
+        }
+
+        {
+            let mut it = parser.consume_ubx(&bytes[8..]);
+            assert!(
+                matches!(it.next(), Some(Err(ParserError::OutOfMemory { required_size })) if required_size == bytes.len() - 6)
+            );
+            assert!(it.next().is_none());
+        }
+
+        // Should now be empty, and we can parse a small packet
+        let bytes = [0xb5, 0x62, 0x5, 0x1, 0x2, 0x0, 0x4, 0x5, 0x11, 0x38];
+
+        {
+            let mut it = parser.consume_ubx(&bytes);
+            assert!(matches!(
+                it.next(),
+                Some(Ok(UbxPacket::Proto23(
+                    packetref_proto23::PacketRef::AckAck(_)
+                )))
+            ));
+            assert!(it.next().is_none());
+        }
+    }
+
+    #[cfg(feature = "ubx_proto27")]
+    #[test]
+    fn parser_oom_clears_buffer_proto27() {
+        let bytes = CfgNav5Builder {
+            mask: CfgNav5Params::DYN,
+            dyn_model: NavDynamicModel::AirborneWithLess1gAcceleration,
+            fix_mode: NavFixMode::Only3D,
+            fixed_alt: 100.17,
+            fixed_alt_var: 0.0017,
+            min_elev_degrees: 17,
+            pdop: 1.7,
+            tdop: 1.7,
+            pacc: 17,
+            tacc: 17,
+            static_hold_thresh: 2.17,
+            dgps_time_out: 17,
+            cno_thresh_num_svs: 17,
+            cno_thresh: 17,
+            static_hold_max_dist: 0x1717,
+            utc_standard: UtcStandardIdentifier::UtcChina,
+            ..CfgNav5Builder::default()
+        }
+        .into_packet_bytes();
+
+        let mut buffer = [0; 12];
+        let mut parser = proto27_with_buffer(&mut buffer);
+
+        {
+            let mut it = parser.consume_ubx(&bytes[0..8]);
+            assert!(it.next().is_none());
+        }
+
+        {
+            let mut it = parser.consume_ubx(&bytes[8..]);
+            assert!(
+                matches!(it.next(), Some(Err(ParserError::OutOfMemory { required_size })) if required_size == bytes.len() - 6)
+            );
+            assert!(it.next().is_none());
+        }
+
+        // Should now be empty, and we can parse a small packet
+        let bytes = [0xb5, 0x62, 0x5, 0x1, 0x2, 0x0, 0x4, 0x5, 0x11, 0x38];
+
+        {
+            let mut it = parser.consume_ubx(&bytes);
+            assert!(matches!(it.next(), Some(Ok(PacketRef::AckAck(_)))));
+            assert!(it.next().is_none());
+        }
+    }
+
+    #[cfg(feature = "ubx_proto31")]
+    #[test]
+    fn parser_oom_clears_buffer_proto31() {
+        let bytes = CfgNav5Builder {
+            mask: CfgNav5Params::DYN,
+            dyn_model: NavDynamicModel::AirborneWithLess1gAcceleration,
+            fix_mode: NavFixMode::Only3D,
+            fixed_alt: 100.17,
+            fixed_alt_var: 0.0017,
+            min_elev_degrees: 17,
+            pdop: 1.7,
+            tdop: 1.7,
+            pacc: 17,
+            tacc: 17,
+            static_hold_thresh: 2.17,
+            dgps_time_out: 17,
+            cno_thresh_num_svs: 17,
+            cno_thresh: 17,
+            static_hold_max_dist: 0x1717,
+            utc_standard: UtcStandardIdentifier::UtcChina,
+            ..CfgNav5Builder::default()
+        }
+        .into_packet_bytes();
+
+        let mut buffer = [0; 12];
+        let mut parser = proto31_with_buffer(&mut buffer);
+
+        {
+            let mut it = parser.consume_ubx(&bytes[0..8]);
+            assert!(it.next().is_none());
+        }
+
+        {
+            let mut it = parser.consume_ubx(&bytes[8..]);
+            assert!(
+                matches!(it.next(), Some(Err(ParserError::OutOfMemory { required_size })) if required_size == bytes.len() - 6)
+            );
+            assert!(it.next().is_none());
+        }
+
+        // Should now be empty, and we can parse a small packet
+        let bytes = [0xb5, 0x62, 0x5, 0x1, 0x2, 0x0, 0x4, 0x5, 0x11, 0x38];
+
+        {
+            let mut it = parser.consume_ubx(&bytes);
+            assert!(matches!(it.next(), Some(Ok(PacketRef::AckAck(_)))));
+            assert!(it.next().is_none());
+        }
+    }
+
+    #[cfg(feature = "ubx_proto14")]
+    #[test]
+    fn parser_accepts_packet_array_underlying_proto14() {
         let bytes = CfgNav5Builder {
             mask: CfgNav5Params::DYN,
             dyn_model: NavDynamicModel::AirborneWithLess1gAcceleration,
@@ -999,7 +1399,108 @@ mod test {
 
         let mut buffer = [0; 1024];
         let buffer = FixedLinearBuffer::new(&mut buffer);
-        let mut parser = Parser::new(buffer);
+        let mut parser: Parser<FixedLinearBuffer<'_>, Proto17> = Parser::new(buffer);
+        let mut it = parser.consume_ubx(&bytes);
+        assert!(matches!(it.next(), Some(Ok(PacketRef::CfgNav5(_)))));
+        assert!(it.next().is_none());
+    }
+
+    #[cfg(feature = "ubx_proto23")]
+    #[test]
+    fn parser_accepts_packet_array_underlying_proto23() {
+        let bytes = CfgNav5Builder {
+            mask: CfgNav5Params::DYN,
+            dyn_model: NavDynamicModel::AirborneWithLess1gAcceleration,
+            fix_mode: NavFixMode::Only3D,
+            fixed_alt: 100.17,
+            fixed_alt_var: 0.0017,
+            min_elev_degrees: 17,
+            pdop: 1.7,
+            tdop: 1.7,
+            pacc: 17,
+            tacc: 17,
+            static_hold_thresh: 2.17,
+            dgps_time_out: 17,
+            cno_thresh_num_svs: 17,
+            cno_thresh: 17,
+            static_hold_max_dist: 0x1717,
+            utc_standard: UtcStandardIdentifier::UtcChina,
+            ..CfgNav5Builder::default()
+        }
+        .into_packet_bytes();
+
+        let mut buffer = [0; 1024];
+        let buffer = FixedLinearBuffer::new(&mut buffer);
+        let mut parser: Parser<FixedLinearBuffer<'_>, Proto23> = Parser::new(buffer);
+        let mut it = parser.consume_ubx(&bytes);
+        assert!(matches!(
+            it.next(),
+            Some(Ok(UbxPacket::Proto23(
+                packetref_proto23::PacketRef::CfgNav5(_)
+            )))
+        ));
+        assert!(it.next().is_none());
+    }
+
+    #[cfg(feature = "ubx_proto27")]
+    #[test]
+    fn parser_accepts_packet_array_underlying_proto27() {
+        let bytes = CfgNav5Builder {
+            mask: CfgNav5Params::DYN,
+            dyn_model: NavDynamicModel::AirborneWithLess1gAcceleration,
+            fix_mode: NavFixMode::Only3D,
+            fixed_alt: 100.17,
+            fixed_alt_var: 0.0017,
+            min_elev_degrees: 17,
+            pdop: 1.7,
+            tdop: 1.7,
+            pacc: 17,
+            tacc: 17,
+            static_hold_thresh: 2.17,
+            dgps_time_out: 17,
+            cno_thresh_num_svs: 17,
+            cno_thresh: 17,
+            static_hold_max_dist: 0x1717,
+            utc_standard: UtcStandardIdentifier::UtcChina,
+            ..CfgNav5Builder::default()
+        }
+        .into_packet_bytes();
+
+        let mut buffer = [0; 1024];
+        let buffer = FixedLinearBuffer::new(&mut buffer);
+        let mut parser: Parser<FixedLinearBuffer<'_>, Proto27> = Parser::new(buffer);
+        let mut it = parser.consume_ubx(&bytes);
+        assert!(matches!(it.next(), Some(Ok(PacketRef::CfgNav5(_)))));
+        assert!(it.next().is_none());
+    }
+
+    #[cfg(feature = "ubx_proto31")]
+    #[test]
+    fn parser_accepts_packet_array_underlying_proto31() {
+        let bytes = CfgNav5Builder {
+            mask: CfgNav5Params::DYN,
+            dyn_model: NavDynamicModel::AirborneWithLess1gAcceleration,
+            fix_mode: NavFixMode::Only3D,
+            fixed_alt: 100.17,
+            fixed_alt_var: 0.0017,
+            min_elev_degrees: 17,
+            pdop: 1.7,
+            tdop: 1.7,
+            pacc: 17,
+            tacc: 17,
+            static_hold_thresh: 2.17,
+            dgps_time_out: 17,
+            cno_thresh_num_svs: 17,
+            cno_thresh: 17,
+            static_hold_max_dist: 0x1717,
+            utc_standard: UtcStandardIdentifier::UtcChina,
+            ..CfgNav5Builder::default()
+        }
+        .into_packet_bytes();
+
+        let mut buffer = [0; 1024];
+        let buffer = FixedLinearBuffer::new(&mut buffer);
+        let mut parser: Parser<FixedLinearBuffer<'_>, Proto31> = Parser::new(buffer);
         let mut it = parser.consume_ubx(&bytes);
         assert!(matches!(it.next(), Some(Ok(PacketRef::CfgNav5(_)))));
         assert!(it.next().is_none());
@@ -1031,7 +1532,12 @@ mod test {
 
         let mut parser = Parser::default();
         let mut it = parser.consume_ubx(&bytes);
-        assert!(matches!(it.next(), Some(Ok(PacketRef::CfgNav5(_)))));
+        assert!(matches!(
+            it.next(),
+            Some(Ok(UbxPacket::Proto23(
+                packetref_proto23::PacketRef::CfgNav5(_)
+            )))
+        ));
         assert!(it.next().is_none());
     }
 
@@ -1057,7 +1563,7 @@ mod test {
         let mut parser = Parser::default();
         let mut it = parser.consume_ubx(&data);
         match it.next() {
-            Some(Ok(PacketRef::CfgNav5(packet))) => {
+            Some(Ok(UbxPacket::Proto23(packetref_proto23::PacketRef::CfgNav5(packet)))) => {
                 // We're good
                 assert_eq!(packet.pacc(), 21);
             },
@@ -1066,7 +1572,7 @@ mod test {
             },
         }
         match it.next() {
-            Some(Ok(PacketRef::CfgNav5(packet))) => {
+            Some(Ok(UbxPacket::Proto23(packetref_proto23::PacketRef::CfgNav5(packet)))) => {
                 // We're good
                 assert_eq!(packet.pacc(), 18);
             },
@@ -1075,11 +1581,5 @@ mod test {
             },
         }
         assert!(it.next().is_none());
-    }
-
-    #[test]
-    #[allow(clippy::assertions_on_constants)]
-    fn test_max_payload_len() {
-        assert!(MAX_PAYLOAD_LEN >= 1240);
     }
 }

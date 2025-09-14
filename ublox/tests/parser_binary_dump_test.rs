@@ -3,7 +3,7 @@
 use cpu_time::ProcessTime;
 use rand::Rng;
 use std::{env, ffi::OsString, fs, path::Path};
-use ublox::{PacketRef, Parser, ParserError};
+use ublox::{PacketRef, Parser, ParserError, UbxPacket};
 
 /// To run test against file with path X,
 /// use such command (if use shell compatible with /bin/sh).
@@ -62,9 +62,9 @@ fn test_parse_big_dump() {
         while let Some(pack) = it.next() {
             match pack {
                 Ok(pack) => match pack {
-                    PacketRef::AckAck(_) => meta.ack_ack += 1,
-                    PacketRef::NavPosLlh(_) => meta.nav_pos_llh += 1,
-                    PacketRef::NavStatus(_) => meta.nav_stat += 1,
+                    UbxPacket::Proto23(PacketRef::AckAck(_)) => meta.ack_ack += 1,
+                    UbxPacket::Proto23(PacketRef::NavPosLlh(_)) => meta.nav_pos_llh += 1,
+                    UbxPacket::Proto23(PacketRef::NavStatus(_)) => meta.nav_stat += 1,
                     _ => meta.unknown += 1,
                 },
                 Err(ParserError::InvalidChecksum { .. }) => meta.wrong_chksum += 1,
