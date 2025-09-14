@@ -1096,20 +1096,21 @@ mod test {
         assert!(it.next().is_none());
     }
 
+    const BYTES_GARBAGE: [u8; 11] = [0xb5, 0xb5, 0x62, 0x5, 0x1, 0x2, 0x0, 0x4, 0x5, 0x11, 0x38];
+
     #[cfg(feature = "ubx_proto14")]
     #[test]
     fn parser_handle_garbage_first_byte_proto14() {
         let mut buffer = [0; 12];
         let buffer = FixedLinearBuffer::new(&mut buffer);
         let mut parser: Parser<FixedLinearBuffer<'_>, Proto17> = Parser::new(buffer);
-
-        let bytes = [0xb5, 0xb5, 0x62, 0x5, 0x1, 0x2, 0x0, 0x4, 0x5, 0x11, 0x38];
-
         {
-            let mut it = parser.consume_ubx(&bytes);
+            let mut it = parser.consume_ubx(&BYTES_GARBAGE);
             assert!(matches!(
                 it.next(),
-                Some(Ok(UbxPacket::Proto17(PacketRef::AckAck(_))))
+                Some(Ok(UbxPacket::Proto17(
+                    packetref_proto17::PacketRef::AckAck(_)
+                )))
             ));
             assert!(it.next().is_none());
         }
@@ -1122,10 +1123,8 @@ mod test {
         let buffer = FixedLinearBuffer::new(&mut buffer);
         let mut parser: Parser<FixedLinearBuffer<'_>, Proto23> = Parser::new(buffer);
 
-        let bytes = [0xb5, 0xb5, 0x62, 0x5, 0x1, 0x2, 0x0, 0x4, 0x5, 0x11, 0x38];
-
         {
-            let mut it = parser.consume_ubx(&bytes);
+            let mut it = parser.consume_ubx(&BYTES_GARBAGE);
             assert!(matches!(
                 it.next(),
                 Some(Ok(UbxPacket::Proto23(
@@ -1143,11 +1142,14 @@ mod test {
         let buffer = FixedLinearBuffer::new(&mut buffer);
         let mut parser: Parser<FixedLinearBuffer<'_>, Proto27> = Parser::new(buffer);
 
-        let bytes = [0xb5, 0xb5, 0x62, 0x5, 0x1, 0x2, 0x0, 0x4, 0x5, 0x11, 0x38];
-
         {
-            let mut it = parser.consume_ubx(&bytes);
-            assert!(matches!(it.next(), Some(Ok(PacketRef::AckAck(_)))));
+            let mut it = parser.consume_ubx(&BYTES_GARBAGE);
+            assert!(matches!(
+                it.next(),
+                Some(Ok(UbxPacket::Proto27(
+                    packetref_proto27::PacketRef::AckAck(_)
+                )))
+            ));
             assert!(it.next().is_none());
         }
     }
@@ -1159,19 +1161,20 @@ mod test {
         let buffer = FixedLinearBuffer::new(&mut buffer);
         let mut parser: Parser<FixedLinearBuffer<'_>, Proto31> = Parser::new(buffer);
 
-        let bytes = [0xb5, 0xb5, 0x62, 0x5, 0x1, 0x2, 0x0, 0x4, 0x5, 0x11, 0x38];
-
         {
-            let mut it = parser.consume_ubx(&bytes);
-            assert!(matches!(it.next(), Some(Ok(PacketRef::AckAck(_)))));
+            let mut it = parser.consume_ubx(&BYTES_GARBAGE);
+            assert!(matches!(
+                it.next(),
+                Some(Ok(UbxPacket::Proto31(
+                    packetref_proto31::PacketRef::AckAck(_)
+                )))
+            ));
             assert!(it.next().is_none());
         }
     }
 
-    #[cfg(feature = "ubx_proto14")]
-    #[test]
-    fn parser_oom_clears_buffer_proto14() {
-        let bytes = CfgNav5Builder {
+    fn test_util_cfg_nav5_bytes() -> [u8; 44] {
+        CfgNav5Builder {
             mask: CfgNav5Params::DYN,
             dyn_model: NavDynamicModel::AirborneWithLess1gAcceleration,
             fix_mode: NavFixMode::Only3D,
@@ -1190,7 +1193,13 @@ mod test {
             utc_standard: UtcStandardIdentifier::UtcChina,
             ..CfgNav5Builder::default()
         }
-        .into_packet_bytes();
+        .into_packet_bytes()
+    }
+
+    #[cfg(feature = "ubx_proto14")]
+    #[test]
+    fn parser_oom_clears_buffer_proto14() {
+        let bytes = test_util_cfg_nav5_bytes();
 
         let mut buffer = [0; 12];
         let mut parser = proto14_with_buffer(&mut buffer);
@@ -1213,7 +1222,12 @@ mod test {
 
         {
             let mut it = parser.consume_ubx(&bytes);
-            assert!(matches!(it.next(), Some(Ok(PacketRef::AckAck(_)))));
+            assert!(matches!(
+                it.next(),
+                Some(Ok(UbxPacket::Proto17(
+                    packetref_proto17::PacketRef::AckAck(_)
+                )))
+            ));
             assert!(it.next().is_none());
         }
     }
@@ -1221,26 +1235,7 @@ mod test {
     #[cfg(feature = "ubx_proto23")]
     #[test]
     fn parser_oom_clears_buffer_proto23() {
-        let bytes = CfgNav5Builder {
-            mask: CfgNav5Params::DYN,
-            dyn_model: NavDynamicModel::AirborneWithLess1gAcceleration,
-            fix_mode: NavFixMode::Only3D,
-            fixed_alt: 100.17,
-            fixed_alt_var: 0.0017,
-            min_elev_degrees: 17,
-            pdop: 1.7,
-            tdop: 1.7,
-            pacc: 17,
-            tacc: 17,
-            static_hold_thresh: 2.17,
-            dgps_time_out: 17,
-            cno_thresh_num_svs: 17,
-            cno_thresh: 17,
-            static_hold_max_dist: 0x1717,
-            utc_standard: UtcStandardIdentifier::UtcChina,
-            ..CfgNav5Builder::default()
-        }
-        .into_packet_bytes();
+        let bytes = test_util_cfg_nav5_bytes();
 
         let mut buffer = [0; 12];
         let mut parser = proto23_with_buffer(&mut buffer);
@@ -1276,26 +1271,7 @@ mod test {
     #[cfg(feature = "ubx_proto27")]
     #[test]
     fn parser_oom_clears_buffer_proto27() {
-        let bytes = CfgNav5Builder {
-            mask: CfgNav5Params::DYN,
-            dyn_model: NavDynamicModel::AirborneWithLess1gAcceleration,
-            fix_mode: NavFixMode::Only3D,
-            fixed_alt: 100.17,
-            fixed_alt_var: 0.0017,
-            min_elev_degrees: 17,
-            pdop: 1.7,
-            tdop: 1.7,
-            pacc: 17,
-            tacc: 17,
-            static_hold_thresh: 2.17,
-            dgps_time_out: 17,
-            cno_thresh_num_svs: 17,
-            cno_thresh: 17,
-            static_hold_max_dist: 0x1717,
-            utc_standard: UtcStandardIdentifier::UtcChina,
-            ..CfgNav5Builder::default()
-        }
-        .into_packet_bytes();
+        let bytes = test_util_cfg_nav5_bytes();
 
         let mut buffer = [0; 12];
         let mut parser = proto27_with_buffer(&mut buffer);
@@ -1318,7 +1294,12 @@ mod test {
 
         {
             let mut it = parser.consume_ubx(&bytes);
-            assert!(matches!(it.next(), Some(Ok(PacketRef::AckAck(_)))));
+            assert!(matches!(
+                it.next(),
+                Some(Ok(UbxPacket::Proto27(
+                    packetref_proto27::PacketRef::AckAck(_)
+                )))
+            ));
             assert!(it.next().is_none());
         }
     }
@@ -1326,26 +1307,7 @@ mod test {
     #[cfg(feature = "ubx_proto31")]
     #[test]
     fn parser_oom_clears_buffer_proto31() {
-        let bytes = CfgNav5Builder {
-            mask: CfgNav5Params::DYN,
-            dyn_model: NavDynamicModel::AirborneWithLess1gAcceleration,
-            fix_mode: NavFixMode::Only3D,
-            fixed_alt: 100.17,
-            fixed_alt_var: 0.0017,
-            min_elev_degrees: 17,
-            pdop: 1.7,
-            tdop: 1.7,
-            pacc: 17,
-            tacc: 17,
-            static_hold_thresh: 2.17,
-            dgps_time_out: 17,
-            cno_thresh_num_svs: 17,
-            cno_thresh: 17,
-            static_hold_max_dist: 0x1717,
-            utc_standard: UtcStandardIdentifier::UtcChina,
-            ..CfgNav5Builder::default()
-        }
-        .into_packet_bytes();
+        let bytes = test_util_cfg_nav5_bytes();
 
         let mut buffer = [0; 12];
         let mut parser = proto31_with_buffer(&mut buffer);
@@ -1368,7 +1330,12 @@ mod test {
 
         {
             let mut it = parser.consume_ubx(&bytes);
-            assert!(matches!(it.next(), Some(Ok(PacketRef::AckAck(_)))));
+            assert!(matches!(
+                it.next(),
+                Some(Ok(UbxPacket::Proto31(
+                    packetref_proto31::PacketRef::AckAck(_)
+                )))
+            ));
             assert!(it.next().is_none());
         }
     }
@@ -1376,58 +1343,25 @@ mod test {
     #[cfg(feature = "ubx_proto14")]
     #[test]
     fn parser_accepts_packet_array_underlying_proto14() {
-        let bytes = CfgNav5Builder {
-            mask: CfgNav5Params::DYN,
-            dyn_model: NavDynamicModel::AirborneWithLess1gAcceleration,
-            fix_mode: NavFixMode::Only3D,
-            fixed_alt: 100.17,
-            fixed_alt_var: 0.0017,
-            min_elev_degrees: 17,
-            pdop: 1.7,
-            tdop: 1.7,
-            pacc: 17,
-            tacc: 17,
-            static_hold_thresh: 2.17,
-            dgps_time_out: 17,
-            cno_thresh_num_svs: 17,
-            cno_thresh: 17,
-            static_hold_max_dist: 0x1717,
-            utc_standard: UtcStandardIdentifier::UtcChina,
-            ..CfgNav5Builder::default()
-        }
-        .into_packet_bytes();
+        let bytes = test_util_cfg_nav5_bytes();
 
         let mut buffer = [0; 1024];
         let buffer = FixedLinearBuffer::new(&mut buffer);
         let mut parser: Parser<FixedLinearBuffer<'_>, Proto17> = Parser::new(buffer);
         let mut it = parser.consume_ubx(&bytes);
-        assert!(matches!(it.next(), Some(Ok(PacketRef::CfgNav5(_)))));
+        assert!(matches!(
+            it.next(),
+            Some(Ok(UbxPacket::Proto17(
+                packetref_proto17::PacketRef::CfgNav5(_)
+            )))
+        ));
         assert!(it.next().is_none());
     }
 
     #[cfg(feature = "ubx_proto23")]
     #[test]
     fn parser_accepts_packet_array_underlying_proto23() {
-        let bytes = CfgNav5Builder {
-            mask: CfgNav5Params::DYN,
-            dyn_model: NavDynamicModel::AirborneWithLess1gAcceleration,
-            fix_mode: NavFixMode::Only3D,
-            fixed_alt: 100.17,
-            fixed_alt_var: 0.0017,
-            min_elev_degrees: 17,
-            pdop: 1.7,
-            tdop: 1.7,
-            pacc: 17,
-            tacc: 17,
-            static_hold_thresh: 2.17,
-            dgps_time_out: 17,
-            cno_thresh_num_svs: 17,
-            cno_thresh: 17,
-            static_hold_max_dist: 0x1717,
-            utc_standard: UtcStandardIdentifier::UtcChina,
-            ..CfgNav5Builder::default()
-        }
-        .into_packet_bytes();
+        let bytes = test_util_cfg_nav5_bytes();
 
         let mut buffer = [0; 1024];
         let buffer = FixedLinearBuffer::new(&mut buffer);
@@ -1445,92 +1379,61 @@ mod test {
     #[cfg(feature = "ubx_proto27")]
     #[test]
     fn parser_accepts_packet_array_underlying_proto27() {
-        let bytes = CfgNav5Builder {
-            mask: CfgNav5Params::DYN,
-            dyn_model: NavDynamicModel::AirborneWithLess1gAcceleration,
-            fix_mode: NavFixMode::Only3D,
-            fixed_alt: 100.17,
-            fixed_alt_var: 0.0017,
-            min_elev_degrees: 17,
-            pdop: 1.7,
-            tdop: 1.7,
-            pacc: 17,
-            tacc: 17,
-            static_hold_thresh: 2.17,
-            dgps_time_out: 17,
-            cno_thresh_num_svs: 17,
-            cno_thresh: 17,
-            static_hold_max_dist: 0x1717,
-            utc_standard: UtcStandardIdentifier::UtcChina,
-            ..CfgNav5Builder::default()
-        }
-        .into_packet_bytes();
+        let bytes = test_util_cfg_nav5_bytes();
 
         let mut buffer = [0; 1024];
         let buffer = FixedLinearBuffer::new(&mut buffer);
         let mut parser: Parser<FixedLinearBuffer<'_>, Proto27> = Parser::new(buffer);
         let mut it = parser.consume_ubx(&bytes);
-        assert!(matches!(it.next(), Some(Ok(PacketRef::CfgNav5(_)))));
+        assert!(matches!(
+            it.next(),
+            Some(Ok(UbxPacket::Proto27(
+                packetref_proto27::PacketRef::CfgNav5(_)
+            )))
+        ));
         assert!(it.next().is_none());
     }
 
     #[cfg(feature = "ubx_proto31")]
     #[test]
     fn parser_accepts_packet_array_underlying_proto31() {
-        let bytes = CfgNav5Builder {
-            mask: CfgNav5Params::DYN,
-            dyn_model: NavDynamicModel::AirborneWithLess1gAcceleration,
-            fix_mode: NavFixMode::Only3D,
-            fixed_alt: 100.17,
-            fixed_alt_var: 0.0017,
-            min_elev_degrees: 17,
-            pdop: 1.7,
-            tdop: 1.7,
-            pacc: 17,
-            tacc: 17,
-            static_hold_thresh: 2.17,
-            dgps_time_out: 17,
-            cno_thresh_num_svs: 17,
-            cno_thresh: 17,
-            static_hold_max_dist: 0x1717,
-            utc_standard: UtcStandardIdentifier::UtcChina,
-            ..CfgNav5Builder::default()
-        }
-        .into_packet_bytes();
+        let bytes = test_util_cfg_nav5_bytes();
 
         let mut buffer = [0; 1024];
         let buffer = FixedLinearBuffer::new(&mut buffer);
         let mut parser: Parser<FixedLinearBuffer<'_>, Proto31> = Parser::new(buffer);
         let mut it = parser.consume_ubx(&bytes);
-        assert!(matches!(it.next(), Some(Ok(PacketRef::CfgNav5(_)))));
+        assert!(matches!(
+            it.next(),
+            Some(Ok(UbxPacket::Proto31(
+                packetref_proto31::PacketRef::CfgNav5(_)
+            )))
+        ));
         assert!(it.next().is_none());
     }
 
     #[test]
-    #[cfg(feature = "std")]
-    fn parser_accepts_packet_vec_underlying() {
-        let bytes = CfgNav5Builder {
-            mask: CfgNav5Params::DYN,
-            dyn_model: NavDynamicModel::AirborneWithLess1gAcceleration,
-            fix_mode: NavFixMode::Only3D,
-            fixed_alt: 100.17,
-            fixed_alt_var: 0.0017,
-            min_elev_degrees: 17,
-            pdop: 1.7,
-            tdop: 1.7,
-            pacc: 17,
-            tacc: 17,
-            static_hold_thresh: 2.17,
-            dgps_time_out: 17,
-            cno_thresh_num_svs: 17,
-            cno_thresh: 17,
-            static_hold_max_dist: 0x1717,
-            utc_standard: UtcStandardIdentifier::UtcChina,
-            ..CfgNav5Builder::default()
-        }
-        .into_packet_bytes();
+    #[cfg(all(feature = "std", feature = "ubx_proto14"))]
+    fn parser_accepts_packet_vec_underlying_proto14() {
+        let bytes = test_util_cfg_nav5_bytes();
 
-        let mut parser = Parser::default();
+        let mut parser = Parser::<_, Proto17>::default();
+        let mut it = parser.consume_ubx(&bytes);
+        assert!(matches!(
+            it.next(),
+            Some(Ok(UbxPacket::Proto17(
+                packetref_proto17::PacketRef::CfgNav5(_)
+            )))
+        ));
+        assert!(it.next().is_none());
+    }
+
+    #[test]
+    #[cfg(all(feature = "std", feature = "ubx_proto23"))]
+    fn parser_accepts_packet_vec_underlying_proto23() {
+        let bytes = test_util_cfg_nav5_bytes();
+
+        let mut parser = Parser::<_, Proto23>::default();
         let mut it = parser.consume_ubx(&bytes);
         assert!(matches!(
             it.next(),
@@ -1542,8 +1445,39 @@ mod test {
     }
 
     #[test]
+    #[cfg(all(feature = "std", feature = "ubx_proto27"))]
+    fn parser_accepts_packet_vec_underlying_proto27() {
+        let bytes = test_util_cfg_nav5_bytes();
+
+        let mut parser = Parser::<_, Proto27>::default();
+        let mut it = parser.consume_ubx(&bytes);
+        assert!(matches!(
+            it.next(),
+            Some(Ok(UbxPacket::Proto27(
+                packetref_proto27::PacketRef::CfgNav5(_)
+            )))
+        ));
+        assert!(it.next().is_none());
+    }
+
+    #[test]
+    #[cfg(all(feature = "std", feature = "ubx_proto31"))]
+    fn parser_accepts_packet_vec_underlying_proto31() {
+        let bytes = test_util_cfg_nav5_bytes();
+
+        let mut parser = Parser::<_, Proto31>::default();
+        let mut it = parser.consume_ubx(&bytes);
+        assert!(matches!(
+            it.next(),
+            Some(Ok(UbxPacket::Proto31(
+                packetref_proto31::PacketRef::CfgNav5(_)
+            )))
+        ));
+        assert!(it.next().is_none());
+    }
+
     #[cfg(feature = "std")]
-    fn parser_accepts_multiple_packets() {
+    fn test_util_multiple_cfg_nav5_packets_bytes() -> Vec<u8> {
         let mut data = vec![];
         data.extend_from_slice(
             &CfgNav5Builder {
@@ -1559,8 +1493,41 @@ mod test {
             }
             .into_packet_bytes(),
         );
+        data
+    }
 
-        let mut parser = Parser::default();
+    #[test]
+    #[cfg(all(feature = "std", feature = "ubx_proto14"))]
+    fn parser_accepts_multiple_packets_proto14() {
+        let data = test_util_multiple_cfg_nav5_packets_bytes();
+        let mut parser = Parser::<_, Proto17>::default();
+        let mut it = parser.consume_ubx(&data);
+        match it.next() {
+            Some(Ok(UbxPacket::Proto17(packetref_proto17::PacketRef::CfgNav5(packet)))) => {
+                // We're good
+                assert_eq!(packet.pacc(), 21);
+            },
+            _ => {
+                panic!()
+            },
+        }
+        match it.next() {
+            Some(Ok(UbxPacket::Proto17(packetref_proto17::PacketRef::CfgNav5(packet)))) => {
+                // We're good
+                assert_eq!(packet.pacc(), 18);
+            },
+            _ => {
+                panic!()
+            },
+        }
+        assert!(it.next().is_none());
+    }
+
+    #[test]
+    #[cfg(all(feature = "std", feature = "ubx_proto23"))]
+    fn parser_accepts_multiple_packets_proto23() {
+        let data = test_util_multiple_cfg_nav5_packets_bytes();
+        let mut parser = Parser::<_, Proto23>::default();
         let mut it = parser.consume_ubx(&data);
         match it.next() {
             Some(Ok(UbxPacket::Proto23(packetref_proto23::PacketRef::CfgNav5(packet)))) => {
@@ -1573,6 +1540,59 @@ mod test {
         }
         match it.next() {
             Some(Ok(UbxPacket::Proto23(packetref_proto23::PacketRef::CfgNav5(packet)))) => {
+                // We're good
+                assert_eq!(packet.pacc(), 18);
+            },
+            _ => {
+                panic!()
+            },
+        }
+        assert!(it.next().is_none());
+    }
+    #[test]
+    #[cfg(all(feature = "std", feature = "ubx_proto27"))]
+    fn parser_accepts_multiple_packets_proto27() {
+        let data = test_util_multiple_cfg_nav5_packets_bytes();
+        let mut parser = Parser::<_, Proto27>::default();
+        let mut it = parser.consume_ubx(&data);
+        match it.next() {
+            Some(Ok(UbxPacket::Proto27(packetref_proto27::PacketRef::CfgNav5(packet)))) => {
+                // We're good
+                assert_eq!(packet.pacc(), 21);
+            },
+            _ => {
+                panic!()
+            },
+        }
+        match it.next() {
+            Some(Ok(UbxPacket::Proto27(packetref_proto27::PacketRef::CfgNav5(packet)))) => {
+                // We're good
+                assert_eq!(packet.pacc(), 18);
+            },
+            _ => {
+                panic!()
+            },
+        }
+        assert!(it.next().is_none());
+    }
+
+    #[test]
+    #[cfg(all(feature = "std", feature = "ubx_proto31"))]
+    fn parser_accepts_multiple_packets_proto31() {
+        let data = test_util_multiple_cfg_nav5_packets_bytes();
+        let mut parser = Parser::<_, Proto31>::default();
+        let mut it = parser.consume_ubx(&data);
+        match it.next() {
+            Some(Ok(UbxPacket::Proto31(packetref_proto31::PacketRef::CfgNav5(packet)))) => {
+                // We're good
+                assert_eq!(packet.pacc(), 21);
+            },
+            _ => {
+                panic!()
+            },
+        }
+        match it.next() {
+            Some(Ok(UbxPacket::Proto31(packetref_proto31::PacketRef::CfgNav5(packet)))) => {
                 // We're good
                 assert_eq!(packet.pacc(), 18);
             },

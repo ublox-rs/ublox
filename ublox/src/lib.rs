@@ -74,7 +74,7 @@ use core::marker::Sized;
 /// Trait for parsing UBX protocol version.
 pub trait UbxProtocol: Sized {
     /// The protocol-specific PacketRef type. The `'a` lifetime is tied to the input buffer.
-    type PacketRef<'a>;
+    type PacketRef<'a>: Into<UbxPacket<'a>>;
 
     /// The maximum payload length supported by this protocol version.
     const MAX_PAYLOAD_LEN: usize;
@@ -89,18 +89,22 @@ pub trait UbxProtocol: Sized {
 
 #[cfg(feature = "ubx_proto14")]
 pub mod proto17 {
+    pub use crate::parser::Proto17;
     pub use crate::ubx_packets::packetref_proto17::PacketRef;
 }
 #[cfg(feature = "ubx_proto23")]
 pub mod proto23 {
+    pub use crate::parser::Proto23;
     pub use crate::ubx_packets::packetref_proto23::PacketRef;
 }
 #[cfg(feature = "ubx_proto27")]
 pub mod proto27 {
+    pub use crate::parser::Proto27;
     pub use crate::ubx_packets::packetref_proto27::PacketRef;
 }
 #[cfg(feature = "ubx_proto31")]
 pub mod proto31 {
+    pub use crate::parser::Proto31;
     pub use crate::ubx_packets::packetref_proto31::PacketRef;
 }
 

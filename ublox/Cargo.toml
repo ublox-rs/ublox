@@ -17,11 +17,13 @@ ubx_proto27 = []
 ubx_proto31 = []
 default = [
     "std",
+    "alloc",
     "serde",
     "ubx_proto14",
     "ubx_proto23",
     "ubx_proto27",
     "ubx_proto31",
+    "sfrbx-gps",
 ]
 
 # Unlock RXM-SFRBX GPS and QZSS interpretation
