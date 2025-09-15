@@ -9,6 +9,17 @@ mod signal;
 mod tui;
 mod ui;
 
+/// Use proto23 if enabled, otherwise use proto27 if enabled, otherwise use proto31
+#[cfg(feature = "ubx_proto23")]
+pub(crate) type Proto = ublox_device::ublox::proto23::Proto23;
+#[cfg(all(feature = "ubx_proto27", not(feature = "ubx_proto23")))]
+pub(crate) type Proto = ublox_device::ublox::proto27::Proto27;
+#[cfg(all(
+    feature = "ubx_proto31",
+    not(any(feature = "ubx_proto23", feature = "ubx_proto27"))
+))]
+pub(crate) type Proto = ublox_device::ublox::proto31::Proto31;
+
 fn main() -> Result<(), Box<dyn Error>> {
     let cli = cli::parse_args();
 
@@ -31,7 +42,7 @@ fn device_debug_mode(cli: &clap::Command) -> Result<()> {
     let (ubx_msg_tx, ubx_msg_rs) = channel();
 
     let serialport = ublox_device::cli::Command::serialport(cli.clone())?;
-    let device = ublox_device::Device::new(serialport);
+    let device: ublox_device::Device<Proto> = ublox_device::Device::new(serialport);
 
     let mut backend_device = backend::UbxDevice::from(device);
     backend_device.configure();

@@ -14,7 +14,7 @@ alias l := lint
 
 # Run all CI checks (except semver)
 [group("all")]
-ci: typos lint build-all build-all-embedded test-all lint-examples build-examples doc msrv
+ci: typos lint-msrv build-all build-all-embedded test-all lint-examples build-examples doc msrv
 
 # Check all feature combinations
 [group("all")]
@@ -49,6 +49,12 @@ lint *ARGS:
     cargo fmt --all
     cargo clippy --all-targets -- -D warnings
 
+# Run clippy lints with version 1.83.0 which we use in CI atm (we should use a newer one!)
+[group("misc")]
+lint-msrv *ARGS:
+    cargo fmt --all
+    cargo +1.83 clippy --all-targets -- -D warnings
+
 # Build docs
 [group("misc")]
 doc $RUSTDOCFLAGS="--cfg docrs":
@@ -72,7 +78,8 @@ cmd-for-all-features CMD *ARGS:
     set -euo pipefail
     
     feature_combinations=(
-    '--features "alloc std ubx_proto23"'
+    '' # Default features
+    '--no-default-features --features "alloc std ubx_proto23"'
     '--no-default-features --features "alloc ubx_proto23 sfrbx-gps"'
     '--no-default-features --features ubx_proto14'
     '--no-default-features --features ubx_proto23'
@@ -82,6 +89,8 @@ cmd-for-all-features CMD *ARGS:
     '--no-default-features --features ubx_proto31'
     '--no-default-features --features "ubx_proto31 std"'
     '--no-default-features --features "ubx_proto31 std serde"'
+    '--no-default-features --features "alloc std ubx_proto14 ubx_proto23"'
+    '--no-default-features --features "alloc std ubx_proto14 ubx_proto23 ubx_proto27 ubx_proto31"'
     )
     
     # Loop through each feature combination
@@ -118,6 +127,6 @@ run-cmd-verbose CMD:
     rc=$?
     set -e
     if [[ rc -ne 0 ]]; then
-        echo "{{RED}}{{BOLD}}Command failed: {{NORMAL}}{{YELLOW}}${RUN_CMD}{{NORMAL}}"
+        echo "{{RED}}{{BOLD}}Command failed: {{NORMAL}}{{YELLOW}}{{CMD}}{{NORMAL}}"
         exit 1
     fi

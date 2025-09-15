@@ -9,7 +9,7 @@ use ublox_device::ublox::{
         EsfStatusFusionMode, EsfStatusImuInit, EsfStatusInsInit, EsfStatusMountAngle,
         EsfStatusWheelTickInit,
     },
-    nav_pvt::{NavPvtFlags, NavPvtFlags2},
+    nav_pvt::common::{NavPvtFlags, NavPvtFlags2},
     GnssFixType,
 };
 

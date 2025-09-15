@@ -52,7 +52,7 @@ pub fn run(cli: &clap::Command, log_file: PathBuf) -> Result<(), Box<dyn Error>>
         },
         Ok(s) => s,
     };
-    let device = ublox_device::Device::new(serialport);
+    let device: ublox_device::Device<crate::Proto> = ublox_device::Device::new(serialport);
     let mut backend_device = backend::UbxDevice::from(device);
     backend_device.configure();
     backend_device.run(ubx_msg_tx);

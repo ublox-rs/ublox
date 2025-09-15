@@ -1,5 +1,8 @@
 #![cfg(feature = "ubx_proto14")]
 
+#[cfg(feature = "serde")]
+use super::{SerializeMap, SerializeUbxPacketFields};
+
 use crate::{ParserError, UbxPacketMeta, UbxUnknownPacketOwned, UbxUnknownPacketRef};
 use ublox_derive::define_recv_packets;
 
@@ -45,8 +48,8 @@ use crate::ubx_packets::packets::{
         NavVelECEFOwned, NavVelECEFRef,
     },
     nav_pos_llh::{NavPosLlh, NavPosLlhOwned, NavPosLlhRef},
-    nav_pvt::{NavPvt, NavPvtOwned, NavPvtRef},
-    nav_rel_pos_ned::{NavRelPosNed, NavRelPosNedOwned, NavRelPosNedRef},
+    nav_pvt::proto14::{NavPvt, NavPvtOwned, NavPvtRef},
+    nav_rel_pos_ned::proto14_23::{NavRelPosNed, NavRelPosNedOwned, NavRelPosNedRef},
     nav_sat::{NavSat, NavSatOwned, NavSatRef},
     nav_sol::{NavSol, NavSolOwned, NavSolRef},
     nav_status::{NavStatus, NavStatusOwned, NavStatusRef},

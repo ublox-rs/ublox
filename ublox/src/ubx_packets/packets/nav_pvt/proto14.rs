@@ -1,5 +1,5 @@
 #[cfg(feature = "serde")]
-use super::SerializeUbxPacketFields;
+use super::super::SerializeUbxPacketFields;
 #[cfg(feature = "serde")]
 use crate::serde::ser::SerializeMap;
 

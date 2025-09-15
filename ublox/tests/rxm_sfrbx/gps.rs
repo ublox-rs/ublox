@@ -1,6 +1,6 @@
 #![cfg(feature = "alloc")]
 
-use ublox::{rxm_sfrbx::RxmSfrbxInterpreted, PacketRef, Parser};
+use ublox::{proto23::PacketRef, rxm_sfrbx::RxmSfrbxInterpreted, Parser};
 
 use gnss_protos::GpsQzssSubframe;
 
@@ -10,6 +10,8 @@ use gnss_protos::GpsQzssSubframe;
 #[test]
 #[cfg(feature = "ubx_proto23")]
 fn sfrbx_gps_eph1() {
+    use ublox::proto23::Proto23;
+
     let bytes = [
         0xb5,
         0x62,
@@ -70,12 +72,14 @@ fn sfrbx_gps_eph1() {
     ];
 
     let mut test_passed = false;
-    let mut parser = Parser::default();
+    let mut parser = Parser::<_, Proto23>::default();
     let mut it = parser.consume_ubx(&bytes);
 
     while let Some(pack) = it.next() {
+        use ublox::UbxPacket;
+
         match pack {
-            Ok(PacketRef::RxmSfrbx(packet)) => {
+            Ok(UbxPacket::Proto23(PacketRef::RxmSfrbx(packet))) => {
                 assert_eq!(packet.gnss_id(), 0);
                 assert_eq!(packet.sv_id(), 1);
                 assert_eq!(packet.reserved1(), 2);
@@ -102,7 +106,6 @@ fn sfrbx_gps_eph1() {
                         },
                         _ => panic!("UBX-SFRBX (GPS/QZSS) invalid subframe interpretation!"),
                     },
-                    _ => panic!("UBX-SFRBX (GPS/QZSS) incorrect interpretation"),
                 }
                 test_passed = true;
             },
@@ -119,6 +122,8 @@ fn sfrbx_gps_eph1() {
 #[test]
 #[cfg(feature = "ubx_proto23")]
 fn sfrbx_gps_eph2() {
+    use ublox::proto23::Proto23;
+
     let bytes = [
         0xb5,
         0x62,
@@ -179,12 +184,12 @@ fn sfrbx_gps_eph2() {
     ];
 
     let mut test_passed = false;
-    let mut parser = Parser::default();
+    let mut parser = Parser::<_, Proto23>::default();
     let mut it = parser.consume_ubx(&bytes);
 
     while let Some(pack) = it.next() {
         match pack {
-            Ok(PacketRef::RxmSfrbx(packet)) => {
+            Ok(ublox::UbxPacket::Proto23(PacketRef::RxmSfrbx(packet))) => {
                 assert_eq!(packet.gnss_id(), 0);
                 assert_eq!(packet.sv_id(), 1);
                 assert_eq!(packet.reserved1(), 2);
@@ -211,11 +216,10 @@ fn sfrbx_gps_eph2() {
                             assert!((subframe.cus - 8.093193173409e-006).abs() < 1e-9);
                             assert!((subframe.cuc - -5.587935447693e-008).abs() < 1e-6);
                             assert!((subframe.dn - 1.444277586415e-009).abs() < 1e-9);
-                            assert_eq!(subframe.fit_int_flag, false);
+                            assert!(!subframe.fit_int_flag);
                         },
                         _ => panic!("UBX-SFRBX (GPS/QZSS) invalid subframe interpretation!"),
                     },
-                    _ => panic!("UBX-SFRBX (GPS/QZSS) incorrect interpretation"),
                 }
                 test_passed = true;
             },
@@ -232,6 +236,8 @@ fn sfrbx_gps_eph2() {
 #[test]
 #[cfg(feature = "ubx_proto23")]
 fn sfrbx_gps_eph3() {
+    use ublox::proto23::Proto23;
+
     let bytes = [
         0xb5,
         0x62,
@@ -292,12 +298,12 @@ fn sfrbx_gps_eph3() {
     ];
 
     let mut test_passed = false;
-    let mut parser = Parser::default();
+    let mut parser = Parser::<_, Proto23>::default();
     let mut it = parser.consume_ubx(&bytes);
 
     while let Some(pack) = it.next() {
         match pack {
-            Ok(PacketRef::RxmSfrbx(packet)) => {
+            Ok(ublox::UbxPacket::Proto23(PacketRef::RxmSfrbx(packet))) => {
                 assert_eq!(packet.gnss_id(), 0);
                 assert_eq!(packet.sv_id(), 1);
                 assert_eq!(packet.reserved1(), 2);
@@ -326,7 +332,6 @@ fn sfrbx_gps_eph3() {
                         },
                         _ => panic!("UBX-SFRBX (GPS/QZSS) invalid subframe interpretation!"),
                     },
-                    _ => panic!("UBX-SFRBX (GPS/QZSS) incorrect interpretation"),
                 }
                 test_passed = true;
             },

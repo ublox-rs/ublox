@@ -15,13 +15,19 @@ ubx_proto14 = []
 ubx_proto23 = []
 ubx_proto27 = []
 ubx_proto31 = []
-default = ["std", "serde", "ubx_proto23"]
+default = [
+    "std",
+    "alloc",
+    "serde",
+    "ubx_proto14",
+    "ubx_proto23",
+    "ubx_proto27",
+    "ubx_proto31",
+    "sfrbx-gps",
+]
 
 # Unlock RXM-SFRBX GPS and QZSS interpretation
-sfrbx-gps = [
-    "gnss-protos",
-    "gnss-protos/gps",
-]
+sfrbx-gps = ["gnss-protos", "gnss-protos/gps"]
 
 alloc = []
 std = []

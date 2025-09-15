@@ -2,28 +2,15 @@
 
 use cpu_time::ProcessTime;
 use rand::Rng;
-use std::{env, ffi::OsString, fs, path::Path};
-use ublox::{PacketRef, Parser, ParserError};
+use std::{
+    env,
+    ffi::OsString,
+    fs,
+    path::{Path, PathBuf},
+};
+use ublox::{Parser, ParserError, UbxPacket};
 
-/// To run test against file with path X,
-/// use such command (if use shell compatible with /bin/sh).
-/// ```sh
-/// UBX_BIG_LOG_PATH=X time cargo test --release test_parse_big_dump -- --ignored --nocapture
-/// ```
-/// Binary dump should be at path X and at path X.meta, should be file with meta
-/// information about what packets you expect find in dump, example:
-/// ```sh
-/// $ cat /var/tmp/gps.bin.meta
-///wrong_chksum=0
-///other_errors=0
-///nav_pos_llh=38291
-///nav_stat=38291
-///unknown=120723
-///ack_ack=1
-/// ```
-#[test]
-#[ignore]
-fn test_parse_big_dump() {
+fn read_big_log() -> (Vec<u8>, Meta, Meta, PathBuf, Vec<usize>) {
     let ubx_big_log_path = env::var("UBX_BIG_LOG_PATH").unwrap();
     let ubx_big_log_path = Path::new(&ubx_big_log_path);
 
@@ -50,21 +37,52 @@ fn test_parse_big_dump() {
         i += chunk;
     }
 
-    let mut meta = Meta::default();
-    let mut log = biglog.as_slice();
-    let mut parser = Parser::default();
+    let meta = Meta::default();
+    (
+        biglog,
+        meta,
+        expect,
+        ubx_big_log_path.to_owned(),
+        read_sizes,
+    )
+}
+
+/// To run test against file with path X,
+/// use such command (if use shell compatible with /bin/sh).
+/// ```sh
+/// UBX_BIG_LOG_PATH=X time cargo test --release test_parse_big_dump -- --ignored --nocapture
+/// ```
+/// Binary dump should be at path X and at path X.meta, should be file with meta
+/// information about what packets you expect find in dump, example:
+/// ```sh
+/// $ cat /var/tmp/gps.bin.meta
+///wrong_chksum=0
+///other_errors=0
+///nav_pos_llh=38291
+///nav_stat=38291
+///unknown=120723
+///ack_ack=1
+/// ```
+#[cfg(feature = "ubx_proto14")]
+#[test]
+#[ignore]
+fn test_parse_big_dump_proto14() {
+    use ublox::proto17::{PacketRef, Proto17};
+    let (log, mut meta, expect, log_path, read_sizes) = read_big_log();
+    let mut log_slice = log.as_slice();
+    let mut parser = Parser::<_, Proto17>::default();
 
     let start = ProcessTime::now();
     for chunk_size in &read_sizes {
-        let (buf, rest) = log.split_at(*chunk_size);
-        log = rest;
+        let (buf, rest) = log_slice.split_at(*chunk_size);
+        log_slice = rest;
         let mut it = parser.consume_ubx(buf);
         while let Some(pack) = it.next() {
             match pack {
                 Ok(pack) => match pack {
-                    PacketRef::AckAck(_) => meta.ack_ack += 1,
-                    PacketRef::NavPosLlh(_) => meta.nav_pos_llh += 1,
-                    PacketRef::NavStatus(_) => meta.nav_stat += 1,
+                    UbxPacket::Proto17(PacketRef::AckAck(_)) => meta.ack_ack += 1,
+                    UbxPacket::Proto17(PacketRef::NavPosLlh(_)) => meta.nav_pos_llh += 1,
+                    UbxPacket::Proto17(PacketRef::NavStatus(_)) => meta.nav_stat += 1,
                     _ => meta.unknown += 1,
                 },
                 Err(ParserError::InvalidChecksum { .. }) => meta.wrong_chksum += 1,
@@ -73,11 +91,122 @@ fn test_parse_big_dump() {
         }
     }
     let cpu_time = start.elapsed();
-    println!(
-        "parse time of {}: {:?}",
-        ubx_big_log_path.display(),
-        cpu_time
-    );
+    println!("parse time of {}: {cpu_time:?}", log_path.display());
+
+    assert_eq!(expect, meta);
+}
+
+/// To run test against file with path X,
+/// use such command (if use shell compatible with /bin/sh).
+/// ```sh
+/// UBX_BIG_LOG_PATH=X time cargo test --release test_parse_big_dump -- --ignored --nocapture
+/// ```
+/// Binary dump should be at path X and at path X.meta, should be file with meta
+/// information about what packets you expect find in dump, example:
+/// ```sh
+/// $ cat /var/tmp/gps.bin.meta
+///wrong_chksum=0
+///other_errors=0
+///nav_pos_llh=38291
+///nav_stat=38291
+///unknown=120723
+///ack_ack=1
+/// ```
+#[cfg(feature = "ubx_proto23")]
+#[test]
+#[ignore]
+fn test_parse_big_dump_proto23() {
+    use ublox::proto23::{PacketRef, Proto23};
+    let (log, mut meta, expect, log_path, read_sizes) = read_big_log();
+    let mut log_slice = log.as_slice();
+    let mut parser = Parser::<_, Proto23>::default();
+
+    let start = ProcessTime::now();
+    for chunk_size in &read_sizes {
+        let (buf, rest) = log_slice.split_at(*chunk_size);
+        log_slice = rest;
+        let mut it = parser.consume_ubx(buf);
+        while let Some(pack) = it.next() {
+            match pack {
+                Ok(pack) => match pack {
+                    UbxPacket::Proto23(PacketRef::AckAck(_)) => meta.ack_ack += 1,
+                    UbxPacket::Proto23(PacketRef::NavPosLlh(_)) => meta.nav_pos_llh += 1,
+                    UbxPacket::Proto23(PacketRef::NavStatus(_)) => meta.nav_stat += 1,
+                    _ => meta.unknown += 1,
+                },
+                Err(ParserError::InvalidChecksum { .. }) => meta.wrong_chksum += 1,
+                Err(_) => meta.other_errors += 1,
+            }
+        }
+    }
+    let cpu_time = start.elapsed();
+    println!("parse time of {}: {cpu_time:?}", log_path.display());
+
+    assert_eq!(expect, meta);
+}
+
+#[cfg(feature = "ubx_proto27")]
+#[test]
+#[ignore]
+fn test_parse_big_dump_proto27() {
+    use ublox::proto27::{PacketRef, Proto27};
+    let (log, mut meta, expect, log_path, read_sizes) = read_big_log();
+    let mut log_slice = log.as_slice();
+    let mut parser = Parser::<_, Proto27>::default();
+
+    let start = ProcessTime::now();
+    for chunk_size in &read_sizes {
+        let (buf, rest) = log_slice.split_at(*chunk_size);
+        log_slice = rest;
+        let mut it = parser.consume_ubx(buf);
+        while let Some(pack) = it.next() {
+            match pack {
+                Ok(pack) => match pack {
+                    UbxPacket::Proto27(PacketRef::AckAck(_)) => meta.ack_ack += 1,
+                    UbxPacket::Proto27(PacketRef::NavPosLlh(_)) => meta.nav_pos_llh += 1,
+                    UbxPacket::Proto27(PacketRef::NavStatus(_)) => meta.nav_stat += 1,
+                    _ => meta.unknown += 1,
+                },
+                Err(ParserError::InvalidChecksum { .. }) => meta.wrong_chksum += 1,
+                Err(_) => meta.other_errors += 1,
+            }
+        }
+    }
+    let cpu_time = start.elapsed();
+    println!("parse time of {}: {cpu_time:?}", log_path.display());
+
+    assert_eq!(expect, meta);
+}
+
+#[cfg(feature = "ubx_proto31")]
+#[test]
+#[ignore]
+fn test_parse_big_dump_proto31() {
+    use ublox::proto31::{PacketRef, Proto31};
+    let (log, mut meta, expect, log_path, read_sizes) = read_big_log();
+    let mut log_slice = log.as_slice();
+    let mut parser = Parser::<_, Proto31>::default();
+
+    let start = ProcessTime::now();
+    for chunk_size in &read_sizes {
+        let (buf, rest) = log_slice.split_at(*chunk_size);
+        log_slice = rest;
+        let mut it = parser.consume_ubx(buf);
+        while let Some(pack) = it.next() {
+            match pack {
+                Ok(pack) => match pack {
+                    UbxPacket::Proto31(PacketRef::AckAck(_)) => meta.ack_ack += 1,
+                    UbxPacket::Proto31(PacketRef::NavPosLlh(_)) => meta.nav_pos_llh += 1,
+                    UbxPacket::Proto31(PacketRef::NavStatus(_)) => meta.nav_stat += 1,
+                    _ => meta.unknown += 1,
+                },
+                Err(ParserError::InvalidChecksum { .. }) => meta.wrong_chksum += 1,
+                Err(_) => meta.other_errors += 1,
+            }
+        }
+    }
+    let cpu_time = start.elapsed();
+    println!("parse time of {}: {cpu_time:?}", log_path.display());
 
     assert_eq!(expect, meta);
 }

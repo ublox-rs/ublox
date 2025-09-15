@@ -10,15 +10,6 @@ pub mod packetref_proto23;
 pub mod packetref_proto27;
 pub mod packetref_proto31;
 
-#[cfg(feature = "ubx_proto14")]
-pub use packetref_proto17::PacketRef;
-#[cfg(feature = "ubx_proto23")]
-pub use packetref_proto23::PacketRef;
-#[cfg(feature = "ubx_proto27")]
-pub use packetref_proto27::PacketRef;
-#[cfg(feature = "ubx_proto31")]
-pub use packetref_proto31::PacketRef;
-
 pub mod ack;
 
 pub mod aid_ini;
