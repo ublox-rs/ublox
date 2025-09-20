@@ -1,0 +1,19 @@
+[package]
+name = "simple-parse"
+version = "0.1.0"
+rust-version.workspace = true
+edition.workspace = true
+license.workspace = true
+documentation.workspace = true
+repository.workspace = true
+keywords.workspace = true
+readme.workspace = true
+exclude.workspace = true
+
+[dependencies]
+clap = { version = "4.2", features = ["derive"] }
+serialport = "4.2"
+ublox = { path = "../../ublox", default-features = false, features = [
+    "alloc",
+    "ubx_proto23",
+] }

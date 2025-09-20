@@ -1,13 +1,31 @@
 # Examples
 
 This folder contains the following examples
+ - [simple-parse](./simple-parse)
  - [basic-cli](./basic-cli)
  - [send-receive](./send-receive)
  - [ublox-tui](./ublox-tui)
  - [DDS](./dds/)
 
+# simple-parse
 
-# uBlox Device
+Minimal example of opening a serial device, reading and parsing ubx packets from it.
+
+This example requires the device to have been preconfigured to output messages.
+
+To run the example with uBlox protocol 23 run
+
+```shell
+cargo run -p simple-parse -- -p /dev/ttyACM0
+```
+
+To run it for other protocol versions, first disable the default features and then enable the specific features needed, e.g.,
+
+```shell
+cargo run -p simple-parse --no-default-features --features alloc,ubx_proto27 -- -p /dev/ttyACM0 
+```
+
+# uBlox Device - This kind of ruins all the examples because the device is so generic and complex!
 
 The device configuration and the reading of packets as well as some common CLI arguments have been abstracted away into an `ublox-device` library. This library is for convenience only as it is used throughout all of the examples.
 
