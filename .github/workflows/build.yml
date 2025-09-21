@@ -22,6 +22,7 @@ jobs:
       matrix:
         feature-args:
           - '' # Default features
+          - 'full'
           - --features "alloc std ubx_proto23"
           - --no-default-features --features "alloc std ubx_proto23"
           - --no-default-features --features "alloc ubx_proto23 sfrbx-gps"
