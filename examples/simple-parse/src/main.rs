@@ -62,6 +62,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                                 ublox::proto23::PacketRef::NavPvt(nav_pvt) => {
                                     println!("Speed: {} [m/s]", nav_pvt.ground_speed_2d())
                                 },
+                                ublox::proto23::PacketRef::EsfMeas(esf_meas) => {
+                                    for data in esf_meas.data() {
+                                        println!("ESF MEAS DATA: {data:?}");
+                                    }
+                                },
                                 _ => (), // Ignore packets we don't care about
                             };
                         },

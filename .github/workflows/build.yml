@@ -83,23 +83,40 @@ jobs:
 
   build_examples:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        example:
+          - ublox-device
+          - ublox-tui
+          - basic-cli
+          - dds
+          - send-receive
+          - simple-parse
     steps:
     - uses: actions/checkout@v5
-    - name: Install libudev
-      run: sudo apt-get update && sudo apt-get install -y libudev-dev
+      with:
+        persist-credentials: false
+
+    # - name: Install libudev
+    #   run: sudo apt-get update && sudo apt-get install -y libudev-dev
+
     - name: Install MSRV
       uses: actions-rs/toolchain@v1
       with:
         toolchain: 1.83.0
         override: true
         components: rustfmt, clippy
+
     - uses: Swatinem/rust-cache@v2
+    
     - name: Build
-      run: cargo build --release --all
+      run: cargo build --release --package ${{ matrix.example }}
+
     - name: Coding style
       run: |
           cargo fmt --all -- --check
-          cargo clippy --all-targets --all -- -D warnings
+          cargo clippy --all-targets --package ${{ matrix.example }} -- -D warnings
   
   docs:
     runs-on: ubuntu-latest
