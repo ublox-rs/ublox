@@ -37,8 +37,8 @@ jobs:
           - --no-default-features --features "alloc std ubx_proto14 ubx_proto23 ubx_proto27 ubx_proto31"
     steps:
     - uses: actions/checkout@v5
-    - name: Install libudev
-      run: sudo apt-get update && sudo apt-get install -y libudev-dev
+      with:
+        persist-credentials: false
     - name: Install MSRV
       uses: actions-rs/toolchain@v1
       with:
@@ -69,6 +69,8 @@ jobs:
           - serde,ubx_proto27
     steps:
     - uses: actions/checkout@v5
+      with:
+        persist-credentials: false
     - name: Install MSRV
       uses: actions-rs/toolchain@v1
       with:
@@ -98,9 +100,6 @@ jobs:
       with:
         persist-credentials: false
 
-    # - name: Install libudev
-    #   run: sudo apt-get update && sudo apt-get install -y libudev-dev
-
     - name: Install MSRV
       uses: actions-rs/toolchain@v1
       with:
@@ -123,6 +122,8 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v5
+        with:
+          persist-credentials: false
     
       - name: Install nightly
         uses: actions-rs/toolchain@v1
@@ -146,9 +147,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
       - uses: taiki-e/install-action@cargo-hack
-      - name: Install libudev
-        run: sudo apt-get update && sudo apt-get install -y libudev-dev
       - uses: Swatinem/rust-cache@v2
       - name: Check MSRV for examples
         run: cargo hack check --rust-version --workspace

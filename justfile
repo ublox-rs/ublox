@@ -34,8 +34,7 @@ test-all *ARGS: (cmd-for-all-features "cargo test" ARGS)
 
 # Build examples
 [group("examples")]
-build-examples:
-    cargo build --release --workspace
+build-examples: (cmd-for-all-examples "cargo build --release")
 
 # Format and lint examples
 [group("examples")]
@@ -79,6 +78,7 @@ cmd-for-all-features CMD *ARGS:
     
     feature_combinations=(
     '' # Default features
+    '--features full'
     '--no-default-features --features "alloc std ubx_proto23"'
     '--no-default-features --features "alloc ubx_proto23 sfrbx-gps"'
     '--no-default-features --features ubx_proto14'
