@@ -1,10 +1,8 @@
-use chrono::prelude::*;
-use std::convert::TryInto;
 use ublox_device::ublox::{
     cfg_msg::{CfgMsgAllPorts, CfgMsgAllPortsBuilder},
     mon_ver::MonVer,
     nav_pvt::proto23_27_31::NavPvt,
-    GnssFixType, Position, UbxPacket, UbxPacketRequest, Velocity,
+    UbxPacket, UbxPacketRequest,
 };
 
 /// Use proto23 if enabled, otherwise use proto27 if enabled, otherwise use proto31
@@ -54,142 +52,71 @@ fn main() {
     // Start reading data
     println!("Opened uBlox device, waiting for messages...");
     loop {
-        device.on_data_available(|packet| {
-
-            match packet {
+        device
+            .on_data_available(|packet| match packet {
                 #[cfg(feature = "ubx_proto14")]
                 UbxPacket::Proto17(_) => unimplemented!(),
                 #[cfg(feature = "ubx_proto23")]
-                UbxPacket::Proto23(packet_ref) => {
-                    use ublox_device::ublox::packetref_proto23::PacketRef;
-                    match &packet_ref {
-                        PacketRef::MonVer(packet) => {
-                            println!(
-                                "SW version: {} HW version: {}; Extensions: {:?}",
-                                packet.software_version(),
-                                packet.hardware_version(),
-                                packet.extension().collect::<Vec<&str>>()
-                            );
-                            println!("{packet:?}");
-                        },
-                        PacketRef::NavPvt(pvt) => {
-                            let has_time = pvt.fix_type() == GnssFixType::Fix3D
-                                || pvt.fix_type() == GnssFixType::GPSPlusDeadReckoning
-                                || pvt.fix_type() == GnssFixType::TimeOnlyFix;
-                            let has_posvel = pvt.fix_type() == GnssFixType::Fix3D
-                                || pvt.fix_type() == GnssFixType::GPSPlusDeadReckoning;
-
-                            if has_posvel {
-                                let pos: Position = pvt.into();
-                                let vel: Velocity = pvt.into();
-                                println!(
-                                    "NavPvt: Latitude: {:.5} Longitude: {:.5} Altitude: {:.2} m, Speed: {:.2} m/s Heading: {:.2} degrees",
-                                    pos.lat, pos.lon, pos.alt
-                                    ,vel.speed, vel.heading
-                                );
-                                println!("NavPvt full: {pvt:?}");
-                            }
-
-                            if has_time {
-                                let time: DateTime<Utc> = pvt
-                                    .try_into()
-                                    .expect("Could not parse NAV-PVT time field to UTC");
-                                println!("Time: {time:?}");
-                            }
-                        },
-                        _ => {
-                            println!("{packet_ref:?}");
-                        },
-                    }
-                },
+                UbxPacket::Proto23(packet_ref) => handler::handle_packet(packet_ref),
                 #[cfg(feature = "ubx_proto27")]
-                UbxPacket::Proto27(packet_ref) => {
-                    use ublox_device::ublox::packetref_proto27::PacketRef;
-                    match &packet_ref {
-                        PacketRef::MonVer(packet) => {
-                            println!(
-                                "SW version: {} HW version: {}; Extensions: {:?}",
-                                packet.software_version(),
-                                packet.hardware_version(),
-                                packet.extension().collect::<Vec<&str>>()
-                            );
-                            println!("{packet:?}");
-                        },
-                        PacketRef::NavPvt(pvt) => {
-                            let has_time = pvt.fix_type() == GnssFixType::Fix3D
-                                || pvt.fix_type() == GnssFixType::GPSPlusDeadReckoning
-                                || pvt.fix_type() == GnssFixType::TimeOnlyFix;
-                            let has_posvel = pvt.fix_type() == GnssFixType::Fix3D
-                                || pvt.fix_type() == GnssFixType::GPSPlusDeadReckoning;
-
-                            if has_posvel {
-                                let pos: Position = pvt.into();
-                                let vel: Velocity = pvt.into();
-                                println!(
-                                    "NavPvt: Latitude: {:.5} Longitude: {:.5} Altitude: {:.2} m, Speed: {:.2} m/s Heading: {:.2} degrees",
-                                    pos.lat, pos.lon, pos.alt
-                                    ,vel.speed, vel.heading
-                                );
-                                println!("NavPvt full: {pvt:?}");
-                            }
-
-                            if has_time {
-                                let time: DateTime<Utc> = pvt
-                                    .try_into()
-                                    .expect("Could not parse NAV-PVT time field to UTC");
-                                println!("Time: {time:?}");
-                            }
-                        },
-                        _ => {
-                            println!("{packet_ref:?}");
-                        },
-                    }
-                },
+                UbxPacket::Proto27(packet_ref) => handler::handle_packet(packet_ref),
                 #[cfg(feature = "ubx_proto31")]
-                UbxPacket::Proto31(packet_ref) => {
-                    use ublox_device::ublox::packetref_proto31::PacketRef;
-                    match &packet_ref {
-                        PacketRef::MonVer(packet) => {
-                            println!(
-                                "SW version: {} HW version: {}; Extensions: {:?}",
-                                packet.software_version(),
-                                packet.hardware_version(),
-                                packet.extension().collect::<Vec<&str>>()
-                            );
-                            println!("{packet:?}");
-                        },
-                        PacketRef::NavPvt(pvt) => {
-                            let has_time = pvt.fix_type() == GnssFixType::Fix3D
-                                || pvt.fix_type() == GnssFixType::GPSPlusDeadReckoning
-                                || pvt.fix_type() == GnssFixType::TimeOnlyFix;
-                            let has_posvel = pvt.fix_type() == GnssFixType::Fix3D
-                                || pvt.fix_type() == GnssFixType::GPSPlusDeadReckoning;
+                UbxPacket::Proto31(packet_ref) => handler::handle_packet(packet_ref),
+            })
+            .unwrap();
+    }
+}
 
-                            if has_posvel {
-                                let pos: Position = pvt.into();
-                                let vel: Velocity = pvt.into();
-                                println!(
+mod handler {
+    #[cfg(feature = "ubx_proto23")]
+    use ublox_device::ublox::packetref_proto23::PacketRef;
+    #[cfg(feature = "ubx_proto27")]
+    use ublox_device::ublox::packetref_proto27::PacketRef;
+    #[cfg(feature = "ubx_proto31")]
+    use ublox_device::ublox::packetref_proto31::PacketRef;
+
+    use chrono::{DateTime, Utc};
+    use ublox_device::ublox::{GnssFixType, Position, Velocity};
+
+    pub fn handle_packet(packet_ref: PacketRef) {
+        match &packet_ref {
+            PacketRef::MonVer(packet) => {
+                println!(
+                    "SW version: {} HW version: {}; Extensions: {:?}",
+                    packet.software_version(),
+                    packet.hardware_version(),
+                    packet.extension().collect::<Vec<&str>>()
+                );
+                println!("{packet:?}");
+            },
+            PacketRef::NavPvt(pvt) => {
+                let has_time = pvt.fix_type() == GnssFixType::Fix3D
+                    || pvt.fix_type() == GnssFixType::GPSPlusDeadReckoning
+                    || pvt.fix_type() == GnssFixType::TimeOnlyFix;
+                let has_posvel = pvt.fix_type() == GnssFixType::Fix3D
+                    || pvt.fix_type() == GnssFixType::GPSPlusDeadReckoning;
+
+                if has_posvel {
+                    let pos: Position = pvt.into();
+                    let vel: Velocity = pvt.into();
+                    println!(
                                     "NavPvt: Latitude: {:.5} Longitude: {:.5} Altitude: {:.2} m, Speed: {:.2} m/s Heading: {:.2} degrees",
                                     pos.lat, pos.lon, pos.alt
                                     ,vel.speed, vel.heading
                                 );
-                                println!("NavPvt full: {pvt:?}");
-                            }
+                    println!("NavPvt full: {pvt:?}");
+                }
 
-                            if has_time {
-                                let time: DateTime<Utc> = pvt
-                                    .try_into()
-                                    .expect("Could not parse NAV-PVT time field to UTC");
-                                println!("Time: {time:?}");
-                            }
-                        },
-                        _ => {
-                            println!("{packet_ref:?}");
-                        },
-                    }
-                },
-            }
-
-        }).unwrap();
+                if has_time {
+                    let time: DateTime<Utc> = pvt
+                        .try_into()
+                        .expect("Could not parse NAV-PVT time field to UTC");
+                    println!("Time: {time:?}");
+                }
+            },
+            _ => {
+                println!("{packet_ref:?}");
+            },
+        }
     }
 }

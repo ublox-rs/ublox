@@ -14,7 +14,15 @@ alias l := lint
 
 # Run all CI checks (except semver)
 [group("all")]
-ci: typos lint-msrv build-all build-all-embedded test-all lint-examples build-examples doc msrv
+ci: typos \
+    lint-msrv \
+    build-all \
+    build-all-embedded \
+    test-all \
+    lint-examples \
+    build-examples \
+    doc \
+    msrv
 
 # Check all feature combinations
 [group("all")]

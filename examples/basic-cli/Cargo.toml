@@ -12,7 +12,7 @@ edition.workspace = true
 rust-version.workspace = true
 
 [features]
-default = ["ubx_proto14", "ubx_proto23", "ubx_proto27", "ubx_proto31"]
+default = ["ubx_proto23"]
 ubx_proto14 = ["ublox-device/ubx_proto14"]
 ubx_proto23 = ["ublox-device/ubx_proto23"]
 ubx_proto27 = ["ublox-device/ubx_proto27"]
