@@ -99,11 +99,12 @@ mod handler {
                 if has_posvel {
                     let pos: Position = pvt.into();
                     let vel: Velocity = pvt.into();
-                    println!(
-                                    "NavPvt: Latitude: {:.5} Longitude: {:.5} Altitude: {:.2} m, Speed: {:.2} m/s Heading: {:.2} degrees",
-                                    pos.lat, pos.lon, pos.alt
-                                    ,vel.speed, vel.heading
-                                );
+                    let lat = pos.lat;
+                    let lon = pos.lon;
+                    let alt = pos.alt;
+                    let speed = vel.speed;
+                    let heading = vel.heading;
+                    println!("NavPvt: Latitude: {lat:.5} Longitude: {lon:.5} Altitude: {alt:.2} m, Speed: {speed:.2} m/s Heading: {heading:.2} degrees");
                     println!("NavPvt full: {pvt:?}");
                 }
 
