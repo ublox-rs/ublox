@@ -12,7 +12,7 @@ exclude.workspace = true
 
 [dependencies]
 clap = { version = "4.2", features = ["derive"] }
-serialport = "4.2"
+serialport = { version = "4.2", default-features = false }
 ublox = { path = "../../ublox", default-features = false, features = [
     "alloc",
     "ubx_proto23",

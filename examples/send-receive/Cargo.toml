@@ -18,6 +18,6 @@ ubx_proto31 = ["ublox-device/ubx_proto31"]
 [dependencies]
 chrono = "0.4"
 clap = { version = "4.2", features = ["cargo"] }
-serialport = "4.2"
+serialport = { version = "4.2", default-features = false }
 
 ublox-device = { path = "../ublox-device", default-features = false, optional = true }

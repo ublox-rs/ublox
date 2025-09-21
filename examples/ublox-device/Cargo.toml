@@ -18,6 +18,6 @@ ubx_proto31 = ["ublox/ubx_proto31"]
 [dependencies]
 anyhow = "1.0"
 clap = { version = "4.2", features = ["cargo"] }
-serialport = "4.2"
+serialport = { version = "4.2", default-features = false }
 
 ublox = { path = "../../ublox", default-features = false, features = ["alloc"] }
