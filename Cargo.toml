@@ -11,4 +11,4 @@ documentation = "https://docs.rs/ublox/latest/ublox/"
 repository = "https://github.com/ublox-rs/ublox"
 keywords = ["u-blox", "gnss", "gps"]
 readme = "README.md"
-exclude = [".github", "CONTRIBUTING.md"]
+exclude = [".github", "CONTRIBUTING.md", "justfile"]

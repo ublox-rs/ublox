@@ -10,7 +10,8 @@ extern crate serde;
 pub use crate::{
     error::{DateTimeError, MemWriterError, ParserError},
     parser::{
-        AnyPacketRef, FixedLinearBuffer, Parser, RtcmPacketRef, UbxParserIter, UnderlyingBuffer,
+        AnyPacketRef, FixedLinearBuffer, Parser, ParserBuilder, RtcmPacketRef, UbxParserIter,
+        UnderlyingBuffer,
     },
     ubx_packets::*,
 };
@@ -24,38 +25,26 @@ pub mod proto23;
 pub mod proto27;
 pub mod proto31;
 
-/// Encapsulates all the UBX packets of each protocol.
+/// Unified interface for UBX packets across different protocol versions.
 ///
-/// This enum provides a unified interface for handling UBX packets across different protocol versions.
-/// Each variant corresponds to a specific UBX protocol version and contains the appropriate packet
-/// reference for that protocol.
+/// Each variant corresponds to a UBX protocol version (17, 23, 27, 31).
 ///
-/// # Protocol Versions
-///
-/// The available variants depend on which feature flags are enabled:
-/// - `ubx_proto14`: Enables Protocol 17 support
-/// - `ubx_proto23`: Enables Protocol 23 support
-/// - `ubx_proto27`: Enables Protocol 27 support
-/// - `ubx_proto31`: Enables Protocol 31 support
-///
-/// # Note
-///
-/// Most users will only need one protocol, so with only one protocol feature enabled
-/// the enum will contain a single variant which is the UBX packet variant of the selected protocol.
+/// Most users will only need one protocol, so enable only the relevant feature flag.
 ///
 /// # Example
 ///
-/// ```rust,ignore
-/// # use ublox::UbxPacket;
+/// ```rust
+/// use ublox::{UbxPacket, proto23::PacketRef};
+///
 /// match packet {
-///     #[cfg(feature = "ubx_proto14")]
-///     UbxPacket::Proto17(p) => { /* handle proto17 */ }
-///     #[cfg(feature = "ubx_proto23")]
-///     UbxPacket::Proto23(p) => { /* handle proto23 */ }
-///     #[cfg(feature = "ubx_proto27")]
-///     UbxPacket::Proto27(p) => { /* handle proto27 */ }
-///     #[cfg(feature = "ubx_proto31")]
-///     UbxPacket::Proto31(p) => { /* handle proto31 */ }
+///     UbxPacket::Proto23(p) => match p {
+///         PacketRef::NavPvt(nav_pvt) => {
+///             println!("Speed: {} m/s", nav_pvt.ground_speed_2d());
+///         },
+///         _ => {} // Other packet types
+///     }
+///     // Handle other protocol versions if needed
+///     _ => {}
 /// }
 /// ```
 #[derive(Debug)]
