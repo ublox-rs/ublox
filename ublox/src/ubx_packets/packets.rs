@@ -5,7 +5,7 @@ use ublox_derive::ubx_extend;
 #[cfg(feature = "serde")]
 use crate::serde::ser::SerializeMap;
 
-pub mod packetref_proto17;
+pub mod packetref_proto14;
 pub mod packetref_proto23;
 pub mod packetref_proto27;
 pub mod packetref_proto31;
@@ -94,7 +94,7 @@ pub mod tim_tm2;
 pub mod tim_tos;
 pub mod tim_tp;
 
-pub mod proto17_packets;
+pub mod proto14_packets;
 
 /// Used to help serialize the packet's fields flattened within a struct containing the msg_id and class fields, but
 /// without using the serde FlatMapSerializer which requires alloc.

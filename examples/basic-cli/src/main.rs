@@ -58,7 +58,7 @@ fn main() {
 
             match packet {
                 #[cfg(feature = "ubx_proto14")]
-                UbxPacket::Proto17(_) => unimplemented!(),
+                UbxPacket::Proto14(_) => unimplemented!(),
                 #[cfg(feature = "ubx_proto23")]
                 UbxPacket::Proto23(packet_ref) => {
                     use ublox_device::ublox::packetref_proto23::PacketRef;

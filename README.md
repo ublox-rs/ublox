@@ -135,7 +135,7 @@ This library supports no_std environments with a deterministic-size `Parser`. Se
 
 ### `ubx_proto14`
 
-Enable support for uBlox protocol 17 messages (legacy messages).
+Enable support for uBlox protocol 14 messages (legacy messages).
 
 ### `ubx_proto23`
 

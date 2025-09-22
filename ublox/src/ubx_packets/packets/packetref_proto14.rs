@@ -56,7 +56,7 @@ use crate::ubx_packets::packets::{
     nav_time_ls::{NavTimeLs, NavTimeLsOwned, NavTimeLsRef},
     nav_time_utc::{NavTimeUTC, NavTimeUTCOwned, NavTimeUTCRef},
     nav_vel_ned::{NavVelNed, NavVelNedOwned, NavVelNedRef},
-    proto17_packets::{AlpSrv, AlpSrvOwned, AlpSrvRef},
+    proto14_packets::{AlpSrv, AlpSrvOwned, AlpSrvRef},
     rxm_rawx::{RxmRawx, RxmRawxOwned, RxmRawxRef},
     rxm_rtcm::{RxmRtcm, RxmRtcmOwned, RxmRtcmRef},
     rxm_sfrbx::{RxmSfrbx, RxmSfrbxOwned, RxmSfrbxRef},

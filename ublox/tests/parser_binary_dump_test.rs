@@ -67,10 +67,10 @@ fn read_big_log() -> (Vec<u8>, Meta, Meta, PathBuf, Vec<usize>) {
 #[test]
 #[ignore]
 fn test_parse_big_dump_proto14() {
-    use ublox::proto17::{PacketRef, Proto17};
+    use ublox::proto14::{PacketRef, Proto14};
     let (log, mut meta, expect, log_path, read_sizes) = read_big_log();
     let mut log_slice = log.as_slice();
-    let mut parser = Parser::<_, Proto17>::default();
+    let mut parser = Parser::<_, Proto14>::default();
 
     let start = ProcessTime::now();
     for chunk_size in &read_sizes {
@@ -80,9 +80,9 @@ fn test_parse_big_dump_proto14() {
         while let Some(pack) = it.next() {
             match pack {
                 Ok(pack) => match pack {
-                    UbxPacket::Proto17(PacketRef::AckAck(_)) => meta.ack_ack += 1,
-                    UbxPacket::Proto17(PacketRef::NavPosLlh(_)) => meta.nav_pos_llh += 1,
-                    UbxPacket::Proto17(PacketRef::NavStatus(_)) => meta.nav_stat += 1,
+                    UbxPacket::Proto14(PacketRef::AckAck(_)) => meta.ack_ack += 1,
+                    UbxPacket::Proto14(PacketRef::NavPosLlh(_)) => meta.nav_pos_llh += 1,
+                    UbxPacket::Proto14(PacketRef::NavStatus(_)) => meta.nav_stat += 1,
                     _ => meta.unknown += 1,
                 },
                 Err(ParserError::InvalidChecksum { .. }) => meta.wrong_chksum += 1,
