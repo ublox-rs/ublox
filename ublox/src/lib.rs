@@ -19,7 +19,7 @@ mod error;
 mod parser;
 mod ubx_packets;
 
-pub mod proto17;
+pub mod proto14;
 pub mod proto23;
 pub mod proto27;
 pub mod proto31;
@@ -33,7 +33,7 @@ pub mod proto31;
 /// # Protocol Versions
 ///
 /// The available variants depend on which feature flags are enabled:
-/// - `ubx_proto14`: Enables Protocol 17 support
+/// - `ubx_proto14`: Enables Protocol 14 support
 /// - `ubx_proto23`: Enables Protocol 23 support
 /// - `ubx_proto27`: Enables Protocol 27 support
 /// - `ubx_proto31`: Enables Protocol 31 support
@@ -49,7 +49,7 @@ pub mod proto31;
 /// # use ublox::UbxPacket;
 /// match packet {
 ///     #[cfg(feature = "ubx_proto14")]
-///     UbxPacket::Proto17(p) => { /* handle proto17 */ }
+///     UbxPacket::Proto14(p) => { /* handle proto14 */ }
 ///     #[cfg(feature = "ubx_proto23")]
 ///     UbxPacket::Proto23(p) => { /* handle proto23 */ }
 ///     #[cfg(feature = "ubx_proto27")]
@@ -61,7 +61,7 @@ pub mod proto31;
 #[derive(Debug)]
 pub enum UbxPacket<'a> {
     #[cfg(feature = "ubx_proto14")]
-    Proto17(proto17::PacketRef<'a>),
+    Proto14(proto14::PacketRef<'a>),
     #[cfg(feature = "ubx_proto23")]
     Proto23(proto23::PacketRef<'a>),
     #[cfg(feature = "ubx_proto27")]

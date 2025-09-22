@@ -15,12 +15,12 @@ macro_rules! my_vec {
 
 #[cfg(feature = "ubx_proto14")]
 fn extract_only_ack_ack_proto14<T: ublox::UnderlyingBuffer>(
-    mut it: UbxParserIter<T, ublox::proto17::Proto17>,
+    mut it: UbxParserIter<T, ublox::proto14::Proto14>,
 ) -> Vec<Result<(u8, u8), ParserError>> {
     let mut ret = vec![];
     while let Some(pack) = it.next() {
         match pack {
-            Ok(UbxPacket::Proto17(ublox::proto17::PacketRef::AckAck(pack))) => {
+            Ok(UbxPacket::Proto14(ublox::proto14::PacketRef::AckAck(pack))) => {
                 ret.push(Ok((pack.class(), pack.msg_id())));
             },
             Err(err) => ret.push(Err(err)),
@@ -98,7 +98,7 @@ where
 #[test]
 fn test_parse_empty_buffer_proto14() {
     test_util_empty_buffer_asserts(
-        Parser::<_, ublox::proto17::Proto17>::default(),
+        Parser::<_, ublox::proto14::Proto14>::default(),
         extract_only_ack_ack_proto14,
     );
 }
@@ -150,7 +150,7 @@ where
 #[test]
 fn test_parse_ack_ack_byte_by_byte_proto14() {
     test_util_byte_by_byte_assert(
-        Parser::<_, ublox::proto17::Proto17>::default(),
+        Parser::<_, ublox::proto14::Proto14>::default(),
         extract_only_ack_ack_proto14,
     );
 }
@@ -198,7 +198,7 @@ where
 #[test]
 fn test_parse_ack_ack_in_one_go_proto14() {
     test_util_in_one_go_assert(
-        Parser::<_, ublox::proto17::Proto17>::default(),
+        Parser::<_, ublox::proto14::Proto14>::default(),
         extract_only_ack_ack_proto14,
     );
 }
@@ -257,7 +257,7 @@ where
 #[test]
 fn test_parse_ack_ack_bad_checksum_proto14() {
     test_util_bad_checksum_assert(
-        Parser::<_, ublox::proto17::Proto17>::default(),
+        Parser::<_, ublox::proto14::Proto14>::default(),
         extract_only_ack_ack_proto14,
     );
 }
@@ -310,7 +310,7 @@ where
 #[test]
 fn test_parse_ack_ack_parted_two_packets_proto14() {
     test_util_parted_two_packets_assert(
-        Parser::<_, ublox::proto17::Proto17>::default(),
+        Parser::<_, ublox::proto14::Proto14>::default(),
         extract_only_ack_ack_proto14,
     );
 }
@@ -360,7 +360,7 @@ where
 #[test]
 fn test_parse_ack_ack_two_in_one_go_proto14() {
     test_util_two_in_one_go_assert(
-        Parser::<_, ublox::proto17::Proto17>::default(),
+        Parser::<_, ublox::proto14::Proto14>::default(),
         extract_only_ack_ack_proto14,
     );
 }
@@ -420,7 +420,7 @@ where
 #[test]
 fn test_parse_ack_ack_garbage_before_proto14() {
     test_util_garbage_before_assert(
-        Parser::<_, ublox::proto17::Proto17>::default(),
+        Parser::<_, ublox::proto14::Proto14>::default(),
         extract_only_ack_ack_proto14,
     );
 }
@@ -498,15 +498,15 @@ fn test_util_assert_expected_cfg_nav5(pack: CfgNav5Ref) {
 #[cfg(feature = "ubx_proto14")]
 #[test]
 fn test_parse_cfg_nav5_proto14() {
-    use ublox::proto17::{PacketRef, Proto17};
+    use ublox::proto14::{PacketRef, Proto14};
     let bytes = test_util_cfg_nav5_bytes();
 
-    let mut parser = Parser::<_, Proto17>::default();
+    let mut parser = Parser::<_, Proto14>::default();
     let mut found = false;
     let mut it = parser.consume_ubx(&bytes);
     while let Some(pack) = it.next() {
         match pack {
-            Ok(UbxPacket::Proto17(PacketRef::CfgNav5(pack))) => {
+            Ok(UbxPacket::Proto14(PacketRef::CfgNav5(pack))) => {
                 found = true;
                 test_util_assert_expected_cfg_nav5(pack);
             },
@@ -619,7 +619,7 @@ fn test_util_esf_meas_assert_expected_json(pack: UbxPacket) {
         }
     };
     match pack {
-        UbxPacket::Proto17(_) => unreachable!("Does not support ESF MEAS"),
+        UbxPacket::Proto14(_) => unreachable!("Does not support ESF MEAS"),
         UbxPacket::Proto23(packet_ref) => {
             let actual = serde_json::to_value(&packet_ref).unwrap();
             assert_eq!(expected_packet_json, actual);
@@ -725,11 +725,11 @@ const ZERO_SIZED_ACK_ACK_BYTES: [u8; 8] = [0xb5, 0x62, 0x05, 0x01, 0x00, 0x00, 0
 #[cfg(feature = "ubx_proto14")]
 #[test]
 fn test_zero_sized_ackack_proto14() {
-    use ublox::proto17::{PacketRef, Proto17};
-    let mut parser = Parser::<_, Proto17>::default();
+    use ublox::proto14::{PacketRef, Proto14};
+    let mut parser = Parser::<_, Proto14>::default();
     let mut it = parser.consume_ubx(&ZERO_SIZED_ACK_ACK_BYTES);
     match it.next() {
-        Some(Ok(UbxPacket::Proto17(PacketRef::Unknown(_)))) => {
+        Some(Ok(UbxPacket::Proto14(PacketRef::Unknown(_)))) => {
             // This is expected
         },
         _ => panic!(),
@@ -786,7 +786,7 @@ fn test_zero_sized_ackack_proto31() {
 #[test]
 fn test_double_start_at_end_proto14() {
     use ublox::{
-        proto17::{PacketRef, Proto17},
+        proto14::{PacketRef, Proto14},
         FixedLinearBuffer,
     };
     #[rustfmt::skip]
@@ -796,7 +796,7 @@ fn test_double_start_at_end_proto14() {
     ];
 
     let mut buf = [0; 10];
-    let mut parser = ublox::Parser::<_, Proto17>::new(FixedLinearBuffer::new(&mut buf));
+    let mut parser = ublox::Parser::<_, Proto14>::new(FixedLinearBuffer::new(&mut buf));
 
     for byte in bytes.iter() {
         parser.consume_ubx(&[*byte]);
@@ -812,13 +812,13 @@ fn test_double_start_at_end_proto14() {
             _ => panic!(),
         }
         match it.next() {
-            Some(Ok(UbxPacket::Proto17(PacketRef::Unknown(_)))) => {
+            Some(Ok(UbxPacket::Proto14(PacketRef::Unknown(_)))) => {
                 // Then an unknown packet
             },
             _ => panic!(),
         }
         match it.next() {
-            Some(Ok(UbxPacket::Proto17(PacketRef::AckAck(_)))) => {
+            Some(Ok(UbxPacket::Proto14(PacketRef::AckAck(_)))) => {
                 // Then the ackack we passed
             },
             _ => panic!(),
@@ -827,7 +827,7 @@ fn test_double_start_at_end_proto14() {
     }
     let mut it = parser.consume_ubx(&ack_ack);
     match it.next() {
-        Some(Ok(UbxPacket::Proto17(PacketRef::AckAck { .. }))) => {
+        Some(Ok(UbxPacket::Proto14(PacketRef::AckAck { .. }))) => {
             // This is what we expect
         },
         _ => {
@@ -1011,14 +1011,14 @@ const ACK_ACK_BYTES: [u8; 10] = [0xb5, 0x62, 0x05, 0x01, 0x02, 0x00, 0x04, 0x05,
 #[cfg(feature = "ubx_proto14")]
 #[test]
 fn test_ack_ack_to_owned_can_be_moved_proto14() {
-    use ublox::proto17::{PacketRef, Proto17};
+    use ublox::proto14::{PacketRef, Proto14};
     // 4 is the class id of the acknowledged packet from the payload of UbxAckAck
     let expect_ack_payload_class_id = 4;
 
-    let mut parser = ublox::Parser::<_, Proto17>::default();
+    let mut parser = ublox::Parser::<_, Proto14>::default();
     let mut it = parser.consume_ubx(&ACK_ACK_BYTES);
     match it.next() {
-        Some(Ok(UbxPacket::Proto17(PacketRef::AckAck(ack_packet)))) => {
+        Some(Ok(UbxPacket::Proto14(PacketRef::AckAck(ack_packet)))) => {
             assert_eq!(ack_packet.class(), expect_ack_payload_class_id);
             let borrowed: AckAckRef = ack_packet;
             let owned: AckAckOwned = borrowed.to_owned();

@@ -140,7 +140,7 @@ impl UbxPacketHandler for PkgHandler {
     fn handle(&mut self, packet: UbxPacket) {
         match packet {
             #[cfg(feature = "ubx_proto14")]
-            UbxPacket::Proto17(_) => unimplemented!("not supported"),
+            UbxPacket::Proto14(_) => unimplemented!("not supported"),
             #[cfg(feature = "ubx_proto23")]
             UbxPacket::Proto23(packet_ref) => self.handle_proto23_packet(packet_ref),
             #[cfg(feature = "ubx_proto27")]
