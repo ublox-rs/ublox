@@ -147,7 +147,7 @@ jobs:
           - feature-group: default-features
             feature: alloc
           - feature-group: only-explicit-features
-            feature: ubx_proto14 
+            feature: ubx_proto14
           - feature-group: only-explicit-features
             feature: ubx_proto23 
           - feature-group: only-explicit-features
