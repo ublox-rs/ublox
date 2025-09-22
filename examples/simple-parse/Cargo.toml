@@ -10,6 +10,13 @@ keywords.workspace = true
 readme.workspace = true
 exclude.workspace = true
 
+[features]
+default = ["ubx_proto23"]
+ubx_proto14 = ["ublox/ubx_proto14"]
+ubx_proto23 = ["ublox/ubx_proto23"]
+ubx_proto27 = ["ublox/ubx_proto27"]
+ubx_proto31 = ["ublox/ubx_proto31"]
+
 [dependencies]
 clap = { version = "4.2", features = ["derive"] }
 serialport = { version = "4.2", default-features = false }
