@@ -14,7 +14,15 @@ alias l := lint
 
 # Run all CI checks (except semver)
 [group("all")]
-ci: typos lint-msrv build-all build-all-embedded test-all lint-examples build-examples doc msrv
+ci: typos \
+    lint-msrv \
+    build-all \
+    build-all-embedded \
+    test-all \
+    lint-examples \
+    build-examples \
+    doc \
+    msrv
 
 # Check all feature combinations
 [group("all")]
@@ -34,14 +42,13 @@ test-all *ARGS: (cmd-for-all-features "cargo test" ARGS)
 
 # Build examples
 [group("examples")]
-build-examples:
-    cargo build --release --all
+build-examples: (cmd-for-all-examples "cargo build --release")
 
 # Format and lint examples
 [group("examples")]
 lint-examples:
     cargo fmt --all -- --check
-    cargo clippy --all-targets --all -- -D warnings
+    cargo clippy --all-targets --workspace -- -D warnings
 
 # Run formatting and clippy lints
 [group("misc")]
@@ -79,6 +86,7 @@ cmd-for-all-features CMD *ARGS:
     
     feature_combinations=(
     '' # Default features
+    '--features full'
     '--no-default-features --features "alloc std ubx_proto23"'
     '--no-default-features --features "alloc ubx_proto23 sfrbx-gps"'
     '--no-default-features --features ubx_proto14'
@@ -115,6 +123,25 @@ cmd-for-all-features-embedded CMD *ARGS:
     # Loop through each feature combination
     for feat in "${feature_combinations[@]}"; do
         just run-cmd-verbose "{{CMD}} ${feat} --target thumbv6m-none-eabi --target thumbv7m-none-eabi --target thumbv7em-none-eabihf {{ARGS}}"
+    done
+
+[no-exit-message, group("misc")]
+cmd-for-all-examples CMD *ARGS:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    examples=(
+        'ublox-device'
+        'ublox-tui'
+        'basic-cli'
+        'dds'
+        'send-receive'
+        'simple-parse'
+    )
+
+    # Loop through each example
+    for example in "${examples[@]}"; do
+        just run-cmd-verbose "{{CMD}} --package ${example} {{ARGS}}"
     done
 
 [private, no-exit-message]

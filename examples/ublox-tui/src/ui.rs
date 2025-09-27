@@ -45,22 +45,6 @@ impl Widget for &mut LogWidget {
             .output_line(false)
             .style(Style::default().fg(ratatui::style::Color::White))
             .render(area, buf);
-
-        // TuiLoggerSmartWidget::default()
-        //     .title_log("Log")
-        //     .style_error(Style::default().fg(Color::Red))
-        //     .style_debug(Style::default().fg(Color::Green))
-        //     .style_warn(Style::default().fg(Color::Yellow))
-        //     .style_trace(Style::default().fg(Color::Magenta))
-        //     .style_info(Style::default().fg(Color::Cyan))
-        //     .output_separator(':')
-        //     .output_timestamp(Some("%H:%M:%S".to_string()))
-        //     .output_level(Some(TuiLoggerLevelOutput::Abbreviated))
-        //     .output_target(true)
-        //     .output_file(true)
-        //     .output_line(true)
-        // .state(self.selected_state())
-        // .render(area, buf);
     }
 }
 
