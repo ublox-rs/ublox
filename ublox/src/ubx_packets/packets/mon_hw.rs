@@ -138,7 +138,5 @@ pub enum JammingState {
     /// Warning - interference visible but fix OK
     Warning = 2,
     /// Critical - interference visible and no fix
-    ///
-    ///
     Critical = 3,
 }
