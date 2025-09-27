@@ -330,10 +330,6 @@ impl<T: UnderlyingBuffer, P: UbxProtocol> UbxParserIter<'_, T, P> {
         (0..self.buf.len()).find(|&i| self.buf[i] == SYNC_CHAR_1)
     }
 
-    #[allow(
-        clippy::should_implement_trait,
-        reason = "This is a lending iterator, which is not in std"
-    )]
     /// Parse and return the next [UbxPacket] in the buffer, or `None` if the buffer cannot yield
     /// another full [UbxPacket]
     pub fn next(&mut self) -> Option<Result<UbxPacket<'_>, ParserError>> {
@@ -417,10 +413,6 @@ impl<T: UnderlyingBuffer, P: UbxProtocol> UbxRtcmParserIter<'_, T, P> {
         NextSync::None
     }
 
-    #[allow(
-        clippy::should_implement_trait,
-        reason = "This is a lending iterator, which is not in std"
-    )]
     /// Parse and return the next [UbxPacket or RtcmPacket](AnyPacketRef) in the buffer, or `None` if the buffer cannot yield
     /// another full packet
     pub fn next(&mut self) -> Option<Result<AnyPacketRef<'_>, ParserError>> {
