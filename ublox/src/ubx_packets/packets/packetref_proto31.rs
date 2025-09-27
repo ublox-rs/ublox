@@ -51,7 +51,7 @@ use crate::ubx_packets::packets::{
         NavVelECEFOwned, NavVelECEFRef,
     },
     nav_pos_llh::{NavPosLlh, NavPosLlhOwned, NavPosLlhRef},
-    nav_pvt::proto23_27_31::{NavPvt, NavPvtOwned, NavPvtRef},
+    nav_pvt::proto27_31::{NavPvt, NavPvtOwned, NavPvtRef},
     nav_rel_pos_ned::proto27_31::{NavRelPosNed, NavRelPosNedOwned, NavRelPosNedRef},
     nav_sat::{NavSat, NavSatOwned, NavSatRef},
     nav_sig::{NavSig, NavSigOwned, NavSigRef},
