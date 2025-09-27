@@ -12,3 +12,18 @@ repository = "https://github.com/ublox-rs/ublox"
 keywords = ["u-blox", "gnss", "gps"]
 readme = "README.md"
 exclude = [".github", "CONTRIBUTING.md", "justfile"]
+
+[workspace.lints.clippy]
+manual_assert = "warn"
+manual_clamp = "warn"
+manual_instant_elapsed = "warn"
+manual_is_power_of_two = "warn"
+manual_let_else = "warn"
+manual_ok_or = "warn"
+manual_string_new = "warn"
+needless_borrow = "warn"
+needless_continue = "warn"
+needless_for_each = "warn"
+needless_pass_by_ref_mut = "warn"
+needless_pass_by_value = "warn"
+needless_range_loop = "warn"
