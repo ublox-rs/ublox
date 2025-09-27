@@ -63,6 +63,7 @@ pub mod mga_gps_utc;
 
 pub mod mon_gnss;
 pub mod mon_hw;
+pub mod mon_hw2;
 pub mod mon_ver;
 
 pub mod nav_att;
