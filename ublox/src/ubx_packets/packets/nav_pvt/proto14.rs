@@ -95,7 +95,7 @@ struct NavPvt {
 
     /// Ground speed \[m/s\]
     #[ubx(map_type = f64, scale = 1e-3, alias = ground_speed_2d)]
-    g_speed: u32,
+    g_speed: i32,
 
     /// Heading of motion 2-D \[deg\]
     #[ubx(map_type = f64, scale = 1e-5, alias = heading_motion)]
