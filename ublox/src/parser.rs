@@ -97,7 +97,7 @@ impl Default for ParserBuilder<DefaultProtocol> {
 }
 
 impl ParserBuilder<DefaultProtocol> {
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             _phantom: PhantomData,
         }
@@ -106,7 +106,7 @@ impl ParserBuilder<DefaultProtocol> {
 
 impl<P: UbxProtocol> ParserBuilder<P> {
     /// Specify a protocol version
-    pub fn with_protocol<NewP: UbxProtocol>(self) -> ParserBuilder<NewP> {
+    pub const fn with_protocol<NewP: UbxProtocol>(self) -> ParserBuilder<NewP> {
         ParserBuilder {
             _phantom: PhantomData,
         }
@@ -119,12 +119,12 @@ impl<P: UbxProtocol> ParserBuilder<P> {
     }
 
     /// Build a parser with a fixed-size buffer (for no_std or when you want bounded memory usage)
-    pub fn with_fixed_buffer<const N: usize>(self) -> Parser<FixedBuffer<N>, P> {
+    pub const fn with_fixed_buffer<const N: usize>(self) -> Parser<FixedBuffer<N>, P> {
         Parser::with_fixed_buffer()
     }
 
     /// Build a parser with a custom buffer implementation
-    pub fn with_buffer<T: UnderlyingBuffer>(self, buffer: T) -> Parser<T, P> {
+    pub const fn with_buffer<T: UnderlyingBuffer>(self, buffer: T) -> Parser<T, P> {
         Parser::new(buffer)
     }
 }
@@ -150,14 +150,14 @@ where
 impl<const N: usize> Parser<FixedBuffer<N>, DefaultProtocol> {
     /// Creates a new parser with a fixed-size buffer and the default protocol.
     /// Use this for no_std environments where you want a compile-time known buffer size.
-    pub fn new_fixed() -> Self {
+    pub const fn new_fixed() -> Self {
         Self::with_fixed_buffer()
     }
 }
 
 impl<const N: usize, P: UbxProtocol> Parser<FixedBuffer<N>, P> {
     /// Creates a new parser with an owned, fixed-size internal buffer of size N.
-    pub fn with_fixed_buffer() -> Self {
+    pub const fn with_fixed_buffer() -> Self {
         Self::new(FixedBuffer::new())
     }
 }
@@ -175,7 +175,7 @@ impl Parser<Vec<u8>, DefaultProtocol> {
 }
 
 impl<T: UnderlyingBuffer, P: UbxProtocol> Parser<T, P> {
-    pub fn new(underlying: T) -> Self {
+    pub const fn new(underlying: T) -> Self {
         Self {
             buf: underlying,
             _phantom: PhantomData,
@@ -241,7 +241,7 @@ struct UbxChecksumCalc {
 }
 
 impl UbxChecksumCalc {
-    fn new() -> Self {
+    const fn new() -> Self {
         Self { ck_a: 0, ck_b: 0 }
     }
 
@@ -256,7 +256,7 @@ impl UbxChecksumCalc {
         self.ck_b = b;
     }
 
-    fn result(self) -> (u8, u8) {
+    const fn result(self) -> (u8, u8) {
         (self.ck_a, self.ck_b)
     }
 }

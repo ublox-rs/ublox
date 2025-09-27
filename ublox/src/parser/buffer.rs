@@ -165,7 +165,7 @@ pub struct FixedBuffer<const N: usize> {
 
 impl<const N: usize> FixedBuffer<N> {
     /// Creates a new, empty `FixedBuffer`.
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             buffer: [0; N],
             len: 0,
@@ -270,7 +270,7 @@ impl<T: UnderlyingBuffer> core::ops::Index<usize> for DualBuffer<'_, T> {
 }
 
 impl<'a, T: UnderlyingBuffer> DualBuffer<'a, T> {
-    pub(crate) fn new(buf: &'a mut T, new_buf: &'a [u8]) -> Self {
+    pub(crate) const fn new(buf: &'a mut T, new_buf: &'a [u8]) -> Self {
         Self {
             buf,
             off: 0,
