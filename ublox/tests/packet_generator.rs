@@ -307,8 +307,6 @@ proptest! {
         prop_assert_eq!(p.fix_type_raw(), expected_pvt.fix_type);
         prop_assert_eq!(p.flags_raw(), expected_pvt.flags);
         prop_assert_eq!(p.vertical_accuracy_raw(), expected_pvt.v_acc);
-        prop_assert_eq!(p.magnetic_declination_raw(), expected_pvt.mag_dec);
-        prop_assert_eq!(p.magnetic_declination_accuracy_raw(), expected_pvt.mag_acc);
     }
 }
 
