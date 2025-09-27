@@ -34,7 +34,7 @@ alloc = []
 std = []
 
 [package.metadata.docs.rs]
-all-features = false
+all-features = true
 rustdoc-args = ["--cfg", "docrs", "--generate-link-to-definition"]
 
 [dependencies]

@@ -11,9 +11,11 @@ use core::marker::PhantomData;
 
 // Pick the oldest enabled protocol as the default
 #[cfg(feature = "ubx_proto14")]
+/// The default protocol for types that are generic over protocols, the type of the [DefaultProtocol] depends on which protocol feature(s) are enabled
 pub type DefaultProtocol = crate::proto14::Proto14;
 
 #[cfg(all(not(feature = "ubx_proto14"), feature = "ubx_proto23"))]
+/// The default protocol for types that are generic over protocols, the type of the [DefaultProtocol] depends on which protocol feature(s) are enabled
 pub type DefaultProtocol = crate::proto23::Proto23;
 
 #[cfg(all(
@@ -21,6 +23,7 @@ pub type DefaultProtocol = crate::proto23::Proto23;
     not(feature = "ubx_proto23"),
     feature = "ubx_proto27"
 ))]
+/// The default protocol for types that are generic over protocols, the type of the [DefaultProtocol] depends on which protocol feature(s) are enabled
 pub type DefaultProtocol = crate::proto27::Proto27;
 
 #[cfg(all(
@@ -29,163 +32,112 @@ pub type DefaultProtocol = crate::proto27::Proto27;
     not(feature = "ubx_proto27"),
     feature = "ubx_proto31"
 ))]
+/// The default protocol for types that are generic over protocols, the type of the [DefaultProtocol] depends on which protocol feature(s) are enabled
 pub type DefaultProtocol = crate::proto31::Proto31;
 
-/// This trait represents an underlying buffer used for the Parser. We provide
-/// implementations for `Vec<u8>` and for `FixedLinearBuffer`, if you want to
-/// use your own struct as an underlying buffer you can implement this trait.
+mod buffer;
+use buffer::DualBuffer;
+pub use buffer::{FixedBuffer, FixedLinearBuffer, UnderlyingBuffer};
+
+/// A compile-time builder for constructing UBX protocol parsers with different buffer types and protocols.
 ///
-/// Look at the `flb_*` unit tests for ideas of unit tests you can run against
-/// your own implementations.
-pub trait UnderlyingBuffer:
-    core::ops::Index<core::ops::Range<usize>, Output = [u8]> + core::ops::Index<usize, Output = u8>
-{
-    /// Removes all elements from the buffer.
-    fn clear(&mut self);
+/// Unlike typical builders, `ParserBuilder` performs all configuration at compile time through
+/// the type system rather than storing configuration in fields.
+///
+/// # Examples
+///
+/// ## Basic parser with default settings
+///
+/// ```rust
+/// # use ublox::ParserBuilder;
+///
+/// // Creates a parser with Vec<u8> buffer and default protocol
+/// # #[cfg(feature = "alloc")]
+/// let mut parser = ParserBuilder::new().with_vec_buffer();
+/// ```
+///
+/// ## Parser with fixed-size buffer (no_std compatible)
+///
+/// ```rust
+/// # use ublox::ParserBuilder;
+///
+/// // Creates a parser with 1024-byte fixed buffer
+/// let mut parser = ParserBuilder::new().with_fixed_buffer::<1024>();
+/// ```
+///
+/// ## Parser with specific protocol version
+///
+/// ```rust
+/// # #[cfg(all(feature = "alloc", feature = "ubx_proto23"))]
+/// # {
+/// # use ublox::{ParserBuilder, proto23::Proto23};
+///
+/// // Specify protocol version and buffer type
+/// let mut parser = ParserBuilder::new()
+///     .with_protocol::<Proto23>()
+///     .with_vec_buffer();
+/// # }
+/// ```
+///
+/// ## Parser with custom buffer implementation
+///
+/// ```rust
+/// # use ublox::{ParserBuilder, FixedLinearBuffer};
+///
+/// let mut my_array = [0u8; 512];
+/// let custom_buffer = FixedLinearBuffer::new(&mut my_array);
+///
+/// let mut parser = ParserBuilder::new()
+///     .with_buffer(custom_buffer);
+/// ```
+pub struct ParserBuilder<P: UbxProtocol = DefaultProtocol> {
+    _phantom: PhantomData<P>,
+}
 
-    /// Returns the number of elements currently stored in the buffer.
-    fn len(&self) -> usize;
-
-    /// Returns the maximum capacity of this buffer. This value should be a minimum max
-    /// capacity - that is, `extend_from_slice` should succeed if max_capacity bytes are
-    /// passed to it.
-    ///
-    /// Note that, for example, the Vec implementation of this trait returns `usize::MAX`,
-    /// which cannot be actually allocated by a Vec. This is okay, because Vec will panic
-    /// if an allocation is requested that it can't handle.
-    fn max_capacity(&self) -> usize;
-
-    /// Returns the number of bytes not copied over due to buffer size constraints.
-    ///
-    /// As noted for `max_capacity`, if this function is passed `max_capacity() - len()`
-    /// bytes it should either panic or return zero bytes, any other behaviour may cause
-    /// unexpected behaviour in the parser.
-    fn extend_from_slice(&mut self, other: &[u8]) -> usize;
-
-    /// Removes the first `count` elements from the buffer. Cannot fail.
-    fn drain(&mut self, count: usize);
-
-    /// Locates the given u8 value within the buffer, returning the index (if it is found).
-    fn find(&self, value: u8) -> Option<usize> {
-        (0..self.len()).find(|&i| self[i] == value)
-    }
-
-    /// Returns whether the buffer is empty.
-    fn is_empty(&self) -> bool {
-        self.len() == 0
+impl Default for ParserBuilder<DefaultProtocol> {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
-#[cfg(any(feature = "std", feature = "alloc"))]
-impl UnderlyingBuffer for Vec<u8> {
-    fn clear(&mut self) {
-        self.clear();
-    }
-
-    fn len(&self) -> usize {
-        self.len()
-    }
-
-    fn max_capacity(&self) -> usize {
-        usize::MAX
-    }
-
-    fn extend_from_slice(&mut self, other: &[u8]) -> usize {
-        self.extend_from_slice(other);
-        0
-    }
-
-    fn drain(&mut self, count: usize) {
-        self.drain(0..count);
-    }
-
-    fn find(&self, value: u8) -> Option<usize> {
-        self.iter().position(|elem| *elem == value)
-    }
-}
-
-pub struct FixedLinearBuffer<'a> {
-    buffer: &'a mut [u8],
-    len: usize,
-}
-
-impl<'a> FixedLinearBuffer<'a> {
-    pub fn new(buf: &'a mut [u8]) -> Self {
+impl ParserBuilder<DefaultProtocol> {
+    pub const fn new() -> Self {
         Self {
-            buffer: buf,
-            len: 0,
+            _phantom: PhantomData,
         }
     }
 }
 
-impl core::ops::Index<core::ops::Range<usize>> for FixedLinearBuffer<'_> {
-    type Output = [u8];
-
-    fn index(&self, index: core::ops::Range<usize>) -> &Self::Output {
-        if index.end > self.len {
-            // Same message style as Rust std lib
-            panic!(
-                "index out of bounds: the len is {len} but the index is {idx}",
-                len = self.len,
-                idx = index.end
-            );
+impl<P: UbxProtocol> ParserBuilder<P> {
+    /// Specify a protocol version
+    pub const fn with_protocol<NewP: UbxProtocol>(self) -> ParserBuilder<NewP> {
+        ParserBuilder {
+            _phantom: PhantomData,
         }
-        self.buffer.index(index)
+    }
+
+    /// Build a parser with a `Vec<u8>` buffer
+    #[cfg(any(feature = "std", feature = "alloc"))]
+    pub fn with_vec_buffer(self) -> Parser<Vec<u8>, P> {
+        Parser::new(Vec::new())
+    }
+
+    /// Build a parser with a fixed-size buffer (for no_std or when you want bounded memory usage)
+    pub const fn with_fixed_buffer<const N: usize>(self) -> Parser<FixedBuffer<N>, P> {
+        Parser::with_fixed_buffer()
+    }
+
+    /// Build a parser with a custom buffer implementation
+    pub const fn with_buffer<T: UnderlyingBuffer>(self, buffer: T) -> Parser<T, P> {
+        Parser::new(buffer)
     }
 }
 
-impl core::ops::Index<usize> for FixedLinearBuffer<'_> {
-    type Output = u8;
-
-    fn index(&self, index: usize) -> &Self::Output {
-        &self.buffer[index]
-    }
-}
-
-impl UnderlyingBuffer for FixedLinearBuffer<'_> {
-    fn clear(&mut self) {
-        self.len = 0;
-    }
-
-    fn len(&self) -> usize {
-        self.len
-    }
-
-    fn max_capacity(&self) -> usize {
-        self.buffer.len()
-    }
-
-    fn extend_from_slice(&mut self, other: &[u8]) -> usize {
-        let to_copy = core::cmp::min(other.len(), self.buffer.len() - self.len);
-        let uncopyable = other.len() - to_copy;
-        self.buffer[self.len..self.len + to_copy].copy_from_slice(&other[..to_copy]);
-        self.len += to_copy;
-        uncopyable
-    }
-
-    fn drain(&mut self, count: usize) {
-        if count >= self.len {
-            self.len = 0;
-            return;
-        }
-
-        let new_size = self.len - count;
-        {
-            let bufptr = self.buffer.as_mut_ptr();
-            unsafe {
-                core::ptr::copy(bufptr.add(count), bufptr, new_size);
-            }
-        }
-        self.len = new_size;
-    }
-
-    fn find(&self, value: u8) -> Option<usize> {
-        (0..self.len()).find(|&i| self[i] == value)
-    }
-}
-
-/// Streaming parser for UBX protocol with buffer. The default constructor will build
-/// a parser containing a Vec, but you can pass your own underlying buffer by passing it
+/// Streaming parser for UBX protocol with buffer.
+///
+/// The easiest way to construct a [Parser] is with the [ParserBuilder].
+///
+/// The default constructor will build a parser containing a Vec, but you can pass your own underlying buffer by passing it
 /// to Parser::new().
 ///
 /// If you pass your own buffer, it should be able to store at _least_ 4 bytes. In practice,
@@ -199,8 +151,25 @@ where
     _phantom: PhantomData<P>,
 }
 
+impl<const N: usize> Parser<FixedBuffer<N>, DefaultProtocol> {
+    /// Creates a new parser with a fixed-size buffer and the default protocol.
+    /// Use this for no_std environments where you want a compile-time known buffer size.
+    pub const fn new_fixed() -> Self {
+        Self::with_fixed_buffer()
+    }
+}
+
+impl<const N: usize, P: UbxProtocol> Parser<FixedBuffer<N>, P> {
+    /// Creates a new parser with an owned, fixed-size internal buffer of size N.
+    pub const fn with_fixed_buffer() -> Self {
+        Self::new(FixedBuffer::new())
+    }
+}
+
 #[cfg(any(feature = "std", feature = "alloc"))]
 impl Parser<Vec<u8>, DefaultProtocol> {
+    /// Creates a new parser with a `Vec<u8>` buffer and the default protocol.
+    /// This is the simplest way to create a parser for most use cases.
     pub fn default_proto() -> Self {
         Self {
             buf: Vec::new(),
@@ -210,7 +179,7 @@ impl Parser<Vec<u8>, DefaultProtocol> {
 }
 
 impl<T: UnderlyingBuffer, P: UbxProtocol> Parser<T, P> {
-    pub fn new(underlying: T) -> Self {
+    pub const fn new(underlying: T) -> Self {
         Self {
             buf: underlying,
             _phantom: PhantomData,
@@ -221,10 +190,18 @@ impl<T: UnderlyingBuffer, P: UbxProtocol> Parser<T, P> {
         self.buf.is_empty()
     }
 
+    /// Returns the number of elements in the buffer
     pub fn buffer_len(&self) -> usize {
         self.buf.len()
     }
 
+    /// Returns the total number of elements the buffer can hold
+    pub fn buffer_capacity(&self) -> usize {
+        self.buf.max_capacity()
+    }
+
+    /// Appends `new_data` to the internal buffer and returns and iterator over the buffer
+    /// that will yield [UbxPackets](UbxPacket) on demand.
     pub fn consume_ubx<'a>(&'a mut self, new_data: &'a [u8]) -> UbxParserIter<'a, T, P> {
         let mut buf = DualBuffer::new(&mut self.buf, new_data);
 
@@ -241,6 +218,8 @@ impl<T: UnderlyingBuffer, P: UbxProtocol> Parser<T, P> {
         }
     }
 
+    /// Appends `new_data` to the internal buffer and returns and iterator over the buffer
+    /// that will yield [UbxPackets or RtcmPackets](AnyPacketRef) on demand.
     pub fn consume_ubx_rtcm<'a>(&'a mut self, new_data: &'a [u8]) -> UbxRtcmParserIter<'a, T, P> {
         let mut buf = DualBuffer::new(&mut self.buf, new_data);
 
@@ -258,187 +237,6 @@ impl<T: UnderlyingBuffer, P: UbxProtocol> Parser<T, P> {
     }
 }
 
-/// Stores two buffers: A "base" and a "new" buffer. Exposes these as the same buffer,
-/// copying data from the "new" buffer to the base buffer as required to maintain that
-/// illusion.
-struct DualBuffer<'a, T: UnderlyingBuffer> {
-    buf: &'a mut T,
-    off: usize,
-
-    new_buf: &'a [u8],
-    new_buf_offset: usize,
-}
-
-impl<T: UnderlyingBuffer> core::ops::Index<usize> for DualBuffer<'_, T> {
-    type Output = u8;
-
-    fn index(&self, index: usize) -> &u8 {
-        if self.off + index < self.buf.len() {
-            &self.buf[index + self.off]
-        } else {
-            &self.new_buf[self.new_buf_offset + index - (self.buf.len() - self.off)]
-        }
-    }
-}
-
-impl<'a, T: UnderlyingBuffer> DualBuffer<'a, T> {
-    fn new(buf: &'a mut T, new_buf: &'a [u8]) -> Self {
-        Self {
-            buf,
-            off: 0,
-            new_buf,
-            new_buf_offset: 0,
-        }
-    }
-
-    /// Clears all elements - equivalent to buf.drain(buf.len())
-    fn clear(&mut self) {
-        self.drain(self.len());
-    }
-
-    /// Remove count elements without providing a view into them.
-    fn drain(&mut self, count: usize) {
-        let underlying_bytes = core::cmp::min(self.buf.len() - self.off, count);
-        let new_bytes = count.saturating_sub(underlying_bytes);
-
-        self.off += underlying_bytes;
-        self.new_buf_offset += new_bytes;
-    }
-
-    /// Return the total number of accessible bytes in this view. Note that you may
-    /// not be able to take() this many bytes at once, if the total number of bytes
-    /// is more than the underlying store can fit.
-    fn len(&self) -> usize {
-        self.buf.len() - self.off + self.new_buf.len() - self.new_buf_offset
-    }
-
-    // Returns the number of bytes which would be lost (because they can't be copied into
-    // the underlying storage) if this DualBuffer were dropped.
-    fn potential_lost_bytes(&self) -> usize {
-        if self.len() <= self.buf.max_capacity() {
-            0
-        } else {
-            self.len() - self.buf.max_capacity()
-        }
-    }
-
-    fn can_drain_and_take(&self, drain: usize, take: usize) -> bool {
-        let underlying_bytes = core::cmp::min(self.buf.len() - self.off, drain);
-        let new_bytes = drain.saturating_sub(underlying_bytes);
-
-        let drained_off = self.off + underlying_bytes;
-        let drained_new_off = self.new_buf_offset + new_bytes;
-
-        if take > self.buf.len() - drained_off + self.new_buf.len() - drained_new_off {
-            // Draining removed too many bytes, we don't have enough to take
-            return false;
-        }
-
-        let underlying_bytes = core::cmp::min(self.buf.len() - drained_off, take);
-        let new_bytes = take.saturating_sub(underlying_bytes);
-
-        if underlying_bytes == 0 {
-            // We would take entirely from the new buffer
-            return true;
-        }
-
-        if new_bytes == 0 {
-            // We would take entirely from the underlying
-            return true;
-        }
-
-        if new_bytes > self.buf.max_capacity() - (self.buf.len() - drained_off) {
-            // We wouldn't be able to fit all the new bytes into underlying
-            return false;
-        }
-
-        true
-    }
-
-    fn peek_raw(&self, range: core::ops::Range<usize>) -> (&[u8], &[u8]) {
-        let split = self.buf.len() - self.off;
-        let a = if range.start >= split {
-            &[]
-        } else {
-            &self.buf[range.start + self.off..core::cmp::min(self.buf.len(), range.end + self.off)]
-        };
-        let b = if range.end <= split {
-            &[]
-        } else {
-            &self.new_buf[self.new_buf_offset + range.start.saturating_sub(split)
-                ..range.end - split + self.new_buf_offset]
-        };
-        (a, b)
-    }
-
-    /// Provide a view of the next count elements, moving data if necessary.
-    /// If the underlying store cannot store enough elements, no data is moved and an
-    /// error is returned.
-    fn take(&mut self, count: usize) -> Result<&[u8], ParserError> {
-        let underlying_bytes = core::cmp::min(self.buf.len() - self.off, count);
-        let new_bytes = count.saturating_sub(underlying_bytes);
-
-        if new_bytes > self.new_buf.len() - self.new_buf_offset {
-            // We need to pull more bytes from new than it has
-            panic!(
-                "Cannot pull {} bytes from a buffer with {}-{}",
-                new_bytes,
-                self.new_buf.len(),
-                self.new_buf_offset
-            );
-        }
-
-        if underlying_bytes == 0 {
-            // We can directly return a slice from new
-            let offset = self.new_buf_offset;
-            self.new_buf_offset += count;
-            return Ok(&self.new_buf[offset..offset + count]);
-        }
-
-        if new_bytes == 0 {
-            // We can directly return from underlying
-            let offset = self.off;
-            self.off += count;
-            return Ok(&self.buf[offset..offset + count]);
-        }
-
-        if self.buf.max_capacity() < count {
-            // Insufficient space
-            return Err(ParserError::OutOfMemory {
-                required_size: count,
-            });
-        }
-
-        if new_bytes < self.buf.max_capacity() - self.buf.len() {
-            // Underlying has enough space to extend from new
-            let bytes_not_moved = self
-                .buf
-                .extend_from_slice(&self.new_buf[self.new_buf_offset..]);
-            self.new_buf_offset += self.new_buf.len() - self.new_buf_offset - bytes_not_moved;
-            let off = self.off;
-            self.off += count;
-            return Ok(&self.buf[off..off + count]);
-        }
-
-        // Last case: We have to move the data in underlying, then extend it
-        self.buf.drain(self.off);
-        self.off = 0;
-        self.buf
-            .extend_from_slice(&self.new_buf[self.new_buf_offset..self.new_buf_offset + new_bytes]);
-        self.new_buf_offset += new_bytes;
-        self.off += count;
-        Ok(&self.buf[0..count])
-    }
-}
-
-impl<T: UnderlyingBuffer> Drop for DualBuffer<'_, T> {
-    fn drop(&mut self) {
-        self.buf.drain(self.off);
-        self.buf
-            .extend_from_slice(&self.new_buf[self.new_buf_offset..]);
-    }
-}
-
 /// For ubx checksum on the fly
 #[derive(Default)]
 struct UbxChecksumCalc {
@@ -447,7 +245,7 @@ struct UbxChecksumCalc {
 }
 
 impl UbxChecksumCalc {
-    fn new() -> Self {
+    const fn new() -> Self {
         Self { ck_a: 0, ck_b: 0 }
     }
 
@@ -462,7 +260,7 @@ impl UbxChecksumCalc {
         self.ck_b = b;
     }
 
-    fn result(self) -> (u8, u8) {
+    const fn result(self) -> (u8, u8) {
         (self.ck_a, self.ck_b)
     }
 }
@@ -678,246 +476,37 @@ mod test {
     use crate::ubx_packets::packets::cfg_nav5::*;
     use crate::ubx_packets::*;
 
+    #[cfg(all(feature = "alloc", feature = "ubx_proto23", feature = "ubx_proto31"))]
+    #[test]
+    fn build_parser() {
+        use crate::{proto23::Proto23, proto31::Proto31};
+        // Default protocol with Vec buffer
+        let parser = ParserBuilder::new().with_vec_buffer();
+        assert_eq!(parser.buffer_capacity(), usize::MAX);
+        assert_eq!(parser.buffer_len(), 0);
+
+        // Different protocol
+        const BUF_SZ_0: usize = 2048;
+        let parser = ParserBuilder::new()
+            .with_protocol::<Proto23>()
+            .with_fixed_buffer::<BUF_SZ_0>();
+        assert_eq!(parser.buffer_capacity(), BUF_SZ_0);
+        assert_eq!(parser.buffer_len(), 0);
+
+        // Custom buffer
+        const BUF_SZ_1: usize = 512;
+        let mut my_buffer = [0; BUF_SZ_1];
+        let buffer = FixedLinearBuffer::new(&mut my_buffer);
+        let parser = ParserBuilder::new()
+            .with_protocol::<Proto31>()
+            .with_buffer(buffer);
+
+        assert_eq!(parser.buffer_capacity(), BUF_SZ_1);
+        assert_eq!(parser.buffer_len(), 0);
+    }
+
     #[cfg(feature = "alloc")]
     use alloc::vec;
-
-    #[cfg(feature = "alloc")]
-    #[test]
-    fn dl_split_indexing() {
-        let mut buf = vec![1, 2, 3, 4];
-        let new = [5, 6, 7, 8];
-        let dual = DualBuffer::new(&mut buf, &new[..]);
-        for i in 0..8 {
-            assert_eq!(dual[i], i as u8 + 1);
-        }
-    }
-
-    #[cfg(feature = "alloc")]
-    #[test]
-    #[should_panic]
-    fn dl_take_too_many() {
-        let mut buf = vec![1, 2, 3, 4];
-        let new = [];
-        {
-            let mut dual = DualBuffer::new(&mut buf, &new[..]);
-
-            // This should panic
-            let _ = dual.take(6);
-        }
-    }
-
-    #[cfg(feature = "alloc")]
-    #[test]
-    fn dl_take_range_underlying() {
-        let mut buf = vec![1, 2, 3, 4];
-        let new = [];
-        {
-            let mut dual = DualBuffer::new(&mut buf, &new[..]);
-            let x = dual.take(3).unwrap();
-            assert_eq!(x, &[1, 2, 3]);
-        }
-        assert_eq!(buf, &[4]);
-    }
-
-    #[cfg(feature = "alloc")]
-    #[test]
-    fn dl_take_range_new() {
-        let mut buf = vec![];
-        let new = [1, 2, 3, 4];
-        {
-            let mut dual = DualBuffer::new(&mut buf, &new[..]);
-            let x = dual.take(3).unwrap();
-            assert_eq!(x, &[1, 2, 3]);
-        }
-        assert_eq!(buf, &[4]);
-    }
-
-    #[cfg(feature = "alloc")]
-    #[test]
-    fn dl_take_range_overlapping() {
-        let mut buf = vec![1, 2, 3, 4];
-        let new = [5, 6, 7, 8];
-        {
-            let mut dual = DualBuffer::new(&mut buf, &new[..]);
-            let x = dual.take(6).unwrap();
-            assert_eq!(x, &[1, 2, 3, 4, 5, 6]);
-        }
-        assert_eq!(buf, &[7, 8]);
-    }
-
-    #[cfg(feature = "alloc")]
-    #[test]
-    fn dl_take_multi_ranges() {
-        let mut buf = vec![1, 2, 3, 4, 5, 6, 7];
-        let new = [8, 9, 10, 11, 12];
-        {
-            let mut dual = DualBuffer::new(&mut buf, &new[..]);
-            assert_eq!(dual.take(3).unwrap(), &[1, 2, 3]);
-            assert_eq!(dual.take(3).unwrap(), &[4, 5, 6]);
-            assert_eq!(dual.take(3).unwrap(), &[7, 8, 9]);
-            assert_eq!(dual.take(3).unwrap(), &[10, 11, 12]);
-        }
-        assert!(buf.is_empty());
-    }
-
-    #[cfg(feature = "alloc")]
-    #[test]
-    fn dl_take_multi_ranges2() {
-        let mut buf = vec![1, 2, 3, 4, 5, 6, 7];
-        let new = [8, 9, 10, 11, 12];
-        {
-            let mut dual = DualBuffer::new(&mut buf, &new[..]);
-            assert_eq!(dual.take(3).unwrap(), &[1, 2, 3]);
-            assert_eq!(dual.take(6).unwrap(), &[4, 5, 6, 7, 8, 9]);
-        }
-        assert_eq!(buf, &[10, 11, 12]);
-    }
-
-    #[test]
-    fn dl_move_then_copy() {
-        let mut buf = [0; 7];
-        let mut buf = FixedLinearBuffer::new(&mut buf);
-        buf.extend_from_slice(&[1, 2, 3, 4, 5, 6, 7]);
-        let new = [8, 9, 10, 11, 12];
-        {
-            let mut dual = DualBuffer::new(&mut buf, &new[..]);
-            assert_eq!(dual.take(3).unwrap(), &[1, 2, 3]);
-            assert_eq!(dual.take(6).unwrap(), &[4, 5, 6, 7, 8, 9]);
-        }
-        assert_eq!(buf.len(), 3);
-    }
-
-    #[test]
-    #[should_panic]
-    fn dl_take_range_oom() {
-        let mut buf = [0; 4];
-        let mut buf = FixedLinearBuffer::new(&mut buf);
-        let new = [1, 2, 3, 4, 5, 6];
-
-        let mut dual = DualBuffer::new(&mut buf, &new[..]);
-        // This should throw
-        assert!(
-            matches!(dual.take(6), Err(ParserError::OutOfMemory { required_size }) if required_size == 6)
-        );
-    }
-
-    #[test]
-    fn dl_drain_partial_underlying() {
-        let mut buf = [0; 4];
-        let mut buf = FixedLinearBuffer::new(&mut buf);
-        buf.extend_from_slice(&[1, 2, 3]);
-        let new = [4, 5, 6, 7, 8, 9];
-        let mut dual = DualBuffer::new(&mut buf, &new[..]);
-
-        dual.drain(2);
-        assert_eq!(dual.len(), 7);
-        assert_eq!(dual.take(4).unwrap(), &[3, 4, 5, 6]);
-        assert_eq!(dual.len(), 3);
-    }
-
-    #[test]
-    fn dl_drain() {
-        let mut buf = [0; 4];
-        let mut buf = FixedLinearBuffer::new(&mut buf);
-        buf.extend_from_slice(&[1, 2, 3]);
-        let new = [4, 5, 6, 7, 8, 9];
-        let mut dual = DualBuffer::new(&mut buf, &new[..]);
-
-        dual.drain(5);
-        assert_eq!(dual.take(3).unwrap(), &[6, 7, 8]);
-        assert_eq!(dual.len(), 1);
-    }
-
-    #[test]
-    fn dl_clear() {
-        let mut buf = [0; 4];
-        let mut buf = FixedLinearBuffer::new(&mut buf);
-        buf.extend_from_slice(&[1, 2, 3]);
-        let new = [4, 5, 6, 7, 8, 9];
-        let mut dual = DualBuffer::new(&mut buf, &new[..]);
-
-        assert_eq!(dual.len(), 9);
-        dual.clear();
-        assert_eq!(dual.len(), 0);
-    }
-
-    #[test]
-    fn dl_peek_raw() {
-        let mut buf = [0; 4];
-        let mut buf = FixedLinearBuffer::new(&mut buf);
-        buf.extend_from_slice(&[1, 2, 3]);
-        let new = [4, 5, 6, 7, 8, 9];
-        let dual = DualBuffer::new(&mut buf, &new[..]);
-
-        let (a, b) = dual.peek_raw(2..6);
-        assert_eq!(a, &[3]);
-        assert_eq!(b, &[4, 5, 6]);
-    }
-
-    #[test]
-    fn flb_clear() {
-        let mut buf = [0; 16];
-        let mut buf = FixedLinearBuffer::new(&mut buf);
-        buf.extend_from_slice(&[1, 2, 3, 4, 5, 6, 7]);
-        assert_eq!(buf.len(), 7);
-        buf.clear();
-        assert_eq!(buf.len(), 0);
-    }
-
-    #[test]
-    #[should_panic]
-    fn flb_index_outside_range() {
-        let mut buf = [0; 16];
-        let mut buf = FixedLinearBuffer::new(&mut buf);
-        buf.extend_from_slice(&[1, 2, 3, 4, 5, 6, 7]);
-        let _ = buf[5..10];
-    }
-
-    #[test]
-    fn flb_extend_outside_range() {
-        let mut buf = [0; 16];
-        let mut buf = FixedLinearBuffer::new(&mut buf);
-        buf.extend_from_slice(&[1, 2, 3, 4, 5, 6, 7]);
-        buf.extend_from_slice(&[1, 2, 3, 4, 5, 6, 7]);
-        buf.extend_from_slice(&[1, 2, 3, 4, 5, 6, 7]);
-        assert_eq!(buf.len(), 16);
-    }
-
-    #[test]
-    fn flb_drain() {
-        let mut buf = [0; 16];
-        let mut buf = FixedLinearBuffer::new(&mut buf);
-        buf.extend_from_slice(&[1, 2, 3, 4, 5, 6, 7]);
-
-        buf.drain(3);
-        assert_eq!(buf.len(), 4);
-        assert_eq!(&buf[0..buf.len()], &[4, 5, 6, 7]);
-
-        buf.extend_from_slice(&[1, 2, 3, 4, 5, 6, 7]);
-        assert_eq!(buf.len(), 11);
-        assert_eq!(&buf[0..buf.len()], &[4, 5, 6, 7, 1, 2, 3, 4, 5, 6, 7]);
-    }
-
-    #[test]
-    fn flb_drain_all() {
-        let mut buf = [0; 16];
-        let mut buf = FixedLinearBuffer::new(&mut buf);
-        buf.extend_from_slice(&[1, 2, 3, 4, 5, 6, 7]);
-
-        buf.drain(7);
-        assert_eq!(buf.len(), 0);
-    }
-
-    #[test]
-    fn flb_find() {
-        let mut buf = [1, 2, 3, 4, 5, 6, 7, 8];
-        let mut buf = FixedLinearBuffer::new(&mut buf);
-        assert_eq!(buf.find(5), None);
-        buf.extend_from_slice(&[1, 2, 3, 4]);
-        assert_eq!(buf.find(5), None);
-        buf.extend_from_slice(&[5, 6, 7, 8]);
-        assert_eq!(buf.find(5), Some(4));
-    }
 
     #[cfg(feature = "alloc")]
     #[test]
@@ -1133,8 +722,9 @@ mod test {
         use crate::proto27::{PacketRef, Proto27};
         let bytes = test_util_cfg_nav5_bytes();
 
-        let mut buffer = [0; 12];
-        let mut parser = Parser::<_, Proto27>::new(FixedLinearBuffer::new(&mut buffer));
+        let mut parser = ParserBuilder::new()
+            .with_protocol::<Proto27>()
+            .with_fixed_buffer::<12>();
 
         {
             let mut it = parser.consume_ubx(&bytes[0..8]);
@@ -1168,9 +758,9 @@ mod test {
         use crate::proto31::{PacketRef, Proto31};
 
         let bytes = test_util_cfg_nav5_bytes();
-
-        let mut buffer = [0; 12];
-        let mut parser = Parser::<_, Proto31>::new(FixedLinearBuffer::new(&mut buffer));
+        let mut parser = ParserBuilder::new()
+            .with_protocol::<Proto31>()
+            .with_fixed_buffer::<12>();
 
         {
             let mut it = parser.consume_ubx(&bytes[0..8]);
@@ -1204,10 +794,9 @@ mod test {
         use crate::proto14::{PacketRef, Proto14};
 
         let bytes = test_util_cfg_nav5_bytes();
-
-        let mut buffer = [0; 1024];
-        let buffer = FixedLinearBuffer::new(&mut buffer);
-        let mut parser: Parser<FixedLinearBuffer<'_>, Proto14> = Parser::new(buffer);
+        let mut parser = ParserBuilder::new()
+            .with_protocol::<Proto14>()
+            .with_fixed_buffer::<1024>();
         let mut it = parser.consume_ubx(&bytes);
         assert!(matches!(
             it.next(),
@@ -1222,9 +811,7 @@ mod test {
         use crate::proto23::{PacketRef, Proto23};
         let bytes = test_util_cfg_nav5_bytes();
 
-        let mut buffer = [0; 1024];
-        let buffer = FixedLinearBuffer::new(&mut buffer);
-        let mut parser: Parser<FixedLinearBuffer<'_>, Proto23> = Parser::new(buffer);
+        let mut parser = Parser::<FixedBuffer<1024>, Proto23>::with_fixed_buffer();
         let mut it = parser.consume_ubx(&bytes);
         assert!(matches!(
             it.next(),
@@ -1238,10 +825,9 @@ mod test {
     fn parser_accepts_packet_array_underlying_proto27() {
         use crate::proto27::{PacketRef, Proto27};
         let bytes = test_util_cfg_nav5_bytes();
-
-        let mut buffer = [0; 1024];
-        let buffer = FixedLinearBuffer::new(&mut buffer);
-        let mut parser: Parser<FixedLinearBuffer<'_>, Proto27> = Parser::new(buffer);
+        let mut parser = ParserBuilder::new()
+            .with_protocol::<Proto27>()
+            .with_fixed_buffer::<1024>();
         let mut it = parser.consume_ubx(&bytes);
         assert!(matches!(
             it.next(),
@@ -1256,9 +842,9 @@ mod test {
         use crate::proto31::{PacketRef, Proto31};
         let bytes = test_util_cfg_nav5_bytes();
 
-        let mut buffer = [0; 1024];
-        let buffer = FixedLinearBuffer::new(&mut buffer);
-        let mut parser: Parser<FixedLinearBuffer<'_>, Proto31> = Parser::new(buffer);
+        let mut parser = ParserBuilder::new()
+            .with_protocol::<Proto31>()
+            .with_fixed_buffer::<1024>();
         let mut it = parser.consume_ubx(&bytes);
         assert!(matches!(
             it.next(),

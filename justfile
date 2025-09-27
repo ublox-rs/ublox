@@ -65,8 +65,8 @@ lint-msrv *ARGS:
 # Build docs
 [group("misc")]
 doc $RUSTDOCFLAGS="--cfg docrs":
-    cd ublox_derive && cargo +nightly doc --no-deps
-    cd ublox        && cargo +nightly doc --no-deps
+    cd ublox_derive && cargo +nightly doc --no-deps --all-features
+    cd ublox        && cargo +nightly doc --no-deps --all-features
 
 # Run MSRV checks
 [group("misc")]

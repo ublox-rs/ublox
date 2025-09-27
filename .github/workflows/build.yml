@@ -139,9 +139,9 @@ jobs:
 
       - name: ublox
         run: |
-          cd ublox
-          RUSTDOCFLAGS="--cfg docrs" \
-              cargo +nightly doc --no-deps
+            cd ublox
+            RUSTDOCFLAGS="--cfg docrs" \
+                cargo +nightly doc --no-deps --all-features
 
   msrv:
     runs-on: ubuntu-latest
