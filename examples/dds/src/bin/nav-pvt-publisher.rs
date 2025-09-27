@@ -51,7 +51,7 @@ fn main() -> Result<()> {
     // Send a packet request for the MonVer packet
     device
         .write_all(&UbxPacketRequest::request_for::<MonVer>().into_packet_bytes())
-        .expect("Unable to write request/poll for UBX-MON-VER message");
+        .expect("Failed to send poll/request for UBX-MON-VER message");
 
     let cli_args = cli.get_matches();
     let domain_id = *cli_args
