@@ -253,8 +253,8 @@ impl UbxChecksumCalc {
         let mut a = self.ck_a;
         let mut b = self.ck_b;
         for byte in bytes.iter() {
-            a = a.overflowing_add(*byte).0;
-            b = b.overflowing_add(a).0;
+            a = a.wrapping_add(*byte);
+            b = b.wrapping_add(a);
         }
         self.ck_a = a;
         self.ck_b = b;
