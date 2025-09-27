@@ -241,10 +241,13 @@ fn calculate_checksum(data: &[u8]) -> (u8, u8) {
 }
 
 /// A proptest strategy that generates a complete, valid UBX frame
-/// containing a NAV-PVT message as a `Vec<u8>`.
+/// containing a NAV-PVT message, along with the source `NavPvt` struct.
 ///
-/// This is the main strategy to use in tests
-pub fn ubx_nav_pvt_frame_strategy(version: ProtocolVersion) -> impl Strategy<Value = Vec<u8>> {
+/// This is the main strategy to use in tests. It returns a tuple of
+/// `(NavPvt, Vec<u8>)`.
+pub fn ubx_nav_pvt_frame_strategy(
+    version: ProtocolVersion,
+) -> impl Strategy<Value = (NavPvt, Vec<u8>)> {
     nav_pvt_payload_strategy(version).prop_map(move |nav_pvt| {
         let payload = nav_pvt.to_bytes(version);
         let class_id = 0x01;
@@ -268,7 +271,7 @@ pub fn ubx_nav_pvt_frame_strategy(version: ProtocolVersion) -> impl Strategy<Val
         final_frame.push(ck_a);
         final_frame.push(ck_b);
 
-        final_frame
+        (nav_pvt, final_frame)
     })
 }
 
@@ -277,7 +280,7 @@ pub fn ubx_nav_pvt_frame_strategy(version: ProtocolVersion) -> impl Strategy<Val
 proptest! {
     #[test]
     fn test_parser_proto14_with_generated_nav_pvt_frames(
-        frame in ubx_nav_pvt_frame_strategy(ProtocolVersion::V14)
+        (expected_pvt, frame)  in ubx_nav_pvt_frame_strategy(ProtocolVersion::V14)
     ) {
         use ublox::proto14::{Proto14, PacketRef};
 
@@ -287,6 +290,25 @@ proptest! {
         let Some(Ok(UbxPacket::Proto14(PacketRef::NavPvt(p)))) = it.next() else {
             panic!("Parser failed to parse a NAV-PVT valid packet");
         };
+
+        // Assert that most of the the parsed fields match the generated values.
+        prop_assert_eq!(p.itow(), expected_pvt.itow);
+        prop_assert_eq!(p.day(), expected_pvt.day);
+        prop_assert_eq!(p.ground_speed_2d_raw(), expected_pvt.g_speed);
+        prop_assert_eq!(p.heading_motion_raw(), expected_pvt.head_mot);
+        prop_assert_eq!(p.longitude_raw(), expected_pvt.lon);
+        prop_assert_eq!(p.latitude_raw(), expected_pvt.lat);
+        prop_assert_eq!(p.height_above_ellipsoid_raw(), expected_pvt.height);
+        prop_assert_eq!(p.pdop_raw(), expected_pvt.p_dop);
+        prop_assert_eq!(p.vel_down_raw(), expected_pvt.vel_d);
+        prop_assert_eq!(p.vel_east_raw(), expected_pvt.vel_e);
+        prop_assert_eq!(p.vel_north_raw(), expected_pvt.vel_n);
+        prop_assert_eq!(p.height_msl_raw(), expected_pvt.h_msl);
+        prop_assert_eq!(p.fix_type_raw(), expected_pvt.fix_type);
+        prop_assert_eq!(p.flags_raw(), expected_pvt.flags);
+        prop_assert_eq!(p.vertical_accuracy_raw(), expected_pvt.v_acc);
+        prop_assert_eq!(p.magnetic_declination_raw(), expected_pvt.mag_dec);
+        prop_assert_eq!(p.magnetic_declination_accuracy_raw(), expected_pvt.mag_acc);
     }
 }
 
@@ -294,7 +316,7 @@ proptest! {
 proptest! {
     #[test]
     fn test_parser_proto23_with_generated_nav_pvt_frames(
-        frame in ubx_nav_pvt_frame_strategy(ProtocolVersion::V23)
+        (expected_pvt, frame) in ubx_nav_pvt_frame_strategy(ProtocolVersion::V23)
     ) {
         use ublox::proto23::{Proto23, PacketRef};
 
@@ -304,6 +326,30 @@ proptest! {
         let Some(Ok(UbxPacket::Proto23(PacketRef::NavPvt(p)))) = it.next() else {
             panic!("Parser failed to parse a NAV-PVT valid packet");
         };
+
+        // Assert that most of the the parsed fields match the generated values.
+        prop_assert_eq!(p.itow(), expected_pvt.itow);
+        prop_assert_eq!(p.day(), expected_pvt.day);
+        prop_assert_eq!(p.ground_speed_2d_raw(), expected_pvt.g_speed);
+        prop_assert_eq!(p.heading_motion_raw(), expected_pvt.head_mot);
+        prop_assert_eq!(p.longitude_raw(), expected_pvt.lon);
+        prop_assert_eq!(p.latitude_raw(), expected_pvt.lat);
+        prop_assert_eq!(p.height_above_ellipsoid_raw(), expected_pvt.height);
+        prop_assert_eq!(p.pdop_raw(), expected_pvt.p_dop);
+        prop_assert_eq!(p.vel_down_raw(), expected_pvt.vel_d);
+        prop_assert_eq!(p.vel_east_raw(), expected_pvt.vel_e);
+        prop_assert_eq!(p.vel_north_raw(), expected_pvt.vel_n);
+        prop_assert_eq!(p.height_msl_raw(), expected_pvt.h_msl);
+        prop_assert_eq!(p.vertical_accuracy_raw(), expected_pvt.v_acc);
+        prop_assert_eq!(p.magnetic_declination_raw(), expected_pvt.mag_dec);
+        prop_assert_eq!(p.magnetic_declination_accuracy_raw(), expected_pvt.mag_acc);
+        prop_assert_eq!(p.magnetic_declination_accuracy_raw(), expected_pvt.mag_acc);
+        prop_assert_eq!(p.fix_type_raw(), expected_pvt.fix_type);
+        prop_assert_eq!(p.flags_raw(), expected_pvt.flags);
+        prop_assert_eq!(p.flags2_raw(), expected_pvt.flags2);
+        prop_assert_eq!(p.flags3_raw(), expected_pvt.flags3, "Invalid flags3_raw = {:?}, flags3 = {:?}", p.flags3_raw(), p.flags3());
+
+
     }
 }
 
@@ -311,7 +357,7 @@ proptest! {
 proptest! {
     #[test]
     fn test_parser_proto27_with_generated_nav_pvt_frames(
-        frame in ubx_nav_pvt_frame_strategy(ProtocolVersion::V27)
+        (expected_pvt, frame) in ubx_nav_pvt_frame_strategy(ProtocolVersion::V27)
     ) {
         use ublox::proto27::{Proto27, PacketRef};
 
@@ -320,6 +366,28 @@ proptest! {
         let Some(Ok(UbxPacket::Proto27(PacketRef::NavPvt(p)))) = it.next() else {
             panic!("Parser failed to parse a NAV-PVT valid packet");
         };
+
+        // Assert that most of the the parsed fields match the generated values.
+        prop_assert_eq!(p.itow(), expected_pvt.itow);
+        prop_assert_eq!(p.day(), expected_pvt.day);
+        prop_assert_eq!(p.ground_speed_2d_raw(), expected_pvt.g_speed);
+        prop_assert_eq!(p.heading_motion_raw(), expected_pvt.head_mot);
+        prop_assert_eq!(p.longitude_raw(), expected_pvt.lon);
+        prop_assert_eq!(p.latitude_raw(), expected_pvt.lat);
+        prop_assert_eq!(p.height_above_ellipsoid_raw(), expected_pvt.height);
+        prop_assert_eq!(p.pdop_raw(), expected_pvt.p_dop);
+        prop_assert_eq!(p.vel_down_raw(), expected_pvt.vel_d);
+        prop_assert_eq!(p.vel_east_raw(), expected_pvt.vel_e);
+        prop_assert_eq!(p.vel_north_raw(), expected_pvt.vel_n);
+        prop_assert_eq!(p.height_msl_raw(), expected_pvt.h_msl);
+        prop_assert_eq!(p.vertical_accuracy_raw(), expected_pvt.v_acc);
+        prop_assert_eq!(p.magnetic_declination_raw(), expected_pvt.mag_dec);
+        prop_assert_eq!(p.magnetic_declination_accuracy_raw(), expected_pvt.mag_acc);
+        prop_assert_eq!(p.magnetic_declination_accuracy_raw(), expected_pvt.mag_acc);
+        prop_assert_eq!(p.fix_type_raw(), expected_pvt.fix_type);
+        prop_assert_eq!(p.flags_raw(), expected_pvt.flags);
+        prop_assert_eq!(p.flags2_raw(), expected_pvt.flags2);
+        prop_assert_eq!(p.flags3_raw(), expected_pvt.flags3);
     }
 }
 
@@ -327,7 +395,7 @@ proptest! {
 proptest! {
     #[test]
     fn test_parser_proto31_with_generated_nav_pvt_frames(
-        frame in ubx_nav_pvt_frame_strategy(ProtocolVersion::V31)
+        (expected_pvt, frame)  in ubx_nav_pvt_frame_strategy(ProtocolVersion::V31)
     ) {
         use ublox::proto31::{Proto31, PacketRef};
 
@@ -336,5 +404,27 @@ proptest! {
         let Some(Ok(UbxPacket::Proto31(PacketRef::NavPvt(p)))) = it.next() else {
             panic!("Parser failed to parse a NAV-PVT valid packet");
         };
+
+        // Assert that most of the the parsed fields match the generated values.
+        prop_assert_eq!(p.itow(), expected_pvt.itow);
+        prop_assert_eq!(p.day(), expected_pvt.day);
+        prop_assert_eq!(p.ground_speed_2d_raw(), expected_pvt.g_speed);
+        prop_assert_eq!(p.heading_motion_raw(), expected_pvt.head_mot);
+        prop_assert_eq!(p.longitude_raw(), expected_pvt.lon);
+        prop_assert_eq!(p.latitude_raw(), expected_pvt.lat);
+        prop_assert_eq!(p.height_above_ellipsoid_raw(), expected_pvt.height);
+        prop_assert_eq!(p.pdop_raw(), expected_pvt.p_dop);
+        prop_assert_eq!(p.vel_down_raw(), expected_pvt.vel_d);
+        prop_assert_eq!(p.vel_east_raw(), expected_pvt.vel_e);
+        prop_assert_eq!(p.vel_north_raw(), expected_pvt.vel_n);
+        prop_assert_eq!(p.height_msl_raw(), expected_pvt.h_msl);
+        prop_assert_eq!(p.vertical_accuracy_raw(), expected_pvt.v_acc);
+        prop_assert_eq!(p.magnetic_declination_raw(), expected_pvt.mag_dec);
+        prop_assert_eq!(p.magnetic_declination_accuracy_raw(), expected_pvt.mag_acc);
+        prop_assert_eq!(p.magnetic_declination_accuracy_raw(), expected_pvt.mag_acc);
+        prop_assert_eq!(p.fix_type_raw(), expected_pvt.fix_type);
+        prop_assert_eq!(p.flags_raw(), expected_pvt.flags);
+        prop_assert_eq!(p.flags2_raw(), expected_pvt.flags2);
+        prop_assert_eq!(p.flags3_raw(), expected_pvt.flags3);
     }
 }
