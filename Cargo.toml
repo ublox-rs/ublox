@@ -14,11 +14,13 @@ readme = "README.md"
 exclude = [".github", "CONTRIBUTING.md", "justfile"]
 
 [workspace.lints.clippy]
-manual_assert = "warn"
+# Should we rewrite these?
+# manual_assert = "warn"
 manual_clamp = "warn"
 manual_instant_elapsed = "warn"
 manual_is_power_of_two = "warn"
-manual_let_else = "warn"
+# Consider enabling this if/when we bump the MSRV
+# manual_let_else = "warn"
 manual_ok_or = "warn"
 manual_string_new = "warn"
 needless_borrow = "warn"

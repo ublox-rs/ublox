@@ -5,7 +5,7 @@ use crate::ParserError;
 use core::cmp::min;
 
 /// This trait represents an underlying buffer used for the Parser. We provide
-/// implementations for `Vec<u8>` and for `FixedLinearBuffer`, if you want to
+/// implementations for `Vec<u8>`, `[u8; N]`, and for `FixedLinearBuffer`, if you want to
 /// use your own struct as an underlying buffer you can implement this trait.
 ///
 /// Look at the `flb_*` unit tests for ideas of unit tests you can run against
@@ -96,14 +96,6 @@ impl core::ops::Index<core::ops::Range<usize>> for FixedLinearBuffer<'_> {
     type Output = [u8];
 
     fn index(&self, index: core::ops::Range<usize>) -> &Self::Output {
-        if index.end > self.len {
-            // Same message style as Rust std lib
-            panic!(
-                "index out of bounds: the len is {len} but the index is {idx}",
-                len = self.len,
-                idx = index.end
-            );
-        }
         self.buffer.index(index)
     }
 }
@@ -184,13 +176,6 @@ impl<const N: usize> core::ops::Index<core::ops::Range<usize>> for FixedBuffer<N
     type Output = [u8];
 
     fn index(&self, index: core::ops::Range<usize>) -> &Self::Output {
-        if index.end > self.len {
-            panic!(
-                "index out of bounds: the len is {len} but the index is {idx}",
-                len = self.len,
-                idx = index.end
-            );
-        }
         &self.buffer[index]
     }
 }
@@ -199,13 +184,6 @@ impl<const N: usize> core::ops::Index<usize> for FixedBuffer<N> {
     type Output = u8;
 
     fn index(&self, index: usize) -> &Self::Output {
-        if index >= self.len {
-            panic!(
-                "index out of bounds: the len is {len} but the index is {idx}",
-                len = self.len,
-                idx = index
-            );
-        }
         &self.buffer[index]
     }
 }
@@ -369,8 +347,7 @@ impl<'a, T: UnderlyingBuffer> DualBuffer<'a, T> {
         if new_bytes > self.new_buf.len() - self.new_buf_offset {
             // We need to pull more bytes from new than it has
             panic!(
-                "Cannot pull {} bytes from a buffer with {}-{}",
-                new_bytes,
+                "Cannot pull {new_bytes} bytes from a buffer with {}-{}",
                 self.new_buf.len(),
                 self.new_buf_offset
             );
