@@ -330,9 +330,12 @@ impl<T: UnderlyingBuffer, P: UbxProtocol> UbxParserIter<'_, T, P> {
         (0..self.buf.len()).find(|&i| self.buf[i] == SYNC_CHAR_1)
     }
 
-    #[allow(clippy::should_implement_trait)]
-    /// Analog of `core::iter::Iterator::next`, should be switched to
-    /// trait implementation after merge of `<https://github.com/rust-lang/rust/issues/44265>`
+    #[allow(
+        clippy::should_implement_trait,
+        reason = "This is a lending iterator, which is not in std"
+    )]
+    /// Parse and return the next [UbxPacket] in the buffer, or `None` if the buffer cannot yield
+    /// another full [UbxPacket]
     pub fn next(&mut self) -> Option<Result<UbxPacket<'_>, ParserError>> {
         while self.buf.len() > 0 {
             let pos = match self.find_sync() {
@@ -414,9 +417,12 @@ impl<T: UnderlyingBuffer, P: UbxProtocol> UbxRtcmParserIter<'_, T, P> {
         NextSync::None
     }
 
-    #[allow(clippy::should_implement_trait)]
-    /// Analog of `core::iter::Iterator::next`, should be switched to
-    /// trait implementation after merge of https://github.com/rust-lang/rust/issues/44265
+    #[allow(
+        clippy::should_implement_trait,
+        reason = "This is a lending iterator, which is not in std"
+    )]
+    /// Parse and return the next [UbxPacket or RtcmPacket](AnyPacketRef) in the buffer, or `None` if the buffer cannot yield
+    /// another full packet
     pub fn next(&mut self) -> Option<Result<AnyPacketRef<'_>, ParserError>> {
         while self.buf.len() > 0 {
             match self.find_sync() {
