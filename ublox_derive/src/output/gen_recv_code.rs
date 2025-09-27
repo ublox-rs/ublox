@@ -36,6 +36,7 @@ pub fn generate_recv_code_for_packet(dbg_ctx: DebugContext, pack_descr: &PackDes
     let debug_impl = util::generate_debug_impl(pack_name, &ref_name, &owned_name, pack_descr);
     let serialize_impl = util::generate_serialize_impl(pack_name, &ref_name, pack_descr);
     let from_ref_impl = generate_from_ref_impl(&ref_name, &owned_name, packet_size);
+    let from_owned_impl = generate_from_owned_impl(&ref_name, &owned_name);
 
     quote! {
         #[doc = #struct_comment]
@@ -68,12 +69,17 @@ pub fn generate_recv_code_for_packet(dbg_ctx: DebugContext, pack_descr: &PackDes
                 &self.0
             }
 
+            pub fn to_ref(&self) -> #ref_name {
+                self.into()
+            }
+
             #(#getters)*
 
             #validator
         }
 
         #from_ref_impl
+        #from_owned_impl
         #debug_impl
         #serialize_impl
     }
@@ -160,6 +166,22 @@ fn generate_from_ref_impl(
         impl<'a> From<#ref_name<'a>> for #owned_name {
             fn from(packet: #ref_name<'a>) -> Self {
                 (&packet).into()
+            }
+        }
+    }
+}
+
+fn generate_from_owned_impl(ref_name: &syn::Ident, owned_name: &syn::Ident) -> TokenStream {
+    quote! {
+        impl<'a> From<#owned_name> for #ref_name<'a> {
+            fn from(packet: #owned_name) -> Self {
+                (packet).into()
+            }
+        }
+
+        impl<'a> From<&'a #owned_name> for #ref_name<'a> {
+            fn from(packet: &'a #owned_name) -> Self {
+                (packet).into()
             }
         }
     }
