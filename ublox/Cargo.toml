@@ -58,3 +58,6 @@ serde_json = "1.0"
 [[bench]]
 harness = false
 name = "packet_benchmark"
+
+[lints]
+workspace = true

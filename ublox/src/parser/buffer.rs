@@ -5,7 +5,7 @@ use crate::ParserError;
 use core::cmp::min;
 
 /// This trait represents an underlying buffer used for the Parser. We provide
-/// implementations for `Vec<u8>` and for `FixedLinearBuffer`, if you want to
+/// implementations for `Vec<u8>`, `[u8; N]`([FixedBuffer]), and for `&mut [u8]` ([FixedLinearBuffer]), if you want to
 /// use your own struct as an underlying buffer you can implement this trait.
 ///
 /// Look at the `flb_*` unit tests for ideas of unit tests you can run against
@@ -97,7 +97,6 @@ impl core::ops::Index<core::ops::Range<usize>> for FixedLinearBuffer<'_> {
 
     fn index(&self, index: core::ops::Range<usize>) -> &Self::Output {
         if index.end > self.len {
-            // Same message style as Rust std lib
             panic!(
                 "index out of bounds: the len is {len} but the index is {idx}",
                 len = self.len,
@@ -555,10 +554,22 @@ mod test {
 
     #[test]
     #[should_panic]
-    fn dl_take_range_oom() {
+    fn dl_take_range_oom_lin_buf() {
         let mut buf = [0; 4];
         let mut buf = FixedLinearBuffer::new(&mut buf);
         let new = [1, 2, 3, 4, 5, 6];
+
+        let mut dual = DualBuffer::new(&mut buf, &new[..]);
+        // This should throw
+        assert!(
+            matches!(dual.take(6), Err(ParserError::OutOfMemory { required_size }) if required_size == 6)
+        );
+    }
+    #[test]
+    #[should_panic]
+    fn dl_take_range_oom_fixed_buf() {
+        let new = [1, 2, 3, 4, 5, 6];
+        let mut buf = FixedBuffer::<4>::new();
 
         let mut dual = DualBuffer::new(&mut buf, &new[..]);
         // This should throw
@@ -678,6 +689,65 @@ mod test {
     fn flb_find() {
         let mut buf = [1, 2, 3, 4, 5, 6, 7, 8];
         let mut buf = FixedLinearBuffer::new(&mut buf);
+        assert_eq!(buf.find(5), None);
+        buf.extend_from_slice(&[1, 2, 3, 4]);
+        assert_eq!(buf.find(5), None);
+        buf.extend_from_slice(&[5, 6, 7, 8]);
+        assert_eq!(buf.find(5), Some(4));
+    }
+
+    #[test]
+    fn fixed_buf_clear() {
+        let mut buf = FixedBuffer::<16>::new();
+        buf.extend_from_slice(&[1, 2, 3, 4, 5, 6, 7]);
+        assert_eq!(buf.len(), 7);
+        buf.clear();
+        assert_eq!(buf.len(), 0);
+    }
+
+    #[test]
+    #[should_panic]
+    fn fixed_buf_index_outside_range() {
+        let mut buf = FixedBuffer::<16>::new();
+        buf.extend_from_slice(&[1, 2, 3, 4, 5, 6, 7]);
+        let _ = buf[5..10];
+    }
+
+    #[test]
+    fn fixed_buf_extend_outside_range() {
+        let mut buf = FixedBuffer::<16>::new();
+        buf.extend_from_slice(&[1, 2, 3, 4, 5, 6, 7]);
+        buf.extend_from_slice(&[1, 2, 3, 4, 5, 6, 7]);
+        buf.extend_from_slice(&[1, 2, 3, 4, 5, 6, 7]);
+        assert_eq!(buf.len(), 16);
+    }
+
+    #[test]
+    fn fixed_buf_drain() {
+        let mut buf = FixedBuffer::<16>::new();
+        buf.extend_from_slice(&[1, 2, 3, 4, 5, 6, 7]);
+
+        buf.drain(3);
+        assert_eq!(buf.len(), 4);
+        assert_eq!(&buf[0..buf.len()], &[4, 5, 6, 7]);
+
+        buf.extend_from_slice(&[1, 2, 3, 4, 5, 6, 7]);
+        assert_eq!(buf.len(), 11);
+        assert_eq!(&buf[0..buf.len()], &[4, 5, 6, 7, 1, 2, 3, 4, 5, 6, 7]);
+    }
+
+    #[test]
+    fn fixed_buf_drain_all() {
+        let mut buf = FixedBuffer::<16>::new();
+        buf.extend_from_slice(&[1, 2, 3, 4, 5, 6, 7]);
+
+        buf.drain(7);
+        assert_eq!(buf.len(), 0);
+    }
+
+    #[test]
+    fn fixed_buf_find() {
+        let mut buf = FixedBuffer::<16>::new();
         assert_eq!(buf.find(5), None);
         buf.extend_from_slice(&[1, 2, 3, 4]);
         assert_eq!(buf.find(5), None);

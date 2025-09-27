@@ -15,6 +15,24 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - name: Install MSRV
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: 1.83.0
+          override: true
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+      - name: Code style
+        run: |
+          cargo fmt --all -- --check
+          cargo clippy --all-features --all-targets -- -D warnings
+
   build:
     runs-on: ubuntu-latest
     strategy:
@@ -47,14 +65,12 @@ jobs:
           override: true
           components: rustfmt, clippy
       - uses: Swatinem/rust-cache@v2
+
       - name: Build
         run: cargo build --verbose ${{ matrix.feature-args }}
-      - name: Run tests
+
+      - name: Test
         run: cargo test --verbose ${{ matrix.feature-args }}
-      - name: Coding style
-        run: |
-          cargo fmt --all -- --check
-          cargo clippy --all-targets -- -D warnings
 
   build_embedded:
     runs-on: ubuntu-latest
@@ -139,9 +155,9 @@ jobs:
 
       - name: ublox
         run: |
-            cd ublox
-            RUSTDOCFLAGS="--cfg docrs" \
-                cargo +nightly doc --no-deps --all-features
+          cd ublox
+          RUSTDOCFLAGS="--cfg docrs" \
+              cargo +nightly doc --no-deps --all-features
 
   msrv:
     runs-on: ubuntu-latest

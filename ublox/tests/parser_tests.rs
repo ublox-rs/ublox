@@ -472,7 +472,7 @@ fn test_util_cfg_nav5_bytes() -> [u8; 44] {
     .into_packet_bytes()
 }
 
-fn test_util_assert_expected_cfg_nav5(pack: CfgNav5Ref) {
+fn test_util_assert_expected_cfg_nav5(pack: &CfgNav5Ref) {
     assert_eq!(CfgNav5Params::DYN, pack.mask());
     assert_eq!(
         NavDynamicModel::AirborneWithLess1gAcceleration,
@@ -508,7 +508,7 @@ fn test_parse_cfg_nav5_proto14() {
         match pack {
             Ok(UbxPacket::Proto14(PacketRef::CfgNav5(pack))) => {
                 found = true;
-                test_util_assert_expected_cfg_nav5(pack);
+                test_util_assert_expected_cfg_nav5(&pack);
             },
             _ => panic!(),
         }
@@ -529,7 +529,7 @@ fn test_parse_cfg_nav5_proto23() {
         match pack {
             Ok(UbxPacket::Proto23(PacketRef::CfgNav5(pack))) => {
                 found = true;
-                test_util_assert_expected_cfg_nav5(pack);
+                test_util_assert_expected_cfg_nav5(&pack);
             },
             _ => panic!(),
         }
@@ -550,7 +550,7 @@ fn test_parse_cfg_nav5_proto27() {
         match pack {
             Ok(UbxPacket::Proto27(PacketRef::CfgNav5(pack))) => {
                 found = true;
-                test_util_assert_expected_cfg_nav5(pack);
+                test_util_assert_expected_cfg_nav5(&pack);
             },
             _ => panic!(),
         }
@@ -571,7 +571,7 @@ fn test_parse_cfg_nav5_proto31() {
         match pack {
             Ok(UbxPacket::Proto31(PacketRef::CfgNav5(pack))) => {
                 found = true;
-                test_util_assert_expected_cfg_nav5(pack);
+                test_util_assert_expected_cfg_nav5(&pack);
             },
             _ => panic!(),
         }
