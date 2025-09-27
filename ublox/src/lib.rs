@@ -65,7 +65,7 @@ pub trait UbxProtocol: Send + Sized {
     type PacketRef<'a>: Into<UbxPacket<'a>>;
 
     /// The maximum payload length supported by this protocol version.
-    const MAX_PAYLOAD_LEN: usize;
+    const MAX_PAYLOAD_LEN: u16;
 
     /// Matches a Class ID, Message ID, and payload to a specific packet type.
     fn match_packet(

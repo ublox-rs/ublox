@@ -39,6 +39,8 @@ mod buffer;
 use buffer::DualBuffer;
 pub use buffer::{FixedBuffer, FixedLinearBuffer, UnderlyingBuffer};
 
+mod checksum;
+
 /// A compile-time builder for constructing UBX protocol parsers with different buffer types and protocols.
 ///
 /// Unlike typical builders, `ParserBuilder` performs all configuration at compile time through
@@ -237,34 +239,6 @@ impl<T: UnderlyingBuffer, P: UbxProtocol> Parser<T, P> {
     }
 }
 
-/// For ubx checksum on the fly
-#[derive(Default)]
-struct UbxChecksumCalc {
-    ck_a: u8,
-    ck_b: u8,
-}
-
-impl UbxChecksumCalc {
-    const fn new() -> Self {
-        Self { ck_a: 0, ck_b: 0 }
-    }
-
-    fn update(&mut self, bytes: &[u8]) {
-        let mut a = self.ck_a;
-        let mut b = self.ck_b;
-        for byte in bytes.iter() {
-            a = a.wrapping_add(*byte);
-            b = b.wrapping_add(a);
-        }
-        self.ck_a = a;
-        self.ck_b = b;
-    }
-
-    const fn result(self) -> (u8, u8) {
-        (self.ck_a, self.ck_b)
-    }
-}
-
 #[derive(Debug, PartialEq, Eq)]
 enum NextSync {
     Ubx(usize),
@@ -286,36 +260,27 @@ pub struct UbxParserIter<'a, T: UnderlyingBuffer, P: UbxProtocol = DefaultProtoc
 
 fn extract_packet_ubx<'b, T: UnderlyingBuffer, P: UbxProtocol>(
     buf: &'b mut DualBuffer<'_, T>,
-    pack_len: usize,
+    pack_len: u16,
 ) -> Option<Result<UbxPacket<'b>, ParserError>> {
-    if !buf.can_drain_and_take(6, pack_len + 2) {
+    if !buf.can_drain_and_take(6, usize::from(pack_len) + 2) {
         if buf.potential_lost_bytes() > 0 {
             // We ran out of space, drop this packet and move on
             buf.drain(2);
             return Some(Err(ParserError::OutOfMemory {
-                required_size: pack_len + 2,
+                required_size: usize::from(pack_len) + 2,
             }));
         }
         return None;
     }
-    let mut checksummer = UbxChecksumCalc::new();
-    let (a, b) = buf.peek_raw(2..(4 + pack_len + 2));
-    checksummer.update(a);
-    checksummer.update(b);
-    let (ck_a, ck_b) = checksummer.result();
-
-    let (expect_ck_a, expect_ck_b) = (buf[6 + pack_len], buf[6 + pack_len + 1]);
-    if (ck_a, ck_b) != (expect_ck_a, expect_ck_b) {
+    if let Err(checksum_error) = checksum::UbxChecksumCalc::validate_buffer(buf, pack_len) {
         buf.drain(2);
-        return Some(Err(ParserError::InvalidChecksum {
-            expect: u16::from_le_bytes([expect_ck_a, expect_ck_b]),
-            got: u16::from_le_bytes([ck_a, ck_b]),
-        }));
+        return Some(Err(checksum_error));
     }
+
     let class_id = buf[2];
     let msg_id = buf[3];
     buf.drain(6);
-    let msg_data = match buf.take(pack_len + 2) {
+    let msg_data = match buf.take(usize::from(pack_len) + 2) {
         Ok(x) => x,
         Err(e) => {
             return Some(Err(e));
@@ -359,7 +324,7 @@ impl<T: UnderlyingBuffer, P: UbxProtocol> UbxParserIter<'_, T, P> {
                 return None;
             }
 
-            let pack_len: usize = u16::from_le_bytes([self.buf[4], self.buf[5]]).into();
+            let pack_len = u16::from_le_bytes([self.buf[4], self.buf[5]]);
             if pack_len > P::MAX_PAYLOAD_LEN {
                 self.buf.drain(2);
                 continue;
@@ -383,8 +348,9 @@ pub struct RtcmPacketRef<'a> {
 
 fn extract_packet_rtcm<'a, 'b, T: UnderlyingBuffer>(
     buf: &'b mut DualBuffer<'a, T>,
-    pack_len: usize,
+    pack_len: u16,
 ) -> Option<Result<AnyPacketRef<'b>, ParserError>> {
+    let pack_len = pack_len as usize; // `usize` is needed for indexing but constraining the input to `u16` is still important
     if !buf.can_drain_and_take(0, pack_len + 3) {
         if buf.potential_lost_bytes() > 0 {
             // We ran out of space, drop this packet and move on
@@ -441,7 +407,7 @@ impl<T: UnderlyingBuffer, P: UbxProtocol> UbxRtcmParserIter<'_, T, P> {
                         return None;
                     }
 
-                    let pack_len: usize = u16::from_le_bytes([self.buf[4], self.buf[5]]).into();
+                    let pack_len = u16::from_le_bytes([self.buf[4], self.buf[5]]);
                     if pack_len > P::MAX_PAYLOAD_LEN {
                         self.buf.drain(2);
                         continue;
@@ -461,8 +427,7 @@ impl<T: UnderlyingBuffer, P: UbxProtocol> UbxRtcmParserIter<'_, T, P> {
                         return None;
                     }
                     // next 2 bytes contain 6 bits reserved + 10 bits length, big endian
-                    let pack_len: usize =
-                        (u16::from_be_bytes([self.buf[1], self.buf[2]]) & 0x03ff).into();
+                    let pack_len = u16::from_be_bytes([self.buf[1], self.buf[2]]) & 0x03ff;
 
                     return extract_packet_rtcm(&mut self.buf, pack_len);
                 },
