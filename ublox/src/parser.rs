@@ -52,6 +52,7 @@ pub use buffer::{FixedBuffer, FixedLinearBuffer, UnderlyingBuffer};
 /// # use ublox::ParserBuilder;
 ///
 /// // Creates a parser with Vec<u8> buffer and default protocol
+/// # #[cfg(feature = "alloc")]
 /// let mut parser = ParserBuilder::new().with_vec_buffer();
 /// ```
 ///
@@ -67,12 +68,15 @@ pub use buffer::{FixedBuffer, FixedLinearBuffer, UnderlyingBuffer};
 /// ## Parser with specific protocol version
 ///
 /// ```rust
+/// # #[cfg(all(feature = "alloc", feature = "ubx_proto23"))]
+/// # {
 /// # use ublox::{ParserBuilder, proto23::Proto23};
 ///
 /// // Specify protocol version and buffer type
 /// let mut parser = ParserBuilder::new()
 ///     .with_protocol::<Proto23>()
 ///     .with_vec_buffer();
+/// # }
 /// ```
 ///
 /// ## Parser with custom buffer implementation

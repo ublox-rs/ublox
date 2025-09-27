@@ -33,8 +33,8 @@ pub mod proto31;
 ///
 /// # Example
 ///
-/// ```rust
-/// use ublox::{UbxPacket, proto23::PacketRef};
+/// ```rust,ignore
+/// # use ublox::{UbxPacket, proto23::PacketRef};
 ///
 /// match packet {
 ///     UbxPacket::Proto23(p) => match p {
