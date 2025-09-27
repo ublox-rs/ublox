@@ -48,7 +48,7 @@ fn main() {
         device
             .on_data_available(|packet| match packet {
                 #[cfg(feature = "ubx_proto14")]
-                UbxPacket::Proto17(_) => unreachable!("no ubx_proto14 feature"),
+                UbxPacket::Proto14(_) => unreachable!("no ubx_proto14 feature"),
                 #[cfg(feature = "ubx_proto23")]
                 UbxPacket::Proto23(packet_ref) => {
                     use ublox_device::ublox::packetref_proto23::PacketRef;

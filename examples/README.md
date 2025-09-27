@@ -22,10 +22,10 @@ cargo run -p simple-parse -- -p /dev/ttyACM0
 To run it for other protocol versions, first disable the default features and then enable the specific features needed, e.g.,
 
 ```shell
-cargo run -p simple-parse --no-default-features --features alloc,ubx_proto27 -- -p /dev/ttyACM0 
+cargo run -p simple-parse --no-default-features --features ubx_proto27 -- -p /dev/ttyACM0 
 ```
 
-# uBlox Device - This kind of ruins all the examples because the device is so generic and complex!
+# uBlox Device
 
 The device configuration and the reading of packets as well as some common CLI arguments have been abstracted away into an `ublox-device` library. This library is for convenience only as it is used throughout all of the examples.
 

@@ -20,14 +20,14 @@ mod error;
 mod parser;
 mod ubx_packets;
 
-pub mod proto17;
+pub mod proto14;
 pub mod proto23;
 pub mod proto27;
 pub mod proto31;
 
 /// Unified interface for UBX packets across different protocol versions.
 ///
-/// Each variant corresponds to a UBX protocol version (17, 23, 27, 31).
+/// Each variant corresponds to a UBX protocol version (14, 23, 27, 31).
 ///
 /// Most users will only need one protocol, so enable only the relevant feature flag.
 ///
@@ -50,7 +50,7 @@ pub mod proto31;
 #[derive(Debug)]
 pub enum UbxPacket<'a> {
     #[cfg(feature = "ubx_proto14")]
-    Proto17(proto17::PacketRef<'a>),
+    Proto14(proto14::PacketRef<'a>),
     #[cfg(feature = "ubx_proto23")]
     Proto23(proto23::PacketRef<'a>),
     #[cfg(feature = "ubx_proto27")]

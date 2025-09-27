@@ -12,7 +12,7 @@ use core::marker::PhantomData;
 // Pick the oldest enabled protocol as the default
 #[cfg(feature = "ubx_proto14")]
 /// The default protocol for types that are generic over protocols, the type of the [DefaultProtocol] depends on which protocol feature(s) are enabled
-pub type DefaultProtocol = crate::proto17::Proto17;
+pub type DefaultProtocol = crate::proto14::Proto14;
 
 #[cfg(all(not(feature = "ubx_proto14"), feature = "ubx_proto23"))]
 /// The default protocol for types that are generic over protocols, the type of the [DefaultProtocol] depends on which protocol feature(s) are enabled
@@ -541,16 +541,16 @@ mod test {
     #[cfg(feature = "ubx_proto14")]
     #[test]
     fn parser_handle_garbage_first_byte_proto14() {
-        use crate::proto17::{PacketRef, Proto17};
+        use crate::proto14::{PacketRef, Proto14};
 
         let mut buffer = [0; 12];
         let buffer = FixedLinearBuffer::new(&mut buffer);
-        let mut parser: Parser<FixedLinearBuffer<'_>, Proto17> = Parser::new(buffer);
+        let mut parser: Parser<FixedLinearBuffer<'_>, Proto14> = Parser::new(buffer);
         {
             let mut it = parser.consume_ubx(&BYTES_GARBAGE);
             assert!(matches!(
                 it.next(),
-                Some(Ok(UbxPacket::Proto17(PacketRef::AckAck(_))))
+                Some(Ok(UbxPacket::Proto14(PacketRef::AckAck(_))))
             ));
             assert!(it.next().is_none());
         }
@@ -637,12 +637,12 @@ mod test {
     #[cfg(feature = "ubx_proto14")]
     #[test]
     fn parser_oom_clears_buffer_proto14() {
-        use crate::proto17::{PacketRef, Proto17};
+        use crate::proto14::{PacketRef, Proto14};
 
         let bytes = test_util_cfg_nav5_bytes();
 
         let mut buffer = [0; 12];
-        let mut parser = Parser::<_, Proto17>::new(FixedLinearBuffer::new(&mut buffer));
+        let mut parser = Parser::<_, Proto14>::new(FixedLinearBuffer::new(&mut buffer));
 
         {
             let mut it = parser.consume_ubx(&bytes[0..8]);
@@ -664,7 +664,7 @@ mod test {
             let mut it = parser.consume_ubx(&bytes);
             assert!(matches!(
                 it.next(),
-                Some(Ok(UbxPacket::Proto17(PacketRef::AckAck(_))))
+                Some(Ok(UbxPacket::Proto14(PacketRef::AckAck(_))))
             ));
             assert!(it.next().is_none());
         }
@@ -780,16 +780,16 @@ mod test {
     #[cfg(feature = "ubx_proto14")]
     #[test]
     fn parser_accepts_packet_array_underlying_proto14() {
-        use crate::proto17::{PacketRef, Proto17};
+        use crate::proto14::{PacketRef, Proto14};
 
         let bytes = test_util_cfg_nav5_bytes();
         let mut parser = ParserBuilder::new()
-            .with_protocol::<Proto17>()
+            .with_protocol::<Proto14>()
             .with_fixed_buffer::<1024>();
         let mut it = parser.consume_ubx(&bytes);
         assert!(matches!(
             it.next(),
-            Some(Ok(UbxPacket::Proto17(PacketRef::CfgNav5(_))))
+            Some(Ok(UbxPacket::Proto14(PacketRef::CfgNav5(_))))
         ));
         assert!(it.next().is_none());
     }
@@ -845,14 +845,14 @@ mod test {
     #[test]
     #[cfg(all(feature = "std", feature = "ubx_proto14"))]
     fn parser_accepts_packet_vec_underlying_proto14() {
-        use crate::proto17::{PacketRef, Proto17};
+        use crate::proto14::{PacketRef, Proto14};
         let bytes = test_util_cfg_nav5_bytes();
 
-        let mut parser = Parser::<_, Proto17>::default();
+        let mut parser = Parser::<_, Proto14>::default();
         let mut it = parser.consume_ubx(&bytes);
         assert!(matches!(
             it.next(),
-            Some(Ok(UbxPacket::Proto17(PacketRef::CfgNav5(_))))
+            Some(Ok(UbxPacket::Proto14(PacketRef::CfgNav5(_))))
         ));
         assert!(it.next().is_none());
     }
@@ -927,12 +927,12 @@ mod test {
     #[test]
     #[cfg(all(feature = "std", feature = "ubx_proto14"))]
     fn parser_accepts_multiple_packets_proto14() {
-        use crate::proto17::{PacketRef, Proto17};
+        use crate::proto14::{PacketRef, Proto14};
         let data = test_util_multiple_cfg_nav5_packets_bytes();
-        let mut parser = Parser::<_, Proto17>::default();
+        let mut parser = Parser::<_, Proto14>::default();
         let mut it = parser.consume_ubx(&data);
         match it.next() {
-            Some(Ok(UbxPacket::Proto17(PacketRef::CfgNav5(packet)))) => {
+            Some(Ok(UbxPacket::Proto14(PacketRef::CfgNav5(packet)))) => {
                 // We're good
                 assert_eq!(packet.pacc(), 21);
             },
@@ -941,7 +941,7 @@ mod test {
             },
         }
         match it.next() {
-            Some(Ok(UbxPacket::Proto17(PacketRef::CfgNav5(packet)))) => {
+            Some(Ok(UbxPacket::Proto14(PacketRef::CfgNav5(packet)))) => {
                 // We're good
                 assert_eq!(packet.pacc(), 18);
             },

@@ -55,7 +55,7 @@ fn main() {
         device
             .on_data_available(|packet| match packet {
                 #[cfg(feature = "ubx_proto14")]
-                UbxPacket::Proto17(_) => unimplemented!(),
+                UbxPacket::Proto14(_) => unimplemented!(),
                 #[cfg(feature = "ubx_proto23")]
                 UbxPacket::Proto23(packet_ref) => handler::handle_packet(packet_ref),
                 #[cfg(feature = "ubx_proto27")]
