@@ -1,3 +1,5 @@
+#![cfg(any(feature = "ubx_proto27", feature = "ubx_proto31"))]
+
 #[cfg(feature = "serde")]
 use super::SerializeUbxPacketFields;
 #[cfg(feature = "serde")]

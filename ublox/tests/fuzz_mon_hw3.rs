@@ -1,3 +1,5 @@
+#![cfg(any(feature = "ubx_proto27", feature = "ubx_proto31"))]
+
 //! A proptest generator for U-Blox MON-HW3 messages.
 //!
 //! This module provides a `proptest` strategy to generate byte-level
