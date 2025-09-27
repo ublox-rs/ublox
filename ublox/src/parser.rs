@@ -49,7 +49,7 @@ pub use buffer::{FixedBuffer, FixedLinearBuffer, UnderlyingBuffer};
 /// ## Basic parser with default settings
 ///
 /// ```rust
-/// use ublox::ParserBuilder;
+/// # use ublox::ParserBuilder;
 ///
 /// // Creates a parser with Vec<u8> buffer and default protocol
 /// let mut parser = ParserBuilder::new().with_vec_buffer();
@@ -58,7 +58,7 @@ pub use buffer::{FixedBuffer, FixedLinearBuffer, UnderlyingBuffer};
 /// ## Parser with fixed-size buffer (no_std compatible)
 ///
 /// ```rust
-/// use ublox::ParserBuilder;
+/// # use ublox::ParserBuilder;
 ///
 /// // Creates a parser with 1024-byte fixed buffer
 /// let mut parser = ParserBuilder::new().with_fixed_buffer::<1024>();
@@ -67,7 +67,7 @@ pub use buffer::{FixedBuffer, FixedLinearBuffer, UnderlyingBuffer};
 /// ## Parser with specific protocol version
 ///
 /// ```rust
-/// use ublox::{ParserBuilder, proto23::Proto23};
+/// # use ublox::{ParserBuilder, proto23::Proto23};
 ///
 /// // Specify protocol version and buffer type
 /// let mut parser = ParserBuilder::new()
@@ -78,7 +78,7 @@ pub use buffer::{FixedBuffer, FixedLinearBuffer, UnderlyingBuffer};
 /// ## Parser with custom buffer implementation
 ///
 /// ```rust
-/// use ublox::{ParserBuilder, FixedLinearBuffer};
+/// # use ublox::{ParserBuilder, FixedLinearBuffer};
 ///
 /// let mut my_array = [0u8; 512];
 /// let custom_buffer = FixedLinearBuffer::new(&mut my_array);
@@ -129,8 +129,11 @@ impl<P: UbxProtocol> ParserBuilder<P> {
     }
 }
 
-/// Streaming parser for UBX protocol with buffer. The default constructor will build
-/// a parser containing a Vec, but you can pass your own underlying buffer by passing it
+/// Streaming parser for UBX protocol with buffer.
+///
+/// The easiest way to construct a [Parser] is with the [ParserBuilder].
+///
+/// The default constructor will build a parser containing a Vec, but you can pass your own underlying buffer by passing it
 /// to Parser::new().
 ///
 /// If you pass your own buffer, it should be able to store at _least_ 4 bytes. In practice,
@@ -193,6 +196,8 @@ impl<T: UnderlyingBuffer, P: UbxProtocol> Parser<T, P> {
         self.buf.max_capacity()
     }
 
+    /// Appends `new_data` to the internal buffer and returns and iterator over the buffer
+    /// that will yield [UbxPackets](UbxPacket) on demand.
     pub fn consume_ubx<'a>(&'a mut self, new_data: &'a [u8]) -> UbxParserIter<'a, T, P> {
         let mut buf = DualBuffer::new(&mut self.buf, new_data);
 
@@ -209,6 +214,8 @@ impl<T: UnderlyingBuffer, P: UbxProtocol> Parser<T, P> {
         }
     }
 
+    /// Appends `new_data` to the internal buffer and returns and iterator over the buffer
+    /// that will yield [UbxPackets or RtcmPackets](AnyPacketRef) on demand.
     pub fn consume_ubx_rtcm<'a>(&'a mut self, new_data: &'a [u8]) -> UbxRtcmParserIter<'a, T, P> {
         let mut buf = DualBuffer::new(&mut self.buf, new_data);
 
