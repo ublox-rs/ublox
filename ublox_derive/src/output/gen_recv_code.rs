@@ -47,6 +47,11 @@ pub fn generate_recv_code_for_packet(dbg_ctx: DebugContext, pack_descr: &PackDes
                 self.0
             }
 
+            #[inline]
+            pub fn payload_len(&self) -> usize {
+                self.0.len()
+            }
+
             pub fn to_owned(&self) -> #owned_name {
                 self.into()
             }

@@ -1017,4 +1017,110 @@ mod test {
         }
         assert!(it.next().is_none());
     }
+
+    const ACK_ACK_BYTES: [u8; 10] = [0xb5, 0x62, 0x05, 0x01, 0x02, 0x00, 0x04, 0x05, 0x11, 0x38];
+
+    #[cfg(feature = "ubx_proto14")]
+    #[test]
+    fn test_ack_ack_payload_len_proto14() {
+        use crate::proto14::{PacketRef, Proto14};
+
+        const ACK_ACK_PAYLOAD_LEN: usize = 2;
+
+        let mut parser = crate::Parser::<FixedBuffer<1024>, Proto14>::with_fixed_buffer();
+        let mut it = parser.consume_ubx(&ACK_ACK_BYTES);
+        match it.next() {
+            Some(Ok(crate::UbxPacket::Proto14(packet_enum))) => match packet_enum {
+                PacketRef::AckAck(pack) => {
+                    assert_eq!(ACK_ACK_PAYLOAD_LEN, pack.payload_len());
+                },
+                _ => panic!(),
+            },
+            _ => panic!(),
+        }
+    }
+
+    #[cfg(feature = "ubx_proto23")]
+    #[test]
+    fn test_ack_ack_payload_len_proto23() {
+        use crate::proto23::{PacketRef, Proto23};
+
+        const ACK_ACK_PAYLOAD_LEN: usize = 2;
+
+        let mut parser = crate::Parser::<FixedBuffer<1024>, Proto23>::with_fixed_buffer();
+        let mut it = parser.consume_ubx(&ACK_ACK_BYTES);
+        match it.next() {
+            Some(Ok(crate::UbxPacket::Proto23(packet_enum))) => match packet_enum {
+                PacketRef::AckAck(pack) => {
+                    assert_eq!(ACK_ACK_PAYLOAD_LEN, pack.payload_len());
+                },
+                _ => panic!(),
+            },
+            _ => panic!(),
+        }
+    }
+
+    // NAV-PVT payload lengths differ across protocols: proto14=84, proto23/27/31=92
+    const NAV_PVT_CLASS: u8 = 0x01;
+    const NAV_PVT_ID: u8 = 0x07;
+    const HEADER_LEN: usize = 6;
+    const CHECKSUM_LEN: usize = 2;
+    #[cfg(feature = "ubx_proto14")]
+    const NAV_PVT_PROTO14_LEN: usize = 84;
+    #[cfg(feature = "ubx_proto23")]
+    const NAV_PVT_PROTO23_LEN: usize = 92;
+
+    fn build_nav_pvt_frame(frame: &mut [u8]) {
+        frame[0] = crate::ubx_packets::SYNC_CHAR_1;
+        frame[1] = crate::ubx_packets::SYNC_CHAR_2;
+        frame[2] = NAV_PVT_CLASS;
+        frame[3] = NAV_PVT_ID;
+        let payload_len = (frame.len() - HEADER_LEN - CHECKSUM_LEN) as u16;
+        let len_bytes = payload_len.to_le_bytes();
+        frame[4] = len_bytes[0];
+        frame[5] = len_bytes[1];
+        let (ck_a, ck_b) = crate::ubx_packets::ubx_checksum(&frame[2..(frame.len() - 2)]);
+        frame[frame.len() - 2] = ck_a;
+        frame[frame.len() - 1] = ck_b;
+    }
+
+    #[cfg(feature = "ubx_proto14")]
+    #[test]
+    fn test_nav_pvt_payload_len_proto14() {
+        use crate::proto14::{PacketRef, Proto14};
+
+        const PACKET_LEN: usize = NAV_PVT_PROTO14_LEN + HEADER_LEN + CHECKSUM_LEN;
+        let mut packet = [0; PACKET_LEN];
+
+        build_nav_pvt_frame(&mut packet);
+        let mut parser = crate::Parser::<FixedBuffer<1024>, Proto14>::with_fixed_buffer();
+        let mut it = parser.consume_ubx(&packet);
+        match it.next() {
+            Some(Ok(crate::UbxPacket::Proto14(packet_enum))) => match packet_enum {
+                PacketRef::NavPvt(p) => assert_eq!(NAV_PVT_PROTO14_LEN, p.payload_len()),
+                _ => panic!(),
+            },
+            _ => panic!(),
+        }
+    }
+
+    #[cfg(feature = "ubx_proto23")]
+    #[test]
+    fn test_nav_pvt_payload_len_proto23() {
+        use crate::proto23::{PacketRef, Proto23};
+
+        const PACKET_LEN: usize = NAV_PVT_PROTO23_LEN + HEADER_LEN + CHECKSUM_LEN;
+        let mut packet = [0; PACKET_LEN];
+
+        build_nav_pvt_frame(&mut packet);
+        let mut parser = crate::Parser::<FixedBuffer<1024>, Proto23>::with_fixed_buffer();
+        let mut it = parser.consume_ubx(&packet);
+        match it.next() {
+            Some(Ok(crate::UbxPacket::Proto23(packet_enum))) => match packet_enum {
+                PacketRef::NavPvt(p) => assert_eq!(NAV_PVT_PROTO23_LEN, p.payload_len()),
+                _ => panic!(),
+            },
+            _ => panic!(),
+        }
+    }
 }

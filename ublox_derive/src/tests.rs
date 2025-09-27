@@ -56,6 +56,10 @@ fn test_ubx_packet_recv_simple() {
                 pub fn as_bytes(&self) -> &[u8] {
                     self.0
                 }
+                #[inline]
+                pub fn payload_len(&self) -> usize {
+                    self.0.len()
+                }
                 pub fn to_owned(&self) -> TestOwned {
                     self.into()
                 }
@@ -373,6 +377,10 @@ fn test_ubx_packet_recv_dyn_len() {
                 #[inline]
                 pub fn as_bytes(&self) -> &[u8] {
                     self.0
+                }
+                #[inline]
+                pub fn payload_len(&self) -> usize {
+                    self.0.len()
                 }
                 pub fn to_owned(&self) -> TestOwned {
                     self.into()
@@ -748,6 +756,14 @@ fn test_define_recv_packets() {
                 }
                 pub fn to_owned(&self) -> PacketOwned {
                     self.into()
+                }
+                #[inline]
+                pub fn payload_len(&self) -> usize {
+                    match *self {
+                        PacketRef::Pack1(ref packet) => packet.payload_len(),
+                        PacketRef::Pack2(ref packet) => packet.payload_len(),
+                        PacketRef::Unknown(ref pack) => pack.payload.len(),
+                    }
                 }
             }
             impl PacketOwned {

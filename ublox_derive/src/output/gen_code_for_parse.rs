@@ -18,6 +18,8 @@ pub fn generate_code_for_parse(recv_packs: &RecvPackets) -> TokenStream {
 
     let mut serializers = Vec::with_capacity(recv_packs.all_packets.len());
 
+    let mut len_matches_ref = Vec::with_capacity(recv_packs.all_packets.len());
+
     for name in &recv_packs.all_packets {
         let ref_name = format_ident!("{}Ref", name);
         let owned_name = format_ident!("{}Owned", name);
@@ -59,6 +61,10 @@ pub fn generate_code_for_parse(recv_packs: &RecvPackets) -> TokenStream {
                 msg,
             }
             .serialize(serializer)
+        });
+
+        len_matches_ref.push(quote! {
+            #union_enum_name_ref::#name(ref packet) => packet.payload_len(),
         });
     }
 
@@ -123,6 +129,14 @@ pub fn generate_code_for_parse(recv_packs: &RecvPackets) -> TokenStream {
 
             pub fn to_owned(&self) -> #union_enum_name_owned {
                 self.into()
+            }
+
+            #[inline]
+            pub fn payload_len(&self) -> usize {
+                match *self {
+                    #(#len_matches_ref)*
+                    #union_enum_name_ref::Unknown(ref pack) => pack.payload.len(),
+                }
             }
         }
         impl #union_enum_name_owned {
