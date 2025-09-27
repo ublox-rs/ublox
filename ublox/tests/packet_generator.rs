@@ -283,11 +283,10 @@ proptest! {
 
         let mut parser = ParserBuilder::new().with_protocol::<Proto14>().with_fixed_buffer::<1024>();
         let mut it = parser.consume_ubx(&frame);
-        let parse_res = it.next();
 
-        let is_valid_nvt_pvt = matches!(parse_res, Some(Ok(UbxPacket::Proto14(PacketRef::NavPvt(_)))));
-        eprintln!("{parse_res:?}");
-        prop_assert!(is_valid_nvt_pvt, "Parser failed to parse a NAV-PVT valid packet");
+        let Some(Ok(UbxPacket::Proto14(PacketRef::NavPvt(p)))) = it.next() else {
+            panic!("Parser failed to parse a NAV-PVT valid packet");
+        };
     }
 }
 
@@ -301,10 +300,10 @@ proptest! {
 
         let mut parser = ParserBuilder::new().with_protocol::<Proto23>().with_fixed_buffer::<1024>();
         let mut it = parser.consume_ubx(&frame);
-        let parse_res = it.next();
 
-        let is_valid_nvt_pvt = matches!(parse_res, Some(Ok(UbxPacket::Proto23(PacketRef::NavPvt(_)))));
-        prop_assert!(is_valid_nvt_pvt, "Parser failed to parse a NAV-PVT valid packet");
+        let Some(Ok(UbxPacket::Proto23(PacketRef::NavPvt(p)))) = it.next() else {
+            panic!("Parser failed to parse a NAV-PVT valid packet");
+        };
     }
 }
 
@@ -318,10 +317,9 @@ proptest! {
 
         let mut parser = ParserBuilder::new().with_protocol::<Proto27>().with_fixed_buffer::<1024>();
         let mut it = parser.consume_ubx(&frame);
-        let parse_res = it.next();
-
-        let is_valid_nvt_pvt = matches!(parse_res, Some(Ok(UbxPacket::Proto27(PacketRef::NavPvt(_)))));
-        prop_assert!(is_valid_nvt_pvt, "Parser failed to parse a NAV-PVT valid packet");
+        let Some(Ok(UbxPacket::Proto27(PacketRef::NavPvt(p)))) = it.next() else {
+            panic!("Parser failed to parse a NAV-PVT valid packet");
+        };
     }
 }
 
@@ -335,9 +333,8 @@ proptest! {
 
         let mut parser = ParserBuilder::new().with_protocol::<Proto31>().with_fixed_buffer::<1024>();
         let mut it = parser.consume_ubx(&frame);
-        let parse_res = it.next();
-
-        let is_valid_nvt_pvt = matches!(parse_res, Some(Ok(UbxPacket::Proto31(PacketRef::NavPvt(_)))));
-        prop_assert!(is_valid_nvt_pvt, "Parser failed to parse a NAV-PVT valid packet");
+        let Some(Ok(UbxPacket::Proto31(PacketRef::NavPvt(p)))) = it.next() else {
+            panic!("Parser failed to parse a NAV-PVT valid packet");
+        };
     }
 }
