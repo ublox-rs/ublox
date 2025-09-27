@@ -47,7 +47,7 @@ fn main() {
     // Send a packet request for the MonVer packet
     device
         .write_all(&UbxPacketRequest::request_for::<MonVer>().into_packet_bytes())
-        .expect("Unable to write request/poll for UBX-MON-VER message");
+        .expect("Failed to send poll/request for UBX-MON-VER message");
 
     // Start reading data
     println!("Opened uBlox device, waiting for messages...");

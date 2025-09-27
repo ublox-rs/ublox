@@ -1,0 +1,25 @@
+[package]
+authors = ["Andrei Gherghescu <andrei-ng@protonmail.com>"]
+description = "Demonstrate usage of uBlox variable sized package"
+name = "variable-packet"
+version = "0.1.0"
+publish = false
+license.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[features]
+default = ["ubx_proto14", "ubx_proto23", "ubx_proto27", "ubx_proto31"]
+ubx_proto14 = ["ublox-device/ubx_proto14"]
+ubx_proto23 = ["ublox-device/ubx_proto23"]
+ubx_proto27 = ["ublox-device/ubx_proto27"]
+ubx_proto31 = ["ublox-device/ubx_proto31"]
+
+
+[dependencies]
+chrono = "0.4"
+clap = { version = "4.2", features = ["cargo"] }
+
+# This example only works for Protocol version 23
+# as CFG-GNSS is only available on that protocol
+ublox-device = { path = "../ublox-device", default-features = false, optional = true }

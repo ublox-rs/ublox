@@ -235,10 +235,10 @@ fn sending_thread(baud_rate: u32, serialport: Box<dyn SerialPort>) {
             );
             device
                 .write_all(&UbxPacketRequest::request_for::<MonVer>().into_packet_bytes())
-                .expect("Unable to write request/poll for UBX-MON-VER message");
+                .expect("Failed to send poll/request for UBX-MON-VER message");
             device
                 .write_all(&UbxPacketRequest::request_for::<EsfRaw>().into_packet_bytes())
-                .expect("Unable to write request/poll for UBX-ESF-RAW message");
+                .expect("Failed to send poll/request for UBX-ESF-RAW message");
             thread::sleep(Duration::from_millis(1000));
         }
     });
