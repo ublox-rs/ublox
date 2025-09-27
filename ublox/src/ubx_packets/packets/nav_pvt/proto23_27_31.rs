@@ -115,11 +115,11 @@ struct NavPvt {
     #[ubx(map_type = f64, scale = 1e-2)]
     pdop: u16,
 
-    reserved1: [u8; 5],
-
     /// Additional flags
     #[ubx(map_type = flags::NavPvtFlags3)]
     flags3: u8,
+
+    reserved1: [u8; 5],
 
     /// Heading of vehicle (2-D), this is only valid when [HEAD_VEH_VALID](NavPvtFlags::HEAD_VEH_VALID) is set,
     /// otherwise the output is set to the heading of motion
