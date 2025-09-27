@@ -19,7 +19,7 @@ pub struct Proto31;
 
 impl crate::UbxProtocol for Proto31 {
     type PacketRef<'a> = PacketRef<'a>;
-    const MAX_PAYLOAD_LEN: usize = packetref_proto31::MAX_PAYLOAD_LEN as usize;
+    const MAX_PAYLOAD_LEN: u16 = packetref_proto31::MAX_PAYLOAD_LEN;
 
     fn match_packet(
         class_id: u8,
