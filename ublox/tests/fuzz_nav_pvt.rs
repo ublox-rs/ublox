@@ -9,6 +9,7 @@ use byteorder::{LittleEndian, WriteBytesExt};
 use proptest::prelude::*;
 use ublox::{ParserBuilder, UbxPacket};
 
+#[allow(dead_code, reason = "dead variants for SOME feature flag combination")]
 #[derive(Debug, Clone, Copy)]
 pub enum ProtocolVersion {
     V14,
@@ -52,15 +53,16 @@ pub struct NavPvt {
     pub s_acc: u32,
     pub head_acc: u32,
     pub p_dop: u16,
-    pub flags3: u8,
-    pub reserved1: [u8; 5],
+    pub flags3: u16,        // 2 bytes in proto23, 1 byte in proto27/31
+    pub reserved1: [u8; 5], // 5 bytes in proto27/31, 4 bytes in proto23 (one becomes part of flags3)
     pub head_veh: i32,
     pub mag_dec: i16,
     pub mag_acc: u16,
 }
 
 impl NavPvt {
-    /// Serializes the NavPvt payload into a 92-byte vector.
+    /// Serializes the NavPvt payload into a vector.
+    /// Proto14: 84 bytes, Proto23/27/31: 92 bytes
     pub fn to_bytes(&self, version: ProtocolVersion) -> Vec<u8> {
         let mut wtr = Vec::with_capacity(92);
         wtr.write_u32::<LittleEndian>(self.itow).unwrap();
@@ -91,21 +93,31 @@ impl NavPvt {
         wtr.write_u32::<LittleEndian>(self.s_acc).unwrap();
         wtr.write_u32::<LittleEndian>(self.head_acc).unwrap();
         wtr.write_u16::<LittleEndian>(self.p_dop).unwrap();
-        wtr.write_u8(self.flags3).unwrap();
-        wtr.extend_from_slice(&self.reserved1);
-        wtr.write_i32::<LittleEndian>(self.head_veh).unwrap();
-        wtr.write_i16::<LittleEndian>(self.mag_dec).unwrap();
-        wtr.write_u16::<LittleEndian>(self.mag_acc).unwrap();
 
-        // TRUNCATE the payload for older versions
+        // Handle version-specific fields
         match version {
             ProtocolVersion::V14 => {
-                // Proto 14 NAV-PVT payload is 84 bytes. The last 8 bytes
-                // (head_veh, mag_dec, mag_acc) are not part of it.
-                wtr.truncate(84);
+                // Proto 14 NAV-PVT payload is 84 bytes total.
+                // After p_dop, we need: reserved2 (2 bytes) + reserved3 (4 bytes) = 6 bytes
+                wtr.extend_from_slice(&[0u8; 2]); // reserved2: [u8; 2]
+                wtr.extend_from_slice(&[0u8; 4]); // reserved3: [u8; 4]
             },
-            // Newer versions use the full 92 bytes
-            ProtocolVersion::V23 | ProtocolVersion::V27 | ProtocolVersion::V31 => {},
+            ProtocolVersion::V23 => {
+                // Proto 23 has 2-byte flags3, then 4 bytes reserved1 (total 92 bytes)
+                wtr.write_u16::<LittleEndian>(self.flags3).unwrap();
+                wtr.extend_from_slice(&self.reserved1[..4]); // Only first 4 bytes of reserved1
+                wtr.write_i32::<LittleEndian>(self.head_veh).unwrap();
+                wtr.write_i16::<LittleEndian>(self.mag_dec).unwrap();
+                wtr.write_u16::<LittleEndian>(self.mag_acc).unwrap();
+            },
+            ProtocolVersion::V27 | ProtocolVersion::V31 => {
+                // Proto 27/31 have 1-byte flags3, then 5 bytes reserved1 (total 92 bytes)
+                wtr.write_u8(self.flags3 as u8).unwrap();
+                wtr.extend_from_slice(&self.reserved1); // All 5 bytes of reserved1
+                wtr.write_i32::<LittleEndian>(self.head_veh).unwrap();
+                wtr.write_i16::<LittleEndian>(self.mag_dec).unwrap();
+                wtr.write_u16::<LittleEndian>(self.mag_acc).unwrap();
+            },
         }
         wtr
     }
@@ -162,25 +174,39 @@ pub fn nav_pvt_payload_strategy(version: ProtocolVersion) -> impl Strategy<Value
             velocity_and_heading,
             // Group 4: Fields for proto14 (older)
             (
-                Just(0u8),      // flags3 is reserved
+                Just(0u16),     // flags3 is reserved (stored as u16 but not serialized)
                 Just([0u8; 5]), // reserved1
                 Just(0i32),     // head_veh is reserved
                 Just(0i16),     // mag_dec is reserved
                 Just(0u16),     // mag_acc is reserved
             ),
         )
-            .sboxed(), // Use .sboxed() to unify the return types
-        ProtocolVersion::V23 | ProtocolVersion::V27 | ProtocolVersion::V31 => (
+            .sboxed(),
+        ProtocolVersion::V23 => (
             time_and_date,
             fix_and_pos,
             velocity_and_heading,
-            // Group 4: Fields for proto23+ (newer)
+            // Group 4: Fields for proto23 (2-byte flags3)
             (
-                any::<u8>(),                        // flags3
+                any::<u16>(),                       // flags3 (2 bytes in proto23)
                 prop::array::uniform5(any::<u8>()), // reserved1
                 (-180000000..=360000000i32),        // head_veh
                 any::<i16>(),                       // mag_dec
                 any::<u16>(),                       // mag_acc
+            ),
+        )
+            .sboxed(),
+        ProtocolVersion::V27 | ProtocolVersion::V31 => (
+            time_and_date,
+            fix_and_pos,
+            velocity_and_heading,
+            // Group 4: Fields for proto27/31 (1-byte flags3)
+            (
+                (0u16..=255u16), // flags3 (1 byte in proto27/31, but stored as u16)
+                prop::array::uniform5(any::<u8>()), // reserved1
+                (-180000000..=360000000i32), // head_veh
+                any::<i16>(),    // mag_dec
+                any::<u16>(),    // mag_acc
             ),
         )
             .sboxed(),
@@ -385,7 +411,7 @@ proptest! {
         prop_assert_eq!(p.fix_type_raw(), expected_pvt.fix_type);
         prop_assert_eq!(p.flags_raw(), expected_pvt.flags);
         prop_assert_eq!(p.flags2_raw(), expected_pvt.flags2);
-        prop_assert_eq!(p.flags3_raw(), expected_pvt.flags3);
+        prop_assert_eq!(p.flags3_raw(), expected_pvt.flags3 as u8);
     }
 }
 
@@ -423,6 +449,6 @@ proptest! {
         prop_assert_eq!(p.fix_type_raw(), expected_pvt.fix_type);
         prop_assert_eq!(p.flags_raw(), expected_pvt.flags);
         prop_assert_eq!(p.flags2_raw(), expected_pvt.flags2);
-        prop_assert_eq!(p.flags3_raw(), expected_pvt.flags3);
+        prop_assert_eq!(p.flags3_raw(), expected_pvt.flags3 as u8);
     }
 }
