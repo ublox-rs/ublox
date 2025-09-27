@@ -9,7 +9,7 @@ use ublox_derive::ubx_packet_recv;
 
 /// Navigation Position Velocity Time Solution
 #[ubx_packet_recv]
-#[ubx(class = 1, id = 0x07, fixed_payload_len = 84)]
+#[ubx(class = 1, id = 0x07, fixed_payload_len = 92)]
 struct NavPvt {
     /// GPS Millisecond time of week of the navigation epoch.
     ///
@@ -52,7 +52,9 @@ struct NavPvt {
     #[ubx(map_type = NavPvtFlags)]
     flags: u8,
 
-    reserved1: u8,
+    /// Additional flags, see [NavPvtFlags2]
+    #[ubx(map_type = NavPvtFlags2)]
+    flags2: u8,
 
     /// Number of satellites used in Nav Solution
     num_satellites: u8,
@@ -105,7 +107,7 @@ struct NavPvt {
     #[ubx(map_type = f64, scale = 1e-3, alias = speed_accuracy)]
     s_acc: u32,
 
-    /// Heading accuracy estimate (for both vehicle and motion) \[deg\]
+    /// Heading accuracy estimate (for both vehicle and motion) [deg]
     #[ubx(map_type = f64, scale = 1e-5, alias = heading_accuracy)]
     head_acc: u32,
 
@@ -113,6 +115,61 @@ struct NavPvt {
     #[ubx(map_type = f64, scale = 1e-2)]
     pdop: u16,
 
-    reserved2: [u8; 2],
-    reserved3: [u8; 4],
+    /// Additional flags
+    #[ubx(map_type = flags::NavPvtFlags3)]
+    flags3: u8,
+
+    reserved1: [u8; 5],
+
+    /// Heading of vehicle (2-D), this is only valid when [HEAD_VEH_VALID](NavPvtFlags::HEAD_VEH_VALID) is set,
+    /// otherwise the output is set to the heading of motion
+    #[ubx(map_type = f64, scale = 1e-5, alias = heading_vehicle)]
+    head_vehicle: i32,
+
+    /// Magnetic declination. Only supported in ADR 4.10 and later.
+    #[ubx(map_type = f64, scale = 1e-2, alias = magnetic_declination)]
+    magnetic_declination: i16,
+
+    /// Magnetic declination accuracy. Only supported in ADR 4.10 and later.
+    #[ubx(map_type = f64, scale = 1e-2, alias = magnetic_declination_accuracy)]
+    magnetic_declination_accuracy: u16,
+}
+
+#[cfg(any(
+    feature = "ubx_proto23",
+    feature = "ubx_proto27",
+    feature = "ubx_proto31"
+))]
+pub(crate) mod flags {
+    #[derive(Debug, Clone, Copy)]
+    #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+    pub struct NavPvtFlags3 {
+        invalid_llh: bool,
+        age_differential_correction: u8,
+    }
+
+    impl NavPvtFlags3 {
+        /// 1 = Invalid lon, lat, height and hMSL
+        pub fn invalid_llh(&self) -> bool {
+            self.invalid_llh
+        }
+
+        pub fn age_differential_correction(&self) -> u8 {
+            self.age_differential_correction
+        }
+    }
+
+    impl From<u8> for NavPvtFlags3 {
+        fn from(val: u8) -> Self {
+            const AGE_DIFFERENTIAL_CORRECTION_MASK: u8 = 0b11110;
+            let invalid = val & 0x01 == 1;
+            // F9R interface description document specifies that this byte is unused
+            // We can read it ... but we don't expose it
+            let age_differential_correction = val & AGE_DIFFERENTIAL_CORRECTION_MASK;
+            Self {
+                invalid_llh: invalid,
+                age_differential_correction,
+            }
+        }
+    }
 }

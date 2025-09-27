@@ -97,7 +97,7 @@ struct NavPvt {
 
     /// Ground speed \[m/s\]
     #[ubx(map_type = f64, scale = 1e-3, alias = ground_speed_2d)]
-    g_speed: u32,
+    g_speed: i32,
 
     /// Heading of motion 2-D \[deg\]
     #[ubx(map_type = f64, scale = 1e-5, alias = heading_motion)]
@@ -115,11 +115,11 @@ struct NavPvt {
     #[ubx(map_type = f64, scale = 1e-2)]
     pdop: u16,
 
-    reserved1: [u8; 5],
-
     /// Additional flags
     #[ubx(map_type = flags::NavPvtFlags3)]
-    flags3: u8,
+    flags3: u16,
+
+    reserved1: [u8; 4],
 
     /// Heading of vehicle (2-D), this is only valid when [HEAD_VEH_VALID](NavPvtFlags::HEAD_VEH_VALID) is set,
     /// otherwise the output is set to the heading of motion
@@ -135,17 +135,12 @@ struct NavPvt {
     magnetic_declination_accuracy: u16,
 }
 
-#[cfg(any(
-    feature = "ubx_proto23",
-    feature = "ubx_proto27",
-    feature = "ubx_proto31"
-))]
 pub(crate) mod flags {
     #[derive(Debug, Clone, Copy)]
     #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
     pub struct NavPvtFlags3 {
         invalid_llh: bool,
-        age_differential_correction: u8,
+        last_correction_age: u8,
     }
 
     impl NavPvtFlags3 {
@@ -154,21 +149,35 @@ pub(crate) mod flags {
             self.invalid_llh
         }
 
-        pub fn age_differential_correction(&self) -> u8 {
-            self.age_differential_correction
+        /// Age of the most recently received differential correction
+        ///
+        /// Values:
+        /// - `0`: Not available
+        /// - `1`: Age between 0 and 1 second
+        /// - `2`: Age between 1 (inclusive) and 2 seconds
+        /// - `3`: Age between 2 (inclusive) and 5 seconds
+        /// - `4`: Age between 5 (inclusive) and 10 seconds
+        /// - `5`: Age between 10 (inclusive) and 15 seconds
+        /// - `6`: Age between 15 (inclusive) and 20 seconds
+        /// - `7`: Age between 20 (inclusive) and 30 seconds
+        /// - `8`: Age between 30 (inclusive) and 45 seconds
+        /// - `9`: Age between 45 (inclusive) and 60 seconds
+        /// - `10`: Age between 60 (inclusive) and 90 seconds
+        /// - `11`: Age between 90 (inclusive) and 120 seconds
+        /// - `>=12`: Age greater or equal than 120 seconds
+        pub fn last_correction_age(&self) -> u8 {
+            self.last_correction_age
         }
     }
 
-    impl From<u8> for NavPvtFlags3 {
-        fn from(val: u8) -> Self {
-            const AGE_DIFFERENTIAL_CORRECTION_MASK: u8 = 0b11110;
-            let invalid = val & 0x01 == 1;
-            // F9R interface description document specifies that this byte is unused
-            // We can read it ... but we don't expose it
-            let age_differential_correction = val & AGE_DIFFERENTIAL_CORRECTION_MASK;
+    impl From<u16> for NavPvtFlags3 {
+        fn from(val: u16) -> Self {
+            const LAST_CORRECTION_AGE_MASK: u16 = 0b0000_0000_0001_1110;
+            let invalid_llh = val & 0x01 == 1;
+            let last_correction_age = ((val & LAST_CORRECTION_AGE_MASK) >> 1) as u8; // bits 1–4
             Self {
-                invalid_llh: invalid,
-                age_differential_correction,
+                invalid_llh,
+                last_correction_age,
             }
         }
     }

@@ -9,7 +9,7 @@ use ublox::{
 };
 use ublox_device::ublox::{
     self,
-    nav_pvt::{common::NavPvtFlags2, proto23_27_31::NavPvt},
+    nav_pvt::{common::NavPvtFlags2, proto27_31::NavPvt},
     UbxPacketRequest,
 };
 use ublox_device::UbxPacketHandler;
@@ -165,7 +165,7 @@ impl PkgHandler {
                 );
             },
             ublox::proto23::PacketRef::NavPvt(pkg) => {
-                self.handle_nav_pvt(&pkg);
+                self.handle_nav_pvt_23(&pkg);
             },
             ublox::proto23::PacketRef::EsfAlg(pkg) => {
                 self.handle_esf_alg(&pkg);
@@ -192,7 +192,7 @@ impl PkgHandler {
                 );
             },
             ublox::proto27::PacketRef::NavPvt(pkg) => {
-                self.handle_nav_pvt(&pkg);
+                self.handle_nav_pvt_27_31(&pkg);
             },
             // Add other packet types as needed
             _ => {
@@ -214,7 +214,7 @@ impl PkgHandler {
                 );
             },
             ublox::proto31::PacketRef::NavPvt(pkg) => {
-                self.handle_nav_pvt(&pkg);
+                self.handle_nav_pvt_27_31(&pkg);
             },
             // Add other packet types as needed
             _ => {
@@ -223,10 +223,27 @@ impl PkgHandler {
         }
     }
 
-    // Generic handler methods that work with any NavPvtRef implementation
-    fn handle_nav_pvt(&mut self, pkg: &ublox::nav_pvt::proto23_27_31::NavPvtRef) {
+    // Handler method that work with NavPvtRef proto 27/31
+    fn handle_nav_pvt_27_31(&mut self, pkg: &ublox::nav_pvt::proto27_31::NavPvtRef) {
         debug!("{pkg:?}");
-        let mut pvt = to_dds_pvt(pkg);
+        let mut pvt = to_dds_pvt_27_31(pkg);
+        pvt.key = self.dds_key.clone();
+        if let Err(e) = dds::write_sample(&self.nav_pvt_wrt, &pvt) {
+            warn!("failed to write PVT message: {e} ");
+        } else {
+            info!(
+                "Published new NavPvt message on DDS at: {:.6} [sec] since start",
+                time::Instant::now()
+                    .duration_since(self.last_published)
+                    .as_secs_f64()
+            );
+        }
+    }
+
+    // Handler method that work with NavPvtRef proto 23
+    fn handle_nav_pvt_23(&mut self, pkg: &ublox::nav_pvt::proto23::NavPvtRef) {
+        debug!("{pkg:?}");
+        let mut pvt = to_dds_pvt_23(pkg);
         pvt.key = self.dds_key.clone();
         if let Err(e) = dds::write_sample(&self.nav_pvt_wrt, &pvt) {
             warn!("failed to write PVT message: {e} ");
@@ -291,7 +308,58 @@ impl PkgHandler {
     }
 }
 
-pub fn to_dds_pvt(pkg: &ublox::nav_pvt::proto23_27_31::NavPvtRef) -> idl::ubx::nav_pvt::NavPvt {
+pub fn to_dds_pvt_27_31(pkg: &ublox::nav_pvt::proto27_31::NavPvtRef) -> idl::ubx::nav_pvt::NavPvt {
+    let mut pvt = idl::ubx::nav_pvt::NavPvt {
+        itow: pkg.itow(),
+        ..Default::default()
+    };
+
+    pvt.time_confirmation_flags = pkg.flags2_raw();
+
+    if pkg.flags2().contains(NavPvtFlags2::CONFIRMED_AVAI) {
+        pvt.day = pkg.day();
+        pvt.month = pkg.month();
+        pvt.year = pkg.year();
+        pvt.hour = pkg.hour();
+        pvt.min = pkg.min();
+        pvt.sec = pkg.sec();
+        pvt.nanosec = pkg.nanosec();
+
+        pvt.utc_time_accuracy = pkg.time_accuracy();
+    }
+
+    pvt.gps_fix_type = pkg.fix_type_raw();
+    pvt.fix_flags = pkg.flags_raw();
+
+    pvt.lat = pkg.latitude() as f32;
+    pvt.lon = pkg.longitude() as f32;
+    pvt.height = pkg.height_above_ellipsoid() as f32;
+    pvt.msl = pkg.height_msl() as f32;
+
+    pvt.vel_n = pkg.vel_north() as f32;
+    pvt.vel_e = pkg.vel_east() as f32;
+    pvt.vel_d = pkg.vel_down() as f32;
+
+    pvt.speed_over_ground = pkg.ground_speed_2d() as f32;
+    pvt.heading_motion = pkg.heading_motion() as f32;
+    pvt.heading_vehicle = pkg.heading_vehicle() as f32;
+    pvt.magnetic_declination = pkg.magnetic_declination() as f32;
+
+    pvt.pdop = pkg.pdop() as f32;
+
+    pvt.satellites_used = pkg.num_satellites();
+
+    pvt.llh_validity = !pkg.flags3().invalid_llh();
+    pvt.horizontal_accuracy = pkg.horizontal_accuracy() as f32;
+    pvt.vertical_accuracy = pkg.vertical_accuracy() as f32;
+    pvt.velocity_accuracy = pkg.speed_accuracy() as f32;
+    pvt.heading_accuracy = pkg.heading_accuracy() as f32;
+    pvt.magnetic_declination_accuracy = pkg.magnetic_declination_accuracy() as f32;
+
+    pvt
+}
+
+pub fn to_dds_pvt_23(pkg: &ublox::nav_pvt::proto23::NavPvtRef) -> idl::ubx::nav_pvt::NavPvt {
     let mut pvt = idl::ubx::nav_pvt::NavPvt {
         itow: pkg.itow(),
         ..Default::default()

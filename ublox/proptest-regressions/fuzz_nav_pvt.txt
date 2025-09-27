@@ -1,0 +1,7 @@
+# Seeds for failure cases proptest has generated in the past. It is
+# automatically read and these particular cases re-run before any
+# novel cases are generated.
+#
+# It is recommended to check this file in to source control so that
+# everyone who runs the test benefits from these saved cases.
+cc adb13a781aec6a7c1985905b35f2d1cdbd85a3cd4049bb2222ccdf346279bbc4 # shrinks to (expected_pvt, frame) = (NavPvt { itow: 0, year: 1999, month: 1, day: 1, hour: 0, min: 0, sec: 0, valid: 0, t_acc: 0, nano: 0, fix_type: 0, flags: 0, flags2: 0, num_sv: 0, lon: 0, lat: 0, height: 0, h_msl: 0, h_acc: 0, v_acc: 0, vel_n: 0, vel_e: 0, vel_d: 0, g_speed: 0, head_mot: 0, s_acc: 0, head_acc: 0, p_dop: 0, flags3: 0, reserved1: [0, 0, 0, 0, 0], head_veh: 0, mag_dec: 0, mag_acc: 0 }, [181, 98, 1, 7, 78, 0, 0, 0, 0, 0, 207, 7, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 46, 77])
