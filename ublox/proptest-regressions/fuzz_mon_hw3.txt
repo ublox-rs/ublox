@@ -1,0 +1,7 @@
+# Seeds for failure cases proptest has generated in the past. It is
+# automatically read and these particular cases re-run before any
+# novel cases are generated.
+#
+# It is recommended to check this file in to source control so that
+# everyone who runs the test benefits from these saved cases.
+cc 02f1144bee885ed63ccf8b3e572286232af6ff4e1ba2edd6d5b7b1ed21ef3144 # shrinks to (expected, frame) = (MonHw3 { version: 0, n_pins: 0, flags: 0, hw_version: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1], reserved0: [0, 0, 0, 0, 0, 0, 0, 0, 0], pins: [] }, [181, 98, 10, 55, 22, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 97, 4])
