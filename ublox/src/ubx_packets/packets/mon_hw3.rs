@@ -138,7 +138,7 @@ impl<'a> PinInfoIter<'a> {
     }
 }
 
-impl<'a> core::iter::Iterator for PinInfoIter<'a> {
+impl core::iter::Iterator for PinInfoIter<'_> {
     type Item = PinInfo;
 
     fn next(&mut self) -> Option<Self::Item> {

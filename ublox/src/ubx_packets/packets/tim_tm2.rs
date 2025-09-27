@@ -33,7 +33,7 @@ struct TimTm2 {
     acc_est: u32,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TimTm2Flags(u8);
 
@@ -81,16 +81,19 @@ impl TimTm2Flags {
     }
 }
 
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum TimTm2Mode {
     Single,
     Running,
 }
 
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum TimTm2Run {
     Armed,
     Stopped,
 }
 
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum TimTm2TimeBase {
     Receiver,
     Gnss,
