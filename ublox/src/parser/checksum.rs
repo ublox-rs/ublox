@@ -13,9 +13,11 @@ impl UbxChecksumCalc {
     }
 
     /// Update checksum with new bytes
-    pub(crate) fn update(&mut self, bytes: &[u8]) {
-        for byte in bytes.iter() {
-            self.update_byte(*byte);
+    pub(crate) const fn update(&mut self, bytes: &[u8]) {
+        let mut i = 0;
+        while i < bytes.len() {
+            self.update_byte(bytes[i]);
+            i += 1;
         }
     }
 
@@ -31,13 +33,14 @@ impl UbxChecksumCalc {
     }
 
     /// Validate checksum and return result
-    pub(crate) fn validate_result(
+    pub(crate) const fn validate_result(
         self,
         received_ck_a: u8,
         received_ck_b: u8,
     ) -> Result<(), ParserError> {
+        let is_valid = self.is_valid(received_ck_a, received_ck_b);
         let (calculated_ck_a, calculated_ck_b) = self.result();
-        if (calculated_ck_a, calculated_ck_b) == (received_ck_a, received_ck_b) {
+        if is_valid {
             Ok(())
         } else {
             Err(ParserError::InvalidChecksum {
@@ -55,13 +58,17 @@ impl UbxChecksumCalc {
         let pack_len = pack_len as usize; // `usize` is needed for indexing but constraining the input to `u16` is still important
         let mut calc = Self::new();
         let (class_msg_bytes, payload_and_checksum) = buf.peek_raw(2..(4 + pack_len + 2));
+        let (received_ck_a, received_ck_b) = (buf[6 + pack_len], buf[6 + pack_len + 1]);
 
         // Calculate checksum over class, message ID, length, and payload
         calc.update(class_msg_bytes);
         calc.update(payload_and_checksum);
 
-        let (received_ck_a, received_ck_b) = (buf[6 + pack_len], buf[6 + pack_len + 1]);
         calc.validate_result(received_ck_a, received_ck_b)
+    }
+
+    const fn is_valid(&self, received_ck_a: u8, received_ck_b: u8) -> bool {
+        self.ck_a == received_ck_a && self.ck_b == received_ck_b
     }
 }
 
@@ -71,24 +78,25 @@ mod tests {
 
     use super::*;
 
+    const PACK_LEN: u8 = 2;
+    const VALID_CK_A: u8 = 0x11;
+    const VALID_CK_B: u8 = 0x38;
+    // UBX-ACK-ACK packet: Class=0x05, ID=0x01, Length=0x0002, Payload=[0x04, 0x05], Checksum=[0x11, 0x38]
+    const VALID_UBX_PACKET: [u8; 10] = [
+        0xB5, 0x62, // Sync chars (not included in checksum)
+        0x05, 0x01, // Class and Message ID
+        PACK_LEN, 0x00, // Length (2 bytes)
+        0x04, 0x05, // Payload
+        VALID_CK_A, VALID_CK_B, // Checksum
+    ];
+
     // Helper function to create a valid UBX packet with correct checksum
-    fn create_valid_ubx_packet() -> (u16, [u8; 10]) {
-        const PACK_LEN: u8 = 2;
-        // UBX-ACK-ACK packet: Class=0x05, ID=0x01, Length=0x0002, Payload=[0x04, 0x05], Checksum=[0x11, 0x38]
-        (
-            PACK_LEN as u16,
-            [
-                0xB5, 0x62, // Sync chars (not included in checksum)
-                0x05, 0x01, // Class and Message ID
-                PACK_LEN, 0x00, // Length (2 bytes)
-                0x04, 0x05, // Payload
-                0x11, 0x38, // Checksum
-            ],
-        )
+    const fn create_valid_ubx_packet() -> (u16, [u8; 10]) {
+        (PACK_LEN as u16, VALID_UBX_PACKET)
     }
 
     // Helper function to create an invalid UBX packet with wrong checksum
-    fn create_invalid_ubx_packet() -> (u16, [u8; 10]) {
+    const fn create_invalid_ubx_packet() -> (u16, [u8; 10]) {
         let (pack_len, mut packet) = create_valid_ubx_packet();
         // Corrupt the checksum
         let buf_len = packet.len();
@@ -236,5 +244,29 @@ mod tests {
                 _ => panic!("Error types should match"),
             }
         }
+    }
+
+    // Compute checksum at compile time
+    #[allow(dead_code, reason = "constant time evaluated")]
+    const fn is_checksum_valid(bytes: &[u8], expected_ck_a: u8, expected_ck_b: u8) -> bool {
+        let mut calc = UbxChecksumCalc::new();
+        calc.update(bytes);
+        calc.is_valid(expected_ck_a, expected_ck_b)
+    }
+
+    #[test]
+    fn test_const_checksum_computation() {
+        // Compile-time assertion
+        const _: () = {
+            assert!(is_checksum_valid(
+                &[
+                    0x05, 0x01, // Class and Message ID
+                    PACK_LEN, 0x00, // Length (2 bytes)
+                    0x04, 0x05, // Payload
+                ],
+                VALID_CK_A,
+                VALID_CK_B
+            ));
+        };
     }
 }
