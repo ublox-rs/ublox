@@ -54,7 +54,7 @@ jobs:
       - name: Coding style
         run: |
           cargo fmt --all -- --check
-          cargo clippy --all-targets -- -D warnings
+          cargo clippy --all-features --all-targets -- -D warnings
 
   build_embedded:
     runs-on: ubuntu-latest
@@ -139,9 +139,9 @@ jobs:
 
       - name: ublox
         run: |
-            cd ublox
-            RUSTDOCFLAGS="--cfg docrs" \
-                cargo +nightly doc --no-deps --all-features
+          cd ublox
+          RUSTDOCFLAGS="--cfg docrs" \
+              cargo +nightly doc --no-deps --all-features
 
   msrv:
     runs-on: ubuntu-latest
