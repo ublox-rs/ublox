@@ -5,7 +5,7 @@ use crate::ParserError;
 use core::cmp::min;
 
 /// This trait represents an underlying buffer used for the Parser. We provide
-/// implementations for `Vec<u8>`, `[u8; N]`, and for `FixedLinearBuffer`, if you want to
+/// implementations for `Vec<u8>`, `[u8; N]`([FixedBuffer]), and for `&mut [u8]` ([FixedLinearBuffer]), if you want to
 /// use your own struct as an underlying buffer you can implement this trait.
 ///
 /// Look at the `flb_*` unit tests for ideas of unit tests you can run against
