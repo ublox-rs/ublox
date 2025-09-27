@@ -1,8 +1,6 @@
 use ublox_device::ublox::{
     cfg_msg::{CfgMsgAllPorts, CfgMsgAllPortsBuilder},
-    mon_ver::MonVer,
-    nav_pvt::proto23_27_31::NavPvt,
-    UbxPacket, UbxPacketRequest,
+    nav_pvt, UbxPacket,
 };
 
 /// Use proto23 if enabled, otherwise use proto27 if enabled, otherwise use proto31
@@ -37,7 +35,8 @@ fn main() {
     println!("Enable UBX-NAV-PVT message on all serial ports: USB, UART1 and UART2 ...");
     device
         .write_all(
-            &CfgMsgAllPortsBuilder::set_rate_for::<NavPvt>([0, 1, 1, 1, 0, 0]).into_packet_bytes(),
+            &CfgMsgAllPortsBuilder::set_rate_for::<nav_pvt::proto23::NavPvt>([0, 1, 1, 1, 0, 0])
+                .into_packet_bytes(),
         )
         .expect("Could not configure ports for UBX-NAV-PVT");
     device
@@ -46,7 +45,7 @@ fn main() {
 
     // Send a packet request for the MonVer packet
     device
-        .write_all(&UbxPacketRequest::request_for::<MonVer>().into_packet_bytes())
+        .write_all(&cfg_msg_enable_nav_pvt_bytes())
         .expect("Unable to write request/poll for UBX-MON-VER message");
 
     // Start reading data
@@ -65,6 +64,14 @@ fn main() {
             })
             .unwrap();
     }
+}
+
+fn cfg_msg_enable_nav_pvt_bytes() -> [u8; 16] {
+    #[cfg(feature = "ubx_proto23")]
+    use nav_pvt::proto23::NavPvt;
+    #[cfg(any(feature = "ubx_proto27", feature = "ubx_proto31"))]
+    use nav_pvt::proto27_31::NavPvt;
+    CfgMsgAllPortsBuilder::set_rate_for::<NavPvt>([0, 1, 1, 1, 0, 0]).into_packet_bytes()
 }
 
 mod handler {
