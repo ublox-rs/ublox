@@ -96,6 +96,13 @@ impl core::ops::Index<core::ops::Range<usize>> for FixedLinearBuffer<'_> {
     type Output = [u8];
 
     fn index(&self, index: core::ops::Range<usize>) -> &Self::Output {
+        if index.end > self.len {
+            panic!(
+                "index out of bounds: the len is {len} but the index is {idx}",
+                len = self.len,
+                idx = index.end
+            );
+        }
         self.buffer.index(index)
     }
 }
@@ -176,6 +183,13 @@ impl<const N: usize> core::ops::Index<core::ops::Range<usize>> for FixedBuffer<N
     type Output = [u8];
 
     fn index(&self, index: core::ops::Range<usize>) -> &Self::Output {
+        if index.end > self.len {
+            panic!(
+                "index out of bounds: the len is {len} but the index is {idx}",
+                len = self.len,
+                idx = index.end
+            );
+        }
         &self.buffer[index]
     }
 }
@@ -184,6 +198,13 @@ impl<const N: usize> core::ops::Index<usize> for FixedBuffer<N> {
     type Output = u8;
 
     fn index(&self, index: usize) -> &Self::Output {
+        if index >= self.len {
+            panic!(
+                "index out of bounds: the len is {len} but the index is {idx}",
+                len = self.len,
+                idx = index
+            );
+        }
         &self.buffer[index]
     }
 }
@@ -347,7 +368,8 @@ impl<'a, T: UnderlyingBuffer> DualBuffer<'a, T> {
         if new_bytes > self.new_buf.len() - self.new_buf_offset {
             // We need to pull more bytes from new than it has
             panic!(
-                "Cannot pull {new_bytes} bytes from a buffer with {}-{}",
+                "Cannot pull {} bytes from a buffer with {}-{}",
+                new_bytes,
                 self.new_buf.len(),
                 self.new_buf_offset
             );
@@ -532,10 +554,22 @@ mod test {
 
     #[test]
     #[should_panic]
-    fn dl_take_range_oom() {
+    fn dl_take_range_oom_lin_buf() {
         let mut buf = [0; 4];
         let mut buf = FixedLinearBuffer::new(&mut buf);
         let new = [1, 2, 3, 4, 5, 6];
+
+        let mut dual = DualBuffer::new(&mut buf, &new[..]);
+        // This should throw
+        assert!(
+            matches!(dual.take(6), Err(ParserError::OutOfMemory { required_size }) if required_size == 6)
+        );
+    }
+    #[test]
+    #[should_panic]
+    fn dl_take_range_oom_fixed_buf() {
+        let new = [1, 2, 3, 4, 5, 6];
+        let mut buf = FixedBuffer::<4>::new();
 
         let mut dual = DualBuffer::new(&mut buf, &new[..]);
         // This should throw
@@ -655,6 +689,65 @@ mod test {
     fn flb_find() {
         let mut buf = [1, 2, 3, 4, 5, 6, 7, 8];
         let mut buf = FixedLinearBuffer::new(&mut buf);
+        assert_eq!(buf.find(5), None);
+        buf.extend_from_slice(&[1, 2, 3, 4]);
+        assert_eq!(buf.find(5), None);
+        buf.extend_from_slice(&[5, 6, 7, 8]);
+        assert_eq!(buf.find(5), Some(4));
+    }
+
+    #[test]
+    fn fixed_buf_clear() {
+        let mut buf = FixedBuffer::<16>::new();
+        buf.extend_from_slice(&[1, 2, 3, 4, 5, 6, 7]);
+        assert_eq!(buf.len(), 7);
+        buf.clear();
+        assert_eq!(buf.len(), 0);
+    }
+
+    #[test]
+    #[should_panic]
+    fn fixed_buf_index_outside_range() {
+        let mut buf = FixedBuffer::<16>::new();
+        buf.extend_from_slice(&[1, 2, 3, 4, 5, 6, 7]);
+        let _ = buf[5..10];
+    }
+
+    #[test]
+    fn fixed_buf_extend_outside_range() {
+        let mut buf = FixedBuffer::<16>::new();
+        buf.extend_from_slice(&[1, 2, 3, 4, 5, 6, 7]);
+        buf.extend_from_slice(&[1, 2, 3, 4, 5, 6, 7]);
+        buf.extend_from_slice(&[1, 2, 3, 4, 5, 6, 7]);
+        assert_eq!(buf.len(), 16);
+    }
+
+    #[test]
+    fn fixed_buf_drain() {
+        let mut buf = FixedBuffer::<16>::new();
+        buf.extend_from_slice(&[1, 2, 3, 4, 5, 6, 7]);
+
+        buf.drain(3);
+        assert_eq!(buf.len(), 4);
+        assert_eq!(&buf[0..buf.len()], &[4, 5, 6, 7]);
+
+        buf.extend_from_slice(&[1, 2, 3, 4, 5, 6, 7]);
+        assert_eq!(buf.len(), 11);
+        assert_eq!(&buf[0..buf.len()], &[4, 5, 6, 7, 1, 2, 3, 4, 5, 6, 7]);
+    }
+
+    #[test]
+    fn fixed_buf_drain_all() {
+        let mut buf = FixedBuffer::<16>::new();
+        buf.extend_from_slice(&[1, 2, 3, 4, 5, 6, 7]);
+
+        buf.drain(7);
+        assert_eq!(buf.len(), 0);
+    }
+
+    #[test]
+    fn fixed_buf_find() {
+        let mut buf = FixedBuffer::<16>::new();
         assert_eq!(buf.find(5), None);
         buf.extend_from_slice(&[1, 2, 3, 4]);
         assert_eq!(buf.find(5), None);
