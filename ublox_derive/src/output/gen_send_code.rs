@@ -16,7 +16,8 @@ pub fn generate_send_code_for_packet(_dbg_ctx: DebugContext, pack_descr: &PackDe
     let mut write_fields = Vec::with_capacity(pack_descr.fields.len());
     let mut extend_fields = Vec::with_capacity(pack_descr.fields.len());
     let mut off = 6usize;
-    for (fi, f) in pack_descr.fields.iter().enumerate() {
+    let mut repeatable_block_seen = false;
+    for f in pack_descr.fields.iter() {
         let ty = f.intermediate_type();
         let name = f.intermediate_field_name();
         let field_comment = &f.comment;
@@ -28,21 +29,36 @@ pub fn generate_send_code_for_packet(_dbg_ctx: DebugContext, pack_descr: &PackDe
         let size_bytes = match f.size_bytes {
             Some(x) => x.get(),
             None => {
-                // Iterator with `data` field.
-                extend_fields.push(quote! {
-                    for f in self.#name {
-                      len_bytes += f.extend_to(out);
-                    }
-                });
+                if repeatable_block_seen {
+                    // Tail variable-size field after iterator
+                    // Requires an into fn to be defined in order to
+                    // return this field as bytes
+                    let into_fn = &f
+                        .map
+                        .map_type
+                        .as_ref()
+                        .expect("tail variable field must have map_type")
+                        .into_fn;
+                    extend_fields.push(quote! {
+                        {
+                            let buf = #into_fn(self.#name);
+                            let bytes: &[u8] = buf.as_ref();
+                            len_bytes += bytes.len();
+                            out.extend(bytes.iter().copied());
+                        }
+                    });
+                } else {
+                    // First repeatable block field: treat as iterator
+                    extend_fields.push(quote! {
+                        for f in self.#name {
+                          len_bytes += f.extend_to(out);
+                        }
+                    });
 
-                builder_needs_lifetime = true;
-
-                assert_eq!(
-                    fi,
-                    pack_descr.fields.len() - 1,
-                    "Iterator field must be the last field."
-                );
-                break;
+                    builder_needs_lifetime = true;
+                    repeatable_block_seen = true;
+                }
+                continue;
             },
         };
 
