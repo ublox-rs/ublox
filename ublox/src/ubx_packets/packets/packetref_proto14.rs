@@ -9,6 +9,7 @@ use ublox_derive::define_recv_packets;
 use crate::ubx_packets::packets::{
     ack::{AckAck, AckAckOwned, AckAckRef, AckNak, AckNakOwned, AckNakRef},
     cfg_ant::{CfgAnt, CfgAntOwned, CfgAntRef},
+    cfg_gnss::{CfgGnss, CfgGnssOwned, CfgGnssRef},
     cfg_itfm::{CfgItfm, CfgItfmOwned, CfgItfmRef},
     cfg_nav5::{CfgNav5, CfgNav5Owned, CfgNav5Ref},
     cfg_odo::{CfgOdo, CfgOdoOwned, CfgOdoRef},
@@ -74,6 +75,7 @@ define_recv_packets!(
         AckAck,
         AckNak,
         CfgAnt,
+        CfgGnss,
         CfgItfm,
         CfgNav5,
         CfgOdo,
