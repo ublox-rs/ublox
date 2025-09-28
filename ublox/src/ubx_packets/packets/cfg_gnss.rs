@@ -17,6 +17,8 @@ use ublox_derive::{ubx_extend_bitflags, ubx_packet_recv_send};
 /// Multi-GNSS config
 /// Deprecatred in protocol versions above 23, use CfgValSet and CfgValGet for newer protocol version
 /// # Example
+/// This is example applies to UBX Protocol 23 and 27.
+/// For UBX Protocol 14, only enabling/disabling a GNSS configurations is possible, no signal mask is available.
 ///
 /// ```rust, ignore
 /// # use ublox::{UbxPacket, UbxPacketRequest, cfg_gnss::{CfgGnss,CfgGnssBuilder, GnssConfigBlock, GnssId, GpsSigMask, GalileoSigMask, GlonassSigMask, BeidouSigMask, QzssSigMask, SbasSigMask}};
@@ -276,13 +278,16 @@ pub struct GnssConfigBlock {
 }
 
 impl GnssConfigBlock {
+    #[cfg(not(feature = "ubx_proto14"))]
     const SIG_CFG_MASK: u32 = 0x00FF;
+
     #[inline]
     pub fn enabled(&self) -> bool {
         self.flags & 0x01 == 1
     }
 
     #[inline]
+    #[cfg(not(feature = "ubx_proto14"))]
     pub fn new<M: Into<SigCfgMask>>(
         enabled: bool,
         gnss_id: GnssId,
@@ -303,10 +308,25 @@ impl GnssConfigBlock {
     }
 
     #[inline]
+    #[cfg(feature = "ubx_proto14")]
+    pub fn new(enabled: bool, gnss_id: GnssId, min: u8, max: u8) -> Self {
+        let flags = enabled as u32;
+        Self {
+            gnss_id,
+            res_trk_ch: min,
+            max_trk_ch: max,
+            flags,
+            reserved1: 0,
+        }
+    }
+
+    #[inline]
+    #[cfg(not(feature = "ubx_proto14"))]
     pub fn raw_sig_mask(&self) -> u8 {
         ((self.flags >> 16) & Self::SIG_CFG_MASK) as u8
     }
 
+    #[cfg(not(feature = "ubx_proto14"))]
     pub fn sig_cfg_mask(&self) -> SigCfgMask {
         let m: u8 = self.raw_sig_mask();
         match self.gnss_id {
@@ -340,6 +360,7 @@ impl GnssConfigBlock {
     }
 }
 
+#[cfg(not(feature = "ubx_proto14"))]
 impl fmt::Debug for GnssConfigBlock {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("GnssConfigBlock")
@@ -352,6 +373,19 @@ impl fmt::Debug for GnssConfigBlock {
                 "raw_sig_mask",
                 &format_args!("0x{:08X}", self.raw_sig_mask()),
             )
+            .field("flags_hex", &format_args!("0x{:08X}", self.flags))
+            .finish()
+    }
+}
+
+#[cfg(feature = "ubx_proto14")]
+impl fmt::Debug for GnssConfigBlock {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("GnssConfigBlock")
+            .field("gnss_id", &self.gnss_id)
+            .field("enabled", &self.enabled())
+            .field("res_trk_ch", &self.res_trk_ch)
+            .field("max_trk_ch", &self.max_trk_ch)
             .field("flags_hex", &format_args!("0x{:08X}", self.flags))
             .finish()
     }
