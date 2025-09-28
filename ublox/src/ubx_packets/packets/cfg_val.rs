@@ -45,7 +45,7 @@ pub const MAX_CFG_KEYS: u16 = 64;
 ///  - if any key is unknown to the receiver FW
 ///  - if the layer field speciﬁes an invalid layer to get the value from
 ///  - if the keys array speciﬁes more than 64 key IDs.
-struct CfgValGetSend<'a> {
+struct CfgValGetRequest<'a> {
     /// Message version
     version: u8,
     /// The layers from which the configuration items should be retrieved
@@ -61,7 +61,7 @@ struct CfgValGetSend<'a> {
   id = 0x8b,
   max_payload_len = 772, // 4 + (sizeof(u32) + sizeof(largest val)) * MAX_CFG_KEYS
 )]
-struct CfgValGetRecv {
+struct CfgValGetResponse {
     /// Message version
     version: u8,
     #[ubx(map_type = CfgLayerGet)]
