@@ -434,6 +434,7 @@ impl<'a> CfgGnssBuilder<'a> {
 
 #[cfg(test)]
 mod tests {
+    #[allow(unused_imports, reason = "unused in some feature sets")]
     use super::*;
 
     #[test]
