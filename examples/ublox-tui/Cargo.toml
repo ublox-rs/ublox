@@ -30,7 +30,7 @@ unicode-width = "0.2"
 lazy_static = "1.5"
 tracing-error = "0.2"
 # can be relaxed to 0.17.4 once we bump MSRV 
-tui-logger = { version = "=0.17.3", features = [
+tui-logger = { version = "=0.17.4", features = [
     "crossterm",
     "tracing-support",
 ] }
