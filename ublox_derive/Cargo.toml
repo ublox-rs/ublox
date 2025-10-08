@@ -2,7 +2,7 @@
 authors = ["Lane Kolbly <lane@rscheme.org>"]
 description = "Utility macros for the ublox crate"
 name = "ublox_derive"
-version = "0.3.0"
+version = "0.4.0"
 homepage = "https://github.com/ublox-rs"
 repository = "https://github.com/ublox-rs/ublox"
 rust-version.workspace = true

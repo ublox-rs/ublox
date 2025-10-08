@@ -2,21 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
-## Unreleased
-
-### Misc
-
-- Fix Rust 1.89.0 clippy lints
-
-## [0.6.0]
+## [0.7.0]
 
 ### Added
 
-- Add remaining `CFG-NAVSPG-*` messages for protocol 27
+- Add remaining `UBX-CFG-NAVSPG-*` messages for protocol 27
+- Add `UBX-MON-HW2` and `UBX-MON-HW3`
+- Add `UBX-RF`
+- Add API to get a packet's payload length
+- Add fuzz testing for `UBX-NAV-HPPOSLLH` and `UBX-NAV-PVT` 
 
 ### Changed
 
-- Bump MSRV from 1.82 to 1.83 for const `.to_le_bytes()` for f32 + f64
+ - Bump MSRV from 1.82 to 1.83 for const `.to_le_bytes()` for f32 + f64
+ - Enable all features for building and publishing docs 
+ - Add a FixedBuffer implementation that owns the byte array 
+ - Add capability to send `UBX-CFG-GNSS` packets 
+ - Add capability to send `UBX-ESF-MEAS` packets 
+ - Renamed `CfgValGetSend` and `CfgValGetRecv` to `CfgValGetRequest` and `CfgValGetResponse`
 
 ### Misc
 
