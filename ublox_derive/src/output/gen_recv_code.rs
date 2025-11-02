@@ -63,6 +63,7 @@ pub fn generate_recv_code_for_packet(dbg_ctx: DebugContext, pack_descr: &PackDes
 
         #[doc = #struct_comment]
         #[doc = "Owns the underlying buffer of data, contains accessor methods to retrieve data."]
+        #[derive(Clone)]
         pub struct #owned_name(pub(crate) [u8; #packet_size]);
 
         impl #owned_name {
