@@ -167,6 +167,7 @@ fn test_ubx_packet_recv_simple() {
             }
             #[doc = "Some comment"]
             #[doc = "Owns the underlying buffer of data, contains accessor methods to retrieve data."]
+            #[derive(Clone)]
             pub struct TestOwned(pub(crate) [u8; 16usize]);
             impl TestOwned {
                 pub(crate) const PACKET_SIZE: usize = 16usize;
@@ -422,6 +423,7 @@ fn test_ubx_packet_recv_dyn_len() {
             }
             #[doc = ""]
             #[doc = "Owns the underlying buffer of data, contains accessor methods to retrieve data."]
+            #[derive(Clone)]
             pub struct TestOwned(pub(crate) [u8; 38usize]);
             impl TestOwned {
                 pub(crate) const PACKET_SIZE: usize = 38usize;
