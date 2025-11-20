@@ -17,6 +17,9 @@ pub trait UbxPacketMeta {
 pub(crate) const SYNC_CHAR_1: u8 = 0xb5;
 pub(crate) const SYNC_CHAR_2: u8 = 0x62;
 pub(crate) const RTCM_SYNC_CHAR: u8 = 0xd3;
+pub(crate) const NMEA_SYNC_CHAR: u8 = 0x24; // '$'
+pub(crate) const NMEA_END_CHAR_1: u8 = 0x0d; // '\r' (<CR>)
+pub(crate) const NMEA_END_CHAR_2: u8 = 0x0a; // '\n' (<LF>)
 
 /// The checksum is calculated over the packet, starting and including
 /// the CLASS field, up until, but excluding, the checksum field.
