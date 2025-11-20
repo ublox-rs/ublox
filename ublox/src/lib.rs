@@ -10,8 +10,8 @@ extern crate serde;
 pub use crate::{
     error::{DateTimeError, MemWriterError, ParserError},
     parser::{
-        AnyPacketRef, FixedBuffer, FixedLinearBuffer, Parser, ParserBuilder, RtcmPacketRef,
-        UbxParserIter, UnderlyingBuffer,
+        AnyPacketRef, FixedBuffer, FixedLinearBuffer, NmeaPacketRef, Parser, ParserBuilder,
+        RtcmPacketRef, UbxParserIter, UnderlyingBuffer,
     },
     ubx_packets::*,
 };
