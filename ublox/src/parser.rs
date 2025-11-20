@@ -3,7 +3,9 @@ use alloc::vec::Vec;
 
 use crate::{
     error::ParserError,
-    ubx_packets::{RTCM_SYNC_CHAR, SYNC_CHAR_1, SYNC_CHAR_2},
+    ubx_packets::{
+        NMEA_END_CHAR_1, NMEA_END_CHAR_2, NMEA_SYNC_CHAR, RTCM_SYNC_CHAR, SYNC_CHAR_1, SYNC_CHAR_2,
+    },
     UbxPacket, UbxProtocol,
 };
 
@@ -237,12 +239,34 @@ impl<T: UnderlyingBuffer, P: UbxProtocol> Parser<T, P> {
             _phantom: PhantomData,
         }
     }
+
+    /// Appends `new_data` to the internal buffer and returns and iterator over the buffer
+    /// that will yield [UbxPackets, RtcmPackets, or NmeaPackets](AnyPacketRef) on demand.
+    pub fn consume_ubx_rtcm_nmea<'a>(
+        &'a mut self,
+        new_data: &'a [u8],
+    ) -> UbxRtcmNmeaParserIter<'a, T, P> {
+        let mut buf = DualBuffer::new(&mut self.buf, new_data);
+
+        for i in 0..buf.len() {
+            if buf[i] == SYNC_CHAR_1 || buf[i] == RTCM_SYNC_CHAR || buf[i] == NMEA_SYNC_CHAR {
+                buf.drain(i);
+                break;
+            }
+        }
+
+        UbxRtcmNmeaParserIter {
+            buf,
+            _phantom: PhantomData,
+        }
+    }
 }
 
 #[derive(Debug, PartialEq, Eq)]
 enum NextSync {
     Ubx(usize),
     Rtcm(usize),
+    Nmea(usize),
     None,
 }
 
@@ -250,6 +274,7 @@ enum NextSync {
 pub enum AnyPacketRef<'a> {
     Ubx(UbxPacket<'a>),
     Rtcm(RtcmPacketRef<'a>),
+    Nmea(NmeaPacketRef<'a>),
 }
 
 /// Iterator over data stored in `Parser` buffer
@@ -430,6 +455,146 @@ impl<T: UnderlyingBuffer, P: UbxProtocol> UbxRtcmParserIter<'_, T, P> {
                     let pack_len = u16::from_be_bytes([self.buf[1], self.buf[2]]) & 0x03ff;
 
                     return extract_packet_rtcm(&mut self.buf, pack_len);
+                },
+                NextSync::Nmea(_) | NextSync::None => {
+                    self.buf.clear();
+                    return None;
+                },
+            };
+        }
+        None
+    }
+}
+
+/// Iterator over data stored in `Parser` buffer
+pub struct UbxRtcmNmeaParserIter<'a, T: UnderlyingBuffer, P: UbxProtocol = DefaultProtocol> {
+    buf: DualBuffer<'a, T>,
+    _phantom: PhantomData<P>,
+}
+
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+pub struct NmeaPacketRef<'a> {
+    pub data: &'a [u8],
+}
+
+fn extract_packet_nmea<'a, 'b, T: UnderlyingBuffer>(
+    buf: &'b mut DualBuffer<'a, T>,
+    pack_len: u16,
+) -> Option<Result<AnyPacketRef<'b>, ParserError>> {
+    let pack_len = pack_len as usize; // `usize` is needed for indexing but constraining the input to `u16` is still important
+    if !buf.can_drain_and_take(0, pack_len) {
+        if buf.potential_lost_bytes() > 0 {
+            // We ran out of space, drop this packet and move on
+            buf.drain(pack_len);
+            return Some(Err(ParserError::OutOfMemory {
+                required_size: pack_len,
+            }));
+        }
+        return None;
+    }
+
+    let maybe_data = buf.take(pack_len);
+    match maybe_data {
+        Ok(data) => Some(Ok(AnyPacketRef::Nmea(NmeaPacketRef::<'b> { data }))),
+        Err(e) => Some(Err(e)),
+    }
+}
+
+impl<T: UnderlyingBuffer, P: UbxProtocol> UbxRtcmNmeaParserIter<'_, T, P> {
+    /// Find the next sync char in the buffer, starting at `min_idx`
+    fn find_sync(&self, min_idx: usize) -> NextSync {
+        for i in min_idx..self.buf.len() {
+            match self.buf[i] {
+                SYNC_CHAR_1 => return NextSync::Ubx(i),
+                RTCM_SYNC_CHAR => return NextSync::Rtcm(i),
+                NMEA_SYNC_CHAR => return NextSync::Nmea(i),
+                _ => (),
+            }
+        }
+        NextSync::None
+    }
+
+    #[allow(
+        clippy::should_implement_trait,
+        reason = "This is a lending iterator, which is not in std"
+    )]
+    /// Parse and return the next [UbxPacket, RtcmPacket, or NmeaPacket](AnyPacketRef) in the buffer, or `None` if the buffer cannot yield
+    /// another full packet
+    pub fn next(&mut self) -> Option<Result<AnyPacketRef<'_>, ParserError>> {
+        while self.buf.len() > 0 {
+            match self.find_sync(0) {
+                NextSync::Ubx(pos) => {
+                    self.buf.drain(pos);
+
+                    if self.buf.len() < 2 {
+                        return None;
+                    }
+                    if self.buf[1] != SYNC_CHAR_2 {
+                        self.buf.drain(1);
+                        continue;
+                    }
+
+                    if self.buf.len() < 6 {
+                        return None;
+                    }
+
+                    let pack_len = u16::from_le_bytes([self.buf[4], self.buf[5]]);
+                    if pack_len > P::MAX_PAYLOAD_LEN {
+                        self.buf.drain(2);
+                        continue;
+                    }
+                    let maybe_packet = extract_packet_ubx::<T, P>(&mut self.buf, pack_len);
+                    match maybe_packet {
+                        Some(Ok(packet)) => return Some(Ok(AnyPacketRef::Ubx(packet))),
+                        Some(Err(e)) => return Some(Err(e)),
+                        None => return None,
+                    }
+                },
+                NextSync::Rtcm(pos) => {
+                    self.buf.drain(pos);
+
+                    // need to read 3 bytes total for sync char (1) + length (2)
+                    if self.buf.len() < 3 {
+                        return None;
+                    }
+                    // next 2 bytes contain 6 bits reserved + 10 bits length, big endian
+                    let pack_len = u16::from_be_bytes([self.buf[1], self.buf[2]]) & 0x03ff;
+
+                    return extract_packet_rtcm(&mut self.buf, pack_len);
+                },
+                NextSync::Nmea(pos) => {
+                    self.buf.drain(pos);
+
+                    // need to read at least 8 bytes for
+                    // sync char (1) + talker (2) + msg type (3) + end chars (2)
+                    if self.buf.len() < 8 {
+                        return None;
+                    }
+                    // try to determine packet length by searching for NMEA end chars
+                    let mut pack_len: Option<u16> = None;
+                    for i in 0..self.buf.len() - 1 {
+                        if self.buf[i] == NMEA_END_CHAR_1 && self.buf[i + 1] == NMEA_END_CHAR_2 {
+                            // including sync and both end chars
+                            pack_len = Some((i + 2) as u16);
+                            break;
+                        }
+                    }
+
+                    // try to extract the packet if its length was found,
+                    // otherwise check if NMEA string has to be discarded
+                    return if let Some(len) = pack_len {
+                        extract_packet_nmea(&mut self.buf, len)
+                    } else {
+                        if self.find_sync(1) != NextSync::None {
+                            // found another packet before the end of the NMEA sentence,
+                            // drain NMEA sync char
+                            self.buf.drain(1);
+                        } else if self.buf.len() > 82 {
+                            // maximum NMEA length exceeded, clear buffer
+                            self.buf.clear();
+                        }
+                        None
+                    };
                 },
                 NextSync::None => {
                     self.buf.clear();
