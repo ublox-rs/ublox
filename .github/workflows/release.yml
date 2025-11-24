@@ -16,7 +16,7 @@ jobs:
     if: github.ref_type == 'tag'
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Install stable
         uses: actions-rs/toolchain@v1
@@ -36,7 +36,7 @@ jobs:
     if: github.ref_type == 'tag'
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Install stable
         uses: actions-rs/toolchain@v1
