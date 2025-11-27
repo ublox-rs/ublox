@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.8.0]
+
+### Added
+
+- Add support for extracting NMEA packets from byte stream
+
+### Changed
+
+ - Derive `Clone` trait for owned packets 
+
 ## [0.7.0]
 
 ### Added
