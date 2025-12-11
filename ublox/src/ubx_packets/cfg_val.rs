@@ -380,6 +380,7 @@ macro_rules! cfg_val {
           self.len() == 0
       }
 
+      /// Returns the [configuration key](CfgKey) corresponding to this value.
       #[inline]
       pub const fn key(&self) -> CfgKey {
         match self {
