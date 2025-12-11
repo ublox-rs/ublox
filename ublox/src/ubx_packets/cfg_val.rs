@@ -380,6 +380,15 @@ macro_rules! cfg_val {
           self.len() == 0
       }
 
+      #[inline]
+      pub const fn key(&self) -> CfgKey {
+        match self {
+          $(
+            Self::$cfg_item(_) => CfgKey::$cfg_item,
+          )*
+        }
+      }
+
       #[track_caller]
       pub fn parse(buf: &[u8]) -> Option<Self> {
         let key_id = u32::from_le_bytes([buf[0], buf[1], buf[2], buf[3]]);
@@ -438,6 +447,19 @@ macro_rules! cfg_val {
         }
       }
     )*
+
+    impl From<CfgVal> for CfgKey {
+      #[inline]
+      fn from(val: CfgVal) -> Self {
+        val.key()
+      }
+    }
+
+    impl From<&CfgVal> for CfgKey {
+      fn from(val: &CfgVal) -> Self {
+        val.key()
+      }
+    }
   }
 }
 
