@@ -700,6 +700,56 @@ cfg_val! {
   MsgOutPubxIdPolytUart2, 0x209100f8, u8,
   /// Output rate of the NMEA-GX-PUBX04 message on port USB
   MsgOutPubxIdPolytUsb, 0x209100f9, u8,
+  /// Output rate of the UBX-ESF-ALG message on port I2C
+  MsgOutUbxEsfAlgI2c, 0x2091010f, u8,
+  /// Output rate of the UBX-ESF-ALG message on port SPI
+  MsgOutUbxEsfAlgSpi, 0x20910113, u8,
+  /// Output rate of the UBX-ESF-ALG message on port UART1
+  MsgOutUbxEsfAlgUart1, 0x20910110, u8,
+  /// Output rate of the UBX-ESF-ALG message on port UART2
+  MsgOutUbxEsfAlgUart2, 0x20910111, u8,
+  /// Output rate of the UBX-ESF-ALG message on port USB
+  MsgOutUbxEsfAlgUsb, 0x20910112, u8,
+  /// Output rate of the UBX-ESF-INS message on port I2C
+  MsgOutUbxEsfInsI2c, 0x20910114, u8,
+  /// Output rate of the UBX-ESF-INS message on port SPI
+  MsgOutUbxEsfInsSpi, 0x20910118, u8,
+  /// Output rate of the UBX-ESF-INS message on port UART1
+  MsgOutUbxEsfInsUart1, 0x20910115, u8,
+  /// Output rate of the UBX-ESF-INS message on port UART2
+  MsgOutUbxEsfInsUart2, 0x20910116, u8,
+  /// Output rate of the UBX-ESF-INS message on port USB
+  MsgOutUbxEsfInsUsb, 0x20910117, u8,
+  /// Output rate of the UBX-ESF-MEAS message on port I2C
+  MsgOutUbxEsfMeasI2c, 0x20910277, u8,
+  /// Output rate of the UBX-ESF-MEAS message on port SPI
+  MsgOutUbxEsfMeasSpi, 0x2091027b, u8,
+  /// Output rate of the UBX-ESF-MEAS message on port UART1
+  MsgOutUbxEsfMeasUart1, 0x20910278, u8,
+  /// Output rate of the UBX-ESF-MEAS message on port UART2
+  MsgOutUbxEsfMeasUart2, 0x20910279, u8,
+  /// Output rate of the UBX-ESF-MEAS message on port USB
+  MsgOutUbxEsfMeasUsb, 0x2091027a, u8,
+  /// Output rate of the UBX-ESF-RAW message on port I2C
+  MsgOutUbxEsfRawI2c, 0x2091029f, u8,
+  /// Output rate of the UBX-ESF-RAW message on port SPI
+  MsgOutUbxEsfRawSpi, 0x209102a3, u8,
+  /// Output rate of the UBX-ESF-RAW message on port UART1
+  MsgOutUbxEsfRawUart1, 0x209102a0, u8,
+  /// Output rate of the UBX-ESF-RAW message on port UART2
+  MsgOutUbxEsfRawUart2, 0x209102a1, u8,
+  /// Output rate of the UBX-ESF-RAW message on port USB
+  MsgOutUbxEsfRawUsb, 0x209102a2, u8,
+  /// Output rate of the UBX-ESF-STATUS message on port I2C
+  MsgOutUbxEsfStatusI2c, 0x20910105, u8,
+  /// Output rate of the UBX-ESF-STATUS message on port SPI
+  MsgOutUbxEsfStatusSpi, 0x20910109, u8,
+  /// Output rate of the UBX-ESF-STATUS message on port UART1
+  MsgOutUbxEsfStatusUart1, 0x20910106, u8,
+  /// Output rate of the UBX-ESF-STATUS message on port UART2
+  MsgOutUbxEsfStatusUart2, 0x20910107, u8,
+  /// Output rate of the UBX-ESF-STATUS message on port USB
+  MsgOutUbxEsfStatusUsb, 0x20910108, u8,
   /// Output rate of the RTCM-3XTYPE1005 message on port I2C
   MsgOutRtcm3Xtype1005I2c, 0x209102bd, u8,
   /// Output rate of the RTCM-3XTYPE1005 message on port SPI
