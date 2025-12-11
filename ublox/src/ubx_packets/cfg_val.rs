@@ -209,6 +209,12 @@ macro_rules! from_cfg_v_bytes {
             9 => NavDynamicModel::WristWornWatch,
             #[cfg(feature = "ubx_proto31")]
             10 => NavDynamicModel::Bike,
+            #[cfg(feature = "ubx_proto31")]
+            11 => NavDynamicModel::Mower,
+            #[cfg(feature = "ubx_proto31")]
+            12 => NavDynamicModel::EScooter,
+            #[cfg(feature = "ubx_proto31")]
+            13 => NavDynamicModel::Rail,
             _ => unreachable!(
                 "CFG-NAVSPG-DYNMODEL_TYPE value not supported by protocol specification"
             ),

@@ -135,6 +135,12 @@ pub enum NavDynamicModel {
     #[cfg(feature = "ubx_proto31")]
     /// supported in protocol versions 19.2
     Bike = 10,
+    #[cfg(feature = "ubx_proto31")]
+    Mower = 11,
+    #[cfg(feature = "ubx_proto31")]
+    EScooter = 12,
+    #[cfg(feature = "ubx_proto31")]
+    Rail = 13,
 }
 
 /// Position Fixing Mode
