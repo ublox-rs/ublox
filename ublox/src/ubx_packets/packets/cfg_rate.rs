@@ -23,7 +23,7 @@ struct CfgRate {
 
 /// Alignment to reference time
 #[repr(u16)]
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum AlignmentToReferenceTime {
     Utc = 0,

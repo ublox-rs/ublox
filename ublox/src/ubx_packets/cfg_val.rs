@@ -345,7 +345,7 @@ macro_rules! cfg_val {
       $cfg_item:ident, $cfg_key_id:expr, $cfg_value_type:ident,
     )*
   ) => {
-    #[derive(Debug, Clone, Copy)]
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
     #[non_exhaustive]
     pub enum CfgKey {
       WildcardAll = 0x7fffffff,
@@ -355,7 +355,7 @@ macro_rules! cfg_val {
       )*
     }
 
-    #[derive(Debug, Clone, Copy)]
+    #[derive(Debug, Clone, Copy, PartialEq)]
     #[cfg_attr(feature = "serde", derive(serde::Serialize))]
     #[non_exhaustive]
     pub enum CfgVal {
@@ -378,6 +378,16 @@ macro_rules! cfg_val {
 
       pub const fn is_empty(&self) -> bool {
           self.len() == 0
+      }
+
+      /// Returns the [configuration key](CfgKey) corresponding to this value.
+      #[inline]
+      pub const fn key(&self) -> CfgKey {
+        match self {
+          $(
+            Self::$cfg_item(_) => CfgKey::$cfg_item,
+          )*
+        }
       }
 
       #[track_caller]
@@ -438,6 +448,19 @@ macro_rules! cfg_val {
         }
       }
     )*
+
+    impl From<CfgVal> for CfgKey {
+      #[inline]
+      fn from(val: CfgVal) -> Self {
+        val.key()
+      }
+    }
+
+    impl From<&CfgVal> for CfgKey {
+      fn from(val: &CfgVal) -> Self {
+        val.key()
+      }
+    }
   }
 }
 

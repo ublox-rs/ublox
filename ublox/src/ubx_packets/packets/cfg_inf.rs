@@ -40,7 +40,7 @@ struct CfgInf {
 #[ubx(from, into_raw, rest_reserved)]
 bitflags! {
     /// `CfgInfMask` parameters bitmask
-    #[derive(Default, Debug, Clone, Copy)]
+    #[derive(Default, Debug, Clone, Copy, PartialEq)]
     pub struct CfgInfMask: u8 {
         const ERROR = 0x1;
         const WARNING = 0x2;
