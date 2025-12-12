@@ -1244,6 +1244,26 @@ cfg_val! {
   MsgOutUbxRxmSfrbxUart2, 0x20910233, u8,
   /// Output rate of the UBX-RXM-SFRBX message on port USB
   MsgOutUbxRxmSfrbxUsb, 0x20910234, u8,
+  /// Output rate of the UBX-SEC-SIG message on port I2C
+  MsgOutUbxSecSigI2c, 0x20910634, u8,
+  /// Output rate of the UBX-SEC-SIG message on port SPI
+  MsgOutUbxSecSigSpi, 0x20910638, u8,
+  /// Output rate of the UBX-SEC-SIG message on port UART1
+  MsgOutUbxSecSigUart1, 0x20910635, u8,
+  /// Output rate of the UBX-SEC-SIG message on port UART2
+  MsgOutUbxSecSigUart2, 0x20910636, u8,
+  /// Output rate of the UBX-SEC-SIG message on port USB
+  MsgOutUbxSecSigUsb, 0x20910637, u8,
+  /// Output rate of the UBX-SEC-SIGLOG message on port I2C
+  MsgOutUbxSecSiglogI2c, 0x20910689, u8,
+  /// Output rate of the UBX-SEC-SIGLOG message on port SPI
+  MsgOutUbxSecSiglogSpi, 0x2091068d, u8,
+  /// Output rate of the UBX-SEC-SIGLOG message on port UART1
+  MsgOutUbxSecSiglogUart1, 0x2091068a, u8,
+  /// Output rate of the UBX-SEC-SIGLOG message on port UART2
+  MsgOutUbxSecSiglogUart2, 0x2091068b, u8,
+  /// Output rate of the UBX-SEC-SIGLOG message on port USB
+  MsgOutUbxSecSiglogUsb, 0x2091068c, u8,
   /// Output rate of the UBX-TIM-TM2 message on port I2C
   MsgOutUbxTimTm2I2c, 0x20910178, u8,
   /// Output rate of the UBX-TIM-TM2 message on port SPI
