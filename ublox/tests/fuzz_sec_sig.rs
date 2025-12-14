@@ -20,10 +20,10 @@ use ublox::{ParserBuilder, UbxPacket};
 /// SEC-SIG payload is variable length: 4 + jamNumCentFreqs * 4 bytes.
 #[derive(Debug, Clone)]
 pub struct SecSigPayload {
-    pub version: u8,            // Message version
-    pub sig_sec_flags: u8,      // Signal security flags
-    pub reserved0: u8,          // Reserved
-    pub jam_num_cent_freqs: u8, // Number of center frequencies
+    pub version: u8,                    // Message version
+    pub sig_sec_flags: u8,              // Signal security flags
+    pub reserved0: u8,                  // Reserved
+    pub jam_num_cent_freqs: u8,         // Number of center frequencies
     pub jam_state_cent_freqs: Vec<u32>, // Repeated jamStateCentFreq blocks
 }
 

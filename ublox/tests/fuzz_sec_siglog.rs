@@ -26,8 +26,8 @@ pub struct SecSiglogEventPayload {
 /// meaningful values for each field before they are serialized into bytes.
 #[derive(Debug, Clone)]
 pub struct SecSiglogPayload {
-    pub version: u8,           // Message version (0x01 for this version)
-    pub reserved0: [u8; 6],    // Reserved
+    pub version: u8,                        // Message version (0x01 for this version)
+    pub reserved0: [u8; 6],                 // Reserved
     pub events: Vec<SecSiglogEventPayload>, // Repeated event blocks
 }
 
@@ -66,16 +66,13 @@ fn calculate_checksum(data: &[u8]) -> (u8, u8) {
 
 /// A proptest strategy for generating a single `SecSiglogEventPayload`.
 fn sec_siglog_event_strategy() -> impl Strategy<Value = SecSiglogEventPayload> {
-    (
-        any::<u32>(),
-        any::<u8>(),
-        any::<u8>(),
-    )
-        .prop_map(|(time_elapsed_s, detection_type, event_type)| SecSiglogEventPayload {
+    (any::<u32>(), any::<u8>(), any::<u8>()).prop_map(
+        |(time_elapsed_s, detection_type, event_type)| SecSiglogEventPayload {
             time_elapsed_s,
             detection_type,
             event_type,
-        })
+        },
+    )
 }
 
 /// A proptest strategy for generating a `SecSiglogPayload` struct.
@@ -86,7 +83,11 @@ fn sec_siglog_payload_strategy() -> impl Strategy<Value = SecSiglogPayload> {
         // Max 16 events (per device documentation)
         prop::collection::vec(sec_siglog_event_strategy(), 0..=16),
     )
-        .prop_map(|(version, reserved0, events)| SecSiglogPayload { version, reserved0, events })
+        .prop_map(|(version, reserved0, events)| SecSiglogPayload {
+            version,
+            reserved0,
+            events,
+        })
 }
 
 /// A proptest strategy that generates a complete, valid UBX frame
