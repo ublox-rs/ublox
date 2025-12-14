@@ -62,7 +62,10 @@ impl<'a> SecSiglogEventIter<'a> {
     }
 
     /// Validate raw repeated-group payload: must be a multiple of 8 bytes.
-    #[allow(dead_code, reason = "It is only dead code in some feature sets")]
+    #[allow(
+        dead_code,
+        reason = "Used by ubx_packet_recv macro for validation, but may appear unused in some feature configurations"
+    )]
     fn is_valid(payload: &[u8]) -> bool {
         payload.len() % 8 == 0
     }

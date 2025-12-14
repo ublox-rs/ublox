@@ -72,7 +72,10 @@ impl<'a> SecSigJamStateCentFreqIter<'a> {
         Self { data, offset: 0 }
     }
 
-    #[allow(dead_code, reason = "It is only dead code in some feature sets")]
+    #[allow(
+        dead_code,
+        reason = "Used by ubx_packet_recv macro for validation, but may appear unused in some feature configurations"
+    )]
     fn is_valid(payload: &[u8]) -> bool {
         payload.len() % 4 == 0
     }
