@@ -62,7 +62,7 @@ impl<'a> SecSiglogEventIter<'a> {
     }
 
     /// Validate raw repeated-group payload: must be a multiple of 8 bytes.
-    #[allow(dead_code)]
+    #[allow(dead_code, reason = "It is only dead code in some feature sets")]
     fn is_valid(payload: &[u8]) -> bool {
         payload.len() % 8 == 0
     }

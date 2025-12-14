@@ -62,7 +62,7 @@ fn sec_sig_payload_strategy() -> impl Strategy<Value = SecSigPayload> {
         any::<u8>(),
         Just(0u8),
         // Keep the number of repeated blocks bounded for test performance.
-        prop::collection::vec((0u32..=0x01ff_ffffu32), 0..=32),
+        prop::collection::vec(0u32..=0x01ff_ffffu32, 0..=32),
     )
         .prop_map(|(version, sig_sec_flags, reserved0, mut blocks)| {
             // Ensure jamNumCentFreqs matches the number of blocks.
