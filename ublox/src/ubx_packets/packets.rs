@@ -93,6 +93,8 @@ pub mod rxm_rawx;
 pub mod rxm_rtcm;
 pub mod rxm_sfrbx;
 
+pub mod sec_sig;
+pub mod sec_siglog;
 pub mod sec_uniq_id;
 
 pub mod tim_svin;
