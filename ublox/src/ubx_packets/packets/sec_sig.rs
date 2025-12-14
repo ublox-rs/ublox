@@ -9,6 +9,8 @@ use super::SerializeUbxPacketFields;
 use crate::serde::ser::SerializeMap;
 
 use crate::{error::ParserError, UbxPacketMeta};
+#[allow(unused_imports, reason = "It is only unused in some feature sets")]
+use crate::FieldIter;
 use ublox_derive::{ubx_extend, ubx_packet_recv};
 
 /// Signal Security Status
@@ -70,6 +72,7 @@ impl<'a> SecSigJamStateCentFreqIter<'a> {
         Self { data, offset: 0 }
     }
 
+    #[allow(dead_code)]
     fn is_valid(payload: &[u8]) -> bool {
         payload.len() % 4 == 0
     }
