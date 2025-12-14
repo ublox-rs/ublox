@@ -14,18 +14,18 @@ use ublox::{ParserBuilder, UbxPacket};
 /// Represents a single 40-byte port block within a MON-COMMS message.
 #[derive(Debug, Clone)]
 pub struct MonCommsPortPayload {
-    pub port_id: u16,       // Port identifier (see u-blox docs)
-    pub tx_pending: u16,    // Bytes pending in TX buffer
-    pub tx_bytes: u32,      // Total bytes transmitted
-    pub tx_usage: u8,       // TX buffer usage (0-255)
-    pub tx_peak_usage: u8,  // Peak TX buffer usage (0-255)
-    pub rx_pending: u16,    // Bytes pending in RX buffer
-    pub rx_bytes: u32,      // Total bytes received
-    pub rx_usage: u8,       // RX buffer usage (0-255)
-    pub rx_peak_usage: u8,  // Peak RX buffer usage (0-255)
-    pub overrun_errs: u16,  // Overrun errors
-    pub msgs: [u16; 4],     // Message counts per protocol
-    pub skipped: u32,       // Skipped bytes
+    pub port_id: u16,      // Port identifier (see u-blox docs)
+    pub tx_pending: u16,   // Bytes pending in TX buffer
+    pub tx_bytes: u32,     // Total bytes transmitted
+    pub tx_usage: u8,      // TX buffer usage (0-255)
+    pub tx_peak_usage: u8, // Peak TX buffer usage (0-255)
+    pub rx_pending: u16,   // Bytes pending in RX buffer
+    pub rx_bytes: u32,     // Total bytes received
+    pub rx_usage: u8,      // RX buffer usage (0-255)
+    pub rx_peak_usage: u8, // Peak RX buffer usage (0-255)
+    pub overrun_errs: u16, // Overrun errors
+    pub msgs: [u16; 4],    // Message counts per protocol
+    pub skipped: u32,      // Skipped bytes
 }
 
 impl MonCommsPortPayload {
@@ -55,11 +55,11 @@ impl MonCommsPortPayload {
 /// MON-COMMS payload is 8 + nPorts * 40 bytes.
 #[derive(Debug, Clone)]
 pub struct MonCommsPayload {
-    pub version: u8,         // Message version (0x00 for this version)
-    pub n_ports: u8,         // Number of ports
-    pub tx_errors: u8,       // TX error bitmask
-    pub reserved0: u8,       // Reserved
-    pub prot_ids: [u8; 4],   // Protocol identifiers
+    pub version: u8,                     // Message version (0x00 for this version)
+    pub n_ports: u8,                     // Number of ports
+    pub tx_errors: u8,                   // TX error bitmask
+    pub reserved0: u8,                   // Reserved
+    pub prot_ids: [u8; 4],               // Protocol identifiers
     pub ports: Vec<MonCommsPortPayload>, // Repeated port blocks
 }
 
@@ -155,19 +155,21 @@ fn mon_comms_payload_strategy() -> impl Strategy<Value = MonCommsPayload> {
         prop::array::uniform4(any::<u8>()),
         prop::collection::vec(mon_comms_port_strategy(), 0..=6),
     )
-        .prop_map(|(version, _n_ports, tx_errors, reserved0, prot_ids, mut ports)| {
-            // Keep header n_ports consistent with number of repeated blocks.
-            let n_ports = ports.len().min(6) as u8;
-            ports.truncate(n_ports as usize);
-            MonCommsPayload {
-                version,
-                n_ports,
-                tx_errors,
-                reserved0,
-                prot_ids,
-                ports,
-            }
-        })
+        .prop_map(
+            |(version, _n_ports, tx_errors, reserved0, prot_ids, mut ports)| {
+                // Keep header n_ports consistent with number of repeated blocks.
+                let n_ports = ports.len().min(6) as u8;
+                ports.truncate(n_ports as usize);
+                MonCommsPayload {
+                    version,
+                    n_ports,
+                    tx_errors,
+                    reserved0,
+                    prot_ids,
+                    ports,
+                }
+            },
+        )
 }
 
 /// A proptest strategy that generates a complete, valid UBX frame

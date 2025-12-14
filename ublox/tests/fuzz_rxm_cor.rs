@@ -16,12 +16,12 @@ use ublox::{ParserBuilder, UbxPacket};
 /// RXM-COR payload is 12 bytes.
 #[derive(Debug, Clone)]
 pub struct RxmCorPayload {
-    pub version: u8,     // Message version (0x01 for this version)
-    pub ebno: u8,        // Eb/N0, 0.125 dB/LSB (raw)
+    pub version: u8,        // Message version (0x01 for this version)
+    pub ebno: u8,           // Eb/N0, 0.125 dB/LSB (raw)
     pub reserved0: [u8; 2], // Reserved
-    pub status_info: u32, // Status information bitfield
-    pub msg_type: u16,    // Message type
-    pub msg_sub_type: u16,// Message subtype
+    pub status_info: u32,   // Status information bitfield
+    pub msg_type: u16,      // Message type
+    pub msg_sub_type: u16,  // Message subtype
 }
 
 impl RxmCorPayload {
@@ -59,14 +59,16 @@ fn rxm_cor_payload_strategy() -> impl Strategy<Value = RxmCorPayload> {
         any::<u16>(),
         any::<u16>(),
     )
-        .prop_map(|(version, ebno, reserved0, status_info, msg_type, msg_sub_type)| RxmCorPayload {
-            version,
-            ebno,
-            reserved0,
-            status_info,
-            msg_type,
-            msg_sub_type,
-        })
+        .prop_map(
+            |(version, ebno, reserved0, status_info, msg_type, msg_sub_type)| RxmCorPayload {
+                version,
+                ebno,
+                reserved0,
+                status_info,
+                msg_type,
+                msg_sub_type,
+            },
+        )
 }
 
 /// A proptest strategy that generates a complete, valid UBX frame
