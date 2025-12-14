@@ -964,6 +964,16 @@ cfg_val! {
   MsgOutUbxNavClockUart2, 0x20910067, u8,
   /// Output rate of the UBX-NAV-CLOCK message on port USB
   MsgOutUbxNavClockUsb, 0x20910068, u8,
+  /// Output rate of the UBX-NAV-COV message on port I2C
+  MsgOutUbxNavCovI2c, 0x20910083, u8,
+  /// Output rate of the UBX-NAV-COV message on port SPI
+  MsgOutUbxNavCovSpi, 0x20910087, u8,
+  /// Output rate of the UBX-NAV-COV message on port UART1
+  MsgOutUbxNavCovUart1, 0x20910084, u8,
+  /// Output rate of the UBX-NAV-COV message on port UART2
+  MsgOutUbxNavCovUart2, 0x20910085, u8,
+  /// Output rate of the UBX-NAV-COV message on port USB
+  MsgOutUbxNavCovUsb, 0x20910086, u8,
   /// Output rate of the UBX-NAV-DOP message on port I2C
   MsgOutUbxNavDopI2c, 0x20910038, u8,
   /// Output rate of the UBX-NAV-DOP message on port SPI
