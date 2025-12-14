@@ -118,7 +118,7 @@ impl<'a> MonCommsPortIter<'a> {
     }
 
     /// Validate raw repeated-group payload: must be a multiple of 40 bytes.
-    #[allow(dead_code)]
+    #[allow(dead_code, reason = "Used by ubx_packet_recv macro for validation, but may appear unused in some feature configurations")]
     fn is_valid(payload: &[u8]) -> bool {
         payload.len() % 40 == 0
     }
