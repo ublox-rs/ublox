@@ -61,6 +61,7 @@ pub mod mga_gps_eph;
 pub mod mga_gps_iono;
 pub mod mga_gps_utc;
 
+pub mod mon_comms;
 pub mod mon_gnss;
 pub mod mon_hw;
 pub mod mon_hw2;
@@ -87,6 +88,7 @@ pub mod nav_time_ls;
 pub mod nav_time_utc;
 pub mod nav_vel_ned;
 
+pub mod rxm_cor;
 pub mod rxm_rawx;
 pub mod rxm_rtcm;
 pub mod rxm_sfrbx;
