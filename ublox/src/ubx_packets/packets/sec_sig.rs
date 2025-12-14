@@ -62,13 +62,13 @@ impl From<u32> for SecSigJamStateCentFreq {
 
 /// Iterator for SEC-SIG jam state entries.
 #[derive(Debug, Clone)]
-pub struct SecSigJamStateCentFreqIter<'a> {
-    data: &'a [u8],
+pub struct SecSigJamStateCentFreqIter<'d> {
+    data: &'d [u8],
     offset: usize,
 }
 
-impl<'a> SecSigJamStateCentFreqIter<'a> {
-    fn new(data: &'a [u8]) -> Self {
+impl<'d> SecSigJamStateCentFreqIter<'d> {
+    fn new(data: &'d [u8]) -> Self {
         Self { data, offset: 0 }
     }
 
