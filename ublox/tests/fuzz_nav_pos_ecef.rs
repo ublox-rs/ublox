@@ -20,11 +20,11 @@ use ublox::{ParserBuilder, UbxPacket};
 /// NAV-POSECEF payload is 20 bytes.
 #[derive(Debug, Clone)]
 pub struct NavPosEcefPayload {
-    pub itow: u32,      // GPS time of week of the navigation epoch [ms]
-    pub ecef_x: i32,    // ECEF X coordinate [cm]
-    pub ecef_y: i32,    // ECEF Y coordinate [cm]
-    pub ecef_z: i32,    // ECEF Z coordinate [cm]
-    pub p_acc: u32,     // Position accuracy estimate [cm]
+    pub itow: u32,   // GPS time of week of the navigation epoch [ms]
+    pub ecef_x: i32, // ECEF X coordinate [cm]
+    pub ecef_y: i32, // ECEF Y coordinate [cm]
+    pub ecef_z: i32, // ECEF Z coordinate [cm]
+    pub p_acc: u32,  // Position accuracy estimate [cm]
 }
 
 impl NavPosEcefPayload {

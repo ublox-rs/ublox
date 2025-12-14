@@ -79,7 +79,11 @@ fn calculate_checksum(data: &[u8]) -> (u8, u8) {
 fn finite_f32() -> impl Strategy<Value = f32> {
     any::<u32>().prop_filter_map("finite f32", |bits| {
         let f = f32::from_bits(bits);
-        if f.is_finite() { Some(f) } else { None }
+        if f.is_finite() {
+            Some(f)
+        } else {
+            None
+        }
     })
 }
 
