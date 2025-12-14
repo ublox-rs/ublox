@@ -1197,7 +1197,7 @@ mod test {
         match it.next() {
             Some(Ok(crate::UbxPacket::Proto14(PacketRef::AckAck(pack)))) => {
                 assert_eq!(ACK_ACK_PAYLOAD_LEN, pack.payload_len());
-            }
+            },
             _ => panic!(),
         }
     }
@@ -1214,7 +1214,7 @@ mod test {
         match it.next() {
             Some(Ok(crate::UbxPacket::Proto23(PacketRef::AckAck(pack)))) => {
                 assert_eq!(ACK_ACK_PAYLOAD_LEN, pack.payload_len());
-            }
+            },
             _ => panic!(),
         }
     }
@@ -1257,7 +1257,7 @@ mod test {
         match it.next() {
             Some(Ok(crate::UbxPacket::Proto14(PacketRef::NavPvt(p)))) => {
                 assert_eq!(NAV_PVT_PROTO14_LEN, p.payload_len())
-            }
+            },
             _ => panic!(),
         }
     }
@@ -1276,7 +1276,7 @@ mod test {
         match it.next() {
             Some(Ok(crate::UbxPacket::Proto23(PacketRef::NavPvt(p)))) => {
                 assert_eq!(NAV_PVT_PROTO23_LEN, p.payload_len())
-            }
+            },
             _ => panic!(),
         }
     }
