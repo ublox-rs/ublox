@@ -11,6 +11,9 @@ use byteorder::{LittleEndian, WriteBytesExt};
 use proptest::prelude::*;
 use ublox::{ParserBuilder, UbxPacket};
 
+const SYNC_CHAR_1: u8 = 0xB5;
+const SYNC_CHAR_2: u8 = 0x62;
+
 /// Represents the payload of a UBX-NAV-COV message.
 ///
 /// The fields are ordered as they appear in the u-blox documentation.
@@ -166,8 +169,8 @@ pub fn ubx_nav_cov_frame_strategy() -> impl Strategy<Value = (NavCovPayload, Vec
         let (ck_a, ck_b) = calculate_checksum(&frame_core);
 
         let mut final_frame = Vec::with_capacity(8 + payload.len());
-        final_frame.push(0xB5);
-        final_frame.push(0x62);
+        final_frame.push(SYNC_CHAR_1);
+        final_frame.push(SYNC_CHAR_2);
         final_frame.extend_from_slice(&frame_core);
         final_frame.push(ck_a);
         final_frame.push(ck_b);

@@ -1195,12 +1195,9 @@ mod test {
         let mut parser = crate::Parser::<FixedBuffer<1024>, Proto14>::with_fixed_buffer();
         let mut it = parser.consume_ubx(&ACK_ACK_BYTES);
         match it.next() {
-            Some(Ok(crate::UbxPacket::Proto14(packet_enum))) => match packet_enum {
-                PacketRef::AckAck(pack) => {
-                    assert_eq!(ACK_ACK_PAYLOAD_LEN, pack.payload_len());
-                },
-                _ => panic!(),
-            },
+            Some(Ok(crate::UbxPacket::Proto14(PacketRef::AckAck(pack)))) => {
+                assert_eq!(ACK_ACK_PAYLOAD_LEN, pack.payload_len());
+            }
             _ => panic!(),
         }
     }
@@ -1215,12 +1212,9 @@ mod test {
         let mut parser = crate::Parser::<FixedBuffer<1024>, Proto23>::with_fixed_buffer();
         let mut it = parser.consume_ubx(&ACK_ACK_BYTES);
         match it.next() {
-            Some(Ok(crate::UbxPacket::Proto23(packet_enum))) => match packet_enum {
-                PacketRef::AckAck(pack) => {
-                    assert_eq!(ACK_ACK_PAYLOAD_LEN, pack.payload_len());
-                },
-                _ => panic!(),
-            },
+            Some(Ok(crate::UbxPacket::Proto23(PacketRef::AckAck(pack)))) => {
+                assert_eq!(ACK_ACK_PAYLOAD_LEN, pack.payload_len());
+            }
             _ => panic!(),
         }
     }
@@ -1261,10 +1255,9 @@ mod test {
         let mut parser = crate::Parser::<FixedBuffer<1024>, Proto14>::with_fixed_buffer();
         let mut it = parser.consume_ubx(&packet);
         match it.next() {
-            Some(Ok(crate::UbxPacket::Proto14(packet_enum))) => match packet_enum {
-                PacketRef::NavPvt(p) => assert_eq!(NAV_PVT_PROTO14_LEN, p.payload_len()),
-                _ => panic!(),
-            },
+            Some(Ok(crate::UbxPacket::Proto14(PacketRef::NavPvt(p)))) => {
+                assert_eq!(NAV_PVT_PROTO14_LEN, p.payload_len())
+            }
             _ => panic!(),
         }
     }
@@ -1281,10 +1274,9 @@ mod test {
         let mut parser = crate::Parser::<FixedBuffer<1024>, Proto23>::with_fixed_buffer();
         let mut it = parser.consume_ubx(&packet);
         match it.next() {
-            Some(Ok(crate::UbxPacket::Proto23(packet_enum))) => match packet_enum {
-                PacketRef::NavPvt(p) => assert_eq!(NAV_PVT_PROTO23_LEN, p.payload_len()),
-                _ => panic!(),
-            },
+            Some(Ok(crate::UbxPacket::Proto23(PacketRef::NavPvt(p)))) => {
+                assert_eq!(NAV_PVT_PROTO23_LEN, p.payload_len())
+            }
             _ => panic!(),
         }
     }
