@@ -1194,6 +1194,16 @@ cfg_val! {
   MsgOutUbxNavVelNedUart2, 0x20910044, u8,
   /// Output rate of the UBX-NAV-VELNED message on port USB
   MsgOutUbxNavVelNedUsb, 0x20910045, u8,
+  /// Output rate of the UBX-RXM-COR message on port I2C
+  MsgOutUbxRxmCorI2c, 0x209106b6, u8,
+  /// Output rate of the UBX-RXM-COR message on port SPI
+  MsgOutUbxRxmCorSpi, 0x209106ba, u8,
+  /// Output rate of the UBX-RXM-COR message on port UART1
+  MsgOutUbxRxmCorUart1, 0x209106b7, u8,
+  /// Output rate of the UBX-RXM-COR message on port UART2
+  MsgOutUbxRxmCorUart2, 0x209106b8, u8,
+  /// Output rate of the UBX-RXM-COR message on port USB
+  MsgOutUbxRxmCorUsb, 0x209106b9, u8,
   /// Output rate of the UBX-RXM-MEASX message on port I2C
   MsgOutUbxRxmMeasxI2c, 0x20910204, u8,
   /// Output rate of the UBX-RXM-MEASX message on port SPI
