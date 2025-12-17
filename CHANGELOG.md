@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.9.0]
+
+### Added
+
+- Add SEC-SIG and SEC-SIGLOG packets
+- Add NAV-COV and NAV-POSECEF packets
+- Add RXM-COR and MON-COMMS packets
+- Implementation for From\<CfgVal\> for CfgKey and derives for CfgVal/CfgKey
+
+### Changed
+
+ - Marked PacketRef enums as `#[non_exhaustive]`
+
+
 ## [0.8.0]
 
 ### Added

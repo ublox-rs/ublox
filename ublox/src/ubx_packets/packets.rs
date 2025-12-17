@@ -2,6 +2,7 @@ use num_traits::cast::{FromPrimitive, ToPrimitive};
 use num_traits::float::FloatCore;
 use ublox_derive::ubx_extend;
 
+#[allow(unused_imports, reason = "It is only unused in some feature sets")]
 #[cfg(feature = "serde")]
 use crate::serde::ser::SerializeMap;
 

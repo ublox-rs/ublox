@@ -736,6 +736,7 @@ fn test_define_recv_packets() {
         quote! {
             #[doc = "All possible packets enum"]
             #[derive(Debug)]
+            #[non_exhaustive]
             pub enum PacketRef<'a> {
                 Pack1(Pack1Ref<'a>),
                 Pack2(Pack2Ref<'a>),
@@ -743,6 +744,7 @@ fn test_define_recv_packets() {
             }
             #[doc = "All possible packets enum, owning the underlying data"]
             #[derive(Debug)]
+            #[non_exhaustive]
             pub enum PacketOwned {
                 Pack1(Pack1Owned),
                 Pack2(Pack2Owned),
