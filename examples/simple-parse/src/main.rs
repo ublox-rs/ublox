@@ -2,6 +2,26 @@ use clap::Parser;
 use std::io::Read;
 use ublox::UbxPacket;
 
+/// Use proto23 if enabled, otherwise use proto27 if enabled, otherwise use proto31, otherwise use proto14
+#[cfg(feature = "ubx_proto23")]
+type Proto = ublox::proto23::Proto23;
+#[cfg(all(feature = "ubx_proto27", not(feature = "ubx_proto23")))]
+type Proto = ublox::proto27::Proto27;
+#[cfg(all(
+    feature = "ubx_proto31",
+    not(any(feature = "ubx_proto23", feature = "ubx_proto27"))
+))]
+type Proto = ublox::proto31::Proto31;
+#[cfg(all(
+    feature = "ubx_proto14",
+    not(any(
+        feature = "ubx_proto23",
+        feature = "ubx_proto27",
+        feature = "ubx_proto31"
+    ))
+))]
+type Proto = ublox::proto14::Proto14;
+
 #[derive(Parser)]
 struct Args {
     /// Serial port device
@@ -47,7 +67,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!(
         "Serial port '{arg_port}' opened successfully at {arg_baud_rate} baud, {arg_data_bits} data bits, {arg_stop_bits} stop bits!",
     );
-    let mut parser = ublox::Parser::default();
+    let mut parser = ublox::Parser::<Vec<u8>, Proto>::default();
     let mut buffer = [0u8; 1024];
 
     loop {
@@ -56,19 +76,21 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 let mut it = parser.consume_ubx(&buffer[..bytes_read]);
                 loop {
                     match it.next() {
+                        #[cfg(feature = "ubx_proto14")]
+                        Some(Ok(UbxPacket::Proto14(p))) => {
+                            handle_packet_proto14(p);
+                        },
+                        #[cfg(feature = "ubx_proto23")]
                         Some(Ok(UbxPacket::Proto23(p))) => {
-                            println!("Received UBX packet: {p:?}");
-                            match p {
-                                ublox::proto23::PacketRef::NavPvt(nav_pvt) => {
-                                    println!("Speed: {} [m/s]", nav_pvt.ground_speed_2d())
-                                },
-                                ublox::proto23::PacketRef::EsfMeas(esf_meas) => {
-                                    for data in esf_meas.data() {
-                                        println!("ESF MEAS DATA: {data:?}");
-                                    }
-                                },
-                                _ => (), // Ignore packets we don't care about
-                            };
+                            handle_packet_proto23(p);
+                        },
+                        #[cfg(feature = "ubx_proto27")]
+                        Some(Ok(UbxPacket::Proto27(p))) => {
+                            handle_packet_proto27(p);
+                        },
+                        #[cfg(feature = "ubx_proto31")]
+                        Some(Ok(UbxPacket::Proto31(p))) => {
+                            handle_packet_proto31(p);
                         },
                         Some(Err(e)) => {
                             println!("Received malformed packet: {e:?}");
@@ -88,4 +110,60 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     Ok(())
+}
+
+#[cfg(feature = "ubx_proto14")]
+fn handle_packet_proto14(p: ublox::proto14::PacketRef) {
+    println!("Received UBX packet: {p:?}");
+    if let ublox::proto14::PacketRef::NavPvt(nav_pvt) = p {
+        println!("Speed: {} [m/s]", nav_pvt.ground_speed_2d())
+    }
+}
+
+#[cfg(feature = "ubx_proto23")]
+fn handle_packet_proto23(p: ublox::proto23::PacketRef) {
+    println!("Received UBX packet: {p:?}");
+    match p {
+        ublox::proto23::PacketRef::NavPvt(nav_pvt) => {
+            println!("Speed: {} [m/s]", nav_pvt.ground_speed_2d())
+        },
+        ublox::proto23::PacketRef::EsfMeas(esf_meas) => {
+            for data in esf_meas.data() {
+                println!("ESF MEAS DATA: {data:?}");
+            }
+        },
+        _ => (),
+    }
+}
+
+#[cfg(feature = "ubx_proto27")]
+fn handle_packet_proto27(p: ublox::proto27::PacketRef) {
+    println!("Received UBX packet: {p:?}");
+    match p {
+        ublox::proto27::PacketRef::NavPvt(nav_pvt) => {
+            println!("Speed: {} [m/s]", nav_pvt.ground_speed_2d())
+        },
+        ublox::proto27::PacketRef::EsfMeas(esf_meas) => {
+            for data in esf_meas.data() {
+                println!("ESF MEAS DATA: {data:?}");
+            }
+        },
+        _ => (),
+    }
+}
+
+#[cfg(feature = "ubx_proto31")]
+fn handle_packet_proto31(p: ublox::proto31::PacketRef) {
+    println!("Received UBX packet: {p:?}");
+    match p {
+        ublox::proto31::PacketRef::NavPvt(nav_pvt) => {
+            println!("Speed: {} [m/s]", nav_pvt.ground_speed_2d())
+        },
+        ublox::proto31::PacketRef::EsfMeas(esf_meas) => {
+            for data in esf_meas.data() {
+                println!("ESF MEAS DATA: {data:?}");
+            }
+        },
+        _ => (),
+    }
 }
