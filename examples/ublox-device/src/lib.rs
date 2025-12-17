@@ -129,7 +129,13 @@ impl<P: UbxProtocol> Device<P> {
                     }
                 },
                 #[cfg(feature = "ubx_proto14")]
-                UbxPacket::Proto14(_) => unreachable!("No ubx_proto14 support"),
+                UbxPacket::Proto14(packet_ref) => {
+                    if let ublox::proto14::PacketRef::AckAck(ack) = packet_ref {
+                        if ack.class() == T::CLASS && ack.msg_id() == T::ID {
+                            found_packet = true;
+                        }
+                    }
+                },
             })?;
 
             if start.elapsed().unwrap().as_millis() > timeout.as_millis() {
