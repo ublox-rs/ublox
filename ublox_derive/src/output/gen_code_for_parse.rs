@@ -108,12 +108,14 @@ pub fn generate_code_for_parse(recv_packs: &RecvPackets) -> TokenStream {
     quote! {
         #[doc = "All possible packets enum"]
         #[derive(Debug)]
+        #[non_exhaustive]
         pub enum #union_enum_name_ref<'a> {
             #(#pack_enum_variants_ref),*,
             Unknown(#unknown_var_ref<'a>)
         }
         #[doc = "All possible packets enum, owning the underlying data"]
         #[derive(Debug)]
+        #[non_exhaustive]
         pub enum #union_enum_name_owned {
             #(#pack_enum_variants_owned),*,
             Unknown(#unknown_var_owned<{MAX_PAYLOAD_LEN as usize}>)
