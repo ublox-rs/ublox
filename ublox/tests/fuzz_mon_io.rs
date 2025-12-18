@@ -7,12 +7,7 @@
 
 use byteorder::{LittleEndian, WriteBytesExt};
 use proptest::prelude::*;
-use ublox::{ParserBuilder, UbxPacket};
-
-/// UBX Sync Character 1 (0xB5 = 'µ')
-const SYNC_CHAR_1: u8 = 0xB5;
-/// UBX Sync Character 2 (0x62 = 'b')
-const SYNC_CHAR_2: u8 = 0x62;
+use ublox::constants::{UBX_SYNC_CHAR_1, UBX_SYNC_CHAR_2};
 
 /// Represents a single I/O port block in a MON-IO message (20 bytes).
 #[derive(Debug, Clone)]
@@ -119,8 +114,8 @@ pub fn ubx_mon_io_frame_strategy() -> impl Strategy<Value = (Vec<MonIoPort>, Vec
 
         // Assemble the final frame
         let mut final_frame = Vec::with_capacity(8 + payload.len());
-        final_frame.push(SYNC_CHAR_1);
-        final_frame.push(SYNC_CHAR_2);
+        final_frame.push(UBX_SYNC_CHAR_1);
+        final_frame.push(UBX_SYNC_CHAR_2);
         final_frame.extend_from_slice(&frame_core);
         final_frame.push(ck_a);
         final_frame.push(ck_b);
@@ -135,7 +130,7 @@ proptest! {
     fn test_parser_proto27_with_generated_mon_io_frames(
         (expected_ports, frame) in ubx_mon_io_frame_strategy()
     ) {
-        use ublox::proto27::{Proto27, PacketRef};
+        use ublox::{proto27::{Proto27, PacketRef}, ParserBuilder, UbxPacket};
 
         let mut parser = ParserBuilder::new().with_protocol::<Proto27>().with_fixed_buffer::<1024>();
         let mut it = parser.consume_ubx(&frame);
@@ -165,7 +160,7 @@ proptest! {
     fn test_parser_proto14_with_generated_mon_io_frames(
         (expected_ports, frame) in ubx_mon_io_frame_strategy()
     ) {
-        use ublox::proto14::{Proto14, PacketRef};
+        use ublox::{proto14::{Proto14, PacketRef}, ParserBuilder, UbxPacket};
 
         let mut parser = ParserBuilder::new().with_protocol::<Proto14>().with_fixed_buffer::<1024>();
         let mut it = parser.consume_ubx(&frame);

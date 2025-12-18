@@ -1,9 +1,6 @@
 use chrono::prelude::*;
 
-use crate::{
-    ubx_checksum, ubx_packets::UbxChecksumCalc, MemWriter, MemWriterError, Position,
-    UbxPacketCreator, UbxPacketMeta, SYNC_CHAR_1, SYNC_CHAR_2,
-};
+use crate::{ubx_checksum, MemWriter, MemWriterError, Position, UbxPacketCreator, UbxPacketMeta};
 use ublox_derive::ubx_packet_send;
 
 /// Supported on:  u-blox 8 / u-blox M8 protocol versions 15, 15.01, 16, 17, 18, 19, 19.1, 19.2, 20, 20.01, 20.1, 20.2, 20.3, 22, 22.01, 23 and 23.01

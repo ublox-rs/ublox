@@ -11,7 +11,7 @@ use alloc::vec::Vec;
 
 use core::fmt;
 
-use crate::{error::ParserError, ubx_checksum, UbxPacketMeta, SYNC_CHAR_1, SYNC_CHAR_2};
+use crate::{error::ParserError, ubx_checksum, UbxPacketMeta};
 use ublox_derive::{ubx_extend_bitflags, ubx_packet_recv_send};
 
 /// Multi-GNSS config

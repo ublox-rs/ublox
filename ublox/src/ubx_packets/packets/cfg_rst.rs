@@ -1,9 +1,6 @@
 use bitflags::bitflags;
 
-use crate::{
-    ubx_checksum, ubx_packets::UbxChecksumCalc, MemWriter, MemWriterError, UbxPacketCreator,
-    UbxPacketMeta, SYNC_CHAR_1, SYNC_CHAR_2,
-};
+use crate::{ubx_checksum, MemWriter, MemWriterError, UbxPacketCreator, UbxPacketMeta};
 use ublox_derive::{ubx_extend_bitflags, ubx_packet_send};
 
 /// Reset Receiver / Clear Backup Data Structures

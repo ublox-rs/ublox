@@ -83,11 +83,16 @@ mod tests {
     const VALID_CK_B: u8 = 0x38;
     // UBX-ACK-ACK packet: Class=0x05, ID=0x01, Length=0x0002, Payload=[0x04, 0x05], Checksum=[0x11, 0x38]
     const VALID_UBX_PACKET: [u8; 10] = [
-        0xB5, 0x62, // Sync chars (not included in checksum)
-        0x05, 0x01, // Class and Message ID
-        PACK_LEN, 0x00, // Length (2 bytes)
-        0x04, 0x05, // Payload
-        VALID_CK_A, VALID_CK_B, // Checksum
+        crate::constants::UBX_SYNC_CHAR_1,
+        crate::constants::UBX_SYNC_CHAR_2, // Sync chars (not included in checksum)
+        0x05,
+        0x01, // Class and Message ID
+        PACK_LEN,
+        0x00, // Length (2 bytes)
+        0x04,
+        0x05, // Payload
+        VALID_CK_A,
+        VALID_CK_B, // Checksum
     ];
 
     // Helper function to create a valid UBX packet with correct checksum

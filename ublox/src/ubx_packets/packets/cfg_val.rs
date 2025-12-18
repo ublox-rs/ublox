@@ -10,7 +10,7 @@ use {super::SerializeUbxPacketFields, crate::serde::ser::SerializeMap};
 use crate::{
     cfg_val::{CfgKey, CfgVal},
     error::ParserError,
-    ubx_checksum, UbxPacketMeta, SYNC_CHAR_1, SYNC_CHAR_2,
+    ubx_checksum, UbxPacketMeta,
 };
 use ublox_derive::{ubx_extend, ubx_extend_bitflags, ubx_packet_recv, ubx_packet_send};
 

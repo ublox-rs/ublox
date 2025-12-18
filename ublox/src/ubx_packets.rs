@@ -2,7 +2,7 @@ pub mod cfg_val;
 pub mod packets;
 mod types;
 
-use crate::error::MemWriterError;
+use crate::{constants::UBX_HEADER_LEN, constants::UBX_SYNC_SIZE, error::MemWriterError};
 pub use packets::*;
 pub use types::*;
 
@@ -13,13 +13,6 @@ pub trait UbxPacketMeta {
     const FIXED_PAYLOAD_LEN: Option<u16>;
     const MAX_PAYLOAD_LEN: u16;
 }
-
-pub(crate) const SYNC_CHAR_1: u8 = 0xb5;
-pub(crate) const SYNC_CHAR_2: u8 = 0x62;
-pub(crate) const RTCM_SYNC_CHAR: u8 = 0xd3;
-pub(crate) const NMEA_SYNC_CHAR: u8 = 0x24; // '$'
-pub(crate) const NMEA_END_CHAR_1: u8 = 0x0d; // '\r' (<CR>)
-pub(crate) const NMEA_END_CHAR_2: u8 = 0x0a; // '\n' (<LF>)
 
 /// The checksum is calculated over the packet, starting and including
 /// the CLASS field, up until, but excluding, the checksum field.
@@ -37,19 +30,19 @@ pub(crate) fn ubx_checksum(data: &[u8]) -> (u8, u8) {
 
 /// For ubx checksum on the fly
 #[derive(Default)]
-struct UbxChecksumCalc {
+pub(crate) struct UbxChecksumCalc {
     ck_a: u8,
     ck_b: u8,
 }
 
 impl UbxChecksumCalc {
-    fn update(&mut self, chunk: &[u8]) {
+    pub(crate) fn update(&mut self, chunk: &[u8]) {
         for byte in chunk {
             self.ck_a = self.ck_a.overflowing_add(*byte).0;
             self.ck_b = self.ck_b.overflowing_add(self.ck_a).0;
         }
     }
-    fn result(self) -> (u8, u8) {
+    pub(crate) fn result(self) -> (u8, u8) {
         (self.ck_a, self.ck_b)
     }
 }
@@ -126,9 +119,10 @@ impl UbxPacketRequest {
 
     #[inline]
     pub fn into_packet_bytes(self) -> [u8; Self::PACKET_LEN] {
+        use crate::constants::{UBX_SYNC_CHAR_1, UBX_SYNC_CHAR_2};
         let mut ret = [
-            SYNC_CHAR_1,
-            SYNC_CHAR_2,
+            UBX_SYNC_CHAR_1,
+            UBX_SYNC_CHAR_2,
             self.req_class,
             self.req_id,
             0,
@@ -136,7 +130,7 @@ impl UbxPacketRequest {
             0,
             0,
         ];
-        let (ck_a, ck_b) = ubx_checksum(&ret[2..6]);
+        let (ck_a, ck_b) = ubx_checksum(&ret[UBX_SYNC_SIZE..UBX_HEADER_LEN]);
         ret[6] = ck_a;
         ret[7] = ck_b;
         ret
