@@ -1,7 +1,4 @@
-use crate::{
-    ubx_checksum, ubx_packets::UbxChecksumCalc, MemWriter, MemWriterError, UbxPacketCreator,
-    UbxPacketMeta, SYNC_CHAR_1, SYNC_CHAR_2,
-};
+use crate::{ubx_checksum, MemWriter, MemWriterError, UbxPacketCreator, UbxPacketMeta};
 use ublox_derive::ubx_packet_send;
 
 /// Set Message Rate the current port

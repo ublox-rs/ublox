@@ -2,10 +2,11 @@
 use alloc::vec::Vec;
 
 use crate::{
-    error::ParserError,
-    ubx_packets::{
-        NMEA_END_CHAR_1, NMEA_END_CHAR_2, NMEA_SYNC_CHAR, RTCM_SYNC_CHAR, SYNC_CHAR_1, SYNC_CHAR_2,
+    constants::{
+        NMEA_END_CHAR_1, NMEA_END_CHAR_2, NMEA_SYNC_CHAR, RTCM_SYNC_CHAR, UBX_SYNC_CHAR_1,
+        UBX_SYNC_CHAR_2,
     },
+    error::ParserError,
     UbxPacket, UbxProtocol,
 };
 
@@ -210,7 +211,7 @@ impl<T: UnderlyingBuffer, P: UbxProtocol> Parser<T, P> {
         let mut buf = DualBuffer::new(&mut self.buf, new_data);
 
         for i in 0..buf.len() {
-            if buf[i] == SYNC_CHAR_1 {
+            if buf[i] == UBX_SYNC_CHAR_1 {
                 buf.drain(i);
                 break;
             }
@@ -228,7 +229,7 @@ impl<T: UnderlyingBuffer, P: UbxProtocol> Parser<T, P> {
         let mut buf = DualBuffer::new(&mut self.buf, new_data);
 
         for i in 0..buf.len() {
-            if buf[i] == SYNC_CHAR_1 || buf[i] == RTCM_SYNC_CHAR {
+            if buf[i] == UBX_SYNC_CHAR_1 || buf[i] == RTCM_SYNC_CHAR {
                 buf.drain(i);
                 break;
             }
@@ -249,7 +250,7 @@ impl<T: UnderlyingBuffer, P: UbxProtocol> Parser<T, P> {
         let mut buf = DualBuffer::new(&mut self.buf, new_data);
 
         for i in 0..buf.len() {
-            if buf[i] == SYNC_CHAR_1 || buf[i] == RTCM_SYNC_CHAR || buf[i] == NMEA_SYNC_CHAR {
+            if buf[i] == UBX_SYNC_CHAR_1 || buf[i] == RTCM_SYNC_CHAR || buf[i] == NMEA_SYNC_CHAR {
                 buf.drain(i);
                 break;
             }
@@ -302,9 +303,9 @@ fn extract_packet_ubx<'b, T: UnderlyingBuffer, P: UbxProtocol>(
         return Some(Err(checksum_error));
     }
 
-    let class_id = buf[2];
-    let msg_id = buf[3];
-    buf.drain(6);
+    let class_id = buf[crate::constants::UBX_CLASS_OFFSET];
+    let msg_id = buf[crate::constants::UBX_MSG_ID_OFFSET];
+    buf.drain(crate::constants::UBX_HEADER_LEN);
     let msg_data = match buf.take(usize::from(pack_len) + 2) {
         Ok(x) => x,
         Err(e) => {
@@ -317,7 +318,7 @@ fn extract_packet_ubx<'b, T: UnderlyingBuffer, P: UbxProtocol>(
 
 impl<T: UnderlyingBuffer, P: UbxProtocol> UbxParserIter<'_, T, P> {
     fn find_sync(&self) -> Option<usize> {
-        (0..self.buf.len()).find(|&i| self.buf[i] == SYNC_CHAR_1)
+        (0..self.buf.len()).find(|&i| self.buf[i] == UBX_SYNC_CHAR_1)
     }
 
     #[allow(
@@ -337,19 +338,22 @@ impl<T: UnderlyingBuffer, P: UbxProtocol> UbxParserIter<'_, T, P> {
             };
             self.buf.drain(pos);
 
-            if self.buf.len() < 2 {
+            if self.buf.len() < crate::constants::UBX_SYNC_SIZE {
                 return None;
             }
-            if self.buf[1] != SYNC_CHAR_2 {
+            if self.buf[1] != UBX_SYNC_CHAR_2 {
                 self.buf.drain(1);
                 continue;
             }
 
-            if self.buf.len() < 6 {
+            if self.buf.len() < crate::constants::UBX_HEADER_LEN {
                 return None;
             }
 
-            let pack_len = u16::from_le_bytes([self.buf[4], self.buf[5]]);
+            let pack_len = u16::from_le_bytes([
+                self.buf[crate::constants::UBX_LENGTH_OFFSET],
+                self.buf[crate::constants::UBX_LENGTH_OFFSET + 1],
+            ]);
             if pack_len > P::MAX_PAYLOAD_LEN {
                 self.buf.drain(2);
                 continue;
@@ -376,7 +380,7 @@ fn extract_packet_rtcm<'a, 'b, T: UnderlyingBuffer>(
     pack_len: u16,
 ) -> Option<Result<AnyPacketRef<'b>, ParserError>> {
     let pack_len = pack_len as usize; // `usize` is needed for indexing but constraining the input to `u16` is still important
-    if !buf.can_drain_and_take(0, pack_len + 3) {
+    if !buf.can_drain_and_take(0, pack_len + crate::constants::RTCM_HEADER_SIZE) {
         if buf.potential_lost_bytes() > 0 {
             // We ran out of space, drop this packet and move on
             // TODO: shouldn't we drain pack_len + 3?
@@ -388,7 +392,7 @@ fn extract_packet_rtcm<'a, 'b, T: UnderlyingBuffer>(
         return None;
     }
 
-    let maybe_data = buf.take(pack_len + 3);
+    let maybe_data = buf.take(pack_len + crate::constants::RTCM_HEADER_SIZE);
     match maybe_data {
         Ok(data) => Some(Ok(AnyPacketRef::Rtcm(RtcmPacketRef::<'b> { data }))),
         Err(e) => Some(Err(e)),
@@ -398,7 +402,7 @@ fn extract_packet_rtcm<'a, 'b, T: UnderlyingBuffer>(
 impl<T: UnderlyingBuffer, P: UbxProtocol> UbxRtcmParserIter<'_, T, P> {
     fn find_sync(&self) -> NextSync {
         for i in 0..self.buf.len() {
-            if self.buf[i] == SYNC_CHAR_1 {
+            if self.buf[i] == UBX_SYNC_CHAR_1 {
                 return NextSync::Ubx(i);
             }
             if self.buf[i] == RTCM_SYNC_CHAR {
@@ -420,19 +424,22 @@ impl<T: UnderlyingBuffer, P: UbxProtocol> UbxRtcmParserIter<'_, T, P> {
                 NextSync::Ubx(pos) => {
                     self.buf.drain(pos);
 
-                    if self.buf.len() < 2 {
+                    if self.buf.len() < crate::constants::UBX_SYNC_SIZE {
                         return None;
                     }
-                    if self.buf[1] != SYNC_CHAR_2 {
+                    if self.buf[1] != UBX_SYNC_CHAR_2 {
                         self.buf.drain(1);
                         continue;
                     }
 
-                    if self.buf.len() < 6 {
+                    if self.buf.len() < crate::constants::UBX_HEADER_LEN {
                         return None;
                     }
 
-                    let pack_len = u16::from_le_bytes([self.buf[4], self.buf[5]]);
+                    let pack_len = u16::from_le_bytes([
+                        self.buf[crate::constants::UBX_LENGTH_OFFSET],
+                        self.buf[crate::constants::UBX_LENGTH_OFFSET + 1],
+                    ]);
                     if pack_len > P::MAX_PAYLOAD_LEN {
                         self.buf.drain(2);
                         continue;
@@ -447,12 +454,12 @@ impl<T: UnderlyingBuffer, P: UbxProtocol> UbxRtcmParserIter<'_, T, P> {
                 NextSync::Rtcm(pos) => {
                     self.buf.drain(pos);
 
-                    // need to read 3 bytes total for sync char (1) + length (2)
-                    if self.buf.len() < 3 {
+                    if self.buf.len() < crate::constants::RTCM_HEADER_SIZE {
                         return None;
                     }
                     // next 2 bytes contain 6 bits reserved + 10 bits length, big endian
-                    let pack_len = u16::from_be_bytes([self.buf[1], self.buf[2]]) & 0x03ff;
+                    let pack_len = u16::from_be_bytes([self.buf[1], self.buf[2]])
+                        & crate::constants::RTCM_LENGTH_MASK;
 
                     return extract_packet_rtcm(&mut self.buf, pack_len);
                 },
@@ -505,7 +512,7 @@ impl<T: UnderlyingBuffer, P: UbxProtocol> UbxRtcmNmeaParserIter<'_, T, P> {
     fn find_sync(&self, min_idx: usize) -> NextSync {
         for i in min_idx..self.buf.len() {
             match self.buf[i] {
-                SYNC_CHAR_1 => return NextSync::Ubx(i),
+                UBX_SYNC_CHAR_1 => return NextSync::Ubx(i),
                 RTCM_SYNC_CHAR => return NextSync::Rtcm(i),
                 NMEA_SYNC_CHAR => return NextSync::Nmea(i),
                 _ => (),
@@ -526,19 +533,22 @@ impl<T: UnderlyingBuffer, P: UbxProtocol> UbxRtcmNmeaParserIter<'_, T, P> {
                 NextSync::Ubx(pos) => {
                     self.buf.drain(pos);
 
-                    if self.buf.len() < 2 {
+                    if self.buf.len() < crate::constants::UBX_SYNC_SIZE {
                         return None;
                     }
-                    if self.buf[1] != SYNC_CHAR_2 {
+                    if self.buf[1] != UBX_SYNC_CHAR_2 {
                         self.buf.drain(1);
                         continue;
                     }
 
-                    if self.buf.len() < 6 {
+                    if self.buf.len() < crate::constants::UBX_HEADER_LEN {
                         return None;
                     }
 
-                    let pack_len = u16::from_le_bytes([self.buf[4], self.buf[5]]);
+                    let pack_len = u16::from_le_bytes([
+                        self.buf[crate::constants::UBX_LENGTH_OFFSET],
+                        self.buf[crate::constants::UBX_LENGTH_OFFSET + 1],
+                    ]);
                     if pack_len > P::MAX_PAYLOAD_LEN {
                         self.buf.drain(2);
                         continue;
@@ -553,21 +563,19 @@ impl<T: UnderlyingBuffer, P: UbxProtocol> UbxRtcmNmeaParserIter<'_, T, P> {
                 NextSync::Rtcm(pos) => {
                     self.buf.drain(pos);
 
-                    // need to read 3 bytes total for sync char (1) + length (2)
-                    if self.buf.len() < 3 {
+                    if self.buf.len() < crate::constants::RTCM_HEADER_SIZE {
                         return None;
                     }
                     // next 2 bytes contain 6 bits reserved + 10 bits length, big endian
-                    let pack_len = u16::from_be_bytes([self.buf[1], self.buf[2]]) & 0x03ff;
+                    let pack_len = u16::from_be_bytes([self.buf[1], self.buf[2]])
+                        & crate::constants::RTCM_LENGTH_MASK;
 
                     return extract_packet_rtcm(&mut self.buf, pack_len);
                 },
                 NextSync::Nmea(pos) => {
                     self.buf.drain(pos);
 
-                    // need to read at least 8 bytes for
-                    // sync char (1) + talker (2) + msg type (3) + end chars (2)
-                    if self.buf.len() < 8 {
+                    if self.buf.len() < crate::constants::NMEA_MIN_BUFFER_SIZE {
                         return None;
                     }
                     // try to determine packet length by searching for NMEA end chars
@@ -589,7 +597,7 @@ impl<T: UnderlyingBuffer, P: UbxProtocol> UbxRtcmNmeaParserIter<'_, T, P> {
                             // found another packet before the end of the NMEA sentence,
                             // drain NMEA sync char
                             self.buf.drain(1);
-                        } else if self.buf.len() > 82 {
+                        } else if self.buf.len() > crate::constants::NMEA_MAX_SENTENCE_LENGTH {
                             // maximum NMEA length exceeded, clear buffer
                             self.buf.clear();
                         }
@@ -1183,7 +1191,18 @@ mod test {
         assert!(it.next().is_none());
     }
 
-    const ACK_ACK_BYTES: [u8; 10] = [0xb5, 0x62, 0x05, 0x01, 0x02, 0x00, 0x04, 0x05, 0x11, 0x38];
+    const ACK_ACK_BYTES: [u8; 10] = [
+        crate::constants::UBX_SYNC_CHAR_1,
+        crate::constants::UBX_SYNC_CHAR_2,
+        0x05,
+        0x01,
+        0x02,
+        0x00,
+        0x04,
+        0x05,
+        0x11,
+        0x38,
+    ];
 
     #[cfg(feature = "ubx_proto14")]
     #[test]
@@ -1222,19 +1241,19 @@ mod test {
     // NAV-PVT payload lengths differ across protocols: proto14=84, proto23/27/31=92
     const NAV_PVT_CLASS: u8 = 0x01;
     const NAV_PVT_ID: u8 = 0x07;
-    const HEADER_LEN: usize = 6;
-    const CHECKSUM_LEN: usize = 2;
     #[cfg(feature = "ubx_proto14")]
     const NAV_PVT_PROTO14_LEN: usize = 84;
     #[cfg(feature = "ubx_proto23")]
     const NAV_PVT_PROTO23_LEN: usize = 92;
 
     fn build_nav_pvt_frame(frame: &mut [u8]) {
-        frame[0] = crate::ubx_packets::SYNC_CHAR_1;
-        frame[1] = crate::ubx_packets::SYNC_CHAR_2;
+        frame[0] = crate::constants::UBX_SYNC_CHAR_1;
+        frame[1] = crate::constants::UBX_SYNC_CHAR_2;
         frame[2] = NAV_PVT_CLASS;
         frame[3] = NAV_PVT_ID;
-        let payload_len = (frame.len() - HEADER_LEN - CHECKSUM_LEN) as u16;
+        let payload_len = (frame.len()
+            - crate::constants::UBX_HEADER_LEN
+            - crate::constants::UBX_CHECKSUM_LEN) as u16;
         let len_bytes = payload_len.to_le_bytes();
         frame[4] = len_bytes[0];
         frame[5] = len_bytes[1];
@@ -1248,7 +1267,9 @@ mod test {
     fn test_nav_pvt_payload_len_proto14() {
         use crate::proto14::{PacketRef, Proto14};
 
-        const PACKET_LEN: usize = NAV_PVT_PROTO14_LEN + HEADER_LEN + CHECKSUM_LEN;
+        const PACKET_LEN: usize = NAV_PVT_PROTO14_LEN
+            + crate::constants::UBX_HEADER_LEN
+            + crate::constants::UBX_CHECKSUM_LEN;
         let mut packet = [0; PACKET_LEN];
 
         build_nav_pvt_frame(&mut packet);
@@ -1267,7 +1288,9 @@ mod test {
     fn test_nav_pvt_payload_len_proto23() {
         use crate::proto23::{PacketRef, Proto23};
 
-        const PACKET_LEN: usize = NAV_PVT_PROTO23_LEN + HEADER_LEN + CHECKSUM_LEN;
+        const PACKET_LEN: usize = NAV_PVT_PROTO23_LEN
+            + crate::constants::UBX_HEADER_LEN
+            + crate::constants::UBX_CHECKSUM_LEN;
         let mut packet = [0; PACKET_LEN];
 
         build_nav_pvt_frame(&mut packet);

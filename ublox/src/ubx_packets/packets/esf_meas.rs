@@ -15,7 +15,7 @@ use alloc::vec::Vec;
 use {super::SerializeUbxPacketFields, crate::serde::ser::SerializeMap};
 
 use crate::ubx_packets::packets::esf_status::EsfSensorType;
-use crate::{error::ParserError, ubx_checksum, UbxPacketMeta, SYNC_CHAR_1, SYNC_CHAR_2};
+use crate::{error::ParserError, ubx_checksum, UbxPacketMeta};
 use ublox_derive::ubx_packet_recv_send;
 
 const DATA_BITMASK: u32 = 0x7FFFFF;

@@ -20,6 +20,7 @@ mod error;
 mod parser;
 mod ubx_packets;
 
+pub mod constants;
 pub mod proto14;
 pub mod proto23;
 pub mod proto27;

@@ -6,10 +6,8 @@ use super::SerializeUbxPacketFields;
 use crate::serde::ser::SerializeMap;
 
 use crate::{
-    error::ParserError,
-    ubx_checksum,
-    ubx_packets::{packets::ScaleBack, UbxChecksumCalc},
-    MemWriter, MemWriterError, UbxPacketCreator, UbxPacketMeta, SYNC_CHAR_1, SYNC_CHAR_2,
+    error::ParserError, ubx_checksum, ubx_packets::packets::ScaleBack, MemWriter, MemWriterError,
+    UbxPacketCreator, UbxPacketMeta,
 };
 use ublox_derive::{ubx_extend, ubx_extend_bitflags, ubx_packet_recv_send};
 
