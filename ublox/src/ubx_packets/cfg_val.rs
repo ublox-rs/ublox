@@ -541,6 +541,40 @@ cfg_val! {
   UsbOutProtNmea,       0x10780002, bool,
   UsbOutProtRtcm3x,     0x10780004, bool,
 
+  // CFG-I2C
+  I2cAddress,           0x20510001, u8,
+  I2cExtendedTimeout,   0x10510002, bool,
+  I2cEnabled,           0x10510003, bool,
+
+  // CFG-I2CINPROT
+  I2cInProtUbx,         0x10710001, bool,
+  I2cInProtNmea,        0x10710002, bool,
+  I2cInProtRtcm3x,      0x10710004, bool,
+  I2cInProtSpartn,      0x10710005, bool,
+
+  // CFG-I2COUTPROT
+  I2cOutProtUbx,        0x10720001, bool,
+  I2cOutProtNmea,       0x10720002, bool,
+  I2cOutProtRtcm3x,     0x10720004, bool,
+
+  // CFG-SPI
+  SpiMaxff,             0x20640001, u8,
+  SpiCpolarity,         0x10640002, bool,
+  SpiCphase,            0x10640003, bool,
+  SpiExtendedTimeout,   0x10640005, bool,
+  SpiEnabled,           0x10640006, bool,
+
+  // CFG-SPIINPROT
+  SpiInProtUbx,         0x10790001, bool,
+  SpiInProtNmea,        0x10790002, bool,
+  SpiInProtRtcm3x,      0x10790004, bool,
+  SpiInProtSpartn,      0x10790005, bool,
+
+  // CFG-SPIOUTPROT
+  SpiOutProtUbx,        0x107a0001, bool,
+  SpiOutProtNmea,       0x107a0002, bool,
+  SpiOutProtRtcm3x,     0x107a0004, bool,
+
   // CFG-INFMSG
   InfMsgUbxI2c,          0x20920001, CfgInfMask,
   InfMsgUbxUart1,        0x20920002, CfgInfMask,
