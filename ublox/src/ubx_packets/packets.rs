@@ -67,6 +67,7 @@ pub mod mon_gnss;
 pub mod mon_hw;
 pub mod mon_hw2;
 pub mod mon_hw3;
+pub mod mon_io;
 pub mod mon_rf;
 pub mod mon_ver;
 
