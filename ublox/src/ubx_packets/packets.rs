@@ -78,6 +78,7 @@ pub mod nav_dop;
 pub mod nav_hp_pos_ecef;
 pub mod nav_hp_pos_llh;
 pub mod nav_other;
+pub mod nav_pl;
 pub mod nav_pos_ecef;
 pub mod nav_pos_llh;
 pub mod nav_pvt;
