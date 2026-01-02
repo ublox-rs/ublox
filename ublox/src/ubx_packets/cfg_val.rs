@@ -1078,6 +1078,16 @@ cfg_val! {
   MsgOutUbxNavOrbUart2, 0x20910012, u8,
   /// Output rate of the UBX-NAV-ORB message on port USB
   MsgOutUbxNavOrbUsb, 0x20910013, u8,
+  /// Output rate of the UBX-NAV-PL message on port I2C
+  MsgOutUbxNavPlI2c, 0x20910415, u8,
+  /// Output rate of the UBX-NAV-PL message on port SPI
+  MsgOutUbxNavPlSpi, 0x20910419, u8,
+  /// Output rate of the UBX-NAV-PL message on port UART1
+  MsgOutUbxNavPlUart1, 0x20910416, u8,
+  /// Output rate of the UBX-NAV-PL message on port UART2
+  MsgOutUbxNavPlUart2, 0x20910417, u8,
+  /// Output rate of the UBX-NAV-PL message on port USB
+  MsgOutUbxNavPlUsb, 0x20910418, u8,
   /// Output rate of the UBX-NAV-POSECEF message on port I2C
   MsgOutUbxNavPosEcefI2c, 0x20910024, u8,
   /// Output rate of the UBX-NAV-POSECEF message on port SPI
@@ -1456,6 +1466,11 @@ cfg_val! {
   NavSpgUtcStandard, 0x2011001c, UtcStandardIdentifier,
   /// Dynamic platform model
   NavSpgDynModel, 0x20110021, NavDynamicModel,
+  /// Enable protection level output
+  ///
+  /// When enabled, the receiver will compute and output protection levels
+  /// in the UBX-NAV-PL message. Requires appropriate firmware support.
+  NavSpgPlEna, 0x101100d7, bool,
   /// Acknowledge assistance input messages
   NavSpgAckAiding, 0x10110025, bool,
   /// Use user geodetic datum parameters
