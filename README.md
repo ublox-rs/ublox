@@ -19,7 +19,7 @@
         <img src=https://img.shields.io/badge/license-MIT-blue.svg alt="MIT License">
     </a>
     <a href=https://www.whatrustisit.com>
-        <img src=https://img.shields.io/badge/minimum%20rustc-1.83-blue?logo=rust alt="MSRV">
+        <img src=https://img.shields.io/badge/minimum%20rustc-1.85-blue?logo=rust alt="MSRV">
     </a>
 </div>
 
@@ -151,7 +151,7 @@ Enable support for uBlox protocol 31 messages.
 
 # Minimum Supported Rust Version
 
-The library crate will support at least the previous year's Rust compilers. Currently, the MSRV is `1.83.0`. Note that, as we are pre-1.0, breaking the MSRV will not force a minor update - the MSRV can change in a patch update.
+The library crate will support at least the previous year's Rust compilers. Currently, the MSRV is `1.85.0`. Note that, as we are pre-1.0, breaking the MSRV will not force a minor update - the MSRV can change in a patch update.
 
 # Contributing
 

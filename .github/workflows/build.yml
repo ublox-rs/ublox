@@ -24,7 +24,7 @@ jobs:
       - name: Install MSRV
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: 1.83.0
+          toolchain: 1.85.0
           override: true
           components: rustfmt, clippy
       - uses: Swatinem/rust-cache@v2
@@ -61,7 +61,7 @@ jobs:
       - name: Install MSRV
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: 1.83.0
+          toolchain: 1.85.0
           override: true
           components: rustfmt, clippy
       - uses: Swatinem/rust-cache@v2
@@ -91,7 +91,7 @@ jobs:
       - name: Install MSRV
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: 1.83.0
+          toolchain: 1.85.0
           override: true
       - name: Install embedded targets
         run: rustup target add thumbv6m-none-eabi thumbv7m-none-eabi thumbv7em-none-eabihf
@@ -119,7 +119,7 @@ jobs:
       - name: Install MSRV
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: 1.83.0
+          toolchain: 1.85.0
           override: true
           components: rustfmt, clippy
 
