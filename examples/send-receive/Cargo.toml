@@ -4,7 +4,7 @@ name = "send-receive"
 description = "Demonstrate usage of the uBlox package for ESF+ADR mode with one thread for receiving and one for sending UBX messages."
 publish = false
 edition.workspace = true
-rust-version.workspace = true
+rust-version = "1.90.0"
 license.workspace = true
 version = "0.1.0"
 

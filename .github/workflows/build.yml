@@ -31,7 +31,8 @@ jobs:
       - name: Code style
         run: |
           cargo fmt --all -- --check
-          cargo clippy --all-features --all-targets -- -D warnings
+          cargo clippy --all-features --all-targets -p ublox -p ublox_derive -- -D warnings
+
 
   build:
     runs-on: ubuntu-latest
@@ -119,7 +120,7 @@ jobs:
       - name: Install MSRV
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: 1.83.0
+          toolchain: 1.90.0
           override: true
           components: rustfmt, clippy
 
@@ -167,8 +168,10 @@ jobs:
           persist-credentials: false
       - uses: taiki-e/install-action@cargo-hack
       - uses: Swatinem/rust-cache@v2
-      - name: Check MSRV for examples
-        run: cargo hack check --rust-version --workspace
+      - name: Check MSRV for ublox packages 
+        run: cargo hack check --rust-version -p ublox -p ublox_derive
+      - name: Check MSRV for examples 
+        run: cargo hack check --rust-version --workspace --exclude ublox --exclude ublox_derive
 
   semver:
     name: semver

@@ -48,19 +48,19 @@ build-examples: (cmd-for-all-examples "cargo build --release")
 [group("examples")]
 lint-examples:
     cargo fmt --all -- --check
-    cargo clippy --all-targets --workspace -- -D warnings
+    cargo clippy --all-targets --workspace --exclude ublox --exclude ublox_derive -- -D warnings
 
 # Run formatting and clippy lints
 [group("misc")]
 lint *ARGS:
     cargo fmt --all
-    cargo clippy --all-features --all-targets -- -D warnings
+    cargo clippy --all-features --all-targets -p ublox -p ublox_derive -- -D warnings
 
 # Run clippy lints with version 1.83.0 which we use in CI atm (we should use a newer one!)
 [group("misc")]
 lint-msrv *ARGS:
     cargo fmt --all
-    cargo +1.83 clippy --all-features --all-targets -- -D warnings
+    cargo +1.83 clippy --all-features --all-targets -p ublox -p ublox_derive -- -D warnings
 
 # Build docs
 [group("misc")]
@@ -71,7 +71,8 @@ doc $RUSTDOCFLAGS="--cfg docrs":
 # Run MSRV checks
 [group("misc")]
 msrv:
-    cargo hack check --rust-version --workspace
+    cargo hack check --rust-version -p ublox -p ublox_derive
+    cargo hack check --rust-version --workspace --exclude ublox --exclude ublox_derive 
 
 # Typo checking
 [group("misc")]
