@@ -81,7 +81,10 @@ fn run_app<B: Backend>(
     mut app: App,
     tick_rate: Duration,
     receiver: Receiver<UbxStatus>,
-) -> Result<()> {
+) -> Result<()>
+where
+    <B as Backend>::Error: Send + Sync + 'static,
+{
     let mut last_tick = Instant::now();
     loop {
         update_states(&mut app, &receiver);
