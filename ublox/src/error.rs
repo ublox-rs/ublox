@@ -36,6 +36,7 @@ pub enum ParserError {
     },
     /// Returned when the parser buffer is not big enough to store the packet
     OutOfMemory {
+        // The required size of the buffer to store the packet payload (and checksum if applicable)
         required_size: usize,
     },
 }
