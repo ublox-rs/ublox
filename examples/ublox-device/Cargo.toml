@@ -4,7 +4,7 @@ authors = ["Andrei Gherghescu <andrei-ng@protonmail.com>"]
 description = "An uBlox device implementation for reuse in examples"
 publish = false
 edition.workspace = true
-rust-version.workspace = true
+rust-version = "1.90.0"
 license.workspace = true
 version = "0.1.0"
 
