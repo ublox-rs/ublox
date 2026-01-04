@@ -1,4 +1,8 @@
-use crate::{parser::buffer::DualBuffer, ParserError, UnderlyingBuffer};
+use crate::{
+    constants::{UBX_CHECKSUM_LEN, UBX_CLASS_OFFSET, UBX_HEADER_LEN, UBX_LENGTH_OFFSET},
+    parser::buffer::DualBuffer,
+    ParserError, UnderlyingBuffer,
+};
 
 /// UBX [Fletcher-16 checksum](https://en.wikipedia.org/wiki/Fletcher%27s_checksum) calculator supporting both streaming and single-shot validation
 #[derive(Default)]
@@ -57,8 +61,12 @@ impl UbxChecksumCalc {
     ) -> Result<(), ParserError> {
         let pack_len = pack_len as usize; // `usize` is needed for indexing but constraining the input to `u16` is still important
         let mut calc = Self::new();
-        let (class_msg_bytes, payload_and_checksum) = buf.peek_raw(2..(4 + pack_len + 2));
-        let (received_ck_a, received_ck_b) = (buf[6 + pack_len], buf[6 + pack_len + 1]);
+        let (class_msg_bytes, payload_and_checksum) =
+            buf.peek_raw(UBX_CLASS_OFFSET..(UBX_LENGTH_OFFSET + pack_len + UBX_CHECKSUM_LEN));
+        let (received_ck_a, received_ck_b) = (
+            buf[UBX_HEADER_LEN + pack_len],
+            buf[UBX_HEADER_LEN + pack_len + 1],
+        );
 
         // Calculate checksum over class, message ID, length, and payload
         calc.update(class_msg_bytes);

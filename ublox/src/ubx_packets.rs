@@ -131,8 +131,8 @@ impl UbxPacketRequest {
             0,
         ];
         let (ck_a, ck_b) = ubx_checksum(&ret[UBX_SYNC_SIZE..UBX_HEADER_LEN]);
-        ret[6] = ck_a;
-        ret[7] = ck_b;
+        ret[UBX_HEADER_LEN] = ck_a;
+        ret[UBX_HEADER_LEN + 1] = ck_b;
         ret
     }
 }
