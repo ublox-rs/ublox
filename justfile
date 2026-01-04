@@ -54,13 +54,13 @@ lint-examples:
 [group("misc")]
 lint *ARGS:
     cargo fmt --all
-    cargo clippy --all-features --all-targets -p ublox -p ublox_derive -- -D warnings
+    cargo clippy --all-features --all-targets -- -D warnings
 
 # Run clippy lints with version 1.83.0 which we use in CI atm (we should use a newer one!)
 [group("misc")]
 lint-msrv *ARGS:
     cargo fmt --all
-    cargo +1.83 clippy --all-features --all-targets -p ublox -p ublox_derive -- -D warnings
+    cargo +1.83 clippy --all-features --all-targets -- -D warnings
 
 # Build docs
 [group("misc")]
@@ -71,7 +71,7 @@ doc $RUSTDOCFLAGS="--cfg docrs":
 # Run MSRV checks
 [group("misc")]
 msrv:
-    cargo hack check --rust-version -p ublox -p ublox_derive
+    cargo hack check --rust-version
     cargo hack check --rust-version --workspace --exclude ublox --exclude ublox_derive 
 
 # Typo checking

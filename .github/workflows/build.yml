@@ -31,7 +31,7 @@ jobs:
       - name: Code style
         run: |
           cargo fmt --all -- --check
-          cargo clippy --all-features --all-targets -p ublox -p ublox_derive -- -D warnings
+          cargo clippy --all-features --all-targets -- -D warnings
 
 
   build:
@@ -169,7 +169,7 @@ jobs:
       - uses: taiki-e/install-action@cargo-hack
       - uses: Swatinem/rust-cache@v2
       - name: Check MSRV for ublox packages 
-        run: cargo hack check --rust-version -p ublox -p ublox_derive
+        run: cargo hack check --rust-version 
       - name: Check MSRV for examples 
         run: cargo hack check --rust-version --workspace --exclude ublox --exclude ublox_derive
 
