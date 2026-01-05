@@ -69,6 +69,7 @@ pub mod mon_hw2;
 pub mod mon_hw3;
 pub mod mon_io;
 pub mod mon_rf;
+pub mod mon_rxr;
 pub mod mon_ver;
 
 pub mod nav_att;
