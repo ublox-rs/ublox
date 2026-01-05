@@ -2,7 +2,7 @@ use clap::Parser;
 use std::io::Read;
 use ublox::UbxPacket;
 
-/// Use proto23 if enabled, otherwise use proto27 if enabled, otherwise use proto31, otherwise use proto14
+/// Use proto23 if enabled, otherwise use proto27 if enabled, otherwise use proto31, otherwise use proto33, otherwise use proto14
 #[cfg(feature = "ubx_proto23")]
 type Proto = ublox::proto23::Proto23;
 #[cfg(all(feature = "ubx_proto27", not(feature = "ubx_proto23")))]
@@ -12,6 +12,15 @@ type Proto = ublox::proto27::Proto27;
     not(any(feature = "ubx_proto23", feature = "ubx_proto27"))
 ))]
 type Proto = ublox::proto31::Proto31;
+#[cfg(all(
+    feature = "ubx_proto33",
+    not(any(
+        feature = "ubx_proto23",
+        feature = "ubx_proto27",
+        feature = "ubx_proto31",
+    ))
+))]
+type Proto = ublox::proto33::Proto33;
 #[cfg(all(
     feature = "ubx_proto14",
     not(any(
@@ -92,6 +101,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         Some(Ok(UbxPacket::Proto31(p))) => {
                             handle_packet_proto31(p);
                         },
+                        #[cfg(feature = "ubx_proto33")]
+                        Some(Ok(UbxPacket::Proto33(p))) => {
+                            handle_packet_proto33(p);
+                        },
                         Some(Err(e)) => {
                             println!("Received malformed packet: {e:?}");
                         },
@@ -160,6 +173,22 @@ fn handle_packet_proto31(p: ublox::proto31::PacketRef) {
             println!("Speed: {} [m/s]", nav_pvt.ground_speed_2d())
         },
         ublox::proto31::PacketRef::EsfMeas(esf_meas) => {
+            for data in esf_meas.data() {
+                println!("ESF MEAS DATA: {data:?}");
+            }
+        },
+        _ => (),
+    }
+}
+
+#[cfg(feature = "ubx_proto33")]
+fn handle_packet_proto33(p: ublox::proto33::PacketRef) {
+    println!("Received UBX packet: {p:?}");
+    match p {
+        ublox::proto33::PacketRef::NavPvt(nav_pvt) => {
+            println!("Speed: {} [m/s]", nav_pvt.ground_speed_2d())
+        },
+        ublox::proto33::PacketRef::EsfMeas(esf_meas) => {
             for data in esf_meas.data() {
                 println!("ESF MEAS DATA: {data:?}");
             }

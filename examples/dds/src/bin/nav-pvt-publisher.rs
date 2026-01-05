@@ -147,6 +147,8 @@ impl UbxPacketHandler for PkgHandler {
             UbxPacket::Proto27(packet_ref) => self.handle_proto27_packet(packet_ref),
             #[cfg(feature = "ubx_proto31")]
             UbxPacket::Proto31(packet_ref) => self.handle_proto31_packet(packet_ref),
+            #[cfg(feature = "ubx_proto33")]
+            UbxPacket::Proto33(packet_ref) => self.handle_proto33_packet(packet_ref),
         }
     }
 }
@@ -220,6 +222,45 @@ impl PkgHandler {
             _ => {
                 trace!("{packet:?}");
             },
+        }
+    }
+
+    #[cfg(feature = "ubx_proto33")]
+    fn handle_proto33_packet(&mut self, packet: ublox::proto33::PacketRef) {
+        match packet {
+            ublox::proto33::PacketRef::MonVer(packet) => {
+                debug!("{packet:?}");
+                info!(
+                    "MonVer: SW version: {} HW version: {}; Extensions: {:?}",
+                    packet.software_version(),
+                    packet.hardware_version(),
+                    packet.extension().collect::<Vec<&str>>()
+                );
+            },
+            ublox::proto33::PacketRef::NavPvt(pkg) => {
+                self.handle_nav_pvt_33(&pkg);
+            },
+            // Add other packet types as needed
+            _ => {
+                trace!("{packet:?}");
+            },
+        }
+    }
+
+    // Handler method that work with NavPvtRef proto 33
+    fn handle_nav_pvt_33(&mut self, pkg: &ublox::nav_pvt::proto33::NavPvtRef) {
+        debug!("{pkg:?}");
+        let mut pvt = to_dds_pvt_33(pkg);
+        pvt.key = self.dds_key.clone();
+        if let Err(e) = dds::write_sample(&self.nav_pvt_wrt, &pvt) {
+            warn!("failed to write PVT message: {e} ");
+        } else {
+            info!(
+                "Published new NavPvt message on DDS at: {:.6} [sec] since start",
+                time::Instant::now()
+                    .duration_since(self.last_published)
+                    .as_secs_f64()
+            );
         }
     }
 
@@ -306,6 +347,57 @@ impl PkgHandler {
             warn!("failed to write EsfStatus message: {e} ");
         }
     }
+}
+
+pub fn to_dds_pvt_33(pkg: &ublox::nav_pvt::proto33::NavPvtRef) -> idl::ubx::nav_pvt::NavPvt {
+    let mut pvt = idl::ubx::nav_pvt::NavPvt {
+        itow: pkg.itow(),
+        ..Default::default()
+    };
+
+    pvt.time_confirmation_flags = pkg.flags2_raw();
+
+    if pkg.flags2().contains(NavPvtFlags2::CONFIRMED_AVAI) {
+        pvt.day = pkg.day();
+        pvt.month = pkg.month();
+        pvt.year = pkg.year();
+        pvt.hour = pkg.hour();
+        pvt.min = pkg.min();
+        pvt.sec = pkg.sec();
+        pvt.nanosec = pkg.nanosec();
+
+        pvt.utc_time_accuracy = pkg.time_accuracy();
+    }
+
+    pvt.gps_fix_type = pkg.fix_type_raw();
+    pvt.fix_flags = pkg.flags_raw();
+
+    pvt.lat = pkg.latitude() as f32;
+    pvt.lon = pkg.longitude() as f32;
+    pvt.height = pkg.height_above_ellipsoid() as f32;
+    pvt.msl = pkg.height_msl() as f32;
+
+    pvt.vel_n = pkg.vel_north() as f32;
+    pvt.vel_e = pkg.vel_east() as f32;
+    pvt.vel_d = pkg.vel_down() as f32;
+
+    pvt.speed_over_ground = pkg.ground_speed_2d() as f32;
+    pvt.heading_motion = pkg.heading_motion() as f32;
+    pvt.heading_vehicle = pkg.heading_vehicle() as f32;
+    pvt.magnetic_declination = pkg.magnetic_declination() as f32;
+
+    pvt.pdop = pkg.pdop() as f32;
+
+    pvt.satellites_used = pkg.num_satellites();
+
+    pvt.llh_validity = !pkg.flags3().invalid_llh();
+    pvt.horizontal_accuracy = pkg.horizontal_accuracy() as f32;
+    pvt.vertical_accuracy = pkg.vertical_accuracy() as f32;
+    pvt.velocity_accuracy = pkg.speed_accuracy() as f32;
+    pvt.heading_accuracy = pkg.heading_accuracy() as f32;
+    pvt.magnetic_declination_accuracy = pkg.magnetic_declination_accuracy() as f32;
+
+    pvt
 }
 
 pub fn to_dds_pvt_27_31(pkg: &ublox::nav_pvt::proto27_31::NavPvtRef) -> idl::ubx::nav_pvt::NavPvt {

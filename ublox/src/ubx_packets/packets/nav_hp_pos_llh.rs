@@ -70,7 +70,11 @@ struct NavHpPosLlh {
     vertical_accuracy: u32,
 }
 
-#[cfg(not(any(feature = "ubx_proto27", feature = "ubx_proto31")))]
+#[cfg(not(any(
+    feature = "ubx_proto27",
+    feature = "ubx_proto31",
+    feature = "ubx_proto33",
+)))]
 pub(crate) mod flags {
     #[derive(Debug, Clone, Copy)]
     #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -83,7 +87,11 @@ pub(crate) mod flags {
     }
 }
 
-#[cfg(any(feature = "ubx_proto27", feature = "ubx_proto31"))]
+#[cfg(any(
+    feature = "ubx_proto27",
+    feature = "ubx_proto31",
+    feature = "ubx_proto33",
+))]
 pub(crate) mod flags {
     #[derive(Debug, Clone, Copy)]
     #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]

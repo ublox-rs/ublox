@@ -1,4 +1,8 @@
-#![cfg(any(feature = "ubx_proto27", feature = "ubx_proto31"))]
+#![cfg(any(
+    feature = "ubx_proto27",
+    feature = "ubx_proto31",
+    feature = "ubx_proto33",
+))]
 
 //! A proptest generator for U-Blox NAV-PL messages.
 //!
@@ -271,6 +275,55 @@ proptest! {
         let mut it = parser.consume_ubx(&frame);
 
         let Some(Ok(UbxPacket::Proto31(PacketRef::NavPl(p)))) = it.next() else {
+            panic!("Parser failed to parse a NAV-PL valid packet");
+        };
+
+        // Header fields
+        prop_assert_eq!(p.version(), expected.version);
+        prop_assert_eq!(p.tmir_coeff(), expected.tmir_coeff);
+        prop_assert_eq!(p.tmir_exp(), expected.tmir_exp);
+
+        // Validity and frame fields (raw values)
+        prop_assert_eq!(p.pl_pos_valid_raw(), expected.pl_pos_valid);
+        prop_assert_eq!(p.pl_pos_frame_raw(), expected.pl_pos_frame);
+        prop_assert_eq!(p.pl_vel_valid_raw(), expected.pl_vel_valid);
+        prop_assert_eq!(p.pl_vel_frame_raw(), expected.pl_vel_frame);
+        prop_assert_eq!(p.pl_time_valid_raw(), expected.pl_time_valid);
+
+        // Invalidity reason fields
+        prop_assert_eq!(p.pl_pos_invalidity_reason_raw(), expected.pl_pos_invalidity_reason);
+        prop_assert_eq!(p.pl_vel_invalidity_reason_raw(), expected.pl_vel_invalidity_reason);
+        prop_assert_eq!(p.pl_time_invalidity_reason_raw(), expected.pl_time_invalidity_reason);
+
+        // Timing and position fields
+        prop_assert_eq!(p.itow(), expected.itow);
+        // Position PLs now return f64 in meters (scaled by 0.001 from mm)
+        prop_assert!((p.pl_pos1() - (expected.pl_pos1 as f64 * 0.001)).abs() < 1e-9);
+        prop_assert!((p.pl_pos2() - (expected.pl_pos2 as f64 * 0.001)).abs() < 1e-9);
+        prop_assert!((p.pl_pos3() - (expected.pl_pos3 as f64 * 0.001)).abs() < 1e-9);
+
+        // Velocity PLs now return f64 in m/s (scaled by 0.001 from mm/s)
+        prop_assert!((p.pl_vel1() - (expected.pl_vel1 as f64 * 0.001)).abs() < 1e-9);
+        prop_assert!((p.pl_vel2() - (expected.pl_vel2 as f64 * 0.001)).abs() < 1e-9);
+        prop_assert!((p.pl_vel3() - (expected.pl_vel3 as f64 * 0.001)).abs() < 1e-9);
+
+        // Orientation and time fields
+        prop_assert_eq!(p.pl_pos_horiz_orient_raw(), expected.pl_pos_horiz_orient);
+        prop_assert_eq!(p.pl_vel_horiz_orient_raw(), expected.pl_vel_horiz_orient);
+        prop_assert_eq!(p.pl_time(), expected.pl_time);
+    }
+}
+
+#[cfg(feature = "ubx_proto33")]
+proptest! {
+    #[test]
+    fn test_parser_proto33_with_generated_nav_pl_frames((expected, frame) in ubx_nav_pl_frame_strategy()) {
+        use ublox::proto33::{PacketRef, Proto33};
+
+        let mut parser = ParserBuilder::new().with_protocol::<Proto33>().with_fixed_buffer::<2048>();
+        let mut it = parser.consume_ubx(&frame);
+
+        let Some(Ok(UbxPacket::Proto33(PacketRef::NavPl(p)))) = it.next() else {
             panic!("Parser failed to parse a NAV-PL valid packet");
         };
 

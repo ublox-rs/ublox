@@ -1,4 +1,8 @@
-#![cfg(any(feature = "ubx_proto27", feature = "ubx_proto31"))]
+#![cfg(any(
+    feature = "ubx_proto27",
+    feature = "ubx_proto31",
+    feature = "ubx_proto33",
+))]
 
 //! A proptest generator for U-Blox SEC-SIG messages.
 //!
@@ -143,6 +147,26 @@ proptest! {
         let mut it = parser.consume_ubx(&frame);
 
         let Some(Ok(UbxPacket::Proto31(PacketRef::SecSig(p)))) = it.next() else {
+            panic!("Parser failed to parse a SEC-SIG valid packet");
+        };
+
+        prop_assert_eq!(p.version(), expected.version);
+        prop_assert_eq!(p.sig_sec_flags_raw(), expected.sig_sec_flags);
+        prop_assert_eq!(p.jam_num_cent_freqs(), expected.jam_num_cent_freqs);
+        prop_assert_eq!(p.jam_state_cent_freqs().count(), expected.jam_state_cent_freqs.len());
+    }
+}
+
+#[cfg(feature = "ubx_proto33")]
+proptest! {
+    #[test]
+    fn test_parser_proto33_with_generated_sec_sig_frames((expected, frame) in ubx_sec_sig_frame_strategy()) {
+        use ublox::proto33::{PacketRef, Proto33};
+
+        let mut parser = ParserBuilder::new().with_protocol::<Proto33>().with_fixed_buffer::<1024>();
+        let mut it = parser.consume_ubx(&frame);
+
+        let Some(Ok(UbxPacket::Proto33(PacketRef::SecSig(p)))) = it.next() else {
             panic!("Parser failed to parse a SEC-SIG valid packet");
         };
 

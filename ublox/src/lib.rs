@@ -25,10 +25,11 @@ pub mod proto14;
 pub mod proto23;
 pub mod proto27;
 pub mod proto31;
+pub mod proto33;
 
 /// Unified interface for UBX packets across different protocol versions.
 ///
-/// Each variant corresponds to a UBX protocol version (14, 23, 27, 31).
+/// Each variant corresponds to a UBX protocol version (14, 23, 27, 31, 33).
 ///
 /// Most users will only need one protocol, so enable only the relevant feature flag.
 ///
@@ -58,6 +59,8 @@ pub enum UbxPacket<'a> {
     Proto27(proto27::PacketRef<'a>),
     #[cfg(feature = "ubx_proto31")]
     Proto31(proto31::PacketRef<'a>),
+    #[cfg(feature = "ubx_proto33")]
+    Proto33(proto33::PacketRef<'a>),
 }
 
 /// Trait for parsing UBX protocol version.

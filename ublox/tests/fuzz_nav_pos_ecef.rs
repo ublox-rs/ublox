@@ -1,4 +1,8 @@
-#![cfg(any(feature = "ubx_proto27", feature = "ubx_proto31"))]
+#![cfg(any(
+    feature = "ubx_proto27",
+    feature = "ubx_proto31",
+    feature = "ubx_proto33",
+))]
 
 //! A proptest generator for U-Blox NAV-POSECEF messages.
 //!
@@ -132,6 +136,27 @@ proptest! {
         let mut it = parser.consume_ubx(&frame);
 
         let Some(Ok(UbxPacket::Proto31(PacketRef::NavPosEcef(p)))) = it.next() else {
+            panic!("Parser failed to parse a NAV-POSECEF valid packet");
+        };
+
+        prop_assert_eq!(p.itow(), expected.itow);
+        prop_assert_eq!(p.ecef_x_meters_raw(), expected.ecef_x);
+        prop_assert_eq!(p.ecef_y_meters_raw(), expected.ecef_y);
+        prop_assert_eq!(p.ecef_z_meters_raw(), expected.ecef_z);
+        prop_assert_eq!(p.p_acc_meters_raw(), expected.p_acc);
+    }
+}
+
+#[cfg(feature = "ubx_proto33")]
+proptest! {
+    #[test]
+    fn test_parser_proto33_with_generated_nav_pos_ecef_frames((expected, frame) in ubx_nav_pos_ecef_frame_strategy()) {
+        use ublox::proto33::{PacketRef, Proto33};
+
+        let mut parser = ParserBuilder::new().with_protocol::<Proto33>().with_fixed_buffer::<1024>();
+        let mut it = parser.consume_ubx(&frame);
+
+        let Some(Ok(UbxPacket::Proto33(PacketRef::NavPosEcef(p)))) = it.next() else {
             panic!("Parser failed to parse a NAV-POSECEF valid packet");
         };
 

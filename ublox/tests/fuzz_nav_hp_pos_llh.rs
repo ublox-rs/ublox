@@ -19,6 +19,7 @@ pub enum ProtocolVersion {
     V23,
     V27,
     V31,
+    V33,
 }
 
 /// Represents the payload of a UBX-NAV-HPPOSLLH message.
@@ -291,6 +292,38 @@ proptest! {
         let mut it = parser.consume_ubx(&frame);
 
         let Some(Ok(UbxPacket::Proto31(PacketRef::NavHpPosLlh(p)))) = it.next() else {
+            panic!("Parser failed to parse a NAV-HPPOSLLH valid packet");
+        };
+
+        // Assert that the parsed fields match the generated values.
+        prop_assert_eq!(p.version(), expected_hpposllh.version);
+        prop_assert_eq!(p.itow(), expected_hpposllh.itow);
+        prop_assert_eq!(p.flags_raw(), expected_hpposllh.flags);
+        prop_assert_eq!(p.lon_degrees_raw(), expected_hpposllh.lon);
+        prop_assert_eq!(p.lat_degrees_raw(), expected_hpposllh.lat);
+        prop_assert_eq!(p.height_meters_raw(), expected_hpposllh.height);
+        prop_assert_eq!(p.height_msl_raw(), expected_hpposllh.h_msl);
+        prop_assert_eq!(p.lon_hp_degrees_raw(), expected_hpposllh.lon_hp);
+        prop_assert_eq!(p.lat_hp_degrees_raw(), expected_hpposllh.lat_hp);
+        prop_assert_eq!(p.height_hp_meters_raw(), expected_hpposllh.height_hp);
+        prop_assert_eq!(p.height_hp_msl_raw(), expected_hpposllh.h_msl_hp);
+        prop_assert_eq!(p.horizontal_accuracy_raw(), expected_hpposllh.h_acc);
+        prop_assert_eq!(p.vertical_accuracy_raw(), expected_hpposllh.v_acc);
+    }
+}
+
+#[cfg(feature = "ubx_proto33")]
+proptest! {
+    #[test]
+    fn test_parser_proto33_with_generated_nav_hpposllh_frames(
+        (expected_hpposllh, frame) in ubx_nav_hpposllh_frame_strategy(ProtocolVersion::V33)
+    ) {
+        use ublox::proto33::{Proto33, PacketRef};
+
+        let mut parser = ParserBuilder::new().with_protocol::<Proto33>().with_fixed_buffer::<1024>();
+        let mut it = parser.consume_ubx(&frame);
+
+        let Some(Ok(UbxPacket::Proto33(PacketRef::NavHpPosLlh(p)))) = it.next() else {
             panic!("Parser failed to parse a NAV-HPPOSLLH valid packet");
         };
 

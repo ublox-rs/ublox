@@ -2,6 +2,7 @@
     feature = "ubx_proto23",
     feature = "ubx_proto27",
     feature = "ubx_proto31",
+    feature = "ubx_proto33",
 ))]
 
 //! A proptest generator for U-Blox MON-HW2 messages.
@@ -214,6 +215,32 @@ proptest! {
         let mut it = parser.consume_ubx(&frame);
 
         let Some(Ok(UbxPacket::Proto31(PacketRef::MonHw2(p)))) = it.next() else {
+            panic!("Parser failed to parse a MON-HW2 valid packet");
+        };
+
+        // Assert that the parsed fields match the generated values.
+        prop_assert_eq!(p.ofs_i(), expected_hw2.ofs_i);
+        prop_assert_eq!(p.mag_i(), expected_hw2.mag_i);
+        prop_assert_eq!(p.ofs_q(), expected_hw2.ofs_q);
+        prop_assert_eq!(p.mag_q(), expected_hw2.mag_q);
+        prop_assert_eq!(p.cfg_source_raw(), expected_hw2.cfg_source);
+        prop_assert_eq!(p.low_lev_cfg(), expected_hw2.low_lev_cfg);
+        prop_assert_eq!(p.post_status(), expected_hw2.post_status);
+    }
+}
+
+#[cfg(feature = "ubx_proto33")]
+proptest! {
+    #[test]
+    fn test_parser_proto33_with_generated_mon_hw2_frames(
+        (expected_hw2, frame) in ubx_mon_hw2_frame_strategy()
+    ) {
+        use ublox::proto33::{Proto33, PacketRef};
+
+        let mut parser = ParserBuilder::new().with_protocol::<Proto33>().with_fixed_buffer::<1024>();
+        let mut it = parser.consume_ubx(&frame);
+
+        let Some(Ok(UbxPacket::Proto33(PacketRef::MonHw2(p)))) = it.next() else {
             panic!("Parser failed to parse a MON-HW2 valid packet");
         };
 

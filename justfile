@@ -98,8 +98,11 @@ cmd-for-all-features CMD *ARGS:
     '--no-default-features --features ubx_proto31'
     '--no-default-features --features "ubx_proto31 std"'
     '--no-default-features --features "ubx_proto31 std serde"'
+    '--no-default-features --features ubx_proto33'
+    '--no-default-features --features "ubx_proto33 std"'
+    '--no-default-features --features "ubx_proto33 std serde"'
     '--no-default-features --features "alloc std ubx_proto14 ubx_proto23"'
-    '--no-default-features --features "alloc std ubx_proto14 ubx_proto23 ubx_proto27 ubx_proto31"'
+    '--no-default-features --features "alloc std ubx_proto14 ubx_proto23 ubx_proto27 ubx_proto31 ubx_proto33"'
     )
     
     # Loop through each feature combination

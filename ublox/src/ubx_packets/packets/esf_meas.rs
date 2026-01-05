@@ -1,7 +1,8 @@
 #![cfg(any(
     feature = "ubx_proto23",
     feature = "ubx_proto27",
-    feature = "ubx_proto31"
+    feature = "ubx_proto31",
+    feature = "ubx_proto33",
 ))]
 use core::fmt;
 #[allow(unused_imports, reason = "It's only unused in some feature sets")]

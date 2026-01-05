@@ -3,7 +3,7 @@ use ublox_device::ublox::{
     nav_pvt, UbxPacket,
 };
 
-/// Use proto23 if enabled, otherwise use proto27 if enabled, otherwise use proto31, otherwise use proto14
+/// Use proto23 if enabled, otherwise use proto27 if enabled, otherwise use proto31, otherwise use proto33, otherwise use proto14
 #[cfg(feature = "ubx_proto23")]
 pub type Proto = ublox_device::ublox::proto23::Proto23;
 #[cfg(all(feature = "ubx_proto27", not(feature = "ubx_proto23")))]
@@ -14,11 +14,21 @@ pub type Proto = ublox_device::ublox::proto27::Proto27;
 ))]
 pub type Proto = ublox_device::ublox::proto31::Proto31;
 #[cfg(all(
+    feature = "ubx_proto33",
+    not(any(
+        feature = "ubx_proto23",
+        feature = "ubx_proto27",
+        feature = "ubx_proto31",
+    ))
+))]
+pub type Proto = ublox_device::ublox::proto33::Proto33;
+#[cfg(all(
     feature = "ubx_proto14",
     not(any(
         feature = "ubx_proto23",
         feature = "ubx_proto27",
-        feature = "ubx_proto31"
+        feature = "ubx_proto31",
+        feature = "ubx_proto33",
     ))
 ))]
 pub type Proto = ublox_device::ublox::proto14::Proto14;
@@ -67,6 +77,8 @@ fn main() {
                 UbxPacket::Proto27(packet_ref) => handler::handle_packet_proto27(packet_ref),
                 #[cfg(feature = "ubx_proto31")]
                 UbxPacket::Proto31(packet_ref) => handler::handle_packet_proto31(packet_ref),
+                #[cfg(feature = "ubx_proto33")]
+                UbxPacket::Proto33(packet_ref) => handler::handle_packet_proto33(packet_ref),
             })
             .unwrap();
     }
@@ -255,6 +267,51 @@ mod handler {
             },
         }
     }
+
+    #[cfg(feature = "ubx_proto33")]
+    pub fn handle_packet_proto33(packet_ref: ublox_device::ublox::proto33::PacketRef) {
+        use ublox_device::ublox::packetref_proto33::PacketRef;
+        match &packet_ref {
+            PacketRef::MonVer(packet) => {
+                println!(
+                    "SW version: {} HW version: {}; Extensions: {:?}",
+                    packet.software_version(),
+                    packet.hardware_version(),
+                    packet.extension().collect::<Vec<&str>>()
+                );
+                println!("{packet:?}");
+            },
+            PacketRef::NavPvt(pvt) => {
+                let has_time = pvt.fix_type() == GnssFixType::Fix3D
+                    || pvt.fix_type() == GnssFixType::GPSPlusDeadReckoning
+                    || pvt.fix_type() == GnssFixType::TimeOnlyFix;
+                let has_posvel = pvt.fix_type() == GnssFixType::Fix3D
+                    || pvt.fix_type() == GnssFixType::GPSPlusDeadReckoning;
+
+                if has_posvel {
+                    let pos: Position = pvt.into();
+                    let vel: Velocity = pvt.into();
+                    let lat = pos.lat;
+                    let lon = pos.lon;
+                    let alt = pos.alt;
+                    let speed = vel.speed;
+                    let heading = vel.heading;
+                    println!("NavPvt: Latitude: {lat:.5} Longitude: {lon:.5} Altitude: {alt:.2} m, Speed: {speed:.2} m/s Heading: {heading:.2} degrees");
+                    println!("NavPvt full: {pvt:?}");
+                }
+
+                if has_time {
+                    let time: DateTime<Utc> = pvt
+                        .try_into()
+                        .expect("Could not parse NAV-PVT time field to UTC");
+                    println!("Time: {time:?}");
+                }
+            },
+            _ => {
+                println!("{packet_ref:?}");
+            },
+        }
+    }
 }
 
 fn cfg_msg_enable_nav_pvt_bytes() -> [u8; 16] {
@@ -276,5 +333,15 @@ fn cfg_msg_enable_nav_pvt_bytes() -> [u8; 16] {
         ))
     ))]
     use nav_pvt::proto27_31::NavPvt;
+    #[cfg(all(
+        feature = "ubx_proto33",
+        not(any(
+            feature = "ubx_proto14",
+            feature = "ubx_proto23",
+            feature = "ubx_proto27",
+            feature = "ubx_proto31",
+        ))
+    ))]
+    use nav_pvt::proto33::NavPvt;
     CfgMsgAllPortsBuilder::set_rate_for::<NavPvt>([0, 1, 1, 1, 0, 0]).into_packet_bytes()
 }

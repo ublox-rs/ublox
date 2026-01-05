@@ -205,10 +205,20 @@ macro_rules! from_cfg_v_bytes {
             6 => NavDynamicModel::AirborneWithLess1gAcceleration,
             7 => NavDynamicModel::AirborneWithLess2gAcceleration,
             8 => NavDynamicModel::AirborneWithLess4gAcceleration,
-            #[cfg(any(feature = "ubx_proto27", feature = "ubx_proto31"))]
+            #[cfg(any(
+                feature = "ubx_proto27",
+                feature = "ubx_proto31",
+                feature = "ubx_proto33",
+            ))]
             9 => NavDynamicModel::WristWornWatch,
-            #[cfg(feature = "ubx_proto31")]
+            #[cfg(any(feature = "ubx_proto31", feature = "ubx_proto33"))]
             10 => NavDynamicModel::Bike,
+            #[cfg(feature = "ubx_proto33")]
+            11 => NavDynamicModel::Mower,
+            #[cfg(feature = "ubx_proto33")]
+            12 => NavDynamicModel::EScooter,
+            #[cfg(feature = "ubx_proto33")]
+            13 => NavDynamicModel::Rail,
             _ => unreachable!(
                 "CFG-NAVSPG-DYNMODEL_TYPE value not supported by protocol specification"
             ),
@@ -757,6 +767,56 @@ cfg_val! {
   MsgOutPubxIdPolytUart2, 0x209100f8, u8,
   /// Output rate of the NMEA-GX-PUBX04 message on port USB
   MsgOutPubxIdPolytUsb, 0x209100f9, u8,
+  /// Output rate of the UBX-ESF-ALG message on port I2C
+  MsgOutUbxEsfAlgI2c, 0x2091010f, u8,
+  /// Output rate of the UBX-ESF-ALG message on port SPI
+  MsgOutUbxEsfAlgSpi, 0x20910113, u8,
+  /// Output rate of the UBX-ESF-ALG message on port UART1
+  MsgOutUbxEsfAlgUart1, 0x20910110, u8,
+  /// Output rate of the UBX-ESF-ALG message on port UART2
+  MsgOutUbxEsfAlgUart2, 0x20910111, u8,
+  /// Output rate of the UBX-ESF-ALG message on port USB
+  MsgOutUbxEsfAlgUsb, 0x20910112, u8,
+  /// Output rate of the UBX-ESF-INS message on port I2C
+  MsgOutUbxEsfInsI2c, 0x20910114, u8,
+  /// Output rate of the UBX-ESF-INS message on port SPI
+  MsgOutUbxEsfInsSpi, 0x20910118, u8,
+  /// Output rate of the UBX-ESF-INS message on port UART1
+  MsgOutUbxEsfInsUart1, 0x20910115, u8,
+  /// Output rate of the UBX-ESF-INS message on port UART2
+  MsgOutUbxEsfInsUart2, 0x20910116, u8,
+  /// Output rate of the UBX-ESF-INS message on port USB
+  MsgOutUbxEsfInsUsb, 0x20910117, u8,
+  /// Output rate of the UBX-ESF-MEAS message on port I2C
+  MsgOutUbxEsfMeasI2c, 0x20910277, u8,
+  /// Output rate of the UBX-ESF-MEAS message on port SPI
+  MsgOutUbxEsfMeasSpi, 0x2091027b, u8,
+  /// Output rate of the UBX-ESF-MEAS message on port UART1
+  MsgOutUbxEsfMeasUart1, 0x20910278, u8,
+  /// Output rate of the UBX-ESF-MEAS message on port UART2
+  MsgOutUbxEsfMeasUart2, 0x20910279, u8,
+  /// Output rate of the UBX-ESF-MEAS message on port USB
+  MsgOutUbxEsfMeasUsb, 0x2091027a, u8,
+  /// Output rate of the UBX-ESF-RAW message on port I2C
+  MsgOutUbxEsfRawI2c, 0x2091029f, u8,
+  /// Output rate of the UBX-ESF-RAW message on port SPI
+  MsgOutUbxEsfRawSpi, 0x209102a3, u8,
+  /// Output rate of the UBX-ESF-RAW message on port UART1
+  MsgOutUbxEsfRawUart1, 0x209102a0, u8,
+  /// Output rate of the UBX-ESF-RAW message on port UART2
+  MsgOutUbxEsfRawUart2, 0x209102a1, u8,
+  /// Output rate of the UBX-ESF-RAW message on port USB
+  MsgOutUbxEsfRawUsb, 0x209102a2, u8,
+  /// Output rate of the UBX-ESF-STATUS message on port I2C
+  MsgOutUbxEsfStatusI2c, 0x20910105, u8,
+  /// Output rate of the UBX-ESF-STATUS message on port SPI
+  MsgOutUbxEsfStatusSpi, 0x20910109, u8,
+  /// Output rate of the UBX-ESF-STATUS message on port UART1
+  MsgOutUbxEsfStatusUart1, 0x20910106, u8,
+  /// Output rate of the UBX-ESF-STATUS message on port UART2
+  MsgOutUbxEsfStatusUart2, 0x20910107, u8,
+  /// Output rate of the UBX-ESF-STATUS message on port USB
+  MsgOutUbxEsfStatusUsb, 0x20910108, u8,
   /// Output rate of the RTCM-3XTYPE1005 message on port I2C
   MsgOutRtcm3Xtype1005I2c, 0x209102bd, u8,
   /// Output rate of the RTCM-3XTYPE1005 message on port SPI
@@ -1569,6 +1629,98 @@ cfg_val! {
   NavSpgConstrAltVar, 0x401100c2, u32,
   /// DGNSS timeout in seconds
   NavSpgConstrDgnssTo, 0x201100c4, u8,
+
+  // CFG-SFCORE-*
+  /// Use ADR/UDR sensor fusion
+  SfCoreUseSf, 0x10080001, bool,
+  /// X coordinate of IMU-to-CRP lever-arm in the installation frame (cm)
+  SfCoreImu2CrpLaX, 0x30080002, i16,
+  /// Y coordinate of IMU-to-CRP lever-arm in the installation frame (cm)
+  SfCoreImu2CrpLaY, 0x30080003, i16,
+  /// Z coordinate of IMU-to-CRP lever-arm in the installation frame (cm)
+  SfCoreImu2CrpLaZ, 0x30080004, i16,
+
+  // CFG-SFIMU-*
+  /// Time period between each update for the saved temperature-dependent gyroscope bias table (s)
+  SfImuGyroTcUpdatePeriod, 0x30060007, u16,
+  /// Gyroscope sensor RMS threshold (2^-8 deg/s)
+  SfImuGyroRmsThdl, 0x20060008, u8,
+  /// Nominal gyroscope sensor data sampling frequency (Hz)
+  SfImuGyroFrequency, 0x20060009, u8,
+  /// Gyroscope sensor data latency due to e.g. CAN bus (ms)
+  SfImuGyroLatency, 0x3006000a, u16,
+  /// Gyroscope sensor data accuracy (1e-3 deg/s)
+  SfImuGyroAccuracy, 0x3006000b, u16,
+  /// Accelerometer RMS threshold (2^-6 m/s^2)
+  SfImuAccelRmsThdl, 0x20060015, u8,
+  /// Nominal accelerometer sensor data sampling frequency (Hz)
+  SfImuAccelFrequency, 0x20060016, u8,
+  /// Accelerometer sensor data latency due to e.g. CAN bus (ms)
+  SfImuAccelLatency, 0x30060017, u16,
+  /// Accelerometer sensor data accuracy (1e-4 m/s^2)
+  SfImuAccelAccuracy, 0x30060018, u16,
+  /// IMU enabled
+  SfImuImuEn, 0x1006001d, bool,
+  /// SCL PIO of the IMU I2C
+  SfImuImuI2cSclPio, 0x2006001e, u8,
+  /// SDA PIO of the IMU I2C
+  SfImuImuI2cSdaPio, 0x2006001f, u8,
+  /// X coordinate of IMU-to-ANT lever-arm in the installation frame (cm)
+  SfImuImu2AntLaX, 0x30060020, i16,
+  /// Y coordinate of IMU-to-ANT lever-arm in the installation frame (cm)
+  SfImuImu2AntLaY, 0x30060021, i16,
+  /// Z coordinate of IMU-to-ANT lever-arm in the installation frame (cm)
+  SfImuImu2AntLaZ, 0x30060022, i16,
+  /// Enable automatic IMU-mount alignment
+  SfImuAutoMntAlgEna, 0x10060027, bool,
+  /// User-deﬁned IMU-mount yaw angle [0, 36000] (1e-2deg)
+  SfImuImuMntAlgYaw, 0x4006002d, u32,
+  /// User-deﬁned IMU-mount pitch angle [-9000, 9000] (1e-2deg)
+  SfImuImuMntAlgPitch, 0x3006002e, i16,
+  /// User-deﬁned IMU-mount roll angle [-18000, 18000] (1e-2deg)
+  SfImuImuMntAlgRoll, 0x3006002f, i16,
+  /// User-deﬁned IMU mount alignment angles tolerance level
+  SfImuImuMntAlgTolerance, 0x20060030, u8,
+
+  // CFG-SFODO-*
+  /// Use combined rear wheel ticks instead of the single tick
+  SfOdoCombineTicks, 0x10070001, bool,
+  /// Use speed measurements
+  SfOdoUseSpeed, 0x10070003, bool,
+  /// Disable automatic estimation of maximum absolute wheel tick counter
+  SfOdoDisAutoCountMax, 0x10070004, bool,
+  /// Disable automatic wheel tick direction pin polarity detection
+  SfOdoDisAutoDirPinPol, 0x10070005, bool,
+  /// Disable automatic receiver reconfiguration for processing speed data instead of wheel tick data
+  SfOdoDisAutoSpeed, 0x10070006, bool,
+  /// Wheel tick scale factor (1e-6)
+  SfOdoFactor, 0x40070007, u32,
+  /// Wheel tick quantization (1e-6 m (or m/s))
+  SfOdoQuantError, 0x40070008, u32,
+  /// Wheel tick counter maximum value
+  SfOdoCountMax, 0x40070009, u32,
+  /// Wheel tick data latency due to e.g. CAN bus (ms)
+  SfOdoLatency, 0x3007000a, u16,
+  /// Nominal wheel tick data frequency (0 = not set) (Hz)
+  SfOdoFrequency, 0x2007000b, u8,
+  /// Count both rising and falling edges on wheel tick signal
+  SfOdoCntBothEdges, 0x1007000d, bool,
+  /// Speed sensor dead band (0 = not set) (cm/s)
+  SfOdoSpeedBand, 0x3007000e, u16,
+  /// Wheel tick signal enabled
+  SfOdoUseWtPin, 0x1007000f, bool,
+  /// Wheel tick direction pin polarity
+  SfOdoDirPinPol, 0x10070010, bool,
+  /// Disable automatic use of wheel tick or speed data received over the software interface
+  SfOdoDisAutoSw, 0x10070011, bool,
+  /// X coordinate of IMU-to-VRP lever-arm in the installation frame (cm)
+  SfOdoImu2VrpLaX, 0x30070012, i16,
+  /// Y coordinate of IMU-to-VRP lever-arm in the installation frame (cm)
+  SfOdoImu2VrpLaY, 0x30070013, i16,
+  /// Z coordinate of IMU-to-VRP lever-arm in the installation frame (cm)
+  SfOdoImu2VrpLaZ, 0x30070014, i16,
+  /// Do not use directional information
+  SfOdoDisDirInfo, 0x1007001c, bool,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

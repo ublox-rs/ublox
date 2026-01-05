@@ -1,4 +1,8 @@
-#![cfg(any(feature = "ubx_proto27", feature = "ubx_proto31"))]
+#![cfg(any(
+    feature = "ubx_proto27",
+    feature = "ubx_proto31",
+    feature = "ubx_proto33",
+))]
 
 //! A proptest generator for U-Blox RXM-COR messages.
 //!
@@ -131,6 +135,27 @@ proptest! {
         let mut it = parser.consume_ubx(&frame);
 
         let Some(Ok(UbxPacket::Proto31(PacketRef::RxmCor(p)))) = it.next() else {
+            panic!("Parser failed to parse a RXM-COR valid packet");
+        };
+
+        prop_assert_eq!(p.version(), expected.version);
+        prop_assert_eq!(p.ebno_raw(), expected.ebno);
+        prop_assert_eq!(p.status_info_raw(), expected.status_info);
+        prop_assert_eq!(p.msg_type(), expected.msg_type);
+        prop_assert_eq!(p.msg_sub_type(), expected.msg_sub_type);
+    }
+}
+
+#[cfg(feature = "ubx_proto33")]
+proptest! {
+    #[test]
+    fn test_parser_proto33_with_generated_rxm_cor_frames((expected, frame) in ubx_rxm_cor_frame_strategy()) {
+        use ublox::proto33::{PacketRef, Proto33};
+
+        let mut parser = ParserBuilder::new().with_protocol::<Proto33>().with_fixed_buffer::<1024>();
+        let mut it = parser.consume_ubx(&frame);
+
+        let Some(Ok(UbxPacket::Proto33(PacketRef::RxmCor(p)))) = it.next() else {
             panic!("Parser failed to parse a RXM-COR valid packet");
         };
 

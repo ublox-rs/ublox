@@ -1,7 +1,8 @@
 #![cfg(any(
     feature = "ubx_proto23",
     feature = "ubx_proto27",
-    feature = "ubx_proto31"
+    feature = "ubx_proto31",
+    feature = "ubx_proto33",
 ))]
 #[allow(unused_imports, reason = "It is only unused in some feature sets")]
 use crate::FieldIter;

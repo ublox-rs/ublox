@@ -9,6 +9,7 @@ use ublox_device::ublox::{
     mon_ver::{MonVer, MonVerRef},
     nav_pvt::{
         common::NavPvtFlags2, proto23::NavPvtRef as NavPvt23, proto27_31::NavPvtRef as NavPvt27_31,
+        proto33::NavPvtRef as NavPvt33,
     },
     *,
 };
@@ -142,6 +143,31 @@ impl<P: UbxProtocol + 'static> UbxDevice<P> {
                         },
                     }
                 },
+                UbxPacket::Proto33(packet_ref) => {
+                    use packetref_proto33::PacketRef;
+                    match packet_ref {
+                        PacketRef::MonVer(pkg) => {
+                            sender.handle_monver(pkg);
+                        },
+                        PacketRef::NavPvt(pkg) => {
+                            sender.handle_navpvt_33(pkg);
+                        },
+                        PacketRef::EsfAlg(pkg) => {
+                            sender.handle_esfalg(pkg);
+                        },
+
+                        PacketRef::EsfStatus(pkg) => {
+                            sender.handle_esf_status(pkg);
+                        },
+
+                        PacketRef::EsfMeas(pkg) => {
+                            sender.handle_esf_meas(pkg);
+                        },
+                        _ => {
+                            trace!("{packet:?}");
+                        },
+                    }
+                },
                 #[cfg(feature = "ubx_proto14")]
                 UbxPacket::Proto14(_) => unimplemented!(),
             });
@@ -236,6 +262,56 @@ impl SenderWrapper {
     }
 
     fn handle_navpvt_27_31(&self, pkg: &NavPvt27_31) {
+        let mut state = NavPvtWidgetState {
+            time_tag: (pkg.itow() / 1000) as f64,
+            ..Default::default()
+        };
+
+        state.flags2 = pkg.flags2();
+
+        if pkg.flags2().contains(NavPvtFlags2::CONFIRMED_AVAI) {
+            state.day = pkg.day();
+            state.month = pkg.month();
+            state.year = pkg.year();
+            state.hour = pkg.hour();
+            state.min = pkg.min();
+            state.sec = pkg.sec();
+            state.nanosecond = pkg.nanosec();
+
+            state.utc_time_accuracy = pkg.time_accuracy();
+        }
+
+        state.position_fix_type = pkg.fix_type();
+        state.fix_flags = pkg.flags();
+
+        state.lat = pkg.latitude();
+        state.lon = pkg.longitude();
+        state.height = pkg.height_above_ellipsoid();
+        state.msl = pkg.height_msl();
+
+        state.vel_ned = (pkg.vel_north(), pkg.vel_east(), pkg.vel_down());
+
+        state.speed_over_ground = pkg.ground_speed_2d();
+        state.heading_motion = pkg.heading_motion();
+        state.heading_vehicle = pkg.heading_vehicle();
+
+        state.magnetic_declination = pkg.magnetic_declination();
+
+        state.pdop = pkg.pdop();
+
+        state.satellites_used = pkg.num_satellites();
+
+        state.invalid_llh = pkg.flags3().invalid_llh();
+        state.position_accuracy = (pkg.horizontal_accuracy(), pkg.vertical_accuracy());
+        state.velocity_accuracy = pkg.speed_accuracy();
+        state.heading_accuracy = pkg.heading_accuracy();
+        state.magnetic_declination_accuracy = pkg.magnetic_declination_accuracy();
+
+        self.send(UbxStatus::Pvt(Box::new(state)));
+        debug!("{pkg:?}");
+    }
+
+    fn handle_navpvt_33(&self, pkg: &NavPvt33) {
         let mut state = NavPvtWidgetState {
             time_tag: (pkg.itow() / 1000) as f64,
             ..Default::default()
