@@ -71,6 +71,7 @@ pub mod mon_io;
 pub mod mon_rf;
 pub mod mon_rxbuf;
 pub mod mon_rxr;
+pub mod mon_txbuf;
 pub mod mon_ver;
 
 pub mod nav_att;
