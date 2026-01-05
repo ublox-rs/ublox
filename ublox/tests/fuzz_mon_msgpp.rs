@@ -7,12 +7,7 @@
 
 use byteorder::{LittleEndian, WriteBytesExt};
 use proptest::prelude::*;
-use ublox::{ParserBuilder, UbxPacket};
-
-/// UBX Sync Character 1 (0xB5 = 'µ')
-const SYNC_CHAR_1: u8 = 0xB5;
-/// UBX Sync Character 2 (0x62 = 'b')
-const SYNC_CHAR_2: u8 = 0x62;
+use ublox::{constants::UBX_SYNC_CHAR_1, constants::UBX_SYNC_CHAR_2, ParserBuilder, UbxPacket};
 
 /// Number of I/O ports
 const NUM_PORTS: usize = 6;
@@ -85,8 +80,8 @@ pub fn ubx_mon_msgpp_frame_strategy() -> impl Strategy<Value = (MonMsgppPayload,
 
         // Assemble the final frame
         let mut final_frame = Vec::with_capacity(8 + payload.len());
-        final_frame.push(SYNC_CHAR_1);
-        final_frame.push(SYNC_CHAR_2);
+        final_frame.push(UBX_SYNC_CHAR_1);
+        final_frame.push(UBX_SYNC_CHAR_2);
         final_frame.extend_from_slice(&frame_core);
         final_frame.push(ck_a);
         final_frame.push(ck_b);

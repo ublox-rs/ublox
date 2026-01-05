@@ -2,10 +2,8 @@
 
 use byteorder::{LittleEndian, WriteBytesExt};
 use proptest::prelude::*;
-use ublox::{ParserBuilder, UbxPacket};
+use ublox::{constants::UBX_SYNC_CHAR_1, constants::UBX_SYNC_CHAR_2, ParserBuilder, UbxPacket};
 
-const SYNC_CHAR_1: u8 = 0xB5;
-const SYNC_CHAR_2: u8 = 0x62;
 const NUM_TARGETS: usize = 6;
 
 #[derive(Debug, Clone)]
@@ -67,8 +65,8 @@ pub fn ubx_mon_rxbuf_frame_strategy() -> impl Strategy<Value = (MonRxbufPayload,
         let (ck_a, ck_b) = calculate_checksum(&frame_core);
 
         let mut final_frame = Vec::with_capacity(8 + payload.len());
-        final_frame.push(SYNC_CHAR_1);
-        final_frame.push(SYNC_CHAR_2);
+        final_frame.push(UBX_SYNC_CHAR_1);
+        final_frame.push(UBX_SYNC_CHAR_2);
         final_frame.extend_from_slice(&frame_core);
         final_frame.push(ck_a);
         final_frame.push(ck_b);

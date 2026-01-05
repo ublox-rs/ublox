@@ -82,7 +82,10 @@ impl UbxChecksumCalc {
 
 #[cfg(test)]
 mod tests {
-    use crate::FixedBuffer;
+    use crate::{
+        constants::{UBX_SYNC_CHAR_1, UBX_SYNC_CHAR_2},
+        FixedBuffer,
+    };
 
     use super::*;
 
@@ -205,9 +208,12 @@ mod tests {
     fn test_empty_payload_checksum() {
         // Create packet with no payload
         let packet = [
-            0xB5, 0x62, // Sync chars
-            0x05, 0x00, // Class and Message ID
-            0x00, 0x00, // Length = 0
+            UBX_SYNC_CHAR_1,
+            UBX_SYNC_CHAR_2,
+            0x05,
+            0x00, // Class and Message ID
+            0x00,
+            0x00, // Length = 0
         ];
 
         // Calculate checksum for empty payload
