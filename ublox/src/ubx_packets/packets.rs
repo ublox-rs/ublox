@@ -69,6 +69,7 @@ pub mod mon_hw2;
 pub mod mon_hw3;
 pub mod mon_io;
 pub mod mon_msgpp;
+pub mod mon_patch;
 pub mod mon_rf;
 pub mod mon_rxbuf;
 pub mod mon_rxr;
