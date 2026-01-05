@@ -1,4 +1,8 @@
-#![cfg(any(feature = "ubx_proto27", feature = "ubx_proto31"))]
+#![cfg(any(
+    feature = "ubx_proto27",
+    feature = "ubx_proto31",
+    feature = "ubx_proto33",
+))]
 use core::fmt;
 
 #[cfg(feature = "serde")]

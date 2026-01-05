@@ -1,4 +1,8 @@
-#![cfg(any(feature = "ubx_proto27", feature = "ubx_proto31"))]
+#![cfg(any(
+    feature = "ubx_proto27",
+    feature = "ubx_proto31",
+    feature = "ubx_proto33",
+))]
 
 //! A proptest generator for U-Blox NAV-COV messages.
 //!
@@ -221,6 +225,40 @@ proptest! {
         let mut it = parser.consume_ubx(&frame);
 
         let Some(Ok(UbxPacket::Proto31(PacketRef::NavCov(p)))) = it.next() else {
+            panic!("Parser failed to parse a NAV-COV valid packet");
+        };
+
+        prop_assert_eq!(p.itow(), expected.itow);
+        prop_assert_eq!(p.version(), expected.version);
+        prop_assert_eq!(p.pos_cov_valid(), expected.pos_cov_valid);
+        prop_assert_eq!(p.vel_cov_valid(), expected.vel_cov_valid);
+
+        prop_assert_eq!(p.pos_cov_nn().to_bits(), expected.pos_cov_nn.to_bits());
+        prop_assert_eq!(p.pos_cov_ne().to_bits(), expected.pos_cov_ne.to_bits());
+        prop_assert_eq!(p.pos_cov_nd().to_bits(), expected.pos_cov_nd.to_bits());
+        prop_assert_eq!(p.pos_cov_ee().to_bits(), expected.pos_cov_ee.to_bits());
+        prop_assert_eq!(p.pos_cov_ed().to_bits(), expected.pos_cov_ed.to_bits());
+        prop_assert_eq!(p.pos_cov_dd().to_bits(), expected.pos_cov_dd.to_bits());
+
+        prop_assert_eq!(p.vel_cov_nn().to_bits(), expected.vel_cov_nn.to_bits());
+        prop_assert_eq!(p.vel_cov_ne().to_bits(), expected.vel_cov_ne.to_bits());
+        prop_assert_eq!(p.vel_cov_nd().to_bits(), expected.vel_cov_nd.to_bits());
+        prop_assert_eq!(p.vel_cov_ee().to_bits(), expected.vel_cov_ee.to_bits());
+        prop_assert_eq!(p.vel_cov_ed().to_bits(), expected.vel_cov_ed.to_bits());
+        prop_assert_eq!(p.vel_cov_dd().to_bits(), expected.vel_cov_dd.to_bits());
+    }
+}
+
+#[cfg(feature = "ubx_proto33")]
+proptest! {
+    #[test]
+    fn test_parser_proto33_with_generated_nav_cov_frames((expected, frame) in ubx_nav_cov_frame_strategy()) {
+        use ublox::proto33::{PacketRef, Proto33};
+
+        let mut parser = ParserBuilder::new().with_protocol::<Proto33>().with_fixed_buffer::<2048>();
+        let mut it = parser.consume_ubx(&frame);
+
+        let Some(Ok(UbxPacket::Proto33(PacketRef::NavCov(p)))) = it.next() else {
             panic!("Parser failed to parse a NAV-COV valid packet");
         };
 

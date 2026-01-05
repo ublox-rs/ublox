@@ -1,4 +1,8 @@
-#![cfg(any(feature = "ubx_proto27", feature = "ubx_proto31"))]
+#![cfg(any(
+    feature = "ubx_proto27",
+    feature = "ubx_proto31",
+    feature = "ubx_proto33",
+))]
 
 //! A proptest generator for U-Blox MON-HW3 messages.
 //!
@@ -145,6 +149,38 @@ pub fn ubx_mon_hw3_frame_strategy() -> impl Strategy<Value = (MonHw3, Vec<u8>)> 
 
         (mon_hw3, final_frame)
     })
+}
+
+#[cfg(feature = "ubx_proto33")]
+proptest! {
+    #[test]
+    fn test_parser_proto33_with_generated_mon_hw3_frames(
+        (expected, frame) in ubx_mon_hw3_frame_strategy()
+    ) {
+        use ublox::proto33::{Proto33, PacketRef};
+
+        let mut parser = ParserBuilder::new()
+            .with_protocol::<Proto33>()
+            .with_fixed_buffer::<2048>();
+
+        let mut it = parser.consume_ubx(&frame);
+
+        let Some(Ok(UbxPacket::Proto33(PacketRef::MonHw3(p)))) = it.next() else {
+            panic!("Parser failed to parse a MON-HW3 valid packet");
+        };
+
+        prop_assert_eq!(p.version(), expected.version);
+        prop_assert_eq!(p.n_pins(), expected.n_pins);
+        prop_assert_eq!(p.flags_raw(), expected.flags);
+        prop_assert_eq!(p.hw_version_raw(), &expected.hw_version);
+        prop_assert_eq!(p.reserved0(), expected.reserved0);
+
+        for (pin_expected, pin_parsed) in expected.pins.iter().zip(p.pins()) {
+            prop_assert_eq!(pin_parsed.pin_id, pin_expected.pin_id);
+            prop_assert_eq!(pin_parsed.vp, pin_expected.vp);
+            prop_assert_eq!(pin_parsed.reserved1, pin_expected.reserved1);
+        }
+    }
 }
 
 #[cfg(feature = "ubx_proto31")]

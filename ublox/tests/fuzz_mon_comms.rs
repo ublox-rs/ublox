@@ -1,4 +1,8 @@
-#![cfg(any(feature = "ubx_proto27", feature = "ubx_proto31"))]
+#![cfg(any(
+    feature = "ubx_proto27",
+    feature = "ubx_proto31",
+    feature = "ubx_proto33",
+))]
 
 //! A proptest generator for U-Blox MON-COMMS messages.
 //!
@@ -249,6 +253,43 @@ proptest! {
         let mut it = parser.consume_ubx(&frame);
 
         let Some(Ok(UbxPacket::Proto31(PacketRef::MonComms(p)))) = it.next() else {
+            panic!("Parser failed to parse a MON-COMMS valid packet");
+        };
+
+        prop_assert_eq!(p.version(), expected.version);
+        prop_assert_eq!(p.n_ports(), expected.ports.len() as u8);
+        prop_assert_eq!(p.ports().count(), expected.ports.len());
+
+        let mut parsed_ports = p.ports();
+        for expected_port in &expected.ports {
+            let parsed_port = parsed_ports.next().unwrap();
+            prop_assert_eq!(parsed_port.port_id, PortId::from(expected_port.port_id));
+            prop_assert_eq!(parsed_port.tx_pending, expected_port.tx_pending);
+            prop_assert_eq!(parsed_port.tx_bytes, expected_port.tx_bytes);
+            prop_assert_eq!(parsed_port.tx_usage, expected_port.tx_usage);
+            prop_assert_eq!(parsed_port.tx_peak_usage, expected_port.tx_peak_usage);
+            prop_assert_eq!(parsed_port.rx_pending, expected_port.rx_pending);
+            prop_assert_eq!(parsed_port.rx_bytes, expected_port.rx_bytes);
+            prop_assert_eq!(parsed_port.rx_usage, expected_port.rx_usage);
+            prop_assert_eq!(parsed_port.rx_peak_usage, expected_port.rx_peak_usage);
+            prop_assert_eq!(parsed_port.overrun_errs, expected_port.overrun_errs);
+            prop_assert_eq!(parsed_port.msgs, expected_port.msgs);
+            prop_assert_eq!(parsed_port.skipped, expected_port.skipped);
+        }
+    }
+}
+
+#[cfg(feature = "ubx_proto33")]
+proptest! {
+    #[test]
+    fn test_parser_proto33_with_generated_mon_comms_frames((expected, frame) in ubx_mon_comms_frame_strategy()) {
+        use ublox::proto33::{PacketRef, Proto33};
+        use ublox::mon_comms::PortId;
+
+        let mut parser = ParserBuilder::new().with_protocol::<Proto33>().with_fixed_buffer::<4096>();
+        let mut it = parser.consume_ubx(&frame);
+
+        let Some(Ok(UbxPacket::Proto33(PacketRef::MonComms(p)))) = it.next() else {
             panic!("Parser failed to parse a MON-COMMS valid packet");
         };
 

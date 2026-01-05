@@ -40,6 +40,16 @@ pub type DefaultProtocol = crate::proto27::Proto27;
 /// The default protocol for types that are generic over protocols, the type of the [DefaultProtocol] depends on which protocol feature(s) are enabled
 pub type DefaultProtocol = crate::proto31::Proto31;
 
+#[cfg(all(
+    not(feature = "ubx_proto14"),
+    not(feature = "ubx_proto23"),
+    not(feature = "ubx_proto27"),
+    not(feature = "ubx_proto31"),
+    feature = "ubx_proto33"
+))]
+/// The default protocol for types that are generic over protocols, the type of the [DefaultProtocol] depends on which protocol feature(s) are enabled
+pub type DefaultProtocol = crate::proto33::Proto33;
+
 mod buffer;
 use buffer::DualBuffer;
 pub use buffer::{FixedBuffer, FixedLinearBuffer, UnderlyingBuffer};
@@ -771,6 +781,24 @@ mod test {
         }
     }
 
+    #[cfg(feature = "ubx_proto33")]
+    #[test]
+    fn parser_handle_garbage_first_byte_proto33() {
+        use crate::proto33::{PacketRef, Proto33};
+
+        let mut buffer = [0; 12];
+        let mut parser: Parser<_, Proto33> = Parser::new(FixedLinearBuffer::new(&mut buffer));
+
+        {
+            let mut it = parser.consume_ubx(&BYTES_GARBAGE);
+            assert!(matches!(
+                it.next(),
+                Some(Ok(UbxPacket::Proto33(PacketRef::AckAck(_))))
+            ));
+            assert!(it.next().is_none());
+        }
+    }
+
     fn test_util_cfg_nav5_bytes() -> [u8; 44] {
         CfgNav5Builder {
             mask: CfgNav5Params::DYN,
@@ -937,6 +965,39 @@ mod test {
         }
     }
 
+    #[cfg(feature = "ubx_proto33")]
+    #[test]
+    fn parser_oom_clears_buffer_proto33() {
+        use crate::proto33::{PacketRef, Proto33};
+
+        let bytes = test_util_cfg_nav5_bytes();
+        let mut parser = ParserBuilder::new()
+            .with_protocol::<Proto33>()
+            .with_fixed_buffer::<12>();
+
+        {
+            let mut it = parser.consume_ubx(&bytes[0..8]);
+            assert!(it.next().is_none());
+        }
+
+        {
+            let mut it = parser.consume_ubx(&bytes[8..]);
+            assert!(
+                matches!(it.next(), Some(Err(ParserError::OutOfMemory { required_size })) if required_size == bytes.len() - 6)
+            );
+            assert!(it.next().is_none());
+        }
+
+        {
+            let mut it = parser.consume_ubx(&ACK_ACK_BYTES);
+            assert!(matches!(
+                it.next(),
+                Some(Ok(UbxPacket::Proto33(PacketRef::AckAck(_))))
+            ));
+            assert!(it.next().is_none());
+        }
+    }
+
     #[cfg(feature = "ubx_proto14")]
     #[test]
     fn parser_accepts_packet_array_underlying_proto14() {
@@ -1002,6 +1063,23 @@ mod test {
         assert!(it.next().is_none());
     }
 
+    #[cfg(feature = "ubx_proto33")]
+    #[test]
+    fn parser_accepts_packet_array_underlying_proto33() {
+        use crate::proto33::{PacketRef, Proto33};
+        let bytes = test_util_cfg_nav5_bytes();
+
+        let mut parser = ParserBuilder::new()
+            .with_protocol::<Proto33>()
+            .with_fixed_buffer::<1024>();
+        let mut it = parser.consume_ubx(&bytes);
+        assert!(matches!(
+            it.next(),
+            Some(Ok(UbxPacket::Proto33(PacketRef::CfgNav5(_))))
+        ));
+        assert!(it.next().is_none());
+    }
+
     #[test]
     #[cfg(all(feature = "std", feature = "ubx_proto14"))]
     fn parser_accepts_packet_vec_underlying_proto14() {
@@ -1060,6 +1138,22 @@ mod test {
         assert!(matches!(
             it.next(),
             Some(Ok(UbxPacket::Proto31(PacketRef::CfgNav5(_))))
+        ));
+        assert!(it.next().is_none());
+    }
+
+    #[test]
+    #[cfg(all(feature = "std", feature = "ubx_proto33"))]
+    fn parser_accepts_packet_vec_underlying_proto33() {
+        use crate::proto33::{PacketRef, Proto33};
+
+        let bytes = test_util_cfg_nav5_bytes();
+
+        let mut parser = Parser::<_, Proto33>::default();
+        let mut it = parser.consume_ubx(&bytes);
+        assert!(matches!(
+            it.next(),
+            Some(Ok(UbxPacket::Proto33(PacketRef::CfgNav5(_))))
         ));
         assert!(it.next().is_none());
     }
@@ -1196,6 +1290,34 @@ mod test {
         assert!(it.next().is_none());
     }
 
+    #[test]
+    #[cfg(all(feature = "std", feature = "ubx_proto33"))]
+    fn parser_accepts_multiple_packets_proto33() {
+        use crate::proto33::{PacketRef, Proto33};
+        let data = test_util_multiple_cfg_nav5_packets_bytes();
+        let mut parser = Parser::<_, Proto33>::default();
+        let mut it = parser.consume_ubx(&data);
+        match it.next() {
+            Some(Ok(UbxPacket::Proto33(PacketRef::CfgNav5(packet)))) => {
+                // We're good
+                assert_eq!(packet.pacc(), 21);
+            },
+            _ => {
+                panic!()
+            },
+        }
+        match it.next() {
+            Some(Ok(UbxPacket::Proto33(PacketRef::CfgNav5(packet)))) => {
+                // We're good
+                assert_eq!(packet.pacc(), 18);
+            },
+            _ => {
+                panic!()
+            },
+        }
+        assert!(it.next().is_none());
+    }
+
     const ACK_ACK_BYTES: [u8; 10] = [
         UBX_SYNC_CHAR_1,
         UBX_SYNC_CHAR_2,
@@ -1243,7 +1365,7 @@ mod test {
         }
     }
 
-    // NAV-PVT payload lengths differ across protocols: proto14=84, proto23/27/31=92
+    // NAV-PVT payload lengths differ across protocols: proto14=84, proto23/27/31/33=92
     const NAV_PVT_CLASS: u8 = 0x01;
     const NAV_PVT_ID: u8 = 0x07;
     #[cfg(feature = "ubx_proto14")]

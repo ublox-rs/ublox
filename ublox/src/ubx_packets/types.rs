@@ -129,6 +129,17 @@ impl From<&NavVelNedOwned> for Velocity {
     }
 }
 
+#[cfg(feature = "ubx_proto33")]
+impl<'a> From<&nav_pvt::proto33::NavPvtRef<'a>> for Position {
+    fn from(packet: &nav_pvt::proto33::NavPvtRef<'a>) -> Self {
+        Position {
+            lon: packet.longitude(),
+            lat: packet.latitude(),
+            alt: packet.height_msl(),
+        }
+    }
+}
+
 #[cfg(any(feature = "ubx_proto27", feature = "ubx_proto31"))]
 impl<'a> From<&nav_pvt::proto27_31::NavPvtRef<'a>> for Position {
     fn from(packet: &nav_pvt::proto27_31::NavPvtRef<'a>) -> Self {
@@ -154,6 +165,17 @@ impl<'a> From<&nav_pvt::proto23::NavPvtRef<'a>> for Position {
 #[cfg(feature = "ubx_proto14")]
 impl<'a> From<&nav_pvt::proto14::NavPvtRef<'a>> for Position {
     fn from(packet: &nav_pvt::proto14::NavPvtRef<'a>) -> Self {
+        Position {
+            lon: packet.longitude(),
+            lat: packet.latitude(),
+            alt: packet.height_msl(),
+        }
+    }
+}
+
+#[cfg(feature = "ubx_proto33")]
+impl From<&nav_pvt::proto33::NavPvtOwned> for Position {
+    fn from(packet: &nav_pvt::proto33::NavPvtOwned) -> Self {
         Position {
             lon: packet.longitude(),
             lat: packet.latitude(),
@@ -195,6 +217,16 @@ impl From<&nav_pvt::proto14::NavPvtOwned> for Position {
     }
 }
 
+#[cfg(feature = "ubx_proto33")]
+impl<'a> From<&nav_pvt::proto33::NavPvtRef<'a>> for Velocity {
+    fn from(packet: &nav_pvt::proto33::NavPvtRef<'a>) -> Self {
+        Velocity {
+            speed: packet.ground_speed_2d(),
+            heading: packet.heading_motion(),
+        }
+    }
+}
+
 #[cfg(any(feature = "ubx_proto27", feature = "ubx_proto31"))]
 impl<'a> From<&nav_pvt::proto27_31::NavPvtRef<'a>> for Velocity {
     fn from(packet: &nav_pvt::proto27_31::NavPvtRef<'a>) -> Self {
@@ -225,6 +257,15 @@ impl<'a> From<&nav_pvt::proto14::NavPvtRef<'a>> for Velocity {
     }
 }
 
+#[cfg(feature = "ubx_proto33")]
+impl From<&nav_pvt::proto33::NavPvtOwned> for Velocity {
+    fn from(packet: &nav_pvt::proto33::NavPvtOwned) -> Self {
+        Velocity {
+            speed: packet.ground_speed_2d(),
+            heading: packet.heading_motion(),
+        }
+    }
+}
 #[cfg(any(feature = "ubx_proto27", feature = "ubx_proto31"))]
 impl From<&nav_pvt::proto27_31::NavPvtOwned> for Velocity {
     fn from(packet: &nav_pvt::proto27_31::NavPvtOwned) -> Self {
@@ -277,6 +318,22 @@ fn datetime_from_nav_pvt(
     Ok(DateTime::from_naive_utc_and_offset(dt, Utc))
 }
 
+#[cfg(feature = "ubx_proto33")]
+impl<'a> TryFrom<&nav_pvt::proto33::NavPvtRef<'a>> for DateTime<Utc> {
+    type Error = DateTimeError;
+    fn try_from(sol: &nav_pvt::proto33::NavPvtRef<'a>) -> Result<Self, Self::Error> {
+        datetime_from_nav_pvt(
+            sol.year(),
+            sol.month(),
+            sol.day(),
+            sol.hour(),
+            sol.min(),
+            sol.sec(),
+            sol.nanosec(),
+        )
+    }
+}
+
 #[cfg(any(feature = "ubx_proto27", feature = "ubx_proto31"))]
 impl<'a> TryFrom<&nav_pvt::proto27_31::NavPvtRef<'a>> for DateTime<Utc> {
     type Error = DateTimeError;
@@ -313,6 +370,22 @@ impl<'a> TryFrom<&nav_pvt::proto23::NavPvtRef<'a>> for DateTime<Utc> {
 impl<'a> TryFrom<&nav_pvt::proto14::NavPvtRef<'a>> for DateTime<Utc> {
     type Error = DateTimeError;
     fn try_from(sol: &nav_pvt::proto14::NavPvtRef<'a>) -> Result<Self, Self::Error> {
+        datetime_from_nav_pvt(
+            sol.year(),
+            sol.month(),
+            sol.day(),
+            sol.hour(),
+            sol.min(),
+            sol.sec(),
+            sol.nanosec(),
+        )
+    }
+}
+
+#[cfg(feature = "ubx_proto33")]
+impl TryFrom<&nav_pvt::proto33::NavPvtOwned> for DateTime<Utc> {
+    type Error = DateTimeError;
+    fn try_from(sol: &nav_pvt::proto33::NavPvtOwned) -> Result<Self, Self::Error> {
         datetime_from_nav_pvt(
             sol.year(),
             sol.month(),

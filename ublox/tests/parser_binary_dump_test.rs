@@ -211,6 +211,39 @@ fn test_parse_big_dump_proto31() {
     assert_eq!(expect, meta);
 }
 
+#[cfg(feature = "ubx_proto33")]
+#[test]
+#[ignore]
+fn test_parse_big_dump_proto33() {
+    use ublox::proto33::{PacketRef, Proto33};
+    let (log, mut meta, expect, log_path, read_sizes) = read_big_log();
+    let mut log_slice = log.as_slice();
+    let mut parser = Parser::<_, Proto33>::default();
+
+    let start = ProcessTime::now();
+    for chunk_size in &read_sizes {
+        let (buf, rest) = log_slice.split_at(*chunk_size);
+        log_slice = rest;
+        let mut it = parser.consume_ubx(buf);
+        while let Some(pack) = it.next() {
+            match pack {
+                Ok(pack) => match pack {
+                    UbxPacket::Proto33(PacketRef::AckAck(_)) => meta.ack_ack += 1,
+                    UbxPacket::Proto33(PacketRef::NavPosLlh(_)) => meta.nav_pos_llh += 1,
+                    UbxPacket::Proto33(PacketRef::NavStatus(_)) => meta.nav_stat += 1,
+                    _ => meta.unknown += 1,
+                },
+                Err(ParserError::InvalidChecksum { .. }) => meta.wrong_chksum += 1,
+                Err(_) => meta.other_errors += 1,
+            }
+        }
+    }
+    let cpu_time = start.elapsed();
+    println!("parse time of {}: {cpu_time:?}", log_path.display());
+
+    assert_eq!(expect, meta);
+}
+
 #[derive(Default, PartialEq, Debug)]
 struct Meta {
     wrong_chksum: usize,

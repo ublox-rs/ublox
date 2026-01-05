@@ -128,6 +128,14 @@ impl<P: UbxProtocol> Device<P> {
                         }
                     }
                 },
+                #[cfg(feature = "ubx_proto33")]
+                UbxPacket::Proto33(packet_ref) => {
+                    if let ublox::proto33::PacketRef::AckAck(ack) = packet_ref {
+                        if ack.class() == T::CLASS && ack.msg_id() == T::ID {
+                            found_packet = true;
+                        }
+                    }
+                },
                 #[cfg(feature = "ubx_proto14")]
                 UbxPacket::Proto14(packet_ref) => {
                     if let ublox::proto14::PacketRef::AckAck(ack) = packet_ref {

@@ -16,6 +16,7 @@ ubx_proto14 = []
 ubx_proto23 = []
 ubx_proto27 = []
 ubx_proto31 = []
+ubx_proto33 = []
 full = [
     "std",
     "alloc",
@@ -24,6 +25,7 @@ full = [
     "ubx_proto23",
     "ubx_proto27",
     "ubx_proto31",
+    "ubx_proto33",
     "sfrbx-gps",
 ]
 

@@ -1,4 +1,8 @@
-#![cfg(any(feature = "ubx_proto27", feature = "ubx_proto31"))]
+#![cfg(any(
+    feature = "ubx_proto27",
+    feature = "ubx_proto31",
+    feature = "ubx_proto33",
+))]
 
 //! A proptest generator for U-Blox MON-RF messages.
 //!
@@ -234,6 +238,45 @@ proptest! {
         let mut it = parser.consume_ubx(&frame);
 
         let Some(Ok(UbxPacket::Proto31(PacketRef::MonRf(p)))) = it.next() else {
+            panic!("Parser failed to parse a MON-RF valid packet");
+        };
+
+        prop_assert_eq!(p.version(), expected_mon_rf.version);
+        prop_assert_eq!(p.n_blocks(), expected_mon_rf.blocks.len() as u8);
+        prop_assert_eq!(p.blocks().count(), expected_mon_rf.blocks.len());
+
+        let mut parsed_blocks = p.blocks();
+        for expected_block in &expected_mon_rf.blocks {
+            let parsed_block = parsed_blocks.next().unwrap();
+
+            prop_assert_eq!(parsed_block.block_id, expected_block.block_id);
+            prop_assert_eq!(parsed_block.flags, expected_block.flags.into());
+            prop_assert_eq!(parsed_block.ant_status as u8, expected_block.ant_status);
+            prop_assert_eq!(parsed_block.ant_power as u8, expected_block.ant_power);
+            prop_assert_eq!(parsed_block.post_status, expected_block.post_status);
+            prop_assert_eq!(parsed_block.noise_per_ms, expected_block.noise_per_ms);
+            prop_assert_eq!(parsed_block.agc_cnt, expected_block.agc_cnt);
+            prop_assert_eq!(parsed_block.jam_ind, expected_block.jam_ind);
+            prop_assert_eq!(parsed_block.ofs_i, expected_block.ofs_i);
+            prop_assert_eq!(parsed_block.mag_i, expected_block.mag_i);
+            prop_assert_eq!(parsed_block.ofs_q, expected_block.ofs_q);
+            prop_assert_eq!(parsed_block.mag_q, expected_block.mag_q);
+        }
+    }
+}
+
+#[cfg(feature = "ubx_proto33")]
+proptest! {
+    #[test]
+    fn test_parser_proto33_with_generated_mon_rf_frames(
+        (expected_mon_rf, frame) in ubx_mon_rf_frame_strategy()
+    ) {
+        use ublox::proto33::{Proto33, PacketRef};
+
+        let mut parser = ParserBuilder::new().with_protocol::<Proto33>().with_fixed_buffer::<2048>();
+        let mut it = parser.consume_ubx(&frame);
+
+        let Some(Ok(UbxPacket::Proto33(PacketRef::MonRf(p)))) = it.next() else {
             panic!("Parser failed to parse a MON-RF valid packet");
         };
 

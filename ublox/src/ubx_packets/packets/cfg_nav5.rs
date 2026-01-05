@@ -111,6 +111,7 @@ bitflags! {
 }
 
 /// Dynamic platform model
+#[non_exhaustive]
 #[derive(Default)]
 #[ubx_extend]
 #[ubx(from_unchecked, into_raw, rest_error)]
@@ -126,12 +127,22 @@ pub enum NavDynamicModel {
     AirborneWithLess1gAcceleration = 6,
     AirborneWithLess2gAcceleration = 7,
     AirborneWithLess4gAcceleration = 8,
-    #[cfg(any(feature = "ubx_proto27", feature = "ubx_proto31"))]
+    #[cfg(any(
+        feature = "ubx_proto27",
+        feature = "ubx_proto31",
+        feature = "ubx_proto33",
+    ))]
     /// not supported in protocol versions less than 18
     WristWornWatch = 9,
-    #[cfg(feature = "ubx_proto31")]
+    #[cfg(any(feature = "ubx_proto31", feature = "ubx_proto33"))]
     /// supported in protocol versions 19.2
     Bike = 10,
+    #[cfg(feature = "ubx_proto33")]
+    Mower = 11,
+    #[cfg(feature = "ubx_proto33")]
+    EScooter = 12,
+    #[cfg(feature = "ubx_proto33")]
+    Rail = 13,
 }
 
 /// Position Fixing Mode

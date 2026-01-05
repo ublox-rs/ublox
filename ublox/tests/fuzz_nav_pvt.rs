@@ -19,6 +19,7 @@ pub enum ProtocolVersion {
     V23,
     V27,
     V31,
+    V33,
 }
 
 /// Represents the payload of a UBX-NAV-PVT message.
@@ -56,8 +57,8 @@ pub struct NavPvt {
     pub s_acc: u32,
     pub head_acc: u32,
     pub p_dop: u16,
-    pub flags3: u16,        // 2 bytes in proto23, 1 byte in proto27/31
-    pub reserved1: [u8; 5], // 5 bytes in proto27/31, 4 bytes in proto23 (one becomes part of flags3)
+    pub flags3: u16,        // 2 bytes in proto23, 1 byte in proto27/31/33
+    pub reserved1: [u8; 5], // 5 bytes in proto27/31/33, 4 bytes in proto23 (one becomes part of flags3)
     pub head_veh: i32,
     pub mag_dec: i16,
     pub mag_acc: u16,
@@ -65,7 +66,7 @@ pub struct NavPvt {
 
 impl NavPvt {
     /// Serializes the NavPvt payload into a vector.
-    /// Proto14: 84 bytes, Proto23/27/31: 92 bytes
+    /// Proto14: 84 bytes, Proto23/27/31/33: 92 bytes
     pub fn to_bytes(&self, version: ProtocolVersion) -> Vec<u8> {
         let mut wtr = Vec::with_capacity(92);
         wtr.write_u32::<LittleEndian>(self.itow).unwrap();
@@ -113,8 +114,9 @@ impl NavPvt {
                 wtr.write_i16::<LittleEndian>(self.mag_dec).unwrap();
                 wtr.write_u16::<LittleEndian>(self.mag_acc).unwrap();
             },
-            ProtocolVersion::V27 | ProtocolVersion::V31 => {
-                // Proto 27/31 have 1-byte flags3, then 5 bytes reserved1 (total 92 bytes)
+            ProtocolVersion::V27 | ProtocolVersion::V31 | ProtocolVersion::V33 => {
+                // TODO: Proto 27/33 have 2-byte flags3
+                // Proto 27/31/33 have 1-byte flags3, then 5 bytes reserved1 (total 92 bytes)
                 wtr.write_u8(self.flags3 as u8).unwrap();
                 wtr.extend_from_slice(&self.reserved1); // All 5 bytes of reserved1
                 wtr.write_i32::<LittleEndian>(self.head_veh).unwrap();
@@ -199,13 +201,13 @@ pub fn nav_pvt_payload_strategy(version: ProtocolVersion) -> impl Strategy<Value
             ),
         )
             .sboxed(),
-        ProtocolVersion::V27 | ProtocolVersion::V31 => (
+        ProtocolVersion::V27 | ProtocolVersion::V31 | ProtocolVersion::V33 => (
             time_and_date,
             fix_and_pos,
             velocity_and_heading,
-            // Group 4: Fields for proto27/31 (1-byte flags3)
+            // Group 4: Fields for proto27/31/33 (1-byte flags3)
             (
-                (0u16..=255u16), // flags3 (1 byte in proto27/31, but stored as u16)
+                (0u16..=255u16), // flags3 (1 byte in proto27/31/33, but stored as u16)
                 prop::array::uniform5(any::<u8>()), // reserved1
                 (-180000000..=360000000i32), // head_veh
                 any::<i16>(),    // mag_dec
@@ -429,6 +431,44 @@ proptest! {
         let mut parser = ParserBuilder::new().with_protocol::<Proto31>().with_fixed_buffer::<1024>();
         let mut it = parser.consume_ubx(&frame);
         let Some(Ok(UbxPacket::Proto31(PacketRef::NavPvt(p)))) = it.next() else {
+            panic!("Parser failed to parse a NAV-PVT valid packet");
+        };
+
+        // Assert that most of the the parsed fields match the generated values.
+        prop_assert_eq!(p.itow(), expected_pvt.itow);
+        prop_assert_eq!(p.day(), expected_pvt.day);
+        prop_assert_eq!(p.ground_speed_2d_raw(), expected_pvt.g_speed);
+        prop_assert_eq!(p.heading_motion_raw(), expected_pvt.head_mot);
+        prop_assert_eq!(p.longitude_raw(), expected_pvt.lon);
+        prop_assert_eq!(p.latitude_raw(), expected_pvt.lat);
+        prop_assert_eq!(p.height_above_ellipsoid_raw(), expected_pvt.height);
+        prop_assert_eq!(p.pdop_raw(), expected_pvt.p_dop);
+        prop_assert_eq!(p.vel_down_raw(), expected_pvt.vel_d);
+        prop_assert_eq!(p.vel_east_raw(), expected_pvt.vel_e);
+        prop_assert_eq!(p.vel_north_raw(), expected_pvt.vel_n);
+        prop_assert_eq!(p.height_msl_raw(), expected_pvt.h_msl);
+        prop_assert_eq!(p.vertical_accuracy_raw(), expected_pvt.v_acc);
+        prop_assert_eq!(p.magnetic_declination_raw(), expected_pvt.mag_dec);
+        prop_assert_eq!(p.magnetic_declination_accuracy_raw(), expected_pvt.mag_acc);
+        prop_assert_eq!(p.magnetic_declination_accuracy_raw(), expected_pvt.mag_acc);
+        prop_assert_eq!(p.fix_type_raw(), expected_pvt.fix_type);
+        prop_assert_eq!(p.flags_raw(), expected_pvt.flags);
+        prop_assert_eq!(p.flags2_raw(), expected_pvt.flags2);
+        prop_assert_eq!(p.flags3_raw(), expected_pvt.flags3 as u8);
+    }
+}
+
+#[cfg(feature = "ubx_proto33")]
+proptest! {
+    #[test]
+    fn test_parser_proto33_with_generated_nav_pvt_frames(
+        (expected_pvt, frame)  in ubx_nav_pvt_frame_strategy(ProtocolVersion::V33)
+    ) {
+        use ublox::proto33::{Proto33, PacketRef};
+
+        let mut parser = ParserBuilder::new().with_protocol::<Proto33>().with_fixed_buffer::<1024>();
+        let mut it = parser.consume_ubx(&frame);
+        let Some(Ok(UbxPacket::Proto33(PacketRef::NavPvt(p)))) = it.next() else {
             panic!("Parser failed to parse a NAV-PVT valid packet");
         };
 
