@@ -5,12 +5,7 @@
 
 use byteorder::{LittleEndian, WriteBytesExt};
 use proptest::prelude::*;
-use ublox::{ParserBuilder, UbxPacket};
-
-/// UBX Sync Character 1 (0xB5 = 'µ')
-const SYNC_CHAR_1: u8 = 0xB5;
-/// UBX Sync Character 2 (0x62 = 'b')
-const SYNC_CHAR_2: u8 = 0x62;
+use ublox::{constants::UBX_SYNC_CHAR_1, constants::UBX_SYNC_CHAR_2, ParserBuilder, UbxPacket};
 
 /// Represents the MON-RXR payload (1 byte).
 #[derive(Debug, Clone)]
@@ -54,8 +49,8 @@ pub fn ubx_mon_rxr_frame_strategy() -> impl Strategy<Value = (MonRxrPayload, Vec
         let (ck_a, ck_b) = calculate_checksum(&frame_core);
 
         let mut final_frame = Vec::with_capacity(9);
-        final_frame.push(SYNC_CHAR_1);
-        final_frame.push(SYNC_CHAR_2);
+        final_frame.push(UBX_SYNC_CHAR_1);
+        final_frame.push(UBX_SYNC_CHAR_2);
         final_frame.extend_from_slice(&frame_core);
         final_frame.push(ck_a);
         final_frame.push(ck_b);

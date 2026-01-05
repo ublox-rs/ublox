@@ -9,7 +9,10 @@
 
 use byteorder::{LittleEndian, WriteBytesExt};
 use proptest::prelude::*;
-use ublox::{ParserBuilder, UbxPacket};
+use ublox::{
+    constants::{UBX_SYNC_CHAR_1, UBX_SYNC_CHAR_2},
+    ParserBuilder, UbxPacket,
+};
 
 /// Represents a single pin in the UBX-MON-HW3 message.
 #[derive(Debug, Clone)]
@@ -134,8 +137,8 @@ pub fn ubx_mon_hw3_frame_strategy() -> impl Strategy<Value = (MonHw3, Vec<u8>)> 
 
         // Assemble final frame
         let mut final_frame = Vec::with_capacity(8 + payload.len());
-        final_frame.push(0xB5);
-        final_frame.push(0x62);
+        final_frame.push(UBX_SYNC_CHAR_1);
+        final_frame.push(UBX_SYNC_CHAR_2);
         final_frame.extend_from_slice(&frame_core);
         final_frame.push(ck_a);
         final_frame.push(ck_b);

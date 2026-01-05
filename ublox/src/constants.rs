@@ -1,4 +1,6 @@
-pub const UBX_SYNC_CHAR_1: u8 = 0xb5;
+/// UBX Sync Character 1 (0xB5 = 'µ')
+pub const UBX_SYNC_CHAR_1: u8 = 0xB5;
+/// UBX Sync Character 2 (0x62 = 'b')
 pub const UBX_SYNC_CHAR_2: u8 = 0x62;
 pub(crate) const UBX_SYNC_SIZE: usize = 2;
 pub(crate) const UBX_PAYLOAD_SIZE_LEN: usize = 2;
@@ -6,7 +8,6 @@ pub(crate) const UBX_CLASS_LEN: usize = 1;
 pub(crate) const UBX_ID_LEN: usize = 1;
 pub(crate) const UBX_HEADER_LEN: usize =
     UBX_SYNC_SIZE + UBX_CLASS_LEN + UBX_ID_LEN + UBX_PAYLOAD_SIZE_LEN;
-
 #[allow(dead_code, reason = "Used in tests")]
 pub(crate) const UBX_CHECKSUM_LEN: usize = 2;
 

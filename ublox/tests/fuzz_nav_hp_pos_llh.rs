@@ -7,7 +7,10 @@
 
 use byteorder::{LittleEndian, WriteBytesExt};
 use proptest::prelude::*;
-use ublox::{ParserBuilder, UbxPacket};
+use ublox::{
+    constants::{UBX_SYNC_CHAR_1, UBX_SYNC_CHAR_2},
+    ParserBuilder, UbxPacket,
+};
 
 #[allow(dead_code, reason = "dead variants for SOME feature flag combination")]
 #[derive(Debug, Clone, Copy)]
@@ -169,8 +172,8 @@ pub fn ubx_nav_hpposllh_frame_strategy(
 
         // Assemble the final frame
         let mut final_frame = Vec::with_capacity(8 + payload.len());
-        final_frame.push(0xB5); // Sync Char 1
-        final_frame.push(0x62); // Sync Char 2
+        final_frame.push(UBX_SYNC_CHAR_1);
+        final_frame.push(UBX_SYNC_CHAR_2);
         final_frame.extend_from_slice(&frame_core);
         final_frame.push(ck_a);
         final_frame.push(ck_b);
