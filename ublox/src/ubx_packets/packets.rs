@@ -73,6 +73,7 @@ pub mod mon_patch;
 pub mod mon_rf;
 pub mod mon_rxbuf;
 pub mod mon_rxr;
+pub mod mon_span;
 pub mod mon_txbuf;
 pub mod mon_ver;
 
