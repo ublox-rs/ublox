@@ -1,18 +1,12 @@
-use super::packets::{
-    nav_hp_pos_ecef::{NavHpPosEcefOwned, NavHpPosEcefRef},
-    nav_hp_pos_llh::{NavHpPosLlhOwned, NavHpPosLlhRef},
-    nav_pos_llh::{NavPosLlhOwned, NavPosLlhRef},
-    nav_pvt,
-    nav_vel_ned::{NavVelNedOwned, NavVelNedRef},
-};
 use crate::error::DateTimeError;
 use chrono::prelude::*;
-use core::{convert::TryFrom, fmt};
+use core::fmt;
 
-/// Represents a world position, can be constructed from NavPosLlh and NavPvt packets.
+/// Represents a geodetic Position in the form of Longitude, Latitude, and Altitude
+/// This can be constructed for example from NavPosLlh and NavPvt uBlox packets.
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, Clone, Copy)]
-pub struct Position {
+pub struct PositionLLA {
     /// Longitude in degrees
     pub lon: f64,
 
@@ -23,278 +17,92 @@ pub struct Position {
     pub alt: f64,
 }
 
-/// Represents a world position in the ECEF coordinate system
+/// A trait for types that can provide LLA (Longitude, Latitude, Altitude) Position information.
+///
+/// This trait is implemented by uBlox packets that contain LLA Position data,
+/// allowing them to be converted to a [`PositionLLA`] struct.
+pub(crate) trait ToLLA {
+    fn to_lla(&self) -> PositionLLA;
+}
+
+/// Represents a Cartesian Position in the ECEF (Earth-Centered, Earth-Fixed) coordinate system.
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, Clone, Copy)]
 pub struct PositionECEF {
-    /// x coordinates in meters
+    /// X coordinate in meters
     pub x: f64,
 
-    /// y coordinates in meters
+    /// Y coordinate in meters
     pub y: f64,
 
-    /// z coordinates in meters
+    /// Z coordinate in meters
     pub z: f64,
+}
+
+/// A trait for types that can provide ECEF (Earth-Centered, Earth-Fixed) Position information.
+///
+/// This trait is implemented by uBlox packets that contain ECEF Position data,
+/// allowing them to be converted to a [`PositionECEF`] struct.
+pub(crate) trait ToECEF {
+    fn to_ecef(&self) -> PositionECEF;
 }
 
 #[derive(Debug, Clone, Copy)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Velocity {
-    /// m/s over the ground
+    /// Speed in meters per second over the ground
     pub speed: f64,
 
     /// Heading in degrees
-    pub heading: f64, // degrees
+    pub heading: f64,
 }
 
-impl<'a> From<&NavPosLlhRef<'a>> for Position {
-    fn from(packet: &NavPosLlhRef<'a>) -> Self {
-        Position {
-            lon: packet.lon_degrees(),
-            lat: packet.lat_degrees(),
-            alt: packet.height_msl(),
-        }
-    }
+/// A trait for types that can provide velocity (speed and heading) information.
+///
+/// This trait is implemented by uBlox packets that contain velocity data,
+/// allowing them to be converted to a [`Velocity`] struct.
+pub(crate) trait ToVelocity {
+    fn to_velocity(&self) -> Velocity;
 }
 
-impl From<&NavPosLlhOwned> for Position {
-    fn from(packet: &NavPosLlhOwned) -> Self {
-        Position {
-            lon: packet.lon_degrees(),
-            lat: packet.lat_degrees(),
-            alt: packet.height_msl(),
-        }
+impl<T> From<&T> for PositionLLA
+where
+    T: ToLLA,
+{
+    fn from(packet: &T) -> Self {
+        packet.to_lla()
     }
 }
 
-impl<'a> From<&NavHpPosLlhRef<'a>> for Position {
-    fn from(packet: &NavHpPosLlhRef<'a>) -> Self {
-        Position {
-            lon: packet.lon_degrees() + packet.lon_hp_degrees(),
-            lat: packet.lat_degrees() + packet.lat_hp_degrees(),
-            alt: packet.height_msl() + packet.height_hp_msl(),
-        }
+impl<T> From<&T> for Velocity
+where
+    T: ToVelocity,
+{
+    fn from(packet: &T) -> Self {
+        packet.to_velocity()
     }
 }
 
-impl From<&NavHpPosLlhOwned> for Position {
-    fn from(packet: &NavHpPosLlhOwned) -> Self {
-        Position {
-            lon: packet.lon_degrees() + packet.lon_hp_degrees(),
-            lat: packet.lat_degrees() + packet.lat_hp_degrees(),
-            alt: packet.height_msl() + packet.height_hp_msl(),
-        }
+impl<T> From<&T> for PositionECEF
+where
+    T: ToECEF,
+{
+    fn from(packet: &T) -> Self {
+        packet.to_ecef()
     }
 }
 
-fn ecef_from_cm_hp(cm: f64, hp_mm: f64) -> f64 {
-    10e-2 * (cm + 0.1 * hp_mm)
+/// A trait for types that can provide Date Time information and convert it to a DateTime<Utc>
+///
+/// This trait is implemented by uBlox packets that contain Date Time data,
+/// allowing them to be converted to a [`DateTime<Utc>`] struct.
+pub(crate) trait ToDateTime {
+    /// Convert to a DateTime<Utc> struct
+    fn to_datetime(&self) -> Result<DateTime<Utc>, DateTimeError>;
 }
 
-impl<'a> From<&NavHpPosEcefRef<'a>> for PositionECEF {
-    fn from(p: &NavHpPosEcefRef<'a>) -> Self {
-        PositionECEF {
-            x: ecef_from_cm_hp(p.ecef_x_cm(), p.ecef_x_hp_mm()),
-            y: ecef_from_cm_hp(p.ecef_y_cm(), p.ecef_y_hp_mm()),
-            z: ecef_from_cm_hp(p.ecef_z_cm(), p.ecef_z_hp_mm()),
-        }
-    }
-}
-
-impl From<&NavHpPosEcefOwned> for PositionECEF {
-    fn from(p: &NavHpPosEcefOwned) -> Self {
-        PositionECEF {
-            x: ecef_from_cm_hp(p.ecef_x_cm(), p.ecef_x_hp_mm()),
-            y: ecef_from_cm_hp(p.ecef_y_cm(), p.ecef_y_hp_mm()),
-            z: ecef_from_cm_hp(p.ecef_z_cm(), p.ecef_z_hp_mm()),
-        }
-    }
-}
-
-impl<'a> From<&NavVelNedRef<'a>> for Velocity {
-    fn from(packet: &NavVelNedRef<'a>) -> Self {
-        Velocity {
-            speed: packet.ground_speed(),
-            heading: packet.heading_degrees(),
-        }
-    }
-}
-
-impl From<&NavVelNedOwned> for Velocity {
-    fn from(packet: &NavVelNedOwned) -> Self {
-        Velocity {
-            speed: packet.ground_speed(),
-            heading: packet.heading_degrees(),
-        }
-    }
-}
-
-#[cfg(feature = "ubx_proto33")]
-impl<'a> From<&nav_pvt::proto33::NavPvtRef<'a>> for Position {
-    fn from(packet: &nav_pvt::proto33::NavPvtRef<'a>) -> Self {
-        Position {
-            lon: packet.longitude(),
-            lat: packet.latitude(),
-            alt: packet.height_msl(),
-        }
-    }
-}
-
-#[cfg(any(feature = "ubx_proto27", feature = "ubx_proto31"))]
-impl<'a> From<&nav_pvt::proto27_31::NavPvtRef<'a>> for Position {
-    fn from(packet: &nav_pvt::proto27_31::NavPvtRef<'a>) -> Self {
-        Position {
-            lon: packet.longitude(),
-            lat: packet.latitude(),
-            alt: packet.height_msl(),
-        }
-    }
-}
-
-#[cfg(feature = "ubx_proto23")]
-impl<'a> From<&nav_pvt::proto23::NavPvtRef<'a>> for Position {
-    fn from(packet: &nav_pvt::proto23::NavPvtRef<'a>) -> Self {
-        Position {
-            lon: packet.longitude(),
-            lat: packet.latitude(),
-            alt: packet.height_msl(),
-        }
-    }
-}
-
-#[cfg(feature = "ubx_proto14")]
-impl<'a> From<&nav_pvt::proto14::NavPvtRef<'a>> for Position {
-    fn from(packet: &nav_pvt::proto14::NavPvtRef<'a>) -> Self {
-        Position {
-            lon: packet.longitude(),
-            lat: packet.latitude(),
-            alt: packet.height_msl(),
-        }
-    }
-}
-
-#[cfg(feature = "ubx_proto33")]
-impl From<&nav_pvt::proto33::NavPvtOwned> for Position {
-    fn from(packet: &nav_pvt::proto33::NavPvtOwned) -> Self {
-        Position {
-            lon: packet.longitude(),
-            lat: packet.latitude(),
-            alt: packet.height_msl(),
-        }
-    }
-}
-
-#[cfg(any(feature = "ubx_proto27", feature = "ubx_proto31"))]
-impl From<&nav_pvt::proto27_31::NavPvtOwned> for Position {
-    fn from(packet: &nav_pvt::proto27_31::NavPvtOwned) -> Self {
-        Position {
-            lon: packet.longitude(),
-            lat: packet.latitude(),
-            alt: packet.height_msl(),
-        }
-    }
-}
-
-#[cfg(feature = "ubx_proto23")]
-impl From<&nav_pvt::proto23::NavPvtOwned> for Position {
-    fn from(packet: &nav_pvt::proto23::NavPvtOwned) -> Self {
-        Position {
-            lon: packet.longitude(),
-            lat: packet.latitude(),
-            alt: packet.height_msl(),
-        }
-    }
-}
-
-#[cfg(feature = "ubx_proto14")]
-impl From<&nav_pvt::proto14::NavPvtOwned> for Position {
-    fn from(packet: &nav_pvt::proto14::NavPvtOwned) -> Self {
-        Position {
-            lon: packet.longitude(),
-            lat: packet.latitude(),
-            alt: packet.height_msl(),
-        }
-    }
-}
-
-#[cfg(feature = "ubx_proto33")]
-impl<'a> From<&nav_pvt::proto33::NavPvtRef<'a>> for Velocity {
-    fn from(packet: &nav_pvt::proto33::NavPvtRef<'a>) -> Self {
-        Velocity {
-            speed: packet.ground_speed_2d(),
-            heading: packet.heading_motion(),
-        }
-    }
-}
-
-#[cfg(any(feature = "ubx_proto27", feature = "ubx_proto31"))]
-impl<'a> From<&nav_pvt::proto27_31::NavPvtRef<'a>> for Velocity {
-    fn from(packet: &nav_pvt::proto27_31::NavPvtRef<'a>) -> Self {
-        Velocity {
-            speed: packet.ground_speed_2d(),
-            heading: packet.heading_motion(),
-        }
-    }
-}
-
-#[cfg(feature = "ubx_proto23")]
-impl<'a> From<&nav_pvt::proto23::NavPvtRef<'a>> for Velocity {
-    fn from(packet: &nav_pvt::proto23::NavPvtRef<'a>) -> Self {
-        Velocity {
-            speed: packet.ground_speed_2d(),
-            heading: packet.heading_motion(),
-        }
-    }
-}
-
-#[cfg(feature = "ubx_proto14")]
-impl<'a> From<&nav_pvt::proto14::NavPvtRef<'a>> for Velocity {
-    fn from(packet: &nav_pvt::proto14::NavPvtRef<'a>) -> Self {
-        Velocity {
-            speed: packet.ground_speed_2d(),
-            heading: packet.heading_motion(),
-        }
-    }
-}
-
-#[cfg(feature = "ubx_proto33")]
-impl From<&nav_pvt::proto33::NavPvtOwned> for Velocity {
-    fn from(packet: &nav_pvt::proto33::NavPvtOwned) -> Self {
-        Velocity {
-            speed: packet.ground_speed_2d(),
-            heading: packet.heading_motion(),
-        }
-    }
-}
-#[cfg(any(feature = "ubx_proto27", feature = "ubx_proto31"))]
-impl From<&nav_pvt::proto27_31::NavPvtOwned> for Velocity {
-    fn from(packet: &nav_pvt::proto27_31::NavPvtOwned) -> Self {
-        Velocity {
-            speed: packet.ground_speed_2d(),
-            heading: packet.heading_motion(),
-        }
-    }
-}
-#[cfg(feature = "ubx_proto23")]
-impl From<&nav_pvt::proto23::NavPvtOwned> for Velocity {
-    fn from(packet: &nav_pvt::proto23::NavPvtOwned) -> Self {
-        Velocity {
-            speed: packet.ground_speed_2d(),
-            heading: packet.heading_motion(),
-        }
-    }
-}
-#[cfg(feature = "ubx_proto14")]
-impl From<&nav_pvt::proto14::NavPvtOwned> for Velocity {
-    fn from(packet: &nav_pvt::proto14::NavPvtOwned) -> Self {
-        Velocity {
-            speed: packet.ground_speed_2d(),
-            heading: packet.heading_motion(),
-        }
-    }
-}
-
-fn datetime_from_nav_pvt(
+/// Helper function to convert date & time components to DateTime<Utc>
+pub(crate) fn datetime_from_components(
     year: u16,
     month: u8,
     day: u8,
@@ -316,134 +124,6 @@ fn datetime_from_nav_pvt(
 
     let dt = NaiveDateTime::new(date, time) + chrono::Duration::nanoseconds(i64::from(nanos));
     Ok(DateTime::from_naive_utc_and_offset(dt, Utc))
-}
-
-#[cfg(feature = "ubx_proto33")]
-impl<'a> TryFrom<&nav_pvt::proto33::NavPvtRef<'a>> for DateTime<Utc> {
-    type Error = DateTimeError;
-    fn try_from(sol: &nav_pvt::proto33::NavPvtRef<'a>) -> Result<Self, Self::Error> {
-        datetime_from_nav_pvt(
-            sol.year(),
-            sol.month(),
-            sol.day(),
-            sol.hour(),
-            sol.min(),
-            sol.sec(),
-            sol.nanosec(),
-        )
-    }
-}
-
-#[cfg(any(feature = "ubx_proto27", feature = "ubx_proto31"))]
-impl<'a> TryFrom<&nav_pvt::proto27_31::NavPvtRef<'a>> for DateTime<Utc> {
-    type Error = DateTimeError;
-    fn try_from(sol: &nav_pvt::proto27_31::NavPvtRef<'a>) -> Result<Self, Self::Error> {
-        datetime_from_nav_pvt(
-            sol.year(),
-            sol.month(),
-            sol.day(),
-            sol.hour(),
-            sol.min(),
-            sol.sec(),
-            sol.nanosec(),
-        )
-    }
-}
-
-#[cfg(feature = "ubx_proto23")]
-impl<'a> TryFrom<&nav_pvt::proto23::NavPvtRef<'a>> for DateTime<Utc> {
-    type Error = DateTimeError;
-    fn try_from(sol: &nav_pvt::proto23::NavPvtRef<'a>) -> Result<Self, Self::Error> {
-        datetime_from_nav_pvt(
-            sol.year(),
-            sol.month(),
-            sol.day(),
-            sol.hour(),
-            sol.min(),
-            sol.sec(),
-            sol.nanosec(),
-        )
-    }
-}
-
-#[cfg(feature = "ubx_proto14")]
-impl<'a> TryFrom<&nav_pvt::proto14::NavPvtRef<'a>> for DateTime<Utc> {
-    type Error = DateTimeError;
-    fn try_from(sol: &nav_pvt::proto14::NavPvtRef<'a>) -> Result<Self, Self::Error> {
-        datetime_from_nav_pvt(
-            sol.year(),
-            sol.month(),
-            sol.day(),
-            sol.hour(),
-            sol.min(),
-            sol.sec(),
-            sol.nanosec(),
-        )
-    }
-}
-
-#[cfg(feature = "ubx_proto33")]
-impl TryFrom<&nav_pvt::proto33::NavPvtOwned> for DateTime<Utc> {
-    type Error = DateTimeError;
-    fn try_from(sol: &nav_pvt::proto33::NavPvtOwned) -> Result<Self, Self::Error> {
-        datetime_from_nav_pvt(
-            sol.year(),
-            sol.month(),
-            sol.day(),
-            sol.hour(),
-            sol.min(),
-            sol.sec(),
-            sol.nanosec(),
-        )
-    }
-}
-
-#[cfg(any(feature = "ubx_proto27", feature = "ubx_proto31"))]
-impl TryFrom<&nav_pvt::proto27_31::NavPvtOwned> for DateTime<Utc> {
-    type Error = DateTimeError;
-    fn try_from(sol: &nav_pvt::proto27_31::NavPvtOwned) -> Result<Self, Self::Error> {
-        datetime_from_nav_pvt(
-            sol.year(),
-            sol.month(),
-            sol.day(),
-            sol.hour(),
-            sol.min(),
-            sol.sec(),
-            sol.nanosec(),
-        )
-    }
-}
-
-#[cfg(feature = "ubx_proto23")]
-impl TryFrom<&nav_pvt::proto23::NavPvtOwned> for DateTime<Utc> {
-    type Error = DateTimeError;
-    fn try_from(sol: &nav_pvt::proto23::NavPvtOwned) -> Result<Self, Self::Error> {
-        datetime_from_nav_pvt(
-            sol.year(),
-            sol.month(),
-            sol.day(),
-            sol.hour(),
-            sol.min(),
-            sol.sec(),
-            sol.nanosec(),
-        )
-    }
-}
-
-#[cfg(feature = "ubx_proto14")]
-impl TryFrom<&nav_pvt::proto14::NavPvtOwned> for DateTime<Utc> {
-    type Error = DateTimeError;
-    fn try_from(sol: &nav_pvt::proto14::NavPvtOwned) -> Result<Self, Self::Error> {
-        datetime_from_nav_pvt(
-            sol.year(),
-            sol.month(),
-            sol.day(),
-            sol.hour(),
-            sol.min(),
-            sol.sec(),
-            sol.nanosec(),
-        )
-    }
 }
 
 #[allow(dead_code, reason = "It is only dead code in some feature sets")]

@@ -3,6 +3,7 @@ use super::SerializeUbxPacketFields;
 #[cfg(feature = "serde")]
 use crate::serde::ser::SerializeMap;
 
+use crate::ubx_packets::types::{PositionLLA, ToLLA};
 use crate::{error::ParserError, UbxPacketMeta};
 use ublox_derive::ubx_packet_recv;
 
@@ -115,3 +116,20 @@ pub(crate) mod flags {
         }
     }
 }
+
+macro_rules! impl_to_lla {
+    ($type:ty) => {
+        impl ToLLA for $type {
+            fn to_lla(&self) -> PositionLLA {
+                PositionLLA {
+                    lon: self.lon_degrees() + self.lon_hp_degrees(),
+                    lat: self.lat_degrees() + self.lat_hp_degrees(),
+                    alt: self.height_msl() + self.height_hp_msl(),
+                }
+            }
+        }
+    };
+}
+
+impl_to_lla!(NavHpPosLlhRef<'_>);
+impl_to_lla!(NavHpPosLlhOwned);

@@ -86,7 +86,7 @@ fn main() {
 
 mod handler {
     use chrono::{DateTime, Utc};
-    use ublox_device::ublox::{GnssFixType, Position, Velocity};
+    use ublox_device::ublox::{GnssFixType, PositionLLA, Velocity};
 
     #[cfg(feature = "ubx_proto14")]
     pub fn handle_packet_proto14(packet_ref: ublox_device::ublox::proto14::PacketRef) {
@@ -109,7 +109,7 @@ mod handler {
                     || pvt.fix_type() == GnssFixType::GPSPlusDeadReckoning;
 
                 if has_posvel {
-                    let pos: Position = pvt.into();
+                    let pos: PositionLLA = pvt.into();
                     let vel: Velocity = pvt.into();
                     let lat = pos.lat;
                     let lon = pos.lon;
@@ -154,7 +154,7 @@ mod handler {
                     || pvt.fix_type() == GnssFixType::GPSPlusDeadReckoning;
 
                 if has_posvel {
-                    let pos: Position = pvt.into();
+                    let pos: PositionLLA = pvt.into();
                     let vel: Velocity = pvt.into();
                     let lat = pos.lat;
                     let lon = pos.lon;
@@ -199,7 +199,7 @@ mod handler {
                     || pvt.fix_type() == GnssFixType::GPSPlusDeadReckoning;
 
                 if has_posvel {
-                    let pos: Position = pvt.into();
+                    let pos: PositionLLA = pvt.into();
                     let vel: Velocity = pvt.into();
                     let lat = pos.lat;
                     let lon = pos.lon;
@@ -244,7 +244,7 @@ mod handler {
                     || pvt.fix_type() == GnssFixType::GPSPlusDeadReckoning;
 
                 if has_posvel {
-                    let pos: Position = pvt.into();
+                    let pos: PositionLLA = pvt.into();
                     let vel: Velocity = pvt.into();
                     let lat = pos.lat;
                     let lon = pos.lon;
@@ -289,7 +289,7 @@ mod handler {
                     || pvt.fix_type() == GnssFixType::GPSPlusDeadReckoning;
 
                 if has_posvel {
-                    let pos: Position = pvt.into();
+                    let pos: PositionLLA = pvt.into();
                     let vel: Velocity = pvt.into();
                     let lat = pos.lat;
                     let lon = pos.lon;
@@ -317,13 +317,16 @@ mod handler {
 fn cfg_msg_enable_nav_pvt_bytes() -> [u8; 16] {
     #[cfg(feature = "ubx_proto14")]
     use nav_pvt::proto14::NavPvt;
+
     #[cfg(all(feature = "ubx_proto23", not(feature = "ubx_proto14")))]
     use nav_pvt::proto23::NavPvt;
+
     #[cfg(all(
         feature = "ubx_proto27",
         not(any(feature = "ubx_proto14", feature = "ubx_proto23"))
     ))]
-    use nav_pvt::proto27_31::NavPvt;
+    use nav_pvt::proto27::NavPvt;
+
     #[cfg(all(
         feature = "ubx_proto31",
         not(any(
@@ -332,7 +335,8 @@ fn cfg_msg_enable_nav_pvt_bytes() -> [u8; 16] {
             feature = "ubx_proto27"
         ))
     ))]
-    use nav_pvt::proto27_31::NavPvt;
+    use nav_pvt::proto31::NavPvt;
+
     #[cfg(all(
         feature = "ubx_proto33",
         not(any(

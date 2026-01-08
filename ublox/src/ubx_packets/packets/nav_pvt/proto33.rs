@@ -3,6 +3,11 @@ use super::super::SerializeUbxPacketFields;
 #[cfg(feature = "serde")]
 use crate::serde::ser::SerializeMap;
 
+use crate::error::DateTimeError;
+use crate::ubx_packets::types::{PositionLLA, ToDateTime, ToLLA, ToVelocity, Velocity};
+use chrono::{DateTime, Utc};
+use core::convert::TryFrom;
+
 use super::common::*;
 use crate::{error::ParserError, GnssFixType, UbxPacketMeta};
 use ublox_derive::ubx_packet_recv;
@@ -135,7 +140,6 @@ struct NavPvt {
     magnetic_declination_accuracy: u16,
 }
 
-#[cfg(feature = "ubx_proto33")]
 pub(crate) mod flags {
     #[derive(Debug, Clone, Copy)]
     #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -169,3 +173,63 @@ pub(crate) mod flags {
         }
     }
 }
+
+macro_rules! impl_to_lla {
+    ($type:ty) => {
+        impl ToLLA for $type {
+            fn to_lla(&self) -> PositionLLA {
+                PositionLLA {
+                    lon: self.longitude(),
+                    lat: self.latitude(),
+                    alt: self.height_msl(),
+                }
+            }
+        }
+    };
+}
+
+impl_to_lla!(NavPvtRef<'_>);
+impl_to_lla!(NavPvtOwned);
+
+macro_rules! impl_to_velocity {
+    ($type:ty) => {
+        impl ToVelocity for $type {
+            fn to_velocity(&self) -> Velocity {
+                Velocity {
+                    speed: self.ground_speed_2d(),
+                    heading: self.heading_motion(),
+                }
+            }
+        }
+    };
+}
+
+impl_to_velocity!(NavPvtRef<'_>);
+impl_to_velocity!(NavPvtOwned);
+
+macro_rules! impl_to_date_time {
+    ($type:ty) => {
+        impl ToDateTime for $type {
+            fn to_datetime(&self) -> Result<DateTime<Utc>, DateTimeError> {
+                crate::ubx_packets::types::datetime_from_components(
+                    self.year(),
+                    self.month(),
+                    self.day(),
+                    self.hour(),
+                    self.min(),
+                    self.sec(),
+                    self.nanosec(),
+                )
+            }
+        }
+        impl TryFrom<&$type> for DateTime<Utc> {
+            type Error = DateTimeError;
+            fn try_from(sol: &$type) -> Result<Self, Self::Error> {
+                sol.to_datetime()
+            }
+        }
+    };
+}
+
+impl_to_date_time!(NavPvtRef<'_>);
+impl_to_date_time!(NavPvtOwned);

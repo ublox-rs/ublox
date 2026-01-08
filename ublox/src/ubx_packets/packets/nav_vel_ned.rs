@@ -3,6 +3,7 @@ use super::SerializeUbxPacketFields;
 #[cfg(feature = "serde")]
 use crate::serde::ser::SerializeMap;
 
+use crate::ubx_packets::types::{ToVelocity, Velocity};
 use crate::{error::ParserError, UbxPacketMeta};
 use ublox_derive::ubx_packet_recv;
 
@@ -45,3 +46,19 @@ struct NavVelNed {
     #[ubx(map_type = f64, scale = 1e-5)]
     course_heading_accuracy_estimate: u32,
 }
+
+macro_rules! impl_to_velocity {
+    ($type:ty) => {
+        impl ToVelocity for $type {
+            fn to_velocity(&self) -> Velocity {
+                Velocity {
+                    speed: self.ground_speed(),
+                    heading: self.heading_degrees(),
+                }
+            }
+        }
+    };
+}
+
+impl_to_velocity!(NavVelNedRef<'_>);
+impl_to_velocity!(NavVelNedOwned);
