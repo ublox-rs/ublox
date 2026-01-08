@@ -78,7 +78,7 @@ fn main() {
                                 || pvt.fix_type() == GnssFixType::GPSPlusDeadReckoning;
 
                             if has_posvel {
-                                let pos: Position = pvt.into();
+                                let pos: PositionLLA = pvt.into();
                                 let vel: Velocity = pvt.into();
                                 println!(
                                     "Latitude: {:.5} Longitude: {:.5} Altitude: {:.2}m",
@@ -126,7 +126,7 @@ fn main() {
                                 || pvt.fix_type() == GnssFixType::GPSPlusDeadReckoning;
 
                             if has_posvel {
-                                let pos: Position = pvt.into();
+                                let pos: PositionLLA = pvt.into();
                                 let vel: Velocity = pvt.into();
                                 println!(
                                     "Latitude: {:.5} Longitude: {:.5} Altitude: {:.2}m",
@@ -174,7 +174,7 @@ fn main() {
                                 || pvt.fix_type() == GnssFixType::GPSPlusDeadReckoning;
 
                             if has_posvel {
-                                let pos: Position = pvt.into();
+                                let pos: PositionLLA = pvt.into();
                                 let vel: Velocity = pvt.into();
                                 println!(
                                     "Latitude: {:.5} Longitude: {:.5} Altitude: {:.2}m",
@@ -222,7 +222,7 @@ fn main() {
                                 || pvt.fix_type() == GnssFixType::GPSPlusDeadReckoning;
 
                             if has_posvel {
-                                let pos: Position = pvt.into();
+                                let pos: PositionLLA = pvt.into();
                                 let vel: Velocity = pvt.into();
                                 println!(
                                     "Latitude: {:.5} Longitude: {:.5} Altitude: {:.2}m",

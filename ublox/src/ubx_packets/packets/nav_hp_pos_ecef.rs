@@ -5,6 +5,7 @@ use super::SerializeUbxPacketFields;
 #[cfg(feature = "serde")]
 use crate::serde::ser::SerializeMap;
 
+use crate::ubx_packets::types::{PositionECEF, ToECEF};
 use crate::{error::ParserError, UbxPacketMeta};
 use ublox_derive::{ubx_extend_bitflags, ubx_packet_recv};
 
@@ -67,3 +68,24 @@ bitflags! {
 
     }
 }
+
+fn ecef_from_cm_hp(cm: f64, hp_mm: f64) -> f64 {
+    10e-2 * (cm + 0.1 * hp_mm)
+}
+
+macro_rules! impl_to_ecef {
+    ($type:ty) => {
+        impl ToECEF for $type {
+            fn to_ecef(&self) -> PositionECEF {
+                PositionECEF {
+                    x: ecef_from_cm_hp(self.ecef_x_cm(), self.ecef_x_hp_mm()),
+                    y: ecef_from_cm_hp(self.ecef_y_cm(), self.ecef_y_hp_mm()),
+                    z: ecef_from_cm_hp(self.ecef_z_cm(), self.ecef_z_hp_mm()),
+                }
+            }
+        }
+    };
+}
+
+impl_to_ecef!(NavHpPosEcefRef<'_>);
+impl_to_ecef!(NavHpPosEcefOwned);
