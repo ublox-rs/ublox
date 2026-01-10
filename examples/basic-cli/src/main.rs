@@ -317,13 +317,16 @@ mod handler {
 fn cfg_msg_enable_nav_pvt_bytes() -> [u8; 16] {
     #[cfg(feature = "ubx_proto14")]
     use nav_pvt::proto14::NavPvt;
+
     #[cfg(all(feature = "ubx_proto23", not(feature = "ubx_proto14")))]
     use nav_pvt::proto23::NavPvt;
+
     #[cfg(all(
         feature = "ubx_proto27",
         not(any(feature = "ubx_proto14", feature = "ubx_proto23"))
     ))]
-    use nav_pvt::proto27_31::NavPvt;
+    use nav_pvt::proto27::NavPvt;
+
     #[cfg(all(
         feature = "ubx_proto31",
         not(any(
@@ -332,7 +335,8 @@ fn cfg_msg_enable_nav_pvt_bytes() -> [u8; 16] {
             feature = "ubx_proto27"
         ))
     ))]
-    use nav_pvt::proto27_31::NavPvt;
+    use nav_pvt::proto31::NavPvt;
+
     #[cfg(all(
         feature = "ubx_proto33",
         not(any(
