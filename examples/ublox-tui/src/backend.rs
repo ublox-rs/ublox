@@ -8,8 +8,8 @@ use ublox_device::ublox::{
     esf_status::{EsfStatus, EsfStatusRef},
     mon_ver::{MonVer, MonVerRef},
     nav_pvt::{
-        common::NavPvtFlags2, proto23::NavPvtRef as NavPvt23, proto27_31::NavPvtRef as NavPvt27_31,
-        proto33::NavPvtRef as NavPvt33,
+        common::NavPvtFlags2, proto23::NavPvtRef as NavPvt23, proto27::NavPvtRef as NavPvt27,
+        proto31::NavPvtRef as NavPvt31, proto33::NavPvtRef as NavPvt33,
     },
     *,
 };
@@ -35,7 +35,7 @@ impl<P: UbxProtocol + 'static> UbxDevice<P> {
         info!("Enable UBX-NAV-PVT message on all serial ports: USB, UART1 and UART2 ...");
         self.device
             .write_all(
-                &CfgMsgAllPortsBuilder::set_rate_for::<nav_pvt::proto27_31::NavPvt>([
+                &CfgMsgAllPortsBuilder::set_rate_for::<nav_pvt::proto31::NavPvt>([
                     0, 1, 1, 1, 0, 0,
                 ])
                 .into_packet_bytes(),
@@ -100,7 +100,7 @@ impl<P: UbxProtocol + 'static> UbxDevice<P> {
                             sender.handle_monver(pkg);
                         },
                         PacketRef::NavPvt(pkg) => {
-                            sender.handle_navpvt_27_31(pkg);
+                            sender.handle_navpvt_27(pkg);
                         },
                         PacketRef::EsfAlg(pkg) => {
                             sender.handle_esfalg(pkg);
@@ -125,7 +125,7 @@ impl<P: UbxProtocol + 'static> UbxDevice<P> {
                             sender.handle_monver(pkg);
                         },
                         PacketRef::NavPvt(pkg) => {
-                            sender.handle_navpvt_27_31(pkg);
+                            sender.handle_navpvt_31(pkg);
                         },
                         PacketRef::EsfAlg(pkg) => {
                             sender.handle_esfalg(pkg);
@@ -261,7 +261,56 @@ impl SenderWrapper {
         debug!("{pkg:?}");
     }
 
-    fn handle_navpvt_27_31(&self, pkg: &NavPvt27_31) {
+    fn handle_navpvt_31(&self, pkg: &NavPvt31) {
+        let mut state = NavPvtWidgetState {
+            time_tag: (pkg.itow() / 1000) as f64,
+            ..Default::default()
+        };
+
+        state.flags2 = pkg.flags2();
+
+        if pkg.flags2().contains(NavPvtFlags2::CONFIRMED_AVAI) {
+            state.day = pkg.day();
+            state.month = pkg.month();
+            state.year = pkg.year();
+            state.hour = pkg.hour();
+            state.min = pkg.min();
+            state.sec = pkg.sec();
+            state.nanosecond = pkg.nanosec();
+
+            state.utc_time_accuracy = pkg.time_accuracy();
+        }
+
+        state.position_fix_type = pkg.fix_type();
+        state.fix_flags = pkg.flags();
+
+        state.lat = pkg.latitude();
+        state.lon = pkg.longitude();
+        state.height = pkg.height_above_ellipsoid();
+        state.msl = pkg.height_msl();
+
+        state.vel_ned = (pkg.vel_north(), pkg.vel_east(), pkg.vel_down());
+
+        state.speed_over_ground = pkg.ground_speed_2d();
+        state.heading_motion = pkg.heading_motion();
+        state.heading_vehicle = pkg.heading_vehicle();
+
+        state.magnetic_declination = pkg.magnetic_declination();
+
+        state.pdop = pkg.pdop();
+
+        state.satellites_used = pkg.num_satellites();
+
+        state.invalid_llh = pkg.flags3().invalid_llh();
+        state.position_accuracy = (pkg.horizontal_accuracy(), pkg.vertical_accuracy());
+        state.velocity_accuracy = pkg.speed_accuracy();
+        state.heading_accuracy = pkg.heading_accuracy();
+        state.magnetic_declination_accuracy = pkg.magnetic_declination_accuracy();
+
+        self.send(UbxStatus::Pvt(Box::new(state)));
+        debug!("{pkg:?}");
+    }
+    fn handle_navpvt_27(&self, pkg: &NavPvt27) {
         let mut state = NavPvtWidgetState {
             time_tag: (pkg.itow() / 1000) as f64,
             ..Default::default()
