@@ -174,7 +174,7 @@ pub(crate) mod flags {
     }
 }
 
-impl<'a> NavPvtFields for NavPvtRef<'a> {
+impl NavPvtFields for NavPvtRef<'_> {
     fn longitude(&self) -> f64 {
         self.longitude()
     }
