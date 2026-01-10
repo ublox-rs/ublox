@@ -3,6 +3,11 @@ use super::super::SerializeUbxPacketFields;
 #[cfg(feature = "serde")]
 use crate::serde::ser::SerializeMap;
 
+use crate::error::DateTimeError;
+use crate::ubx_packets::types::{datetime_from_nav_pvt, NavPvtFields};
+use chrono::{DateTime, Utc};
+use core::convert::TryFrom;
+
 use super::common::*;
 use crate::{error::ParserError, GnssFixType, UbxPacketMeta};
 use ublox_derive::ubx_packet_recv;
@@ -135,11 +140,6 @@ struct NavPvt {
     magnetic_declination_accuracy: u16,
 }
 
-#[cfg(any(
-    feature = "ubx_proto23",
-    feature = "ubx_proto27",
-    feature = "ubx_proto31"
-))]
 pub(crate) mod flags {
     #[derive(Debug, Clone, Copy)]
     #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -171,5 +171,97 @@ pub(crate) mod flags {
                 age_differential_correction,
             }
         }
+    }
+}
+
+impl NavPvtFields for NavPvtRef<'_> {
+    fn longitude(&self) -> f64 {
+        self.longitude()
+    }
+    fn latitude(&self) -> f64 {
+        self.latitude()
+    }
+    fn height_msl(&self) -> f64 {
+        self.height_msl()
+    }
+    fn ground_speed_2d(&self) -> f64 {
+        self.ground_speed_2d()
+    }
+    fn heading_motion(&self) -> f64 {
+        self.heading_motion()
+    }
+    fn year(&self) -> u16 {
+        self.year()
+    }
+    fn month(&self) -> u8 {
+        self.month()
+    }
+    fn day(&self) -> u8 {
+        self.day()
+    }
+    fn hour(&self) -> u8 {
+        self.hour()
+    }
+    fn min(&self) -> u8 {
+        self.min()
+    }
+    fn sec(&self) -> u8 {
+        self.sec()
+    }
+    fn nanosec(&self) -> i32 {
+        self.nanosec()
+    }
+}
+
+impl NavPvtFields for NavPvtOwned {
+    fn longitude(&self) -> f64 {
+        self.longitude()
+    }
+    fn latitude(&self) -> f64 {
+        self.latitude()
+    }
+    fn height_msl(&self) -> f64 {
+        self.height_msl()
+    }
+    fn ground_speed_2d(&self) -> f64 {
+        self.ground_speed_2d()
+    }
+    fn heading_motion(&self) -> f64 {
+        self.heading_motion()
+    }
+    fn year(&self) -> u16 {
+        self.year()
+    }
+    fn month(&self) -> u8 {
+        self.month()
+    }
+    fn day(&self) -> u8 {
+        self.day()
+    }
+    fn hour(&self) -> u8 {
+        self.hour()
+    }
+    fn min(&self) -> u8 {
+        self.min()
+    }
+    fn sec(&self) -> u8 {
+        self.sec()
+    }
+    fn nanosec(&self) -> i32 {
+        self.nanosec()
+    }
+}
+
+impl<'a> TryFrom<&NavPvtRef<'a>> for DateTime<Utc> {
+    type Error = DateTimeError;
+    fn try_from(sol: &NavPvtRef<'a>) -> Result<Self, Self::Error> {
+        datetime_from_nav_pvt(sol)
+    }
+}
+
+impl TryFrom<&NavPvtOwned> for DateTime<Utc> {
+    type Error = DateTimeError;
+    fn try_from(sol: &NavPvtOwned) -> Result<Self, Self::Error> {
+        datetime_from_nav_pvt(sol)
     }
 }

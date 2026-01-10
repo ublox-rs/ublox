@@ -140,6 +140,7 @@ struct NavPvt {
     magnetic_declination_accuracy: u16,
 }
 
+#[cfg(feature = "ubx_proto27")]
 pub(crate) mod flags {
     #[derive(Debug, Clone, Copy)]
     #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
