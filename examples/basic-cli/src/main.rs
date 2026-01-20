@@ -1,6 +1,7 @@
 use ublox_device::ublox::{
     cfg_msg::{CfgMsgAllPorts, CfgMsgAllPortsBuilder},
-    nav_pvt, UbxPacket,
+    mon_ver::MonVer,
+    nav_pvt, UbxPacket, UbxPacketRequest,
 };
 
 /// Use proto23 if enabled, otherwise use proto27 if enabled, otherwise use proto31, otherwise use proto33, otherwise use proto14
@@ -61,7 +62,7 @@ fn main() {
 
     // Send a packet request for the MonVer packet
     device
-        .write_all(&cfg_msg_enable_nav_pvt_bytes())
+        .write_all(&UbxPacketRequest::request_for::<MonVer>().into_packet_bytes())
         .expect("Unable to write request/poll for UBX-MON-VER message");
 
     // Start reading data
