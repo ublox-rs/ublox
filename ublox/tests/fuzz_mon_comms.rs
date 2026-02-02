@@ -209,13 +209,13 @@ pub fn ubx_mon_comms_frame_strategy() -> impl Strategy<Value = (MonCommsPayload,
 proptest! {
     #[test]
     fn test_parser_proto27_with_generated_mon_comms_frames((expected, frame) in ubx_mon_comms_frame_strategy()) {
-        use ublox::proto27::{PacketRef, Proto27};
+        use ublox::proto27::{Packet, Proto27};
         use ublox::mon_comms::PortId;
 
         let mut parser = ParserBuilder::new().with_protocol::<Proto27>().with_fixed_buffer::<4096>();
         let mut it = parser.consume_ubx(&frame);
 
-        let Some(Ok(UbxPacket::Proto27(PacketRef::MonComms(p)))) = it.next() else {
+        let Some(Ok(UbxPacket::Proto27(Packet::MonComms(p)))) = it.next() else {
             panic!("Parser failed to parse a MON-COMMS valid packet");
         };
 
@@ -246,13 +246,13 @@ proptest! {
 proptest! {
     #[test]
     fn test_parser_proto31_with_generated_mon_comms_frames((expected, frame) in ubx_mon_comms_frame_strategy()) {
-        use ublox::proto31::{PacketRef, Proto31};
+        use ublox::proto31::{Packet, Proto31};
         use ublox::mon_comms::PortId;
 
         let mut parser = ParserBuilder::new().with_protocol::<Proto31>().with_fixed_buffer::<4096>();
         let mut it = parser.consume_ubx(&frame);
 
-        let Some(Ok(UbxPacket::Proto31(PacketRef::MonComms(p)))) = it.next() else {
+        let Some(Ok(UbxPacket::Proto31(Packet::MonComms(p)))) = it.next() else {
             panic!("Parser failed to parse a MON-COMMS valid packet");
         };
 
@@ -283,13 +283,13 @@ proptest! {
 proptest! {
     #[test]
     fn test_parser_proto33_with_generated_mon_comms_frames((expected, frame) in ubx_mon_comms_frame_strategy()) {
-        use ublox::proto33::{PacketRef, Proto33};
+        use ublox::proto33::{Packet, Proto33};
         use ublox::mon_comms::PortId;
 
         let mut parser = ParserBuilder::new().with_protocol::<Proto33>().with_fixed_buffer::<4096>();
         let mut it = parser.consume_ubx(&frame);
 
-        let Some(Ok(UbxPacket::Proto33(PacketRef::MonComms(p)))) = it.next() else {
+        let Some(Ok(UbxPacket::Proto33(Packet::MonComms(p)))) = it.next() else {
             panic!("Parser failed to parse a MON-COMMS valid packet");
         };
 

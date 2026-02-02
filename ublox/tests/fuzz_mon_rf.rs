@@ -193,12 +193,12 @@ proptest! {
     fn test_parser_proto27_with_generated_mon_rf_frames(
         (expected_mon_rf, frame) in ubx_mon_rf_frame_strategy()
     ) {
-        use ublox::proto27::{Proto27, PacketRef};
+        use ublox::proto27::{Proto27, Packet};
 
         let mut parser = ParserBuilder::new().with_protocol::<Proto27>().with_fixed_buffer::<2048>();
         let mut it = parser.consume_ubx(&frame);
 
-        let Some(Ok(UbxPacket::Proto27(PacketRef::MonRf(p)))) = it.next() else {
+        let Some(Ok(UbxPacket::Proto27(Packet::MonRf(p)))) = it.next() else {
             panic!("Parser failed to parse a MON-RF valid packet");
         };
 
@@ -232,12 +232,12 @@ proptest! {
     fn test_parser_proto31_with_generated_mon_rf_frames(
         (expected_mon_rf, frame) in ubx_mon_rf_frame_strategy()
     ) {
-        use ublox::proto31::{Proto31, PacketRef};
+        use ublox::proto31::{Proto31, Packet};
 
         let mut parser = ParserBuilder::new().with_protocol::<Proto31>().with_fixed_buffer::<2048>();
         let mut it = parser.consume_ubx(&frame);
 
-        let Some(Ok(UbxPacket::Proto31(PacketRef::MonRf(p)))) = it.next() else {
+        let Some(Ok(UbxPacket::Proto31(Packet::MonRf(p)))) = it.next() else {
             panic!("Parser failed to parse a MON-RF valid packet");
         };
 
@@ -271,12 +271,12 @@ proptest! {
     fn test_parser_proto33_with_generated_mon_rf_frames(
         (expected_mon_rf, frame) in ubx_mon_rf_frame_strategy()
     ) {
-        use ublox::proto33::{Proto33, PacketRef};
+        use ublox::proto33::{Proto33, Packet};
 
         let mut parser = ParserBuilder::new().with_protocol::<Proto33>().with_fixed_buffer::<2048>();
         let mut it = parser.consume_ubx(&frame);
 
-        let Some(Ok(UbxPacket::Proto33(PacketRef::MonRf(p)))) = it.next() else {
+        let Some(Ok(UbxPacket::Proto33(Packet::MonRf(p)))) = it.next() else {
             panic!("Parser failed to parse a MON-RF valid packet");
         };
 

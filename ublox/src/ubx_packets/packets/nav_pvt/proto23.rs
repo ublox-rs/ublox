@@ -202,8 +202,7 @@ macro_rules! impl_to_lla {
     };
 }
 
-impl_to_lla!(NavPvtRef<'_>);
-impl_to_lla!(NavPvtOwned);
+impl_to_lla!(NavPvt);
 
 macro_rules! impl_to_velocity {
     ($type:ty) => {
@@ -218,8 +217,7 @@ macro_rules! impl_to_velocity {
     };
 }
 
-impl_to_velocity!(NavPvtRef<'_>);
-impl_to_velocity!(NavPvtOwned);
+impl_to_velocity!(NavPvt);
 
 macro_rules! impl_to_date_time {
     ($type:ty) => {
@@ -245,5 +243,4 @@ macro_rules! impl_to_date_time {
     };
 }
 
-impl_to_date_time!(NavPvtRef<'_>);
-impl_to_date_time!(NavPvtOwned);
+impl_to_date_time!(NavPvt);

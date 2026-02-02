@@ -60,9 +60,9 @@ fn main() {
                 UbxPacket::Proto14(_) => unreachable!("no ubx_proto14 feature"),
                 #[cfg(feature = "ubx_proto23")]
                 UbxPacket::Proto23(packet_ref) => {
-                    use ublox_device::ublox::packetref_proto23::PacketRef;
+                    use ublox_device::ublox::packet_proto23::Packet;
                     match &packet_ref {
-                        PacketRef::MonVer(packet) => {
+                        Packet::MonVer(packet) => {
                             println!(
                                 "SW version: {} HW version: {}; Extensions: {:?}",
                                 packet.software_version(),
@@ -70,7 +70,7 @@ fn main() {
                                 packet.extension().collect::<Vec<&str>>()
                             );
                         },
-                        PacketRef::NavPvt(pvt) => {
+                        Packet::NavPvt(pvt) => {
                             let has_time = pvt.fix_type() == GnssFixType::Fix3D
                                 || pvt.fix_type() == GnssFixType::GPSPlusDeadReckoning
                                 || pvt.fix_type() == GnssFixType::TimeOnlyFix;
@@ -98,7 +98,7 @@ fn main() {
                                 println!("Time: {time:?}");
                             }
                         },
-                        PacketRef::EsfRaw(raw) => {
+                        Packet::EsfRaw(raw) => {
                             println!("Got raw message: {raw:?}");
                         },
                         _ => {
@@ -108,9 +108,9 @@ fn main() {
                 },
                 #[cfg(feature = "ubx_proto27")]
                 UbxPacket::Proto27(packet_ref) => {
-                    use ublox_device::ublox::packetref_proto27::PacketRef;
+                    use ublox_device::ublox::packet_proto27::Packet;
                     match &packet_ref {
-                        PacketRef::MonVer(packet) => {
+                        Packet::MonVer(packet) => {
                             println!(
                                 "SW version: {} HW version: {}; Extensions: {:?}",
                                 packet.software_version(),
@@ -118,7 +118,7 @@ fn main() {
                                 packet.extension().collect::<Vec<&str>>()
                             );
                         },
-                        PacketRef::NavPvt(pvt) => {
+                        Packet::NavPvt(pvt) => {
                             let has_time = pvt.fix_type() == GnssFixType::Fix3D
                                 || pvt.fix_type() == GnssFixType::GPSPlusDeadReckoning
                                 || pvt.fix_type() == GnssFixType::TimeOnlyFix;
@@ -146,7 +146,7 @@ fn main() {
                                 println!("Time: {time:?}");
                             }
                         },
-                        PacketRef::EsfRaw(raw) => {
+                        Packet::EsfRaw(raw) => {
                             println!("Got raw message: {raw:?}");
                         },
                         _ => {
@@ -156,9 +156,9 @@ fn main() {
                 },
                 #[cfg(feature = "ubx_proto31")]
                 UbxPacket::Proto31(packet_ref) => {
-                    use ublox_device::ublox::packetref_proto31::PacketRef;
+                    use ublox_device::ublox::packet_proto31::Packet;
                     match &packet_ref {
-                        PacketRef::MonVer(packet) => {
+                        Packet::MonVer(packet) => {
                             println!(
                                 "SW version: {} HW version: {}; Extensions: {:?}",
                                 packet.software_version(),
@@ -166,7 +166,7 @@ fn main() {
                                 packet.extension().collect::<Vec<&str>>()
                             );
                         },
-                        PacketRef::NavPvt(pvt) => {
+                        Packet::NavPvt(pvt) => {
                             let has_time = pvt.fix_type() == GnssFixType::Fix3D
                                 || pvt.fix_type() == GnssFixType::GPSPlusDeadReckoning
                                 || pvt.fix_type() == GnssFixType::TimeOnlyFix;
@@ -194,7 +194,7 @@ fn main() {
                                 println!("Time: {time:?}");
                             }
                         },
-                        PacketRef::EsfRaw(raw) => {
+                        Packet::EsfRaw(raw) => {
                             println!("Got raw message: {raw:?}");
                         },
                         _ => {
@@ -204,9 +204,9 @@ fn main() {
                 },
                 #[cfg(feature = "ubx_proto33")]
                 UbxPacket::Proto33(packet_ref) => {
-                    use ublox_device::ublox::packetref_proto33::PacketRef;
+                    use ublox_device::ublox::packet_proto33::Packet;
                     match &packet_ref {
-                        PacketRef::MonVer(packet) => {
+                        Packet::MonVer(packet) => {
                             println!(
                                 "SW version: {} HW version: {}; Extensions: {:?}",
                                 packet.software_version(),
@@ -214,7 +214,7 @@ fn main() {
                                 packet.extension().collect::<Vec<&str>>()
                             );
                         },
-                        PacketRef::NavPvt(pvt) => {
+                        Packet::NavPvt(pvt) => {
                             let has_time = pvt.fix_type() == GnssFixType::Fix3D
                                 || pvt.fix_type() == GnssFixType::GPSPlusDeadReckoning
                                 || pvt.fix_type() == GnssFixType::TimeOnlyFix;
@@ -242,7 +242,7 @@ fn main() {
                                 println!("Time: {time:?}");
                             }
                         },
-                        PacketRef::EsfRaw(raw) => {
+                        Packet::EsfRaw(raw) => {
                             println!("Got raw message: {raw:?}");
                         },
                         _ => {

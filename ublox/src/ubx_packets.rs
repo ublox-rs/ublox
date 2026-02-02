@@ -6,6 +6,27 @@ use crate::{constants::UBX_HEADER_LEN, constants::UBX_SYNC_SIZE, error::MemWrite
 pub use packets::*;
 pub use types::*;
 
+#[derive(Debug, Clone)]
+pub(crate) enum PacketBuffer<'a, const N: usize> {
+    Borrowed(&'a [u8]),
+    Owned([u8; N]),
+}
+
+impl<'a, const N: usize> PacketBuffer<'a, N> {
+    #[inline]
+    pub(crate) fn as_bytes(&self) -> &[u8] {
+        match self {
+            PacketBuffer::Borrowed(slice) => &slice,
+            PacketBuffer::Owned(array) => array.as_slice(),
+        }
+    }
+
+    #[inline]
+    pub(crate) fn len(&self) -> usize {
+        self.as_bytes().len()
+    }
+}
+
 /// Information about concrete UBX protocol's packet
 pub trait UbxPacketMeta {
     const CLASS: u8;
@@ -80,20 +101,12 @@ pub trait UbxPacketCreator {
 }
 
 /// Packet not supported yet by this crate
-#[derive(Debug, Clone, Copy)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize))]
-pub struct UbxUnknownPacketRef<'a> {
-    pub payload: &'a [u8],
-    pub class: u8,
-    pub msg_id: u8,
-}
-
 #[derive(Debug, Clone)]
-pub struct UbxUnknownPacketOwned<const MAX_PAYLOAD_LEN: usize> {
-    pub payload: [u8; MAX_PAYLOAD_LEN],
-    pub payload_len: usize,
+pub struct UbxUnknownPacket<'a, const MAX_PAYLOAD_LEN: usize> {
+    pub(crate) buffer: PacketBuffer<'a, MAX_PAYLOAD_LEN>,
     pub class: u8,
     pub msg_id: u8,
+    pub payload_len: usize,
 }
 
 /// Request specific packet

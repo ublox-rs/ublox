@@ -21,7 +21,7 @@ fn extract_only_ack_ack_proto14<T: ublox::UnderlyingBuffer>(
     let mut ret = vec![];
     while let Some(pack) = it.next() {
         match pack {
-            Ok(UbxPacket::Proto14(ublox::proto14::PacketRef::AckAck(pack))) => {
+            Ok(UbxPacket::Proto14(ublox::proto14::Packet::AckAck(pack))) => {
                 ret.push(Ok((pack.class(), pack.msg_id())));
             },
             Err(err) => ret.push(Err(err)),
@@ -38,7 +38,7 @@ fn extract_only_ack_ack_proto23<T: ublox::UnderlyingBuffer>(
     let mut ret = vec![];
     while let Some(pack) = it.next() {
         match pack {
-            Ok(UbxPacket::Proto23(ublox::proto23::PacketRef::AckAck(pack))) => {
+            Ok(UbxPacket::Proto23(ublox::proto23::Packet::AckAck(pack))) => {
                 ret.push(Ok((pack.class(), pack.msg_id())));
             },
             Err(err) => ret.push(Err(err)),
@@ -55,7 +55,7 @@ fn extract_only_ack_ack_proto27<T: ublox::UnderlyingBuffer>(
     let mut ret = vec![];
     while let Some(pack) = it.next() {
         match pack {
-            Ok(UbxPacket::Proto27(ublox::proto27::PacketRef::AckAck(pack))) => {
+            Ok(UbxPacket::Proto27(ublox::proto27::Packet::AckAck(pack))) => {
                 ret.push(Ok((pack.class(), pack.msg_id())));
             },
             Err(err) => ret.push(Err(err)),
@@ -72,7 +72,7 @@ fn extract_only_ack_ack_proto31<T: ublox::UnderlyingBuffer>(
     let mut ret = vec![];
     while let Some(pack) = it.next() {
         match pack {
-            Ok(UbxPacket::Proto31(ublox::proto31::PacketRef::AckAck(pack))) => {
+            Ok(UbxPacket::Proto31(ublox::proto31::Packet::AckAck(pack))) => {
                 ret.push(Ok((pack.class(), pack.msg_id())));
             },
             Err(err) => ret.push(Err(err)),
@@ -89,7 +89,7 @@ fn extract_only_ack_ack_proto33<T: ublox::UnderlyingBuffer>(
     let mut ret = vec![];
     while let Some(pack) = it.next() {
         match pack {
-            Ok(UbxPacket::Proto33(ublox::proto33::PacketRef::AckAck(pack))) => {
+            Ok(UbxPacket::Proto33(ublox::proto33::Packet::AckAck(pack))) => {
                 ret.push(Ok((pack.class(), pack.msg_id())));
             },
             Err(err) => ret.push(Err(err)),
@@ -574,7 +574,7 @@ fn test_util_assert_expected_cfg_nav5(pack: &CfgNav5Ref) {
 #[cfg(feature = "ubx_proto14")]
 #[test]
 fn test_parse_cfg_nav5_proto14() {
-    use ublox::proto14::{PacketRef, Proto14};
+    use ublox::proto14::{Packet, Proto14};
     let bytes = test_util_cfg_nav5_bytes();
 
     let mut parser = Parser::<_, Proto14>::default();
@@ -582,7 +582,7 @@ fn test_parse_cfg_nav5_proto14() {
     let mut it = parser.consume_ubx(&bytes);
     while let Some(pack) = it.next() {
         match pack {
-            Ok(UbxPacket::Proto14(PacketRef::CfgNav5(pack))) => {
+            Ok(UbxPacket::Proto14(Packet::CfgNav5(pack))) => {
                 found = true;
                 test_util_assert_expected_cfg_nav5(&pack);
             },
@@ -595,7 +595,7 @@ fn test_parse_cfg_nav5_proto14() {
 #[cfg(feature = "ubx_proto23")]
 #[test]
 fn test_parse_cfg_nav5_proto23() {
-    use ublox::proto23::{PacketRef, Proto23};
+    use ublox::proto23::{Packet, Proto23};
     let bytes = test_util_cfg_nav5_bytes();
 
     let mut parser = Parser::<_, Proto23>::default();
@@ -603,7 +603,7 @@ fn test_parse_cfg_nav5_proto23() {
     let mut it = parser.consume_ubx(&bytes);
     while let Some(pack) = it.next() {
         match pack {
-            Ok(UbxPacket::Proto23(PacketRef::CfgNav5(pack))) => {
+            Ok(UbxPacket::Proto23(Packet::CfgNav5(pack))) => {
                 found = true;
                 test_util_assert_expected_cfg_nav5(&pack);
             },
@@ -616,7 +616,7 @@ fn test_parse_cfg_nav5_proto23() {
 #[cfg(feature = "ubx_proto27")]
 #[test]
 fn test_parse_cfg_nav5_proto27() {
-    use ublox::proto27::{PacketRef, Proto27};
+    use ublox::proto27::{Packet, Proto27};
     let bytes = test_util_cfg_nav5_bytes();
 
     let mut parser = Parser::<_, Proto27>::default();
@@ -624,7 +624,7 @@ fn test_parse_cfg_nav5_proto27() {
     let mut it = parser.consume_ubx(&bytes);
     while let Some(pack) = it.next() {
         match pack {
-            Ok(UbxPacket::Proto27(PacketRef::CfgNav5(pack))) => {
+            Ok(UbxPacket::Proto27(Packet::CfgNav5(pack))) => {
                 found = true;
                 test_util_assert_expected_cfg_nav5(&pack);
             },
@@ -637,7 +637,7 @@ fn test_parse_cfg_nav5_proto27() {
 #[cfg(feature = "ubx_proto31")]
 #[test]
 fn test_parse_cfg_nav5_proto31() {
-    use ublox::proto31::{PacketRef, Proto31};
+    use ublox::proto31::{Packet, Proto31};
     let bytes = test_util_cfg_nav5_bytes();
 
     let mut parser = Parser::<_, Proto31>::default();
@@ -645,7 +645,7 @@ fn test_parse_cfg_nav5_proto31() {
     let mut it = parser.consume_ubx(&bytes);
     while let Some(pack) = it.next() {
         match pack {
-            Ok(UbxPacket::Proto31(PacketRef::CfgNav5(pack))) => {
+            Ok(UbxPacket::Proto31(Packet::CfgNav5(pack))) => {
                 found = true;
                 test_util_assert_expected_cfg_nav5(&pack);
             },
@@ -658,7 +658,7 @@ fn test_parse_cfg_nav5_proto31() {
 #[cfg(feature = "ubx_proto33")]
 #[test]
 fn test_parse_cfg_nav5_proto33() {
-    use ublox::proto33::{PacketRef, Proto33};
+    use ublox::proto33::{Packet, Proto33};
     let bytes = test_util_cfg_nav5_bytes();
 
     let mut parser = Parser::<_, Proto33>::default();
@@ -666,7 +666,7 @@ fn test_parse_cfg_nav5_proto33() {
     let mut it = parser.consume_ubx(&bytes);
     while let Some(pack) = it.next() {
         match pack {
-            Ok(UbxPacket::Proto33(PacketRef::CfgNav5(pack))) => {
+            Ok(UbxPacket::Proto33(Packet::CfgNav5(pack))) => {
                 found = true;
                 test_util_assert_expected_cfg_nav5(&pack);
             },
@@ -720,7 +720,7 @@ fn test_util_esf_meas_assert_expected_json(pack: UbxPacket) {
         UbxPacket::Proto23(packet_ref) => {
             let actual = serde_json::to_value(&packet_ref).unwrap();
             assert_eq!(expected_packet_json, actual);
-            if let ublox::proto23::PacketRef::EsfMeas(esf_meas_ref) = &packet_ref {
+            if let ublox::proto23::Packet::EsfMeas(esf_meas_ref) = &packet_ref {
                 let actual = serde_json::to_value(esf_meas_ref).unwrap();
                 assert_eq!(expected_esf_meas_json, actual);
             } else {
@@ -730,7 +730,7 @@ fn test_util_esf_meas_assert_expected_json(pack: UbxPacket) {
         UbxPacket::Proto27(packet_ref) => {
             let actual = serde_json::to_value(&packet_ref).unwrap();
             assert_eq!(expected_packet_json, actual);
-            if let ublox::proto27::PacketRef::EsfMeas(esf_meas_ref) = &packet_ref {
+            if let ublox::proto27::Packet::EsfMeas(esf_meas_ref) = &packet_ref {
                 let actual = serde_json::to_value(esf_meas_ref).unwrap();
                 assert_eq!(expected_esf_meas_json, actual);
             } else {
@@ -740,7 +740,7 @@ fn test_util_esf_meas_assert_expected_json(pack: UbxPacket) {
         UbxPacket::Proto31(packet_ref) => {
             let actual = serde_json::to_value(&packet_ref).unwrap();
             assert_eq!(expected_packet_json, actual);
-            if let ublox::proto31::PacketRef::EsfMeas(esf_meas_ref) = &packet_ref {
+            if let ublox::proto31::Packet::EsfMeas(esf_meas_ref) = &packet_ref {
                 let actual = serde_json::to_value(esf_meas_ref).unwrap();
                 assert_eq!(expected_esf_meas_json, actual);
             } else {
@@ -750,7 +750,7 @@ fn test_util_esf_meas_assert_expected_json(pack: UbxPacket) {
         UbxPacket::Proto33(packet_ref) => {
             let actual = serde_json::to_value(&packet_ref).unwrap();
             assert_eq!(expected_packet_json, actual);
-            if let ublox::proto33::PacketRef::EsfMeas(esf_meas_ref) = &packet_ref {
+            if let ublox::proto33::Packet::EsfMeas(esf_meas_ref) = &packet_ref {
                 let actual = serde_json::to_value(esf_meas_ref).unwrap();
                 assert_eq!(expected_esf_meas_json, actual);
             } else {
@@ -854,11 +854,11 @@ const ZERO_SIZED_ACK_ACK_BYTES: [u8; 8] = [0xb5, 0x62, 0x05, 0x01, 0x00, 0x00, 0
 #[cfg(feature = "ubx_proto14")]
 #[test]
 fn test_zero_sized_ackack_proto14() {
-    use ublox::proto14::{PacketRef, Proto14};
+    use ublox::proto14::{Packet, Proto14};
     let mut parser = Parser::<_, Proto14>::default();
     let mut it = parser.consume_ubx(&ZERO_SIZED_ACK_ACK_BYTES);
     match it.next() {
-        Some(Ok(UbxPacket::Proto14(PacketRef::Unknown(_)))) => {
+        Some(Ok(UbxPacket::Proto14(Packet::Unknown(_)))) => {
             // This is expected
         },
         _ => panic!(),
@@ -869,11 +869,11 @@ fn test_zero_sized_ackack_proto14() {
 #[cfg(feature = "ubx_proto23")]
 #[test]
 fn test_zero_sized_ackack_proto23() {
-    use ublox::proto23::{PacketRef, Proto23};
+    use ublox::proto23::{Packet, Proto23};
     let mut parser = Parser::<_, Proto23>::default();
     let mut it = parser.consume_ubx(&ZERO_SIZED_ACK_ACK_BYTES);
     match it.next() {
-        Some(Ok(UbxPacket::Proto23(PacketRef::Unknown(_)))) => {
+        Some(Ok(UbxPacket::Proto23(Packet::Unknown(_)))) => {
             // This is expected
         },
         _ => panic!(),
@@ -884,11 +884,11 @@ fn test_zero_sized_ackack_proto23() {
 #[cfg(feature = "ubx_proto27")]
 #[test]
 fn test_zero_sized_ackack_proto27() {
-    use ublox::proto27::{PacketRef, Proto27};
+    use ublox::proto27::{Packet, Proto27};
     let mut parser = Parser::<_, Proto27>::default();
     let mut it = parser.consume_ubx(&ZERO_SIZED_ACK_ACK_BYTES);
     match it.next() {
-        Some(Ok(UbxPacket::Proto27(PacketRef::Unknown(_)))) => {
+        Some(Ok(UbxPacket::Proto27(Packet::Unknown(_)))) => {
             // This is expected
         },
         _ => panic!(),
@@ -899,11 +899,11 @@ fn test_zero_sized_ackack_proto27() {
 #[cfg(feature = "ubx_proto31")]
 #[test]
 fn test_zero_sized_ackack_proto31() {
-    use ublox::proto31::{PacketRef, Proto31};
+    use ublox::proto31::{Packet, Proto31};
     let mut parser = Parser::<_, Proto31>::default();
     let mut it = parser.consume_ubx(&ZERO_SIZED_ACK_ACK_BYTES);
     match it.next() {
-        Some(Ok(UbxPacket::Proto31(PacketRef::Unknown(_)))) => {
+        Some(Ok(UbxPacket::Proto31(Packet::Unknown(_)))) => {
             // This is expected
         },
         _ => panic!(),
@@ -914,11 +914,11 @@ fn test_zero_sized_ackack_proto31() {
 #[cfg(feature = "ubx_proto33")]
 #[test]
 fn test_zero_sized_ackack_proto33() {
-    use ublox::proto33::{PacketRef, Proto33};
+    use ublox::proto33::{Packet, Proto33};
     let mut parser = Parser::<_, Proto33>::default();
     let mut it = parser.consume_ubx(&ZERO_SIZED_ACK_ACK_BYTES);
     match it.next() {
-        Some(Ok(UbxPacket::Proto33(PacketRef::Unknown(_)))) => {
+        Some(Ok(UbxPacket::Proto33(Packet::Unknown(_)))) => {
             // This is expected
         },
         _ => panic!(),
@@ -930,7 +930,7 @@ fn test_zero_sized_ackack_proto33() {
 #[test]
 fn test_double_start_at_end_proto14() {
     use ublox::{
-        proto14::{PacketRef, Proto14},
+        proto14::{Packet, Proto14},
         FixedLinearBuffer,
     };
     #[rustfmt::skip]
@@ -956,13 +956,13 @@ fn test_double_start_at_end_proto14() {
             _ => panic!(),
         }
         match it.next() {
-            Some(Ok(UbxPacket::Proto14(PacketRef::Unknown(_)))) => {
+            Some(Ok(UbxPacket::Proto14(Packet::Unknown(_)))) => {
                 // Then an unknown packet
             },
             _ => panic!(),
         }
         match it.next() {
-            Some(Ok(UbxPacket::Proto14(PacketRef::AckAck(_)))) => {
+            Some(Ok(UbxPacket::Proto14(Packet::AckAck(_)))) => {
                 // Then the ackack we passed
             },
             _ => panic!(),
@@ -971,7 +971,7 @@ fn test_double_start_at_end_proto14() {
     }
     let mut it = parser.consume_ubx(&ack_ack);
     match it.next() {
-        Some(Ok(UbxPacket::Proto14(PacketRef::AckAck { .. }))) => {
+        Some(Ok(UbxPacket::Proto14(Packet::AckAck { .. }))) => {
             // This is what we expect
         },
         _ => {
@@ -986,7 +986,7 @@ fn test_double_start_at_end_proto14() {
 #[test]
 fn test_double_start_at_end_proto23() {
     use ublox::{
-        proto23::{PacketRef, Proto23},
+        proto23::{Packet, Proto23},
         FixedLinearBuffer,
     };
     #[rustfmt::skip]
@@ -1012,13 +1012,13 @@ fn test_double_start_at_end_proto23() {
             _ => panic!(),
         }
         match it.next() {
-            Some(Ok(UbxPacket::Proto23(PacketRef::Unknown(_)))) => {
+            Some(Ok(UbxPacket::Proto23(Packet::Unknown(_)))) => {
                 // Then an unknown packet
             },
             _ => panic!(),
         }
         match it.next() {
-            Some(Ok(UbxPacket::Proto23(PacketRef::AckAck(_)))) => {
+            Some(Ok(UbxPacket::Proto23(Packet::AckAck(_)))) => {
                 // Then the ackack we passed
             },
             _ => panic!(),
@@ -1027,7 +1027,7 @@ fn test_double_start_at_end_proto23() {
     }
     let mut it = parser.consume_ubx(&ack_ack);
     match it.next() {
-        Some(Ok(UbxPacket::Proto23(PacketRef::AckAck { .. }))) => {
+        Some(Ok(UbxPacket::Proto23(Packet::AckAck { .. }))) => {
             // This is what we expect
         },
         _ => {
@@ -1042,7 +1042,7 @@ fn test_double_start_at_end_proto23() {
 #[test]
 fn test_double_start_at_end_proto27() {
     use ublox::{
-        proto27::{PacketRef, Proto27},
+        proto27::{Packet, Proto27},
         FixedLinearBuffer,
     };
     #[rustfmt::skip]
@@ -1068,13 +1068,13 @@ fn test_double_start_at_end_proto27() {
             _ => panic!(),
         }
         match it.next() {
-            Some(Ok(UbxPacket::Proto27(PacketRef::Unknown(_)))) => {
+            Some(Ok(UbxPacket::Proto27(Packet::Unknown(_)))) => {
                 // Then an unknown packet
             },
             _ => panic!(),
         }
         match it.next() {
-            Some(Ok(UbxPacket::Proto27(PacketRef::AckAck(_)))) => {
+            Some(Ok(UbxPacket::Proto27(Packet::AckAck(_)))) => {
                 // Then the ackack we passed
             },
             _ => panic!(),
@@ -1083,7 +1083,7 @@ fn test_double_start_at_end_proto27() {
     }
     let mut it = parser.consume_ubx(&ack_ack);
     match it.next() {
-        Some(Ok(UbxPacket::Proto27(PacketRef::AckAck { .. }))) => {
+        Some(Ok(UbxPacket::Proto27(Packet::AckAck { .. }))) => {
             // This is what we expect
         },
         _ => {
@@ -1098,7 +1098,7 @@ fn test_double_start_at_end_proto27() {
 #[test]
 fn test_double_start_at_end_proto31() {
     use ublox::{
-        proto31::{PacketRef, Proto31},
+        proto31::{Packet, Proto31},
         FixedLinearBuffer,
     };
     #[rustfmt::skip]
@@ -1124,13 +1124,13 @@ fn test_double_start_at_end_proto31() {
             _ => panic!(),
         }
         match it.next() {
-            Some(Ok(UbxPacket::Proto31(PacketRef::Unknown(_)))) => {
+            Some(Ok(UbxPacket::Proto31(Packet::Unknown(_)))) => {
                 // Then an unknown packet
             },
             _ => panic!(),
         }
         match it.next() {
-            Some(Ok(UbxPacket::Proto31(PacketRef::AckAck(_)))) => {
+            Some(Ok(UbxPacket::Proto31(Packet::AckAck(_)))) => {
                 // Then the ackack we passed
             },
             _ => panic!(),
@@ -1139,7 +1139,7 @@ fn test_double_start_at_end_proto31() {
     }
     let mut it = parser.consume_ubx(&ack_ack);
     match it.next() {
-        Some(Ok(UbxPacket::Proto31(PacketRef::AckAck { .. }))) => {
+        Some(Ok(UbxPacket::Proto31(Packet::AckAck { .. }))) => {
             // This is what we expect
         },
         _ => {
@@ -1154,7 +1154,7 @@ fn test_double_start_at_end_proto31() {
 #[test]
 fn test_double_start_at_end_proto33() {
     use ublox::{
-        proto33::{PacketRef, Proto33},
+        proto33::{Packet, Proto33},
         FixedLinearBuffer,
     };
     #[rustfmt::skip]
@@ -1179,13 +1179,13 @@ fn test_double_start_at_end_proto33() {
             _ => panic!(),
         }
         match it.next() {
-            Some(Ok(UbxPacket::Proto33(PacketRef::Unknown(_)))) => {
+            Some(Ok(UbxPacket::Proto33(Packet::Unknown(_)))) => {
                 // Then an unknown packet
             },
             _ => panic!(),
         }
         match it.next() {
-            Some(Ok(UbxPacket::Proto33(PacketRef::AckAck(_)))) => {
+            Some(Ok(UbxPacket::Proto33(Packet::AckAck(_)))) => {
                 // Then the ackack we passed
             },
             _ => panic!(),
@@ -1194,7 +1194,7 @@ fn test_double_start_at_end_proto33() {
     }
     let mut it = parser.consume_ubx(&ACK_ACK_BYTES);
     match it.next() {
-        Some(Ok(UbxPacket::Proto33(PacketRef::AckAck { .. }))) => {
+        Some(Ok(UbxPacket::Proto33(Packet::AckAck { .. }))) => {
             // This is what we expect
         },
         _ => {
@@ -1210,14 +1210,14 @@ const ACK_ACK_BYTES: [u8; 10] = [0xb5, 0x62, 0x05, 0x01, 0x02, 0x00, 0x04, 0x05,
 #[cfg(feature = "ubx_proto14")]
 #[test]
 fn test_ack_ack_to_owned_can_be_moved_proto14() {
-    use ublox::proto14::{PacketRef, Proto14};
+    use ublox::proto14::{Packet, Proto14};
     // 4 is the class id of the acknowledged packet from the payload of UbxAckAck
     let expect_ack_payload_class_id = 4;
 
     let mut parser = ublox::Parser::<_, Proto14>::default();
     let mut it = parser.consume_ubx(&ACK_ACK_BYTES);
     match it.next() {
-        Some(Ok(UbxPacket::Proto14(PacketRef::AckAck(ack_packet)))) => {
+        Some(Ok(UbxPacket::Proto14(Packet::AckAck(ack_packet)))) => {
             assert_eq!(ack_packet.class(), expect_ack_payload_class_id);
             let borrowed: AckAckRef = ack_packet;
             let owned: AckAckOwned = borrowed.to_owned();
@@ -1238,14 +1238,14 @@ fn test_ack_ack_to_owned_can_be_moved_proto14() {
 #[cfg(feature = "ubx_proto23")]
 #[test]
 fn test_ack_ack_to_owned_can_be_moved_proto23() {
-    use ublox::proto23::{PacketRef, Proto23};
+    use ublox::proto23::{Packet, Proto23};
     // 4 is the class id of the acknowledged packet from the payload of UbxAckAck
     let expect_ack_payload_class_id = 4;
 
     let mut parser = ublox::Parser::<_, Proto23>::default();
     let mut it = parser.consume_ubx(&ACK_ACK_BYTES);
     match it.next() {
-        Some(Ok(UbxPacket::Proto23(PacketRef::AckAck(ack_packet)))) => {
+        Some(Ok(UbxPacket::Proto23(Packet::AckAck(ack_packet)))) => {
             assert_eq!(ack_packet.class(), expect_ack_payload_class_id);
             let borrowed: AckAckRef = ack_packet;
             let owned: AckAckOwned = borrowed.to_owned();
@@ -1266,14 +1266,14 @@ fn test_ack_ack_to_owned_can_be_moved_proto23() {
 #[cfg(feature = "ubx_proto27")]
 #[test]
 fn test_ack_ack_to_owned_can_be_moved_proto27() {
-    use ublox::proto27::{PacketRef, Proto27};
+    use ublox::proto27::{Packet, Proto27};
     // 4 is the class id of the acknowledged packet from the payload of UbxAckAck
     let expect_ack_payload_class_id = 4;
 
     let mut parser = ublox::Parser::<_, Proto27>::default();
     let mut it = parser.consume_ubx(&ACK_ACK_BYTES);
     match it.next() {
-        Some(Ok(UbxPacket::Proto27(PacketRef::AckAck(ack_packet)))) => {
+        Some(Ok(UbxPacket::Proto27(Packet::AckAck(ack_packet)))) => {
             assert_eq!(ack_packet.class(), expect_ack_payload_class_id);
             let borrowed: AckAckRef = ack_packet;
             let owned: AckAckOwned = borrowed.to_owned();
@@ -1294,14 +1294,14 @@ fn test_ack_ack_to_owned_can_be_moved_proto27() {
 #[cfg(feature = "ubx_proto31")]
 #[test]
 fn test_ack_ack_to_owned_can_be_moved_proto31() {
-    use ublox::proto31::{PacketRef, Proto31};
+    use ublox::proto31::{Packet, Proto31};
     // 4 is the class id of the acknowledged packet from the payload of UbxAckAck
     let expect_ack_payload_class_id = 4;
 
     let mut parser = ublox::Parser::<_, Proto31>::default();
     let mut it = parser.consume_ubx(&ACK_ACK_BYTES);
     match it.next() {
-        Some(Ok(UbxPacket::Proto31(PacketRef::AckAck(ack_packet)))) => {
+        Some(Ok(UbxPacket::Proto31(Packet::AckAck(ack_packet)))) => {
             assert_eq!(ack_packet.class(), expect_ack_payload_class_id);
             let borrowed: AckAckRef = ack_packet;
             let owned: AckAckOwned = borrowed.to_owned();
@@ -1322,14 +1322,14 @@ fn test_ack_ack_to_owned_can_be_moved_proto31() {
 #[cfg(feature = "ubx_proto33")]
 #[test]
 fn test_ack_ack_to_owned_can_be_moved_proto33() {
-    use ublox::proto33::{PacketRef, Proto33};
+    use ublox::proto33::{Packet, Proto33};
     // 4 is the class id of the acknowledged packet from the payload of UbxAckAck
     let expect_ack_payload_class_id = 4;
 
     let mut parser = ublox::Parser::<_, Proto33>::default();
     let mut it = parser.consume_ubx(&ACK_ACK_BYTES);
     match it.next() {
-        Some(Ok(UbxPacket::Proto33(PacketRef::AckAck(ack_packet)))) => {
+        Some(Ok(UbxPacket::Proto33(Packet::AckAck(ack_packet)))) => {
             assert_eq!(ack_packet.class(), expect_ack_payload_class_id);
             let borrowed: AckAckRef = ack_packet;
             let owned: AckAckOwned = borrowed.to_owned();

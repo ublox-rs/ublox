@@ -131,5 +131,4 @@ macro_rules! impl_to_lla {
     };
 }
 
-impl_to_lla!(NavHpPosLlhRef<'_>);
-impl_to_lla!(NavHpPosLlhOwned);
+impl_to_lla!(NavHpPosLlh);

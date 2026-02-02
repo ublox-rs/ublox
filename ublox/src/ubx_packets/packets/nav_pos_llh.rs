@@ -53,5 +53,4 @@ macro_rules! impl_to_lla {
     };
 }
 
-impl_to_lla!(NavPosLlhRef<'_>);
-impl_to_lla!(NavPosLlhOwned);
+impl_to_lla!(NavPosLlh);

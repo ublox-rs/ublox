@@ -1,6 +1,6 @@
 #![cfg(feature = "alloc")]
 
-use ublox::{proto23::PacketRef, rxm_sfrbx::RxmSfrbxInterpreted, Parser};
+use ublox::{proto23::Packet, rxm_sfrbx::RxmSfrbxInterpreted, Parser};
 
 use gnss_protos::GpsQzssSubframe;
 
@@ -79,7 +79,7 @@ fn sfrbx_gps_eph1() {
         use ublox::UbxPacket;
 
         match pack {
-            Ok(UbxPacket::Proto23(PacketRef::RxmSfrbx(packet))) => {
+            Ok(UbxPacket::Proto23(Packet::RxmSfrbx(packet))) => {
                 assert_eq!(packet.gnss_id(), 0);
                 assert_eq!(packet.sv_id(), 1);
                 assert_eq!(packet.reserved1(), 2);
@@ -189,7 +189,7 @@ fn sfrbx_gps_eph2() {
 
     while let Some(pack) = it.next() {
         match pack {
-            Ok(ublox::UbxPacket::Proto23(PacketRef::RxmSfrbx(packet))) => {
+            Ok(ublox::UbxPacket::Proto23(Packet::RxmSfrbx(packet))) => {
                 assert_eq!(packet.gnss_id(), 0);
                 assert_eq!(packet.sv_id(), 1);
                 assert_eq!(packet.reserved1(), 2);
@@ -303,7 +303,7 @@ fn sfrbx_gps_eph3() {
 
     while let Some(pack) = it.next() {
         match pack {
-            Ok(ublox::UbxPacket::Proto23(PacketRef::RxmSfrbx(packet))) => {
+            Ok(ublox::UbxPacket::Proto23(Packet::RxmSfrbx(packet))) => {
                 assert_eq!(packet.gnss_id(), 0);
                 assert_eq!(packet.sv_id(), 1);
                 assert_eq!(packet.reserved1(), 2);

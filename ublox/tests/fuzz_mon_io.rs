@@ -130,12 +130,12 @@ proptest! {
     fn test_parser_proto27_with_generated_mon_io_frames(
         (expected_ports, frame) in ubx_mon_io_frame_strategy()
     ) {
-        use ublox::{proto27::{Proto27, PacketRef}, ParserBuilder, UbxPacket};
+        use ublox::{proto27::{Proto27, Packet}, ParserBuilder, UbxPacket};
 
         let mut parser = ParserBuilder::new().with_protocol::<Proto27>().with_fixed_buffer::<1024>();
         let mut it = parser.consume_ubx(&frame);
 
-        let Some(Ok(UbxPacket::Proto27(PacketRef::MonIo(p)))) = it.next() else {
+        let Some(Ok(UbxPacket::Proto27(Packet::MonIo(p)))) = it.next() else {
             panic!("Parser failed to parse a MON-IO valid packet");
         };
 
@@ -160,12 +160,12 @@ proptest! {
     fn test_parser_proto14_with_generated_mon_io_frames(
         (expected_ports, frame) in ubx_mon_io_frame_strategy()
     ) {
-        use ublox::{proto14::{Proto14, PacketRef}, ParserBuilder, UbxPacket};
+        use ublox::{proto14::{Proto14, Packet}, ParserBuilder, UbxPacket};
 
         let mut parser = ParserBuilder::new().with_protocol::<Proto14>().with_fixed_buffer::<1024>();
         let mut it = parser.consume_ubx(&frame);
 
-        let Some(Ok(UbxPacket::Proto14(PacketRef::MonIo(p)))) = it.next() else {
+        let Some(Ok(UbxPacket::Proto14(Packet::MonIo(p)))) = it.next() else {
             panic!("Parser failed to parse a MON-IO valid packet");
         };
 

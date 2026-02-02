@@ -737,7 +737,7 @@ fn test_define_recv_packets() {
             #[doc = "All possible packets enum"]
             #[derive(Debug)]
             #[non_exhaustive]
-            pub enum PacketRef<'a> {
+            pub enum Packet<'a> {
                 Pack1(Pack1Ref<'a>),
                 Pack2(Pack2Ref<'a>),
                 Unknown(UnknownPacketRef<'a>),
@@ -750,12 +750,12 @@ fn test_define_recv_packets() {
                 Pack2(Pack2Owned),
                 Unknown(UnknownPacketOwned<{ MAX_PAYLOAD_LEN as usize }>),
             }
-            impl<'a> PacketRef<'a> {
+            impl<'a> Packet<'a> {
                 pub fn class_and_msg_id(&self) -> (u8, u8) {
                     match *self {
-                        PacketRef::Pack1(_) => (Pack1::CLASS, Pack1::ID),
-                        PacketRef::Pack2(_) => (Pack2::CLASS, Pack2::ID),
-                        PacketRef::Unknown(ref pack) => (pack.class, pack.msg_id),
+                        Packet::Pack1(_) => (Pack1::CLASS, Pack1::ID),
+                        Packet::Pack2(_) => (Pack2::CLASS, Pack2::ID),
+                        Packet::Unknown(ref pack) => (pack.class, pack.msg_id),
                     }
                 }
                 pub fn to_owned(&self) -> PacketOwned {
@@ -764,9 +764,9 @@ fn test_define_recv_packets() {
                 #[inline]
                 pub fn payload_len(&self) -> usize {
                     match *self {
-                        PacketRef::Pack1(ref packet) => packet.payload_len(),
-                        PacketRef::Pack2(ref packet) => packet.payload_len(),
-                        PacketRef::Unknown(ref pack) => pack.payload.len(),
+                        Packet::Pack1(ref packet) => packet.payload_len(),
+                        Packet::Pack2(ref packet) => packet.payload_len(),
+                        Packet::Unknown(ref pack) => pack.payload.len(),
                     }
                 }
             }
@@ -784,15 +784,15 @@ fn test_define_recv_packets() {
                 class: u8,
                 msg_id: u8,
                 payload: &[u8],
-            ) -> Result<PacketRef, ParserError> {
+            ) -> Result<Packet, ParserError> {
                 match (class, msg_id) {
                     (Pack1::CLASS, Pack1::ID) if <Pack1Ref>::validate(payload).is_ok() => {
-                        Ok(PacketRef::Pack1(Pack1Ref(payload)))
+                        Ok(Packet::Pack1(Pack1Ref(payload)))
                     },
                     (Pack2::CLASS, Pack2::ID) if <Pack2Ref>::validate(payload).is_ok() => {
-                        Ok(PacketRef::Pack2(Pack2Ref(payload)))
+                        Ok(Packet::Pack2(Pack2Ref(payload)))
                     },
-                    _ => Ok(PacketRef::Unknown(UnknownPacketRef {
+                    _ => Ok(Packet::Unknown(UnknownPacketRef {
                         payload,
                         class,
                         msg_id,
@@ -828,12 +828,12 @@ fn test_define_recv_packets() {
                     },
                 }
             }
-            impl<'a> From<&PacketRef<'a>> for PacketOwned {
-                fn from(packet: &PacketRef<'a>) -> Self {
+            impl<'a> From<&Packet<'a>> for PacketOwned {
+                fn from(packet: &Packet<'a>) -> Self {
                     match packet {
-                        PacketRef::Pack1(packet) => PacketOwned::Pack1(packet.into()),
-                        PacketRef::Pack2(packet) => PacketOwned::Pack2(packet.into()),
-                        PacketRef::Unknown(UnknownPacketRef {
+                        Packet::Pack1(packet) => PacketOwned::Pack1(packet.into()),
+                        Packet::Pack2(packet) => PacketOwned::Pack2(packet.into()),
+                        Packet::Unknown(UnknownPacketRef {
                             payload,
                             class,
                             msg_id,
@@ -883,25 +883,25 @@ fn test_define_recv_packets() {
             }
 
             #[cfg(feature = "serde")]
-            impl serde::Serialize for PacketRef<'_> {
+            impl serde::Serialize for Packet<'_> {
                 fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
                 where
                     S: serde::Serializer,
                 {
                     match *self {
-                        PacketRef::Pack1(ref msg) => PacketSerializer {
+                        Packet::Pack1(ref msg) => PacketSerializer {
                             class: Pack1::CLASS,
                             msg_id: Pack1::ID,
                             msg,
                         }
                         .serialize(serializer),
-                        PacketRef::Pack2(ref msg) => PacketSerializer {
+                        Packet::Pack2(ref msg) => PacketSerializer {
                             class: Pack2::CLASS,
                             msg_id: Pack2::ID,
                             msg,
                         }
                         .serialize(serializer),
-                        PacketRef::Unknown(ref pack) => pack.serialize(serializer),
+                        Packet::Unknown(ref pack) => pack.serialize(serializer),
                     }
                 }
             }

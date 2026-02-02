@@ -157,7 +157,7 @@ proptest! {
     fn test_parser_proto33_with_generated_mon_hw3_frames(
         (expected, frame) in ubx_mon_hw3_frame_strategy()
     ) {
-        use ublox::proto33::{Proto33, PacketRef};
+        use ublox::proto33::{Proto33, Packet};
 
         let mut parser = ParserBuilder::new()
             .with_protocol::<Proto33>()
@@ -165,7 +165,7 @@ proptest! {
 
         let mut it = parser.consume_ubx(&frame);
 
-        let Some(Ok(UbxPacket::Proto33(PacketRef::MonHw3(p)))) = it.next() else {
+        let Some(Ok(UbxPacket::Proto33(Packet::MonHw3(p)))) = it.next() else {
             panic!("Parser failed to parse a MON-HW3 valid packet");
         };
 
@@ -189,7 +189,7 @@ proptest! {
     fn test_parser_proto31_with_generated_mon_hw3_frames(
         (expected, frame) in ubx_mon_hw3_frame_strategy()
     ) {
-        use ublox::proto31::{Proto31, PacketRef};
+        use ublox::proto31::{Proto31, Packet};
 
         let mut parser = ParserBuilder::new()
             .with_protocol::<Proto31>()
@@ -197,7 +197,7 @@ proptest! {
 
         let mut it = parser.consume_ubx(&frame);
 
-        let Some(Ok(UbxPacket::Proto31(PacketRef::MonHw3(p)))) = it.next() else {
+        let Some(Ok(UbxPacket::Proto31(Packet::MonHw3(p)))) = it.next() else {
             panic!("Parser failed to parse a MON-HW3 valid packet");
         };
 
@@ -221,7 +221,7 @@ proptest! {
     fn test_parser_proto27_with_generated_mon_hw3_frames(
         (expected, frame) in ubx_mon_hw3_frame_strategy()
     ) {
-        use ublox::proto27::{Proto27, PacketRef};
+        use ublox::proto27::{Proto27, Packet};
 
         let mut parser = ParserBuilder::new()
             .with_protocol::<Proto27>()
@@ -229,7 +229,7 @@ proptest! {
 
         let mut it = parser.consume_ubx(&frame);
 
-        let Some(Ok(UbxPacket::Proto27(PacketRef::MonHw3(p)))) = it.next() else {
+        let Some(Ok(UbxPacket::Proto27(Packet::MonHw3(p)))) = it.next() else {
             panic!("Parser failed to parse a MON-HW3 valid packet");
         };
 

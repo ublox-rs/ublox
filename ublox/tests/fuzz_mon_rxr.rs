@@ -65,12 +65,12 @@ proptest! {
     fn test_parser_proto14_with_generated_mon_rxr_frames(
         (expected, frame) in ubx_mon_rxr_frame_strategy()
     ) {
-        use ublox::proto14::{Proto14, PacketRef};
+        use ublox::proto14::{Proto14, Packet};
 
         let mut parser = ParserBuilder::new().with_protocol::<Proto14>().with_fixed_buffer::<64>();
         let mut it = parser.consume_ubx(&frame);
 
-        let Some(Ok(UbxPacket::Proto14(PacketRef::MonRxr(p)))) = it.next() else {
+        let Some(Ok(UbxPacket::Proto14(Packet::MonRxr(p)))) = it.next() else {
             panic!("Parser failed to parse a valid MON-RXR packet");
         };
 
@@ -85,12 +85,12 @@ proptest! {
     fn test_parser_proto27_with_generated_mon_rxr_frames(
         (expected, frame) in ubx_mon_rxr_frame_strategy()
     ) {
-        use ublox::proto27::{Proto27, PacketRef};
+        use ublox::proto27::{Proto27, Packet};
 
         let mut parser = ParserBuilder::new().with_protocol::<Proto27>().with_fixed_buffer::<64>();
         let mut it = parser.consume_ubx(&frame);
 
-        let Some(Ok(UbxPacket::Proto27(PacketRef::MonRxr(p)))) = it.next() else {
+        let Some(Ok(UbxPacket::Proto27(Packet::MonRxr(p)))) = it.next() else {
             panic!("Parser failed to parse a valid MON-RXR packet");
         };
 

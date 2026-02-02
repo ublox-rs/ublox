@@ -155,9 +155,9 @@ impl UbxPacketHandler for PkgHandler {
 
 impl PkgHandler {
     #[cfg(feature = "ubx_proto23")]
-    fn handle_proto23_packet(&mut self, packet: ublox::proto23::PacketRef) {
+    fn handle_proto23_packet(&mut self, packet: ublox::proto23::Packet) {
         match packet {
-            ublox::proto23::PacketRef::MonVer(packet) => {
+            ublox::proto23::Packet::MonVer(packet) => {
                 debug!("{packet:?}");
                 info!(
                     "MonVer: SW version: {} HW version: {}; Extensions: {:?}",
@@ -166,13 +166,13 @@ impl PkgHandler {
                     packet.extension().collect::<Vec<&str>>()
                 );
             },
-            ublox::proto23::PacketRef::NavPvt(pkg) => {
+            ublox::proto23::Packet::NavPvt(pkg) => {
                 self.handle_nav_pvt_23(&pkg);
             },
-            ublox::proto23::PacketRef::EsfAlg(pkg) => {
+            ublox::proto23::Packet::EsfAlg(pkg) => {
                 self.handle_esf_alg(&pkg);
             },
-            ublox::proto23::PacketRef::EsfStatus(pkg) => {
+            ublox::proto23::Packet::EsfStatus(pkg) => {
                 self.handle_esf_status(&pkg);
             },
             _ => {
@@ -182,9 +182,9 @@ impl PkgHandler {
     }
 
     #[cfg(feature = "ubx_proto27")]
-    fn handle_proto27_packet(&mut self, packet: ublox::proto27::PacketRef) {
+    fn handle_proto27_packet(&mut self, packet: ublox::proto27::Packet) {
         match packet {
-            ublox::proto27::PacketRef::MonVer(packet) => {
+            ublox::proto27::Packet::MonVer(packet) => {
                 debug!("{packet:?}");
                 info!(
                     "MonVer: SW version: {} HW version: {}; Extensions: {:?}",
@@ -193,7 +193,7 @@ impl PkgHandler {
                     packet.extension().collect::<Vec<&str>>()
                 );
             },
-            ublox::proto27::PacketRef::NavPvt(pkg) => {
+            ublox::proto27::Packet::NavPvt(pkg) => {
                 self.handle_nav_pvt_27(&pkg);
             },
             // Add other packet types as needed
@@ -204,9 +204,9 @@ impl PkgHandler {
     }
 
     #[cfg(feature = "ubx_proto31")]
-    fn handle_proto31_packet(&mut self, packet: ublox::proto31::PacketRef) {
+    fn handle_proto31_packet(&mut self, packet: ublox::proto31::Packet) {
         match packet {
-            ublox::proto31::PacketRef::MonVer(packet) => {
+            ublox::proto31::Packet::MonVer(packet) => {
                 debug!("{packet:?}");
                 info!(
                     "MonVer: SW version: {} HW version: {}; Extensions: {:?}",
@@ -215,7 +215,7 @@ impl PkgHandler {
                     packet.extension().collect::<Vec<&str>>()
                 );
             },
-            ublox::proto31::PacketRef::NavPvt(pkg) => {
+            ublox::proto31::Packet::NavPvt(pkg) => {
                 self.handle_nav_pvt_31(&pkg);
             },
             // Add other packet types as needed
@@ -226,9 +226,9 @@ impl PkgHandler {
     }
 
     #[cfg(feature = "ubx_proto33")]
-    fn handle_proto33_packet(&mut self, packet: ublox::proto33::PacketRef) {
+    fn handle_proto33_packet(&mut self, packet: ublox::proto33::Packet) {
         match packet {
-            ublox::proto33::PacketRef::MonVer(packet) => {
+            ublox::proto33::Packet::MonVer(packet) => {
                 debug!("{packet:?}");
                 info!(
                     "MonVer: SW version: {} HW version: {}; Extensions: {:?}",
@@ -237,7 +237,7 @@ impl PkgHandler {
                     packet.extension().collect::<Vec<&str>>()
                 );
             },
-            ublox::proto33::PacketRef::NavPvt(pkg) => {
+            ublox::proto33::Packet::NavPvt(pkg) => {
                 self.handle_nav_pvt_33(&pkg);
             },
             // Add other packet types as needed

@@ -670,7 +670,7 @@ mod test {
     #[cfg(feature = "alloc")]
     #[test]
     fn parser_oom_processes_multiple_small_packets() {
-        use crate::proto23::{PacketRef, Proto23};
+        use crate::proto23::{Packet, Proto23};
 
         let packet = [0xb5, 0x62, 0x5, 0x1, 0x2, 0x0, 0x4, 0x5, 0x11, 0x38];
 
@@ -689,7 +689,7 @@ mod test {
         for _ in 0..5 {
             assert!(matches!(
                 it.next(),
-                Some(Ok(UbxPacket::Proto23(PacketRef::AckAck(_))))
+                Some(Ok(UbxPacket::Proto23(Packet::AckAck(_))))
             ));
         }
         assert!(it.next().is_none());
@@ -711,7 +711,7 @@ mod test {
     #[cfg(feature = "ubx_proto14")]
     #[test]
     fn parser_handle_garbage_first_byte_proto14() {
-        use crate::proto14::{PacketRef, Proto14};
+        use crate::proto14::{Packet, Proto14};
 
         let mut buffer = [0; 12];
         let buffer = FixedLinearBuffer::new(&mut buffer);
@@ -720,7 +720,7 @@ mod test {
             let mut it = parser.consume_ubx(&BYTES_GARBAGE);
             assert!(matches!(
                 it.next(),
-                Some(Ok(UbxPacket::Proto14(PacketRef::AckAck(_))))
+                Some(Ok(UbxPacket::Proto14(Packet::AckAck(_))))
             ));
             assert!(it.next().is_none());
         }
@@ -729,7 +729,7 @@ mod test {
     #[cfg(feature = "ubx_proto23")]
     #[test]
     fn parser_handle_garbage_first_byte_proto23() {
-        use crate::proto23::{PacketRef, Proto23};
+        use crate::proto23::{Packet, Proto23};
         let mut buffer = [0; 12];
         let buffer = FixedLinearBuffer::new(&mut buffer);
         let mut parser: Parser<FixedLinearBuffer<'_>, Proto23> = Parser::new(buffer);
@@ -738,7 +738,7 @@ mod test {
             let mut it = parser.consume_ubx(&BYTES_GARBAGE);
             assert!(matches!(
                 it.next(),
-                Some(Ok(UbxPacket::Proto23(PacketRef::AckAck(_))))
+                Some(Ok(UbxPacket::Proto23(Packet::AckAck(_))))
             ));
             assert!(it.next().is_none());
         }
@@ -747,7 +747,7 @@ mod test {
     #[cfg(feature = "ubx_proto27")]
     #[test]
     fn parser_handle_garbage_first_byte_proto27() {
-        use crate::proto27::{PacketRef, Proto27};
+        use crate::proto27::{Packet, Proto27};
 
         let mut buffer = [0; 12];
         let buffer = FixedLinearBuffer::new(&mut buffer);
@@ -757,7 +757,7 @@ mod test {
             let mut it = parser.consume_ubx(&BYTES_GARBAGE);
             assert!(matches!(
                 it.next(),
-                Some(Ok(UbxPacket::Proto27(PacketRef::AckAck(_))))
+                Some(Ok(UbxPacket::Proto27(Packet::AckAck(_))))
             ));
             assert!(it.next().is_none());
         }
@@ -766,7 +766,7 @@ mod test {
     #[cfg(feature = "ubx_proto31")]
     #[test]
     fn parser_handle_garbage_first_byte_proto31() {
-        use crate::proto31::{PacketRef, Proto31};
+        use crate::proto31::{Packet, Proto31};
 
         let mut buffer = [0; 12];
         let mut parser: Parser<_, Proto31> = Parser::new(FixedLinearBuffer::new(&mut buffer));
@@ -775,7 +775,7 @@ mod test {
             let mut it = parser.consume_ubx(&BYTES_GARBAGE);
             assert!(matches!(
                 it.next(),
-                Some(Ok(UbxPacket::Proto31(PacketRef::AckAck(_))))
+                Some(Ok(UbxPacket::Proto31(Packet::AckAck(_))))
             ));
             assert!(it.next().is_none());
         }
@@ -784,7 +784,7 @@ mod test {
     #[cfg(feature = "ubx_proto33")]
     #[test]
     fn parser_handle_garbage_first_byte_proto33() {
-        use crate::proto33::{PacketRef, Proto33};
+        use crate::proto33::{Packet, Proto33};
 
         let mut buffer = [0; 12];
         let mut parser: Parser<_, Proto33> = Parser::new(FixedLinearBuffer::new(&mut buffer));
@@ -793,7 +793,7 @@ mod test {
             let mut it = parser.consume_ubx(&BYTES_GARBAGE);
             assert!(matches!(
                 it.next(),
-                Some(Ok(UbxPacket::Proto33(PacketRef::AckAck(_))))
+                Some(Ok(UbxPacket::Proto33(Packet::AckAck(_))))
             ));
             assert!(it.next().is_none());
         }
@@ -825,7 +825,7 @@ mod test {
     #[cfg(feature = "ubx_proto14")]
     #[test]
     fn parser_oom_clears_buffer_proto14() {
-        use crate::proto14::{PacketRef, Proto14};
+        use crate::proto14::{Packet, Proto14};
 
         let bytes = test_util_cfg_nav5_bytes();
 
@@ -852,7 +852,7 @@ mod test {
             let mut it = parser.consume_ubx(&bytes);
             assert!(matches!(
                 it.next(),
-                Some(Ok(UbxPacket::Proto14(PacketRef::AckAck(_))))
+                Some(Ok(UbxPacket::Proto14(Packet::AckAck(_))))
             ));
             assert!(it.next().is_none());
         }
@@ -861,7 +861,7 @@ mod test {
     #[cfg(feature = "ubx_proto23")]
     #[test]
     fn parser_oom_clears_buffer_proto23() {
-        use crate::proto23::{PacketRef, Proto23};
+        use crate::proto23::{Packet, Proto23};
         let bytes = test_util_cfg_nav5_bytes();
 
         let mut buffer = [0; 12];
@@ -887,7 +887,7 @@ mod test {
             let mut it = parser.consume_ubx(&bytes);
             assert!(matches!(
                 it.next(),
-                Some(Ok(UbxPacket::Proto23(PacketRef::AckAck(_))))
+                Some(Ok(UbxPacket::Proto23(Packet::AckAck(_))))
             ));
             assert!(it.next().is_none());
         }
@@ -896,7 +896,7 @@ mod test {
     #[cfg(feature = "ubx_proto27")]
     #[test]
     fn parser_oom_clears_buffer_proto27() {
-        use crate::proto27::{PacketRef, Proto27};
+        use crate::proto27::{Packet, Proto27};
         let bytes = test_util_cfg_nav5_bytes();
 
         let mut parser = ParserBuilder::new()
@@ -923,7 +923,7 @@ mod test {
             let mut it = parser.consume_ubx(&bytes);
             assert!(matches!(
                 it.next(),
-                Some(Ok(UbxPacket::Proto27(PacketRef::AckAck(_))))
+                Some(Ok(UbxPacket::Proto27(Packet::AckAck(_))))
             ));
             assert!(it.next().is_none());
         }
@@ -932,7 +932,7 @@ mod test {
     #[cfg(feature = "ubx_proto31")]
     #[test]
     fn parser_oom_clears_buffer_proto31() {
-        use crate::proto31::{PacketRef, Proto31};
+        use crate::proto31::{Packet, Proto31};
 
         let bytes = test_util_cfg_nav5_bytes();
         let mut parser = ParserBuilder::new()
@@ -959,7 +959,7 @@ mod test {
             let mut it = parser.consume_ubx(&bytes);
             assert!(matches!(
                 it.next(),
-                Some(Ok(UbxPacket::Proto31(PacketRef::AckAck(_))))
+                Some(Ok(UbxPacket::Proto31(Packet::AckAck(_))))
             ));
             assert!(it.next().is_none());
         }
@@ -968,7 +968,7 @@ mod test {
     #[cfg(feature = "ubx_proto33")]
     #[test]
     fn parser_oom_clears_buffer_proto33() {
-        use crate::proto33::{PacketRef, Proto33};
+        use crate::proto33::{Packet, Proto33};
 
         let bytes = test_util_cfg_nav5_bytes();
         let mut parser = ParserBuilder::new()
@@ -992,7 +992,7 @@ mod test {
             let mut it = parser.consume_ubx(&ACK_ACK_BYTES);
             assert!(matches!(
                 it.next(),
-                Some(Ok(UbxPacket::Proto33(PacketRef::AckAck(_))))
+                Some(Ok(UbxPacket::Proto33(Packet::AckAck(_))))
             ));
             assert!(it.next().is_none());
         }
@@ -1001,7 +1001,7 @@ mod test {
     #[cfg(feature = "ubx_proto14")]
     #[test]
     fn parser_accepts_packet_array_underlying_proto14() {
-        use crate::proto14::{PacketRef, Proto14};
+        use crate::proto14::{Packet, Proto14};
 
         let bytes = test_util_cfg_nav5_bytes();
         let mut parser = ParserBuilder::new()
@@ -1010,7 +1010,7 @@ mod test {
         let mut it = parser.consume_ubx(&bytes);
         assert!(matches!(
             it.next(),
-            Some(Ok(UbxPacket::Proto14(PacketRef::CfgNav5(_))))
+            Some(Ok(UbxPacket::Proto14(Packet::CfgNav5(_))))
         ));
         assert!(it.next().is_none());
     }
@@ -1018,14 +1018,14 @@ mod test {
     #[cfg(feature = "ubx_proto23")]
     #[test]
     fn parser_accepts_packet_array_underlying_proto23() {
-        use crate::proto23::{PacketRef, Proto23};
+        use crate::proto23::{Packet, Proto23};
         let bytes = test_util_cfg_nav5_bytes();
 
         let mut parser = Parser::<FixedBuffer<1024>, Proto23>::with_fixed_buffer();
         let mut it = parser.consume_ubx(&bytes);
         assert!(matches!(
             it.next(),
-            Some(Ok(UbxPacket::Proto23(PacketRef::CfgNav5(_))))
+            Some(Ok(UbxPacket::Proto23(Packet::CfgNav5(_))))
         ));
         assert!(it.next().is_none());
     }
@@ -1033,7 +1033,7 @@ mod test {
     #[cfg(feature = "ubx_proto27")]
     #[test]
     fn parser_accepts_packet_array_underlying_proto27() {
-        use crate::proto27::{PacketRef, Proto27};
+        use crate::proto27::{Packet, Proto27};
         let bytes = test_util_cfg_nav5_bytes();
         let mut parser = ParserBuilder::new()
             .with_protocol::<Proto27>()
@@ -1041,7 +1041,7 @@ mod test {
         let mut it = parser.consume_ubx(&bytes);
         assert!(matches!(
             it.next(),
-            Some(Ok(UbxPacket::Proto27(PacketRef::CfgNav5(_))))
+            Some(Ok(UbxPacket::Proto27(Packet::CfgNav5(_))))
         ));
         assert!(it.next().is_none());
     }
@@ -1049,7 +1049,7 @@ mod test {
     #[cfg(feature = "ubx_proto31")]
     #[test]
     fn parser_accepts_packet_array_underlying_proto31() {
-        use crate::proto31::{PacketRef, Proto31};
+        use crate::proto31::{Packet, Proto31};
         let bytes = test_util_cfg_nav5_bytes();
 
         let mut parser = ParserBuilder::new()
@@ -1058,7 +1058,7 @@ mod test {
         let mut it = parser.consume_ubx(&bytes);
         assert!(matches!(
             it.next(),
-            Some(Ok(UbxPacket::Proto31(PacketRef::CfgNav5(_))))
+            Some(Ok(UbxPacket::Proto31(Packet::CfgNav5(_))))
         ));
         assert!(it.next().is_none());
     }
@@ -1066,7 +1066,7 @@ mod test {
     #[cfg(feature = "ubx_proto33")]
     #[test]
     fn parser_accepts_packet_array_underlying_proto33() {
-        use crate::proto33::{PacketRef, Proto33};
+        use crate::proto33::{Packet, Proto33};
         let bytes = test_util_cfg_nav5_bytes();
 
         let mut parser = ParserBuilder::new()
@@ -1075,7 +1075,7 @@ mod test {
         let mut it = parser.consume_ubx(&bytes);
         assert!(matches!(
             it.next(),
-            Some(Ok(UbxPacket::Proto33(PacketRef::CfgNav5(_))))
+            Some(Ok(UbxPacket::Proto33(Packet::CfgNav5(_))))
         ));
         assert!(it.next().is_none());
     }
@@ -1083,14 +1083,14 @@ mod test {
     #[test]
     #[cfg(all(feature = "std", feature = "ubx_proto14"))]
     fn parser_accepts_packet_vec_underlying_proto14() {
-        use crate::proto14::{PacketRef, Proto14};
+        use crate::proto14::{Packet, Proto14};
         let bytes = test_util_cfg_nav5_bytes();
 
         let mut parser = Parser::<_, Proto14>::default();
         let mut it = parser.consume_ubx(&bytes);
         assert!(matches!(
             it.next(),
-            Some(Ok(UbxPacket::Proto14(PacketRef::CfgNav5(_))))
+            Some(Ok(UbxPacket::Proto14(Packet::CfgNav5(_))))
         ));
         assert!(it.next().is_none());
     }
@@ -1098,14 +1098,14 @@ mod test {
     #[test]
     #[cfg(all(feature = "std", feature = "ubx_proto23"))]
     fn parser_accepts_packet_vec_underlying_proto23() {
-        use crate::proto23::{PacketRef, Proto23};
+        use crate::proto23::{Packet, Proto23};
         let bytes = test_util_cfg_nav5_bytes();
 
         let mut parser = Parser::<_, Proto23>::default();
         let mut it = parser.consume_ubx(&bytes);
         assert!(matches!(
             it.next(),
-            Some(Ok(UbxPacket::Proto23(PacketRef::CfgNav5(_))))
+            Some(Ok(UbxPacket::Proto23(Packet::CfgNav5(_))))
         ));
         assert!(it.next().is_none());
     }
@@ -1113,7 +1113,7 @@ mod test {
     #[test]
     #[cfg(all(feature = "std", feature = "ubx_proto27"))]
     fn parser_accepts_packet_vec_underlying_proto27() {
-        use crate::proto27::{PacketRef, Proto27};
+        use crate::proto27::{Packet, Proto27};
 
         let bytes = test_util_cfg_nav5_bytes();
 
@@ -1121,7 +1121,7 @@ mod test {
         let mut it = parser.consume_ubx(&bytes);
         assert!(matches!(
             it.next(),
-            Some(Ok(UbxPacket::Proto27(PacketRef::CfgNav5(_))))
+            Some(Ok(UbxPacket::Proto27(Packet::CfgNav5(_))))
         ));
         assert!(it.next().is_none());
     }
@@ -1129,7 +1129,7 @@ mod test {
     #[test]
     #[cfg(all(feature = "std", feature = "ubx_proto31"))]
     fn parser_accepts_packet_vec_underlying_proto31() {
-        use crate::proto31::{PacketRef, Proto31};
+        use crate::proto31::{Packet, Proto31};
 
         let bytes = test_util_cfg_nav5_bytes();
 
@@ -1137,7 +1137,7 @@ mod test {
         let mut it = parser.consume_ubx(&bytes);
         assert!(matches!(
             it.next(),
-            Some(Ok(UbxPacket::Proto31(PacketRef::CfgNav5(_))))
+            Some(Ok(UbxPacket::Proto31(Packet::CfgNav5(_))))
         ));
         assert!(it.next().is_none());
     }
@@ -1145,7 +1145,7 @@ mod test {
     #[test]
     #[cfg(all(feature = "std", feature = "ubx_proto33"))]
     fn parser_accepts_packet_vec_underlying_proto33() {
-        use crate::proto33::{PacketRef, Proto33};
+        use crate::proto33::{Packet, Proto33};
 
         let bytes = test_util_cfg_nav5_bytes();
 
@@ -1153,7 +1153,7 @@ mod test {
         let mut it = parser.consume_ubx(&bytes);
         assert!(matches!(
             it.next(),
-            Some(Ok(UbxPacket::Proto33(PacketRef::CfgNav5(_))))
+            Some(Ok(UbxPacket::Proto33(Packet::CfgNav5(_))))
         ));
         assert!(it.next().is_none());
     }
@@ -1181,12 +1181,12 @@ mod test {
     #[test]
     #[cfg(all(feature = "std", feature = "ubx_proto14"))]
     fn parser_accepts_multiple_packets_proto14() {
-        use crate::proto14::{PacketRef, Proto14};
+        use crate::proto14::{Packet, Proto14};
         let data = test_util_multiple_cfg_nav5_packets_bytes();
         let mut parser = Parser::<_, Proto14>::default();
         let mut it = parser.consume_ubx(&data);
         match it.next() {
-            Some(Ok(UbxPacket::Proto14(PacketRef::CfgNav5(packet)))) => {
+            Some(Ok(UbxPacket::Proto14(Packet::CfgNav5(packet)))) => {
                 // We're good
                 assert_eq!(packet.pacc(), 21);
             },
@@ -1195,7 +1195,7 @@ mod test {
             },
         }
         match it.next() {
-            Some(Ok(UbxPacket::Proto14(PacketRef::CfgNav5(packet)))) => {
+            Some(Ok(UbxPacket::Proto14(Packet::CfgNav5(packet)))) => {
                 // We're good
                 assert_eq!(packet.pacc(), 18);
             },
@@ -1209,12 +1209,12 @@ mod test {
     #[test]
     #[cfg(all(feature = "std", feature = "ubx_proto23"))]
     fn parser_accepts_multiple_packets_proto23() {
-        use crate::proto23::{PacketRef, Proto23};
+        use crate::proto23::{Packet, Proto23};
         let data = test_util_multiple_cfg_nav5_packets_bytes();
         let mut parser = Parser::<_, Proto23>::default();
         let mut it = parser.consume_ubx(&data);
         match it.next() {
-            Some(Ok(UbxPacket::Proto23(PacketRef::CfgNav5(packet)))) => {
+            Some(Ok(UbxPacket::Proto23(Packet::CfgNav5(packet)))) => {
                 // We're good
                 assert_eq!(packet.pacc(), 21);
             },
@@ -1223,7 +1223,7 @@ mod test {
             },
         }
         match it.next() {
-            Some(Ok(UbxPacket::Proto23(PacketRef::CfgNav5(packet)))) => {
+            Some(Ok(UbxPacket::Proto23(Packet::CfgNav5(packet)))) => {
                 // We're good
                 assert_eq!(packet.pacc(), 18);
             },
@@ -1236,13 +1236,13 @@ mod test {
     #[test]
     #[cfg(all(feature = "std", feature = "ubx_proto27"))]
     fn parser_accepts_multiple_packets_proto27() {
-        use crate::proto27::{PacketRef, Proto27};
+        use crate::proto27::{Packet, Proto27};
 
         let data = test_util_multiple_cfg_nav5_packets_bytes();
         let mut parser = Parser::<_, Proto27>::default();
         let mut it = parser.consume_ubx(&data);
         match it.next() {
-            Some(Ok(UbxPacket::Proto27(PacketRef::CfgNav5(packet)))) => {
+            Some(Ok(UbxPacket::Proto27(Packet::CfgNav5(packet)))) => {
                 // We're good
                 assert_eq!(packet.pacc(), 21);
             },
@@ -1251,7 +1251,7 @@ mod test {
             },
         }
         match it.next() {
-            Some(Ok(UbxPacket::Proto27(PacketRef::CfgNav5(packet)))) => {
+            Some(Ok(UbxPacket::Proto27(Packet::CfgNav5(packet)))) => {
                 // We're good
                 assert_eq!(packet.pacc(), 18);
             },
@@ -1265,12 +1265,12 @@ mod test {
     #[test]
     #[cfg(all(feature = "std", feature = "ubx_proto31"))]
     fn parser_accepts_multiple_packets_proto31() {
-        use crate::proto31::{PacketRef, Proto31};
+        use crate::proto31::{Packet, Proto31};
         let data = test_util_multiple_cfg_nav5_packets_bytes();
         let mut parser = Parser::<_, Proto31>::default();
         let mut it = parser.consume_ubx(&data);
         match it.next() {
-            Some(Ok(UbxPacket::Proto31(PacketRef::CfgNav5(packet)))) => {
+            Some(Ok(UbxPacket::Proto31(Packet::CfgNav5(packet)))) => {
                 // We're good
                 assert_eq!(packet.pacc(), 21);
             },
@@ -1279,7 +1279,7 @@ mod test {
             },
         }
         match it.next() {
-            Some(Ok(UbxPacket::Proto31(PacketRef::CfgNav5(packet)))) => {
+            Some(Ok(UbxPacket::Proto31(Packet::CfgNav5(packet)))) => {
                 // We're good
                 assert_eq!(packet.pacc(), 18);
             },
@@ -1293,12 +1293,12 @@ mod test {
     #[test]
     #[cfg(all(feature = "std", feature = "ubx_proto33"))]
     fn parser_accepts_multiple_packets_proto33() {
-        use crate::proto33::{PacketRef, Proto33};
+        use crate::proto33::{Packet, Proto33};
         let data = test_util_multiple_cfg_nav5_packets_bytes();
         let mut parser = Parser::<_, Proto33>::default();
         let mut it = parser.consume_ubx(&data);
         match it.next() {
-            Some(Ok(UbxPacket::Proto33(PacketRef::CfgNav5(packet)))) => {
+            Some(Ok(UbxPacket::Proto33(Packet::CfgNav5(packet)))) => {
                 // We're good
                 assert_eq!(packet.pacc(), 21);
             },
@@ -1307,7 +1307,7 @@ mod test {
             },
         }
         match it.next() {
-            Some(Ok(UbxPacket::Proto33(PacketRef::CfgNav5(packet)))) => {
+            Some(Ok(UbxPacket::Proto33(Packet::CfgNav5(packet)))) => {
                 // We're good
                 assert_eq!(packet.pacc(), 18);
             },
@@ -1334,14 +1334,14 @@ mod test {
     #[cfg(feature = "ubx_proto14")]
     #[test]
     fn test_ack_ack_payload_len_proto14() {
-        use crate::proto14::{PacketRef, Proto14};
+        use crate::proto14::{Packet, Proto14};
 
         const ACK_ACK_PAYLOAD_LEN: usize = 2;
 
         let mut parser = crate::Parser::<FixedBuffer<1024>, Proto14>::with_fixed_buffer();
         let mut it = parser.consume_ubx(&ACK_ACK_BYTES);
         match it.next() {
-            Some(Ok(crate::UbxPacket::Proto14(PacketRef::AckAck(pack)))) => {
+            Some(Ok(crate::UbxPacket::Proto14(Packet::AckAck(pack)))) => {
                 assert_eq!(ACK_ACK_PAYLOAD_LEN, pack.payload_len());
             },
             _ => panic!(),
@@ -1351,14 +1351,14 @@ mod test {
     #[cfg(feature = "ubx_proto23")]
     #[test]
     fn test_ack_ack_payload_len_proto23() {
-        use crate::proto23::{PacketRef, Proto23};
+        use crate::proto23::{Packet, Proto23};
 
         const ACK_ACK_PAYLOAD_LEN: usize = 2;
 
         let mut parser = crate::Parser::<FixedBuffer<1024>, Proto23>::with_fixed_buffer();
         let mut it = parser.consume_ubx(&ACK_ACK_BYTES);
         match it.next() {
-            Some(Ok(crate::UbxPacket::Proto23(PacketRef::AckAck(pack)))) => {
+            Some(Ok(crate::UbxPacket::Proto23(Packet::AckAck(pack)))) => {
                 assert_eq!(ACK_ACK_PAYLOAD_LEN, pack.payload_len());
             },
             _ => panic!(),
@@ -1392,7 +1392,7 @@ mod test {
     #[cfg(feature = "ubx_proto14")]
     #[test]
     fn test_nav_pvt_payload_len_proto14() {
-        use crate::proto14::{PacketRef, Proto14};
+        use crate::proto14::{Packet, Proto14};
 
         const PACKET_LEN: usize = NAV_PVT_PROTO14_LEN + UBX_HEADER_LEN + UBX_CHECKSUM_LEN;
         let mut packet = [0; PACKET_LEN];
@@ -1401,7 +1401,7 @@ mod test {
         let mut parser = crate::Parser::<FixedBuffer<1024>, Proto14>::with_fixed_buffer();
         let mut it = parser.consume_ubx(&packet);
         match it.next() {
-            Some(Ok(crate::UbxPacket::Proto14(PacketRef::NavPvt(p)))) => {
+            Some(Ok(crate::UbxPacket::Proto14(Packet::NavPvt(p)))) => {
                 assert_eq!(NAV_PVT_PROTO14_LEN, p.payload_len())
             },
             _ => panic!(),
@@ -1411,7 +1411,7 @@ mod test {
     #[cfg(feature = "ubx_proto23")]
     #[test]
     fn test_nav_pvt_payload_len_proto23() {
-        use crate::proto23::{PacketRef, Proto23};
+        use crate::proto23::{Packet, Proto23};
 
         const PACKET_LEN: usize = NAV_PVT_PROTO23_LEN + UBX_HEADER_LEN + UBX_CHECKSUM_LEN;
         let mut packet = [0; PACKET_LEN];
@@ -1420,7 +1420,7 @@ mod test {
         let mut parser = crate::Parser::<FixedBuffer<1024>, Proto23>::with_fixed_buffer();
         let mut it = parser.consume_ubx(&packet);
         match it.next() {
-            Some(Ok(crate::UbxPacket::Proto23(PacketRef::NavPvt(p)))) => {
+            Some(Ok(crate::UbxPacket::Proto23(Packet::NavPvt(p)))) => {
                 assert_eq!(NAV_PVT_PROTO23_LEN, p.payload_len())
             },
             _ => panic!(),

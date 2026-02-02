@@ -34,7 +34,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
- - Marked PacketRef enums as `#[non_exhaustive]`
+ - Marked Packet enums as `#[non_exhaustive]`
 
 
 ## [0.8.0]
@@ -74,7 +74,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
-- Add owned variants of `PacketRef` ([#103](https://github.com/ublox-rs/ublox/pull/103))
+- Add owned variants of `Packet` ([#103](https://github.com/ublox-rs/ublox/pull/103))
 - Split large file that defined all packets definition into individual files ([#129])(https://github.com/ublox-rs/ublox/pull/129)
 - Some of the new `CFG-NAVSPG-*` messages
 - Add new `invalidLlh` bitflag for `UBX-NAV-HPPOSLLH` protocol 27 & 31
@@ -110,14 +110,14 @@ All notable changes to this project will be documented in this file.
   - cherry-picked NavSig from PR ([#73](https://github.com/ublox-rs/ublox/pull/73))
   - add semver to CI
 - Added comments and scaling for NavRelPosNed packets ([#93](https://github.com/ublox-rs/ublox/pull/93))
-- Separate PacketRef enum into own file and CI improvements ([#94](https://github.com/ublox-rs/ublox/pull/94))
+- Separate Packet enum into own file and CI improvements ([#94](https://github.com/ublox-rs/ublox/pull/94))
   - set rust-version in primary workspace
   - add CI check for msrv
 - Create a release script ([#89](https://github.com/ublox-rs/ublox/pull/89))
 - Introduce feature flags for UBX protocol versions ([#87](https://github.com/ublox-rs/ublox/pull/87))
   - differentiate between uBlox prototocol/series
   - add build.rs to force single feature for protocol version
-  - duplicate PacketRef enum per protocol version
+  - duplicate Packet enum per protocol version
   - add CFG-ESFWT message
   - fix bug in ESF MEAS decoding
   - refactor ublox_device into a lib to be used by all examples

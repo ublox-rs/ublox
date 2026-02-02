@@ -5,45 +5,20 @@ use quote::quote;
 use syn::Ident;
 
 pub(super) fn generate_fn_match_packet(
-    union_enum_name_ref: &Ident,
-    matches_ref: &[TokenStream],
-    unknown_var_ref: &Ident,
+    union_enum_name: &Ident,
+    matches: &[TokenStream],
+    unknown_var: &Ident,
 ) -> TokenStream {
     quote! {
-        pub(crate) fn match_packet(class: u8, msg_id: u8, payload: &[u8]) -> Result<#union_enum_name_ref, ParserError> {
+        pub(crate) fn match_packet(class: u8, msg_id: u8, payload: &[u8]) -> Result<#union_enum_name, ParserError> {
             match (class, msg_id) {
-                #(#matches_ref)*
-                _ => Ok(#union_enum_name_ref::Unknown(#unknown_var_ref {
-                    payload,
+                #(#matches)*
+                _ => Ok(#union_enum_name::Unknown(#unknown_var {
+                    buffer: PacketBuffer::Borrowed(payload),
                     class,
-                    msg_id
+                    msg_id,
+                    payload_len: payload.len(),
                 })),
-            }
-        }
-    }
-}
-
-pub(super) fn generate_fn_match_packet_owned(
-    union_enum_name_owned: &Ident,
-    matches_owned: &[TokenStream],
-    unknown_var_owned: &Ident,
-) -> TokenStream {
-    quote! {
-        pub(crate) fn match_packet_owned(class: u8, msg_id: u8, payload: &[u8]) -> Result<#union_enum_name_owned, ParserError> {
-            match (class, msg_id) {
-                #(#matches_owned)*
-                _ => {
-                    let mut payload_copy = [0u8; MAX_PAYLOAD_LEN as usize];
-                    let payload_len = core::cmp::min(payload.len(), MAX_PAYLOAD_LEN as usize);
-                    payload_copy[..payload_len].copy_from_slice(&payload[..payload_len]);
-
-                    Ok(#union_enum_name_owned::Unknown(#unknown_var_owned {
-                        payload: payload_copy,
-                        payload_len,
-                        class,
-                        msg_id
-                    }))
-                }
             }
         }
     }

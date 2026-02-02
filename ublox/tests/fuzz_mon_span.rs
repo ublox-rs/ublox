@@ -138,12 +138,12 @@ proptest! {
     fn test_parser_proto27_with_generated_mon_span_frames(
         (expected, frame) in ubx_mon_span_frame_strategy()
     ) {
-        use ublox::proto27::{Proto27, PacketRef};
+        use ublox::proto27::{Proto27, Packet};
 
         let mut parser = ParserBuilder::new().with_protocol::<Proto27>().with_fixed_buffer::<1024>();
         let mut it = parser.consume_ubx(&frame);
 
-        let Some(Ok(UbxPacket::Proto27(PacketRef::MonSpan(p)))) = it.next() else {
+        let Some(Ok(UbxPacket::Proto27(Packet::MonSpan(p)))) = it.next() else {
             panic!("Parser failed to parse a valid MON-SPAN packet");
         };
 
@@ -170,12 +170,12 @@ proptest! {
     fn test_parser_proto31_with_generated_mon_span_frames(
         (expected, frame) in ubx_mon_span_frame_strategy()
     ) {
-        use ublox::proto31::{Proto31, PacketRef};
+        use ublox::proto31::{Proto31, Packet};
 
         let mut parser = ParserBuilder::new().with_protocol::<Proto31>().with_fixed_buffer::<1024>();
         let mut it = parser.consume_ubx(&frame);
 
-        let Some(Ok(UbxPacket::Proto31(PacketRef::MonSpan(p)))) = it.next() else {
+        let Some(Ok(UbxPacket::Proto31(Packet::MonSpan(p)))) = it.next() else {
             panic!("Parser failed to parse a valid MON-SPAN packet");
         };
 

@@ -6,11 +6,11 @@ use ublox_derive::ubx_extend;
 #[cfg(feature = "serde")]
 use crate::serde::ser::SerializeMap;
 
-pub mod packetref_proto14;
-pub mod packetref_proto23;
-pub mod packetref_proto27;
-pub mod packetref_proto31;
-pub mod packetref_proto33;
+pub mod packet_proto14;
+pub mod packet_proto23;
+pub mod packet_proto27;
+pub mod packet_proto31;
+pub mod packet_proto33;
 
 pub mod ack;
 

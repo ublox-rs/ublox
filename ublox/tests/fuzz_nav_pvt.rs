@@ -313,12 +313,12 @@ proptest! {
     fn test_parser_proto14_with_generated_nav_pvt_frames(
         (expected_pvt, frame)  in ubx_nav_pvt_frame_strategy(ProtocolVersion::V14)
     ) {
-        use ublox::proto14::{Proto14, PacketRef};
+        use ublox::proto14::{Proto14, Packet};
 
         let mut parser = ParserBuilder::new().with_protocol::<Proto14>().with_fixed_buffer::<1024>();
         let mut it = parser.consume_ubx(&frame);
 
-        let Some(Ok(UbxPacket::Proto14(PacketRef::NavPvt(p)))) = it.next() else {
+        let Some(Ok(UbxPacket::Proto14(Packet::NavPvt(p)))) = it.next() else {
             panic!("Parser failed to parse a NAV-PVT valid packet");
         };
 
@@ -347,12 +347,12 @@ proptest! {
     fn test_parser_proto23_with_generated_nav_pvt_frames(
         (expected_pvt, frame) in ubx_nav_pvt_frame_strategy(ProtocolVersion::V23)
     ) {
-        use ublox::proto23::{Proto23, PacketRef};
+        use ublox::proto23::{Proto23, Packet};
 
         let mut parser = ParserBuilder::new().with_protocol::<Proto23>().with_fixed_buffer::<1024>();
         let mut it = parser.consume_ubx(&frame);
 
-        let Some(Ok(UbxPacket::Proto23(PacketRef::NavPvt(p)))) = it.next() else {
+        let Some(Ok(UbxPacket::Proto23(Packet::NavPvt(p)))) = it.next() else {
             panic!("Parser failed to parse a NAV-PVT valid packet");
         };
 
@@ -388,11 +388,11 @@ proptest! {
     fn test_parser_proto27_with_generated_nav_pvt_frames(
         (expected_pvt, frame) in ubx_nav_pvt_frame_strategy(ProtocolVersion::V27)
     ) {
-        use ublox::proto27::{Proto27, PacketRef};
+        use ublox::proto27::{Proto27, Packet};
 
         let mut parser = ParserBuilder::new().with_protocol::<Proto27>().with_fixed_buffer::<1024>();
         let mut it = parser.consume_ubx(&frame);
-        let Some(Ok(UbxPacket::Proto27(PacketRef::NavPvt(p)))) = it.next() else {
+        let Some(Ok(UbxPacket::Proto27(Packet::NavPvt(p)))) = it.next() else {
             panic!("Parser failed to parse a NAV-PVT valid packet");
         };
 
@@ -426,11 +426,11 @@ proptest! {
     fn test_parser_proto31_with_generated_nav_pvt_frames(
         (expected_pvt, frame)  in ubx_nav_pvt_frame_strategy(ProtocolVersion::V31)
     ) {
-        use ublox::proto31::{Proto31, PacketRef};
+        use ublox::proto31::{Proto31, Packet};
 
         let mut parser = ParserBuilder::new().with_protocol::<Proto31>().with_fixed_buffer::<1024>();
         let mut it = parser.consume_ubx(&frame);
-        let Some(Ok(UbxPacket::Proto31(PacketRef::NavPvt(p)))) = it.next() else {
+        let Some(Ok(UbxPacket::Proto31(Packet::NavPvt(p)))) = it.next() else {
             panic!("Parser failed to parse a NAV-PVT valid packet");
         };
 
@@ -464,11 +464,11 @@ proptest! {
     fn test_parser_proto33_with_generated_nav_pvt_frames(
         (expected_pvt, frame)  in ubx_nav_pvt_frame_strategy(ProtocolVersion::V33)
     ) {
-        use ublox::proto33::{Proto33, PacketRef};
+        use ublox::proto33::{Proto33, Packet};
 
         let mut parser = ParserBuilder::new().with_protocol::<Proto33>().with_fixed_buffer::<1024>();
         let mut it = parser.consume_ubx(&frame);
-        let Some(Ok(UbxPacket::Proto33(PacketRef::NavPvt(p)))) = it.next() else {
+        let Some(Ok(UbxPacket::Proto33(Packet::NavPvt(p)))) = it.next() else {
             panic!("Parser failed to parse a NAV-PVT valid packet");
         };
 

@@ -95,7 +95,7 @@ Parsing packets happens by instantiating a `Parser` object and then adding data 
     loop {
         match it.next() {
             Some(Ok(packet)) => {
-                // We've received a &PacketRef, we can handle it
+                // We've received a &Packet, we can handle it
                 // Or we can convert it to an owned structure, so we can move it
                 let owned_packet = packet.to_owned();
             }

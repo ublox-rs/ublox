@@ -1,14 +1,11 @@
 use crate::types::{packfield::PackField, PackDesc};
 use proc_macro2::TokenStream;
-use quote::quote;
-use syn::{parse_quote, Ident, Type};
+use quote::{format_ident, quote};
+use syn::{parse_quote, Type};
 
-pub(super) fn generate_debug_impl(
-    pack_name: &str,
-    ref_name: &Ident,
-    owned_name: &Ident,
-    pack_descr: &PackDesc,
-) -> TokenStream {
+pub(super) fn generate_debug_impl(pack_descr: &PackDesc) -> TokenStream {
+    let pack_name: &String = &pack_descr.name;
+    let pack_name_ident: syn::Ident = format_ident!("{}", pack_descr.name);
     let fields: Vec<TokenStream> = pack_descr
         .fields
         .iter()
@@ -22,15 +19,8 @@ pub(super) fn generate_debug_impl(
         .collect();
 
     quote! {
-        impl core::fmt::Debug for #ref_name<'_> {
+        impl<'a, const N: usize>  core::fmt::Debug for #pack_name_ident<'a, N> {
             fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-                f.debug_struct(#pack_name)
-                    #(#fields)*
-                    .finish()
-            }
-        }
-        impl core::fmt::Debug for #owned_name {
-            fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
                 f.debug_struct(#pack_name)
                     #(#fields)*
                     .finish()
@@ -39,11 +29,8 @@ pub(super) fn generate_debug_impl(
     }
 }
 
-pub(super) fn generate_serialize_impl(
-    _pack_name: &str,
-    ref_name: &Ident,
-    pack_descr: &PackDesc,
-) -> TokenStream {
+pub(super) fn generate_serialize_impl(pack_descr: &PackDesc) -> TokenStream {
+    let pack_name_ident: syn::Ident = format_ident!("{}", pack_descr.name);
     let fields = pack_descr.fields.iter().map(|field| {
         let field_name = &field.name;
         let field_accessor = field.intermediate_field_name();
@@ -62,7 +49,7 @@ pub(super) fn generate_serialize_impl(
     });
     quote! {
         #[cfg(feature = "serde")]
-        impl SerializeUbxPacketFields for #ref_name<'_> {
+        impl<'a, const N: usize> SerializeUbxPacketFields for #pack_name_ident<'a, N> {
             fn serialize_fields<S>(&self, state: &mut S) -> Result<(), S::Error>
             where
                 S: serde::ser::SerializeMap,
@@ -73,7 +60,7 @@ pub(super) fn generate_serialize_impl(
         }
 
         #[cfg(feature = "serde")]
-        impl serde::Serialize for #ref_name<'_> {
+        impl<'a, const N: usize> serde::Serialize for #pack_name_ident<'a, N> {
             fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
             where
                 S: serde::Serializer,

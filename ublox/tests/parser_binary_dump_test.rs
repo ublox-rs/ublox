@@ -67,7 +67,7 @@ fn read_big_log() -> (Vec<u8>, Meta, Meta, PathBuf, Vec<usize>) {
 #[test]
 #[ignore]
 fn test_parse_big_dump_proto14() {
-    use ublox::proto14::{PacketRef, Proto14};
+    use ublox::proto14::{Packet, Proto14};
     let (log, mut meta, expect, log_path, read_sizes) = read_big_log();
     let mut log_slice = log.as_slice();
     let mut parser = Parser::<_, Proto14>::default();
@@ -80,9 +80,9 @@ fn test_parse_big_dump_proto14() {
         while let Some(pack) = it.next() {
             match pack {
                 Ok(pack) => match pack {
-                    UbxPacket::Proto14(PacketRef::AckAck(_)) => meta.ack_ack += 1,
-                    UbxPacket::Proto14(PacketRef::NavPosLlh(_)) => meta.nav_pos_llh += 1,
-                    UbxPacket::Proto14(PacketRef::NavStatus(_)) => meta.nav_stat += 1,
+                    UbxPacket::Proto14(Packet::AckAck(_)) => meta.ack_ack += 1,
+                    UbxPacket::Proto14(Packet::NavPosLlh(_)) => meta.nav_pos_llh += 1,
+                    UbxPacket::Proto14(Packet::NavStatus(_)) => meta.nav_stat += 1,
                     _ => meta.unknown += 1,
                 },
                 Err(ParserError::InvalidChecksum { .. }) => meta.wrong_chksum += 1,
@@ -116,7 +116,7 @@ fn test_parse_big_dump_proto14() {
 #[test]
 #[ignore]
 fn test_parse_big_dump_proto23() {
-    use ublox::proto23::{PacketRef, Proto23};
+    use ublox::proto23::{Packet, Proto23};
     let (log, mut meta, expect, log_path, read_sizes) = read_big_log();
     let mut log_slice = log.as_slice();
     let mut parser = Parser::<_, Proto23>::default();
@@ -129,9 +129,9 @@ fn test_parse_big_dump_proto23() {
         while let Some(pack) = it.next() {
             match pack {
                 Ok(pack) => match pack {
-                    UbxPacket::Proto23(PacketRef::AckAck(_)) => meta.ack_ack += 1,
-                    UbxPacket::Proto23(PacketRef::NavPosLlh(_)) => meta.nav_pos_llh += 1,
-                    UbxPacket::Proto23(PacketRef::NavStatus(_)) => meta.nav_stat += 1,
+                    UbxPacket::Proto23(Packet::AckAck(_)) => meta.ack_ack += 1,
+                    UbxPacket::Proto23(Packet::NavPosLlh(_)) => meta.nav_pos_llh += 1,
+                    UbxPacket::Proto23(Packet::NavStatus(_)) => meta.nav_stat += 1,
                     _ => meta.unknown += 1,
                 },
                 Err(ParserError::InvalidChecksum { .. }) => meta.wrong_chksum += 1,
@@ -149,7 +149,7 @@ fn test_parse_big_dump_proto23() {
 #[test]
 #[ignore]
 fn test_parse_big_dump_proto27() {
-    use ublox::proto27::{PacketRef, Proto27};
+    use ublox::proto27::{Packet, Proto27};
     let (log, mut meta, expect, log_path, read_sizes) = read_big_log();
     let mut log_slice = log.as_slice();
     let mut parser = Parser::<_, Proto27>::default();
@@ -162,9 +162,9 @@ fn test_parse_big_dump_proto27() {
         while let Some(pack) = it.next() {
             match pack {
                 Ok(pack) => match pack {
-                    UbxPacket::Proto27(PacketRef::AckAck(_)) => meta.ack_ack += 1,
-                    UbxPacket::Proto27(PacketRef::NavPosLlh(_)) => meta.nav_pos_llh += 1,
-                    UbxPacket::Proto27(PacketRef::NavStatus(_)) => meta.nav_stat += 1,
+                    UbxPacket::Proto27(Packet::AckAck(_)) => meta.ack_ack += 1,
+                    UbxPacket::Proto27(Packet::NavPosLlh(_)) => meta.nav_pos_llh += 1,
+                    UbxPacket::Proto27(Packet::NavStatus(_)) => meta.nav_stat += 1,
                     _ => meta.unknown += 1,
                 },
                 Err(ParserError::InvalidChecksum { .. }) => meta.wrong_chksum += 1,
@@ -182,7 +182,7 @@ fn test_parse_big_dump_proto27() {
 #[test]
 #[ignore]
 fn test_parse_big_dump_proto31() {
-    use ublox::proto31::{PacketRef, Proto31};
+    use ublox::proto31::{Packet, Proto31};
     let (log, mut meta, expect, log_path, read_sizes) = read_big_log();
     let mut log_slice = log.as_slice();
     let mut parser = Parser::<_, Proto31>::default();
@@ -195,9 +195,9 @@ fn test_parse_big_dump_proto31() {
         while let Some(pack) = it.next() {
             match pack {
                 Ok(pack) => match pack {
-                    UbxPacket::Proto31(PacketRef::AckAck(_)) => meta.ack_ack += 1,
-                    UbxPacket::Proto31(PacketRef::NavPosLlh(_)) => meta.nav_pos_llh += 1,
-                    UbxPacket::Proto31(PacketRef::NavStatus(_)) => meta.nav_stat += 1,
+                    UbxPacket::Proto31(Packet::AckAck(_)) => meta.ack_ack += 1,
+                    UbxPacket::Proto31(Packet::NavPosLlh(_)) => meta.nav_pos_llh += 1,
+                    UbxPacket::Proto31(Packet::NavStatus(_)) => meta.nav_stat += 1,
                     _ => meta.unknown += 1,
                 },
                 Err(ParserError::InvalidChecksum { .. }) => meta.wrong_chksum += 1,
@@ -215,7 +215,7 @@ fn test_parse_big_dump_proto31() {
 #[test]
 #[ignore]
 fn test_parse_big_dump_proto33() {
-    use ublox::proto33::{PacketRef, Proto33};
+    use ublox::proto33::{Packet, Proto33};
     let (log, mut meta, expect, log_path, read_sizes) = read_big_log();
     let mut log_slice = log.as_slice();
     let mut parser = Parser::<_, Proto33>::default();
@@ -228,9 +228,9 @@ fn test_parse_big_dump_proto33() {
         while let Some(pack) = it.next() {
             match pack {
                 Ok(pack) => match pack {
-                    UbxPacket::Proto33(PacketRef::AckAck(_)) => meta.ack_ack += 1,
-                    UbxPacket::Proto33(PacketRef::NavPosLlh(_)) => meta.nav_pos_llh += 1,
-                    UbxPacket::Proto33(PacketRef::NavStatus(_)) => meta.nav_stat += 1,
+                    UbxPacket::Proto33(Packet::AckAck(_)) => meta.ack_ack += 1,
+                    UbxPacket::Proto33(Packet::NavPosLlh(_)) => meta.nav_pos_llh += 1,
+                    UbxPacket::Proto33(Packet::NavStatus(_)) => meta.nav_stat += 1,
                     _ => meta.unknown += 1,
                 },
                 Err(ParserError::InvalidChecksum { .. }) => meta.wrong_chksum += 1,

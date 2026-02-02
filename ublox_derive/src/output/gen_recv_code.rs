@@ -7,9 +7,7 @@ use quote::{format_ident, quote};
 use syn::parse_quote;
 
 pub fn generate_recv_code_for_packet(dbg_ctx: DebugContext, pack_descr: &PackDesc) -> TokenStream {
-    let pack_name: &String = &pack_descr.name;
-    let ref_name: syn::Ident = format_ident!("{}Ref", pack_descr.name);
-    let owned_name: syn::Ident = format_ident!("{}Owned", pack_descr.name);
+    let pack_name_ident = format_ident!("{}", pack_descr.name);
     let packet_size: usize = match pack_descr.header.payload_len {
         PayloadLen::Fixed(value) => value,
         PayloadLen::Max(value) => value,
@@ -24,7 +22,6 @@ pub fn generate_recv_code_for_packet(dbg_ctx: DebugContext, pack_descr: &PackDes
     process_fields(
         dbg_ctx,
         pack_descr,
-        pack_name,
         &mut off,
         &mut getters,
         &mut field_validators,
@@ -32,28 +29,50 @@ pub fn generate_recv_code_for_packet(dbg_ctx: DebugContext, pack_descr: &PackDes
     );
 
     let struct_comment = &pack_descr.comment;
-    let validator = generate_validator(pack_descr, pack_name, &ref_name, field_validators);
-    let debug_impl = util::generate_debug_impl(pack_name, &ref_name, &owned_name, pack_descr);
-    let serialize_impl = util::generate_serialize_impl(pack_name, &ref_name, pack_descr);
-    let from_ref_impl = generate_from_ref_impl(&ref_name, &owned_name, packet_size);
+    let validator = generate_validator(pack_descr, field_validators);
+    let debug_impl = util::generate_debug_impl(pack_descr);
+    let serialize_impl = util::generate_serialize_impl(pack_descr);
 
     quote! {
         #[doc = #struct_comment]
         #[doc = "Contains a reference to an underlying buffer, contains accessor methods to retrieve data."]
-        pub struct #ref_name<'a>(pub(crate) &'a [u8]);
-        impl<'a> #ref_name<'a> {
+        pub struct #pack_name_ident<'a, const N: usize = #packet_size> {
+            pub(crate) buffer: PacketBuffer<'a, N>
+        }
+
+        impl<'a, const N: usize> #pack_name_ident<'a, N> {
             #[inline]
             pub fn as_bytes(&self) -> &[u8] {
-                self.0
+                self.buffer.as_bytes()
             }
 
             #[inline]
             pub fn payload_len(&self) -> usize {
-                self.0.len()
+                self.buffer.len()
             }
 
-            pub fn to_owned(&self) -> #owned_name {
-                self.into()
+            pub fn new_borrowed(slice: &'a [u8]) -> Self {
+                Self {
+                    buffer: PacketBuffer::Borrowed(slice),
+                }
+            }
+
+            pub fn new_owned(data: [u8; N]) -> Self {
+                Self {
+                    buffer: PacketBuffer::Owned(data),
+                }
+            }
+
+            pub fn into_owned(self) -> [u8; N] {
+                match self.buffer {
+                    PacketBuffer::Borrowed(slice) => {
+                        let mut arr = [0u8; N];
+                        let copy_len = core::cmp::min(slice.len(), N);
+                        arr[..copy_len].copy_from_slice(&slice[..copy_len]);
+                        arr
+                    }
+                    PacketBuffer::Owned(arr) => arr,
+                }
             }
 
             #(#getters)*
@@ -61,36 +80,14 @@ pub fn generate_recv_code_for_packet(dbg_ctx: DebugContext, pack_descr: &PackDes
             #validator
         }
 
-        #[doc = #struct_comment]
-        #[doc = "Owns the underlying buffer of data, contains accessor methods to retrieve data."]
-        #[derive(Clone)]
-        pub struct #owned_name(pub(crate) [u8; #packet_size]);
-
-        impl #owned_name {
-            pub(crate) const PACKET_SIZE: usize = #packet_size;
-
-            #[inline]
-            pub fn as_bytes(&self) -> &[u8] {
-                &self.0
-            }
-
-            #(#getters)*
-
-            #validator
-        }
-
-        #from_ref_impl
         #debug_impl
         #serialize_impl
     }
 }
 
-fn generate_validator(
-    pack_descr: &PackDesc,
-    pack_name: &String,
-    ref_name: &syn::Ident,
-    field_validators: Vec<TokenStream>,
-) -> TokenStream {
+fn generate_validator(pack_descr: &PackDesc, field_validators: Vec<TokenStream>) -> TokenStream {
+    let pack_name: &String = &pack_descr.name;
+    let pack_name_ident: syn::Ident = format_ident!("{}", pack_descr.name);
     let validator = if let Some(payload_len) = pack_descr.packet_payload_size() {
         quote! {
             pub(crate) fn validate(payload: &[u8]) -> Result<(), ParserError> {
@@ -127,7 +124,7 @@ fn generate_validator(
                     if got < #size {
                         return Err(ParserError::InvalidPacketLen{ packet: #pack_name, expect: #size, got });
                     }
-                    #size #(+ #ref_name(payload).#size_fns())*
+                    #size #(+ #pack_name_ident::new_borrowed(payload).#size_fns())*
                 }
             }
         };
@@ -148,38 +145,15 @@ fn generate_validator(
     validator
 }
 
-fn generate_from_ref_impl(
-    ref_name: &syn::Ident,
-    owned_name: &syn::Ident,
-    packet_size: usize,
-) -> TokenStream {
-    quote! {
-        impl<'a> From<&#ref_name<'a>> for #owned_name {
-            fn from(packet: &#ref_name<'a>) -> Self {
-                let src = packet.as_bytes();
-                let mut dst = [0u8; #packet_size];
-                dst[..src.len()].clone_from_slice(src);
-                Self(dst)
-            }
-        }
-
-        impl<'a> From<#ref_name<'a>> for #owned_name {
-            fn from(packet: #ref_name<'a>) -> Self {
-                (&packet).into()
-            }
-        }
-    }
-}
-
 fn process_fields<'a>(
     dbg_ctx: DebugContext,
     pack_descr: &'a PackDesc,
-    pack_name: &String,
     off: &mut usize,
     getters: &mut Vec<TokenStream>,
     field_validators: &mut Vec<TokenStream>,
     size_fns: &mut Vec<&'a TokenStream>,
 ) {
+    let pack_name: &String = &pack_descr.name;
     for (field_index, f) in pack_descr.fields.iter().enumerate() {
         let ty: &syn::Type = f.intermediate_type();
 
@@ -227,7 +201,7 @@ fn process_fixed_size_field(
     getters: &mut Vec<TokenStream>,
     field_validators: &mut Vec<TokenStream>,
 ) {
-    let get_raw = util::get_raw_field_code(f, off, quote! {self.0});
+    let get_raw = util::get_raw_field_code(f, off, quote! {self.buffer.as_bytes()});
     let new_line = quote! { let val = #get_raw;  };
     let mut get_value_lines = vec![new_line];
 
@@ -307,7 +281,7 @@ fn process_variable_size_field<'a>(
         quote! { #off.. }
     };
 
-    let mut get_value_lines = vec![quote! { &self.0[#range] }];
+    let mut get_value_lines = vec![quote! { &self.buffer.as_bytes()[#range] }];
     if let Some(ref out_ty) = f.map.map_type {
         let get_raw = &get_value_lines[0];
         let new_line = quote! { let val = #get_raw ;  };

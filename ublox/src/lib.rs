@@ -36,11 +36,11 @@ pub mod proto33;
 /// # Example
 ///
 /// ```rust,ignore
-/// # use ublox::{UbxPacket, proto23::PacketRef};
+/// # use ublox::{UbxPacket, proto23::Packet};
 ///
 /// match packet {
 ///     UbxPacket::Proto23(p) => match p {
-///         PacketRef::NavPvt(nav_pvt) => {
+///         Packet::NavPvt(nav_pvt) => {
 ///             println!("Speed: {} m/s", nav_pvt.ground_speed_2d());
 ///         },
 ///         _ => {} // Other packet types
@@ -52,21 +52,21 @@ pub mod proto33;
 #[derive(Debug)]
 pub enum UbxPacket<'a> {
     #[cfg(feature = "ubx_proto14")]
-    Proto14(proto14::PacketRef<'a>),
+    Proto14(proto14::Packet<'a>),
     #[cfg(feature = "ubx_proto23")]
-    Proto23(proto23::PacketRef<'a>),
+    Proto23(proto23::Packet<'a>),
     #[cfg(feature = "ubx_proto27")]
-    Proto27(proto27::PacketRef<'a>),
+    Proto27(proto27::Packet<'a>),
     #[cfg(feature = "ubx_proto31")]
-    Proto31(proto31::PacketRef<'a>),
+    Proto31(proto31::Packet<'a>),
     #[cfg(feature = "ubx_proto33")]
-    Proto33(proto33::PacketRef<'a>),
+    Proto33(proto33::Packet<'a>),
 }
 
 /// Trait for parsing UBX protocol version.
 pub trait UbxProtocol: Send + Sized {
-    /// The protocol-specific PacketRef type. The `'a` lifetime is tied to the input buffer.
-    type PacketRef<'a>: Into<UbxPacket<'a>>;
+    /// The protocol-specific Packet type. The `'a` lifetime is tied to the input buffer.
+    type Packet<'a>: Into<UbxPacket<'a>>;
 
     /// The maximum payload length supported by this protocol version.
     const MAX_PAYLOAD_LEN: u16;
@@ -76,5 +76,5 @@ pub trait UbxProtocol: Send + Sized {
         class_id: u8,
         msg_id: u8,
         payload: &[u8],
-    ) -> Result<Self::PacketRef<'_>, ParserError>;
+    ) -> Result<Self::Packet<'_>, ParserError>;
 }

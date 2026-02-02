@@ -90,10 +90,10 @@ mod handler {
     use ublox_device::ublox::{GnssFixType, PositionLLA, Velocity};
 
     #[cfg(feature = "ubx_proto14")]
-    pub fn handle_packet_proto14(packet_ref: ublox_device::ublox::proto14::PacketRef) {
-        use ublox_device::ublox::packetref_proto14::PacketRef;
+    pub fn handle_packet_proto14(packet_ref: ublox_device::ublox::proto14::Packet) {
+        use ublox_device::ublox::packet_proto14::Packet;
         match &packet_ref {
-            PacketRef::MonVer(packet) => {
+            Packet::MonVer(packet) => {
                 println!(
                     "SW version: {} HW version: {}; Extensions: {:?}",
                     packet.software_version(),
@@ -102,7 +102,7 @@ mod handler {
                 );
                 println!("{packet:?}");
             },
-            PacketRef::NavPvt(pvt) => {
+            Packet::NavPvt(pvt) => {
                 let has_time = pvt.fix_type() == GnssFixType::Fix3D
                     || pvt.fix_type() == GnssFixType::GPSPlusDeadReckoning
                     || pvt.fix_type() == GnssFixType::TimeOnlyFix;
@@ -137,10 +137,10 @@ mod handler {
     }
 
     #[cfg(feature = "ubx_proto23")]
-    pub fn handle_packet_proto23(packet_ref: ublox_device::ublox::proto23::PacketRef) {
-        use ublox_device::ublox::packetref_proto23::PacketRef;
+    pub fn handle_packet_proto23(packet_ref: ublox_device::ublox::proto23::Packet) {
+        use ublox_device::ublox::packet_proto23::Packet;
         match &packet_ref {
-            PacketRef::MonVer(packet) => {
+            Packet::MonVer(packet) => {
                 println!(
                     "SW version: {} HW version: {}; Extensions: {:?}",
                     packet.software_version(),
@@ -149,7 +149,7 @@ mod handler {
                 );
                 println!("{packet:?}");
             },
-            PacketRef::NavPvt(pvt) => {
+            Packet::NavPvt(pvt) => {
                 let has_time = pvt.fix_type() == GnssFixType::Fix3D
                     || pvt.fix_type() == GnssFixType::GPSPlusDeadReckoning
                     || pvt.fix_type() == GnssFixType::TimeOnlyFix;
@@ -184,10 +184,10 @@ mod handler {
     }
 
     #[cfg(feature = "ubx_proto27")]
-    pub fn handle_packet_proto27(packet_ref: ublox_device::ublox::proto27::PacketRef) {
-        use ublox_device::ublox::packetref_proto27::PacketRef;
+    pub fn handle_packet_proto27(packet_ref: ublox_device::ublox::proto27::Packet) {
+        use ublox_device::ublox::packet_proto27::Packet;
         match &packet_ref {
-            PacketRef::MonVer(packet) => {
+            Packet::MonVer(packet) => {
                 println!(
                     "SW version: {} HW version: {}; Extensions: {:?}",
                     packet.software_version(),
@@ -196,7 +196,7 @@ mod handler {
                 );
                 println!("{packet:?}");
             },
-            PacketRef::NavPvt(pvt) => {
+            Packet::NavPvt(pvt) => {
                 let has_time = pvt.fix_type() == GnssFixType::Fix3D
                     || pvt.fix_type() == GnssFixType::GPSPlusDeadReckoning
                     || pvt.fix_type() == GnssFixType::TimeOnlyFix;
@@ -231,10 +231,10 @@ mod handler {
     }
 
     #[cfg(feature = "ubx_proto31")]
-    pub fn handle_packet_proto31(packet_ref: ublox_device::ublox::proto31::PacketRef) {
-        use ublox_device::ublox::packetref_proto31::PacketRef;
+    pub fn handle_packet_proto31(packet_ref: ublox_device::ublox::proto31::Packet) {
+        use ublox_device::ublox::packet_proto31::Packet;
         match &packet_ref {
-            PacketRef::MonVer(packet) => {
+            Packet::MonVer(packet) => {
                 println!(
                     "SW version: {} HW version: {}; Extensions: {:?}",
                     packet.software_version(),
@@ -243,7 +243,7 @@ mod handler {
                 );
                 println!("{packet:?}");
             },
-            PacketRef::NavPvt(pvt) => {
+            Packet::NavPvt(pvt) => {
                 let has_time = pvt.fix_type() == GnssFixType::Fix3D
                     || pvt.fix_type() == GnssFixType::GPSPlusDeadReckoning
                     || pvt.fix_type() == GnssFixType::TimeOnlyFix;
@@ -278,10 +278,10 @@ mod handler {
     }
 
     #[cfg(feature = "ubx_proto33")]
-    pub fn handle_packet_proto33(packet_ref: ublox_device::ublox::proto33::PacketRef) {
-        use ublox_device::ublox::packetref_proto33::PacketRef;
+    pub fn handle_packet_proto33(packet_ref: ublox_device::ublox::proto33::Packet) {
+        use ublox_device::ublox::packet_proto33::Packet;
         match &packet_ref {
-            PacketRef::MonVer(packet) => {
+            Packet::MonVer(packet) => {
                 println!(
                     "SW version: {} HW version: {}; Extensions: {:?}",
                     packet.software_version(),
@@ -290,7 +290,7 @@ mod handler {
                 );
                 println!("{packet:?}");
             },
-            PacketRef::NavPvt(pvt) => {
+            Packet::NavPvt(pvt) => {
                 let has_time = pvt.fix_type() == GnssFixType::Fix3D
                     || pvt.fix_type() == GnssFixType::GPSPlusDeadReckoning
                     || pvt.fix_type() == GnssFixType::TimeOnlyFix;

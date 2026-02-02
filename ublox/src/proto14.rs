@@ -1,15 +1,15 @@
 #![cfg(feature = "ubx_proto14")]
 //! Protocol 14 specific types
 
-use crate::ubx_packets::packetref_proto14;
+use crate::ubx_packets::packet_proto14;
 #[cfg(feature = "alloc")]
 use alloc::vec::Vec;
 
 #[doc(inline)]
-pub use crate::ubx_packets::packetref_proto14::PacketRef;
+pub use crate::ubx_packets::packet_proto14::Packet;
 
-impl<'a> From<PacketRef<'a>> for crate::UbxPacket<'a> {
-    fn from(packet: PacketRef<'a>) -> Self {
+impl<'a> From<Packet<'a>> for crate::UbxPacket<'a> {
+    fn from(packet: Packet<'a>) -> Self {
         crate::UbxPacket::Proto14(packet)
     }
 }
@@ -18,15 +18,15 @@ impl<'a> From<PacketRef<'a>> for crate::UbxPacket<'a> {
 pub struct Proto14;
 
 impl crate::UbxProtocol for Proto14 {
-    type PacketRef<'a> = PacketRef<'a>;
-    const MAX_PAYLOAD_LEN: u16 = packetref_proto14::MAX_PAYLOAD_LEN;
+    type Packet<'a> = Packet<'a>;
+    const MAX_PAYLOAD_LEN: u16 = packet_proto14::MAX_PAYLOAD_LEN;
 
     fn match_packet(
         class_id: u8,
         msg_id: u8,
         payload: &[u8],
-    ) -> Result<Self::PacketRef<'_>, crate::ParserError> {
-        packetref_proto14::match_packet(class_id, msg_id, payload)
+    ) -> Result<Self::Packet<'_>, crate::ParserError> {
+        packet_proto14::match_packet(class_id, msg_id, payload)
     }
 }
 

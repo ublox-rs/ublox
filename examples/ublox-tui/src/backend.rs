@@ -69,23 +69,23 @@ impl<P: UbxProtocol + 'static> UbxDevice<P> {
         thread::spawn(move || loop {
             let res = self.device.on_data_available(|packet| match &packet {
                 UbxPacket::Proto23(packet_ref) => {
-                    use packetref_proto23::PacketRef;
+                    use packet_proto23::Packet;
                     match packet_ref {
-                        PacketRef::MonVer(pkg) => {
+                        Packet::MonVer(pkg) => {
                             sender.handle_monver(pkg);
                         },
-                        PacketRef::NavPvt(pkg) => {
+                        Packet::NavPvt(pkg) => {
                             sender.handle_navpvt_23(pkg);
                         },
-                        PacketRef::EsfAlg(pkg) => {
+                        Packet::EsfAlg(pkg) => {
                             sender.handle_esfalg(pkg);
                         },
 
-                        PacketRef::EsfStatus(pkg) => {
+                        Packet::EsfStatus(pkg) => {
                             sender.handle_esf_status(pkg);
                         },
 
-                        PacketRef::EsfMeas(pkg) => {
+                        Packet::EsfMeas(pkg) => {
                             sender.handle_esf_meas(pkg);
                         },
                         _ => {
@@ -94,23 +94,23 @@ impl<P: UbxProtocol + 'static> UbxDevice<P> {
                     }
                 },
                 UbxPacket::Proto27(packet_ref) => {
-                    use packetref_proto27::PacketRef;
+                    use packet_proto27::Packet;
                     match packet_ref {
-                        PacketRef::MonVer(pkg) => {
+                        Packet::MonVer(pkg) => {
                             sender.handle_monver(pkg);
                         },
-                        PacketRef::NavPvt(pkg) => {
+                        Packet::NavPvt(pkg) => {
                             sender.handle_navpvt_27(pkg);
                         },
-                        PacketRef::EsfAlg(pkg) => {
+                        Packet::EsfAlg(pkg) => {
                             sender.handle_esfalg(pkg);
                         },
 
-                        PacketRef::EsfStatus(pkg) => {
+                        Packet::EsfStatus(pkg) => {
                             sender.handle_esf_status(pkg);
                         },
 
-                        PacketRef::EsfMeas(pkg) => {
+                        Packet::EsfMeas(pkg) => {
                             sender.handle_esf_meas(pkg);
                         },
                         _ => {
@@ -119,23 +119,23 @@ impl<P: UbxProtocol + 'static> UbxDevice<P> {
                     }
                 },
                 UbxPacket::Proto31(packet_ref) => {
-                    use packetref_proto31::PacketRef;
+                    use packet_proto31::Packet;
                     match packet_ref {
-                        PacketRef::MonVer(pkg) => {
+                        Packet::MonVer(pkg) => {
                             sender.handle_monver(pkg);
                         },
-                        PacketRef::NavPvt(pkg) => {
+                        Packet::NavPvt(pkg) => {
                             sender.handle_navpvt_31(pkg);
                         },
-                        PacketRef::EsfAlg(pkg) => {
+                        Packet::EsfAlg(pkg) => {
                             sender.handle_esfalg(pkg);
                         },
 
-                        PacketRef::EsfStatus(pkg) => {
+                        Packet::EsfStatus(pkg) => {
                             sender.handle_esf_status(pkg);
                         },
 
-                        PacketRef::EsfMeas(pkg) => {
+                        Packet::EsfMeas(pkg) => {
                             sender.handle_esf_meas(pkg);
                         },
                         _ => {
@@ -144,23 +144,23 @@ impl<P: UbxProtocol + 'static> UbxDevice<P> {
                     }
                 },
                 UbxPacket::Proto33(packet_ref) => {
-                    use packetref_proto33::PacketRef;
+                    use packet_proto33::Packet;
                     match packet_ref {
-                        PacketRef::MonVer(pkg) => {
+                        Packet::MonVer(pkg) => {
                             sender.handle_monver(pkg);
                         },
-                        PacketRef::NavPvt(pkg) => {
+                        Packet::NavPvt(pkg) => {
                             sender.handle_navpvt_33(pkg);
                         },
-                        PacketRef::EsfAlg(pkg) => {
+                        Packet::EsfAlg(pkg) => {
                             sender.handle_esfalg(pkg);
                         },
 
-                        PacketRef::EsfStatus(pkg) => {
+                        Packet::EsfStatus(pkg) => {
                             sender.handle_esf_status(pkg);
                         },
 
-                        PacketRef::EsfMeas(pkg) => {
+                        Packet::EsfMeas(pkg) => {
                             sender.handle_esf_meas(pkg);
                         },
                         _ => {

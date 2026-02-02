@@ -106,7 +106,7 @@ impl<P: UbxProtocol> Device<P> {
             self.on_data_available(|packet| match packet {
                 #[cfg(feature = "ubx_proto23")]
                 UbxPacket::Proto23(packet_ref) => {
-                    if let ublox::proto23::PacketRef::AckAck(ack) = packet_ref {
+                    if let ublox::proto23::Packet::AckAck(ack) = packet_ref {
                         if ack.class() == T::CLASS && ack.msg_id() == T::ID {
                             found_packet = true;
                         }
@@ -114,7 +114,7 @@ impl<P: UbxProtocol> Device<P> {
                 },
                 #[cfg(feature = "ubx_proto27")]
                 UbxPacket::Proto27(packet_ref) => {
-                    if let ublox::proto27::PacketRef::AckAck(ack) = packet_ref {
+                    if let ublox::proto27::Packet::AckAck(ack) = packet_ref {
                         if ack.class() == T::CLASS && ack.msg_id() == T::ID {
                             found_packet = true;
                         }
@@ -122,7 +122,7 @@ impl<P: UbxProtocol> Device<P> {
                 },
                 #[cfg(feature = "ubx_proto31")]
                 UbxPacket::Proto31(packet_ref) => {
-                    if let ublox::proto31::PacketRef::AckAck(ack) = packet_ref {
+                    if let ublox::proto31::Packet::AckAck(ack) = packet_ref {
                         if ack.class() == T::CLASS && ack.msg_id() == T::ID {
                             found_packet = true;
                         }
@@ -130,7 +130,7 @@ impl<P: UbxProtocol> Device<P> {
                 },
                 #[cfg(feature = "ubx_proto33")]
                 UbxPacket::Proto33(packet_ref) => {
-                    if let ublox::proto33::PacketRef::AckAck(ack) = packet_ref {
+                    if let ublox::proto33::Packet::AckAck(ack) = packet_ref {
                         if ack.class() == T::CLASS && ack.msg_id() == T::ID {
                             found_packet = true;
                         }
@@ -138,7 +138,7 @@ impl<P: UbxProtocol> Device<P> {
                 },
                 #[cfg(feature = "ubx_proto14")]
                 UbxPacket::Proto14(packet_ref) => {
-                    if let ublox::proto14::PacketRef::AckAck(ack) = packet_ref {
+                    if let ublox::proto14::Packet::AckAck(ack) = packet_ref {
                         if ack.class() == T::CLASS && ack.msg_id() == T::ID {
                             found_packet = true;
                         }

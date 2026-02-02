@@ -133,12 +133,12 @@ pub fn ubx_sec_siglog_frame_strategy() -> impl Strategy<Value = (SecSiglogPayloa
 proptest! {
     #[test]
     fn test_parser_proto27_with_generated_sec_siglog_frames((expected, frame) in ubx_sec_siglog_frame_strategy()) {
-        use ublox::proto27::{PacketRef, Proto27};
+        use ublox::proto27::{Packet, Proto27};
 
         let mut parser = ParserBuilder::new().with_protocol::<Proto27>().with_fixed_buffer::<4096>();
         let mut it = parser.consume_ubx(&frame);
 
-        let Some(Ok(UbxPacket::Proto27(PacketRef::SecSiglog(p)))) = it.next() else {
+        let Some(Ok(UbxPacket::Proto27(Packet::SecSiglog(p)))) = it.next() else {
             panic!("Parser failed to parse a SEC-SIGLOG valid packet");
         };
 
@@ -161,12 +161,12 @@ proptest! {
 proptest! {
     #[test]
     fn test_parser_proto31_with_generated_sec_siglog_frames((expected, frame) in ubx_sec_siglog_frame_strategy()) {
-        use ublox::proto31::{PacketRef, Proto31};
+        use ublox::proto31::{Packet, Proto31};
 
         let mut parser = ParserBuilder::new().with_protocol::<Proto31>().with_fixed_buffer::<4096>();
         let mut it = parser.consume_ubx(&frame);
 
-        let Some(Ok(UbxPacket::Proto31(PacketRef::SecSiglog(p)))) = it.next() else {
+        let Some(Ok(UbxPacket::Proto31(Packet::SecSiglog(p)))) = it.next() else {
             panic!("Parser failed to parse a SEC-SIGLOG valid packet");
         };
 
@@ -189,12 +189,12 @@ proptest! {
 proptest! {
     #[test]
     fn test_parser_proto33_with_generated_sec_siglog_frames((expected, frame) in ubx_sec_siglog_frame_strategy()) {
-        use ublox::proto33::{PacketRef, Proto33};
+        use ublox::proto33::{Packet, Proto33};
 
         let mut parser = ParserBuilder::new().with_protocol::<Proto33>().with_fixed_buffer::<4096>();
         let mut it = parser.consume_ubx(&frame);
 
-        let Some(Ok(UbxPacket::Proto33(PacketRef::SecSiglog(p)))) = it.next() else {
+        let Some(Ok(UbxPacket::Proto33(Packet::SecSiglog(p)))) = it.next() else {
             panic!("Parser failed to parse a SEC-SIGLOG valid packet");
         };
 
