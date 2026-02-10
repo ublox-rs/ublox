@@ -94,6 +94,7 @@ pub mod nav_sat;
 pub mod nav_sig;
 pub mod nav_sol;
 pub mod nav_status;
+pub mod nav_time_gps;
 pub mod nav_time_ls;
 pub mod nav_time_utc;
 pub mod nav_vel_ned;
