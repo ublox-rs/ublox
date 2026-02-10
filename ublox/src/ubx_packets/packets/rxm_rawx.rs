@@ -64,7 +64,7 @@ impl<'a> RxmRawxInfoIter<'a> {
     }
 
     fn is_valid(bytes: &[u8]) -> bool {
-        bytes.len() % 32 == 0
+        bytes.len().is_multiple_of(32)
     }
 }
 

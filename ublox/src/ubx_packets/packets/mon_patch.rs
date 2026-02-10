@@ -92,7 +92,7 @@ impl<'a> MonPatchEntryIter<'a> {
 
     #[allow(dead_code, reason = "Used by ubx_packet_recv macro for validation")]
     fn is_valid(payload: &[u8]) -> bool {
-        payload.len() % PATCH_ENTRY_SIZE == 0
+        payload.len().is_multiple_of(PATCH_ENTRY_SIZE)
     }
 }
 

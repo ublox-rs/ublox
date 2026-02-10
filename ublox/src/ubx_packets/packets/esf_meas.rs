@@ -160,7 +160,7 @@ impl<'a> EsfMeasDataIter<'a> {
     }
 
     fn is_valid(bytes: &[u8]) -> bool {
-        bytes.len() % Self::BLOCK_SIZE == 0
+        bytes.len().is_multiple_of(Self::BLOCK_SIZE)
     }
 }
 

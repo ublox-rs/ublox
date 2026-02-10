@@ -115,7 +115,7 @@ impl<'a> MonSpanRfBlockIter<'a> {
 
     #[allow(dead_code, reason = "Used by ubx_packet_recv macro for validation")]
     fn is_valid(payload: &[u8]) -> bool {
-        payload.len() % RF_BLOCK_SIZE == 0
+        payload.len().is_multiple_of(RF_BLOCK_SIZE)
     }
 }
 

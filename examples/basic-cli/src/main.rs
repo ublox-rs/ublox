@@ -117,7 +117,9 @@ mod handler {
                     let alt = pos.alt;
                     let speed = vel.speed;
                     let heading = vel.heading;
-                    println!("NavPvt: Latitude: {lat:.5} Longitude: {lon:.5} Altitude: {alt:.2} m, Speed: {speed:.2} m/s Heading: {heading:.2} degrees");
+                    println!(
+                        "NavPvt: Latitude: {lat:.5} Longitude: {lon:.5} Altitude: {alt:.2} m, Speed: {speed:.2} m/s Heading: {heading:.2} degrees"
+                    );
                     println!("NavPvt full: {pvt:?}");
                 }
 
@@ -162,7 +164,9 @@ mod handler {
                     let alt = pos.alt;
                     let speed = vel.speed;
                     let heading = vel.heading;
-                    println!("NavPvt: Latitude: {lat:.5} Longitude: {lon:.5} Altitude: {alt:.2} m, Speed: {speed:.2} m/s Heading: {heading:.2} degrees");
+                    println!(
+                        "NavPvt: Latitude: {lat:.5} Longitude: {lon:.5} Altitude: {alt:.2} m, Speed: {speed:.2} m/s Heading: {heading:.2} degrees"
+                    );
                     println!("NavPvt full: {pvt:?}");
                 }
 
@@ -207,7 +211,9 @@ mod handler {
                     let alt = pos.alt;
                     let speed = vel.speed;
                     let heading = vel.heading;
-                    println!("NavPvt: Latitude: {lat:.5} Longitude: {lon:.5} Altitude: {alt:.2} m, Speed: {speed:.2} m/s Heading: {heading:.2} degrees");
+                    println!(
+                        "NavPvt: Latitude: {lat:.5} Longitude: {lon:.5} Altitude: {alt:.2} m, Speed: {speed:.2} m/s Heading: {heading:.2} degrees"
+                    );
                     println!("NavPvt full: {pvt:?}");
                 }
 
@@ -252,7 +258,9 @@ mod handler {
                     let alt = pos.alt;
                     let speed = vel.speed;
                     let heading = vel.heading;
-                    println!("NavPvt: Latitude: {lat:.5} Longitude: {lon:.5} Altitude: {alt:.2} m, Speed: {speed:.2} m/s Heading: {heading:.2} degrees");
+                    println!(
+                        "NavPvt: Latitude: {lat:.5} Longitude: {lon:.5} Altitude: {alt:.2} m, Speed: {speed:.2} m/s Heading: {heading:.2} degrees"
+                    );
                     println!("NavPvt full: {pvt:?}");
                 }
 
@@ -297,7 +305,9 @@ mod handler {
                     let alt = pos.alt;
                     let speed = vel.speed;
                     let heading = vel.heading;
-                    println!("NavPvt: Latitude: {lat:.5} Longitude: {lon:.5} Altitude: {alt:.2} m, Speed: {speed:.2} m/s Heading: {heading:.2} degrees");
+                    println!(
+                        "NavPvt: Latitude: {lat:.5} Longitude: {lon:.5} Altitude: {alt:.2} m, Speed: {speed:.2} m/s Heading: {heading:.2} degrees"
+                    );
                     println!("NavPvt full: {pvt:?}");
                 }
 

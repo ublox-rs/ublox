@@ -138,7 +138,7 @@ impl<'a> PinInfoIter<'a> {
 
     /// Validate raw repeated-group payload: must be a multiple of 6 bytes (each pin entry is 6 bytes)
     fn is_valid(payload: &[u8]) -> bool {
-        payload.len() % 6 == 0
+        payload.len().is_multiple_of(6)
     }
 }
 

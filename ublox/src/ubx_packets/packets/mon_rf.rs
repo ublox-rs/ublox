@@ -146,7 +146,7 @@ impl<'a> RfBlockIter<'a> {
 
     /// Validate raw repeated-group payload: must be a multiple of 24 bytes.
     fn is_valid(payload: &[u8]) -> bool {
-        payload.len() % 24 == 0
+        payload.len().is_multiple_of(24)
     }
 }
 

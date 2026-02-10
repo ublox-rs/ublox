@@ -123,7 +123,7 @@ impl<'a> MonCommsPortIter<'a> {
         reason = "Used by ubx_packet_recv macro for validation, but may appear unused in some feature configurations"
     )]
     fn is_valid(payload: &[u8]) -> bool {
-        payload.len() % 40 == 0
+        payload.len().is_multiple_of(40)
     }
 }
 

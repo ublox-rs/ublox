@@ -110,7 +110,7 @@ fn sfrbx_gps_eph1() {
                 test_passed = true;
             },
             Ok(_) => panic!("found invalid packet"),
-            Err(e) => panic!("UBX-SFRBX parsing failed with {}", e),
+            Err(e) => panic!("UBX-SFRBX parsing failed with {e}"),
         }
     }
     assert!(test_passed, "UBX-SFRBX test failed");
@@ -224,7 +224,7 @@ fn sfrbx_gps_eph2() {
                 test_passed = true;
             },
             Ok(_) => panic!("found invalid packet"),
-            Err(e) => panic!("UBX-SFRBX parsing failed with {}", e),
+            Err(e) => panic!("UBX-SFRBX parsing failed with {e}"),
         }
     }
     assert!(test_passed, "UBX-SFRBX test failed");
@@ -336,7 +336,7 @@ fn sfrbx_gps_eph3() {
                 test_passed = true;
             },
             Ok(_) => panic!("found invalid packet"),
-            Err(e) => panic!("UBX-SFRBX parsing failed with {}", e),
+            Err(e) => panic!("UBX-SFRBX parsing failed with {e}"),
         }
     }
     assert!(test_passed, "UBX-SFRBX test failed");

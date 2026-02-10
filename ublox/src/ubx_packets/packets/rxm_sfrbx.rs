@@ -52,7 +52,7 @@ impl<'a> DwrdIter<'a> {
     }
 
     fn is_valid(bytes: &[u8]) -> bool {
-        bytes.len() % 4 == 0
+        bytes.len().is_multiple_of(4)
     }
 }
 
