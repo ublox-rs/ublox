@@ -15,7 +15,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  lint:
+  lint-package:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -24,15 +24,32 @@ jobs:
       - name: Install MSRV
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: 1.83.0
+          toolchain: 1.88.0
           override: true
           components: rustfmt, clippy
       - uses: Swatinem/rust-cache@v2
-      - name: Code style
+      - name: Code style (package)
         run: |
           cargo fmt --all -- --check
-          cargo clippy --all-features --all-targets -- -D warnings
+          cargo clippy -p ublox -p ublox_derive --all-features --all-targets -- -D warnings
 
+  lint-examples:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Install Rust (examples)
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: 1.90.0
+          override: true
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+      - name: Code style (examples)
+        run: |
+          cargo fmt --all -- --check
+          cargo clippy --workspace --exclude ublox --exclude ublox_derive --all-targets -- -D warnings
 
   build:
     runs-on: ubuntu-latest
@@ -65,7 +82,7 @@ jobs:
       - name: Install MSRV
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: 1.83.0
+          toolchain: 1.88.0
           override: true
           components: rustfmt, clippy
       - uses: Swatinem/rust-cache@v2
@@ -95,7 +112,7 @@ jobs:
       - name: Install MSRV
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: 1.83.0
+          toolchain: 1.88.0
           override: true
       - name: Install embedded targets
         run: rustup target add thumbv6m-none-eabi thumbv7m-none-eabi thumbv7em-none-eabihf

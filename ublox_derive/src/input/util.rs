@@ -166,13 +166,13 @@ pub(super) fn parse_ubx_attr(attrs: &[Attribute], struct_name: &Ident) -> syn::R
             return Err(Error::new(
                 meta.span(),
                 "You should not note max_payload_len AND fixed_payload_len",
-            ))
+            ));
         },
         (None, None) => {
             return Err(Error::new(
                 meta.span(),
                 "You should note max_payload_len or fixed_payload_len",
-            ))
+            ));
         },
     };
 
@@ -273,7 +273,7 @@ fn field_size_bytes(ty: &Type) -> syn::Result<Option<NonZeroUsize>> {
     ];
     if let Some((_ty, size)) = valid_types.iter().find(|x| x.0 == *ty) {
         Ok(Some(*size))
-    } else if let syn::Type::Array(ref fixed_array) = ty {
+    } else if let syn::Type::Array(fixed_array) = ty {
         if *fixed_array.elem != syn::parse_quote!(u8) {
             return Err(Error::new(fixed_array.elem.span(), "Only u8 supported"));
         }

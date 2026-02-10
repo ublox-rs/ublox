@@ -54,13 +54,13 @@ lint-examples:
 [group("misc")]
 lint *ARGS:
     cargo fmt --all
-    cargo clippy --all-features --all-targets -- -D warnings
+    cargo clippy -p ublox -p ublox_derive --all-features --all-targets -- -D warnings
 
-# Run clippy lints with version 1.83.0 which we use in CI atm (we should use a newer one!)
+# Run clippy lints with version 1.88.0
 [group("misc")]
 lint-msrv *ARGS:
     cargo fmt --all
-    cargo +1.83 clippy --all-features --all-targets -- -D warnings
+    cargo +1.88 clippy -p ublox -p ublox_derive --all-features --all-targets -- -D warnings
 
 # Build docs
 [group("misc")]

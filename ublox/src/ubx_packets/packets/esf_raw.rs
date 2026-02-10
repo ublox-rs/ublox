@@ -37,7 +37,7 @@ impl<'a> EsfRawDataIter<'a> {
     }
 
     fn is_valid(bytes: &'a [u8]) -> bool {
-        bytes.len() % Self::BLOCK_SIZE == 0
+        bytes.len().is_multiple_of(Self::BLOCK_SIZE)
     }
 }
 

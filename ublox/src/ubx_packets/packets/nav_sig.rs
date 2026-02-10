@@ -53,7 +53,7 @@ impl<'a> NavSigIter<'a> {
     }
 
     fn is_valid(bytes: &[u8]) -> bool {
-        bytes.len() % 16 == 0
+        bytes.len().is_multiple_of(16)
     }
 }
 

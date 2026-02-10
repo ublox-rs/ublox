@@ -45,7 +45,7 @@ pub fn generate_code_to_extend_bitflags(bitflags: BitFlagsMacro) -> syn::Result<
             return Err(syn::Error::new(
                 bitflags.name.span(),
                 "Only reserved supported",
-            ))
+            ));
         },
         Some(UbxEnumRestHandling::Reserved) => (),
     }

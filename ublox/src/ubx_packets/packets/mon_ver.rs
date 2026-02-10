@@ -55,7 +55,7 @@ impl<'a> MonVerExtensionIter<'a> {
     }
 
     fn is_valid(payload: &[u8]) -> bool {
-        payload.len() % 30 == 0 && payload.chunks(30).all(is_cstr_valid)
+        payload.len().is_multiple_of(30) && payload.chunks(30).all(is_cstr_valid)
     }
 }
 

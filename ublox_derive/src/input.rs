@@ -97,7 +97,7 @@ pub fn parse_ubx_enum_type(
             return Err(Error::new(
                 attr.span(),
                 "Invalid repr attribute for ubx_type enum",
-            ))
+            ));
         },
     };
     let mut variants = Vec::with_capacity(in_variants.len());

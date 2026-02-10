@@ -1,7 +1,7 @@
 #![cfg(feature = "alloc")]
 
 use cpu_time::ProcessTime;
-use rand::Rng;
+use rand::RngExt;
 use std::{
     env,
     ffi::OsString,

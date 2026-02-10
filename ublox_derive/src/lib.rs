@@ -208,7 +208,7 @@ fn do_define_recv_packets(input: TokenStream) -> syn::Result<TokenStream> {
 }
 
 fn type_is_option(ty: &Type) -> bool {
-    matches!(ty, Type::Path(ref typepath) if typepath.qself.is_none() && path_is_option(&typepath.path))
+    matches!(ty, Type::Path(typepath) if typepath.qself.is_none() && path_is_option(&typepath.path))
 }
 
 fn path_is_option(path: &syn::Path) -> bool {

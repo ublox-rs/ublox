@@ -172,7 +172,9 @@ impl<P: UbxProtocol + 'static> UbxDevice<P> {
                 UbxPacket::Proto14(_) => unimplemented!(),
             });
             if let Err(e) = res {
-                error!("Stopping UBX messages parsing thread. Failed to parse incoming UBX packet: {e}");
+                error!(
+                        "Stopping UBX messages parsing thread. Failed to parse incoming UBX packet: {e}"
+                    );
             }
         });
     }
