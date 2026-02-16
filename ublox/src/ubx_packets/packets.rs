@@ -100,6 +100,7 @@ pub mod nav_time_utc;
 pub mod nav_vel_ned;
 
 pub mod rxm_cor;
+pub mod rxm_pmreq;
 pub mod rxm_rawx;
 pub mod rxm_rtcm;
 pub mod rxm_sfrbx;
