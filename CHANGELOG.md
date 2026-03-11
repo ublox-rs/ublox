@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.10.0]
+
+### Added
+
+- Add UBX-MON-IO and UBX-NAV-PL message support 
+- Add UBX-MON-SPAN, UBX-MON-PATCH, UBX-MON-MSGPP, UBX-MON-TXBUF, UBX-MON-RXBUF, and UBX-MON-RXR message support
+- Add UBX-NAV-TIMEGPS message support
+- Add UBX-RXM-PMREQ message support
+- Add constants module for reusing UBX specific constants within the crate
+- Add basic support for protocol version 33
+
+### Fixed
+
+ - Fixed buffer drain for RTCM and NMEA
+ - Fixed examples
+
+### Changed
+
+ - Bumped MSRV to 1.88
+ - Separated UBX-NAV-PVT per protocol
+
 ## [0.9.0]
 
 ### Added
