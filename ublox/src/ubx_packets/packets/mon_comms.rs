@@ -63,13 +63,22 @@ pub enum PortId {
 
 impl From<u16> for PortId {
     fn from(value: u16) -> Self {
-        match value {
-            0 => PortId::I2c,
-            1 => PortId::Uart1,
-            2 => PortId::Uart2,
-            3 => PortId::Usb,
-            5 => PortId::Spi,
-            other => PortId::Unknown(other),
+        // UBX-MON-COMMS reports `portId` as a 16-bit value whose high byte
+        // selects the physical interface; the low byte is a sub-index that
+        // can vary by product (e.g. UART2 is 0x0201 on ZED-F9P but 0x0200 on
+        // ZED-X20P), so decode on the high byte.
+        //
+        // Refs: ZED-F9P Integration Manual (UBX-18010802) Table 27 "Port number
+        // assignment"; ZED-X20P Integration Manual Table 35; NEO-M9N Integration
+        // Manual (UBX-19014286) Table 13. The values are NOT a plain 0 to 5 index
+        // (that small enumeration is the unrelated `txErrors.outputPort` field).
+        match value >> 8 {
+            0x00 => PortId::I2c,
+            0x01 => PortId::Uart1,
+            0x02 => PortId::Uart2,
+            0x03 => PortId::Usb,
+            0x04 => PortId::Spi,
+            _ => PortId::Unknown(value),
         }
     }
 }
@@ -156,5 +165,25 @@ impl core::iter::Iterator for MonCommsPortIter<'_> {
 
         self.offset += 40;
         Some(port)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::PortId;
+
+    #[test]
+    fn port_id_from_u16_matches_interface_manuals() {
+        // portId values from the u-blox integration manuals
+        // (ZED-F9P Table 27, ZED-X20P Table 35, NEO-M9N Table 13).
+        assert_eq!(PortId::from(0x0000), PortId::I2c);
+        assert_eq!(PortId::from(0x0100), PortId::Uart1);
+        assert_eq!(PortId::from(0x0200), PortId::Uart2); // ZED-X20P
+        assert_eq!(PortId::from(0x0201), PortId::Uart2); // ZED-F9P
+        assert_eq!(PortId::from(0x0300), PortId::Usb);
+        assert_eq!(PortId::from(0x0400), PortId::Spi);
+        // An unrecognized interface (high byte) preserves the raw value.
+        assert_eq!(PortId::from(0x0500), PortId::Unknown(0x0500));
+        assert_eq!(PortId::from(0xFFFF), PortId::Unknown(0xFFFF));
     }
 }
