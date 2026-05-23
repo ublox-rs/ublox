@@ -95,7 +95,19 @@ fn calculate_checksum(data: &[u8]) -> (u8, u8) {
 }
 
 fn port_id_strategy() -> impl Strategy<Value = u16> {
-    prop_oneof![Just(0u16), Just(1u16), Just(2u16), Just(3u16), Just(5u16)]
+    // portId values the receiver actually emits (high byte selects
+    // the interface; UART2's low byte differs between products: 0x0200 on
+    // ZED-X20P, 0x0201 on ZED-F9P), plus an arbitrary u16 to exercise the
+    // `PortId::Unknown` path.
+    prop_oneof![
+        Just(0x0000u16), // I2C
+        Just(0x0100u16), // UART1
+        Just(0x0200u16), // UART2 (ZED-X20P)
+        Just(0x0201u16), // UART2 (ZED-F9P)
+        Just(0x0300u16), // USB
+        Just(0x0400u16), // SPI
+        any::<u16>(),
+    ]
 }
 
 /// A proptest strategy for generating a single `MonCommsPortPayload`.
