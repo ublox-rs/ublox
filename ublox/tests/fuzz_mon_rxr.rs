@@ -3,9 +3,11 @@
 //! This module provides a `proptest` strategy to generate byte-level
 //! UBX frames containing a MON-RXR message.
 
-use byteorder::{LittleEndian, WriteBytesExt};
 use proptest::prelude::*;
-use ublox::{constants::UBX_SYNC_CHAR_1, constants::UBX_SYNC_CHAR_2, ParserBuilder, UbxPacket};
+use ublox::{ParserBuilder, UbxPacket};
+
+mod common;
+use common::build_ubx_frame;
 
 /// Represents the MON-RXR payload (1 byte).
 #[derive(Debug, Clone)]
@@ -19,41 +21,13 @@ impl MonRxrPayload {
     }
 }
 
-/// Calculates the 8-bit Fletcher-16 checksum used by U-Blox.
-fn calculate_checksum(data: &[u8]) -> (u8, u8) {
-    let mut ck_a: u8 = 0;
-    let mut ck_b: u8 = 0;
-    for byte in data {
-        ck_a = ck_a.wrapping_add(*byte);
-        ck_b = ck_b.wrapping_add(ck_a);
-    }
-    (ck_a, ck_b)
-}
-
 /// A proptest strategy that generates a complete, valid UBX frame
 /// containing a MON-RXR message.
 pub fn ubx_mon_rxr_frame_strategy() -> impl Strategy<Value = (MonRxrPayload, Vec<u8>)> {
     any::<u8>().prop_map(|flags| {
         let payload_data = MonRxrPayload { flags };
 
-        let class_id = 0x0a;
-        let message_id = 0x21;
-        let length: u16 = 1;
-
-        let mut frame_core = Vec::with_capacity(5);
-        frame_core.push(class_id);
-        frame_core.push(message_id);
-        frame_core.write_u16::<LittleEndian>(length).unwrap();
-        frame_core.push(flags);
-
-        let (ck_a, ck_b) = calculate_checksum(&frame_core);
-
-        let mut final_frame = Vec::with_capacity(9);
-        final_frame.push(UBX_SYNC_CHAR_1);
-        final_frame.push(UBX_SYNC_CHAR_2);
-        final_frame.extend_from_slice(&frame_core);
-        final_frame.push(ck_a);
-        final_frame.push(ck_b);
+        let final_frame = build_ubx_frame(0x0a, 0x21, &[flags]);
 
         (payload_data, final_frame)
     })
