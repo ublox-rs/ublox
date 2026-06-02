@@ -7,10 +7,10 @@
 
 use byteorder::{LittleEndian, WriteBytesExt};
 use proptest::prelude::*;
-use ublox::{
-    constants::{UBX_SYNC_CHAR_1, UBX_SYNC_CHAR_2},
-    ParserBuilder, UbxPacket,
-};
+use ublox::{ParserBuilder, UbxPacket};
+
+mod common;
+use common::build_ubx_frame;
 
 #[allow(dead_code, reason = "dead variants for SOME feature flag combination")]
 #[derive(Debug, Clone, Copy)]
@@ -137,17 +137,6 @@ pub fn nav_hpposllh_payload_strategy(
         )
 }
 
-/// Calculates the 8-bit Fletcher-16 checksum used by U-Blox.
-fn calculate_checksum(data: &[u8]) -> (u8, u8) {
-    let mut ck_a: u8 = 0;
-    let mut ck_b: u8 = 0;
-    for byte in data {
-        ck_a = ck_a.wrapping_add(*byte);
-        ck_b = ck_b.wrapping_add(ck_a);
-    }
-    (ck_a, ck_b)
-}
-
 /// A proptest strategy that generates a complete, valid UBX frame
 /// containing a NAV-HPPOSLLH message, along with the source `NavHpPosLlh` struct.
 ///
@@ -158,26 +147,8 @@ pub fn ubx_nav_hpposllh_frame_strategy(
 ) -> impl Strategy<Value = (NavHpPosLlh, Vec<u8>)> {
     nav_hpposllh_payload_strategy(version).prop_map(move |nav_hpposllh| {
         let payload = nav_hpposllh.to_bytes(version);
-        let class_id = 0x01; // NAV class
-        let message_id = 0x14; // HPPOSLLH message ID
-        let length = payload.len() as u16;
 
-        // Start building the frame to be checksummed
-        let mut frame_core = Vec::with_capacity(4 + payload.len());
-        frame_core.push(class_id);
-        frame_core.push(message_id);
-        frame_core.write_u16::<LittleEndian>(length).unwrap();
-        frame_core.extend_from_slice(&payload);
-
-        let (ck_a, ck_b) = calculate_checksum(&frame_core);
-
-        // Assemble the final frame
-        let mut final_frame = Vec::with_capacity(8 + payload.len());
-        final_frame.push(UBX_SYNC_CHAR_1);
-        final_frame.push(UBX_SYNC_CHAR_2);
-        final_frame.extend_from_slice(&frame_core);
-        final_frame.push(ck_a);
-        final_frame.push(ck_b);
+        let final_frame = build_ubx_frame(0x01, 0x14, &payload);
 
         (nav_hpposllh, final_frame)
     })

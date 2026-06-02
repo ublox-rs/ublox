@@ -2,7 +2,10 @@
 
 use byteorder::{LittleEndian, WriteBytesExt};
 use proptest::prelude::*;
-use ublox::{constants::UBX_SYNC_CHAR_1, constants::UBX_SYNC_CHAR_2, ParserBuilder, UbxPacket};
+use ublox::{ParserBuilder, UbxPacket};
+
+mod common;
+use common::build_ubx_frame;
 
 const NUM_TARGETS: usize = 6;
 
@@ -58,38 +61,11 @@ fn mon_txbuf_payload_strategy() -> impl Strategy<Value = MonTxbufPayload> {
         )
 }
 
-fn calculate_checksum(data: &[u8]) -> (u8, u8) {
-    let mut ck_a: u8 = 0;
-    let mut ck_b: u8 = 0;
-    for byte in data {
-        ck_a = ck_a.wrapping_add(*byte);
-        ck_b = ck_b.wrapping_add(ck_a);
-    }
-    (ck_a, ck_b)
-}
-
 pub fn ubx_mon_txbuf_frame_strategy() -> impl Strategy<Value = (MonTxbufPayload, Vec<u8>)> {
     mon_txbuf_payload_strategy().prop_map(|payload_data| {
         let payload = payload_data.to_bytes();
 
-        let class_id = 0x0a;
-        let message_id = 0x08;
-        let length = payload.len() as u16;
-
-        let mut frame_core = Vec::with_capacity(4 + payload.len());
-        frame_core.push(class_id);
-        frame_core.push(message_id);
-        frame_core.write_u16::<LittleEndian>(length).unwrap();
-        frame_core.extend_from_slice(&payload);
-
-        let (ck_a, ck_b) = calculate_checksum(&frame_core);
-
-        let mut final_frame = Vec::with_capacity(8 + payload.len());
-        final_frame.push(UBX_SYNC_CHAR_1);
-        final_frame.push(UBX_SYNC_CHAR_2);
-        final_frame.extend_from_slice(&frame_core);
-        final_frame.push(ck_a);
-        final_frame.push(ck_b);
+        let final_frame = build_ubx_frame(0x0a, 0x08, &payload);
 
         (payload_data, final_frame)
     })
