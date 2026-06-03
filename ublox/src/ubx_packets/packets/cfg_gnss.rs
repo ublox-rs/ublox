@@ -90,7 +90,7 @@ impl CfgGnssOwned {
     }
 }
 
-/// Information message config
+/// GNSS constellation identifier used by UBX-CFG-GNSS and related messages.
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
@@ -103,6 +103,7 @@ pub enum GnssId {
     IMES = 4,
     QZSS = 5,
     GLONASS = 6,
+    NAVIC = 7,
 }
 
 impl TryFrom<u8> for GnssId {
@@ -117,7 +118,8 @@ impl TryFrom<u8> for GnssId {
             4 => Ok(GnssId::IMES),
             5 => Ok(GnssId::QZSS),
             6 => Ok(GnssId::GLONASS),
-            _ => Err("Invalid GnssId value: value must be in range [0, 6]"),
+            7 => Ok(GnssId::NAVIC),
+            _ => Err("Invalid GnssId value: expected 0..=7 (7 = NavIC)"),
         }
     }
 }
@@ -135,6 +137,7 @@ pub enum SigCfgMask {
     Sbas(SbasSigMask),
     Qzss(QzssSigMask),
     Imes(ImesSigMask),
+    Navic(NavicSigMask),
     Unknown(u8),
 }
 
@@ -174,6 +177,12 @@ impl From<ImesSigMask> for SigCfgMask {
     }
 }
 
+impl From<NavicSigMask> for SigCfgMask {
+    fn from(m: NavicSigMask) -> Self {
+        SigCfgMask::Navic(m)
+    }
+}
+
 impl SigCfgMask {
     #[inline]
     pub fn raw_bits(self) -> u8 {
@@ -185,6 +194,7 @@ impl SigCfgMask {
             SigCfgMask::Sbas(m) => m.bits(),
             SigCfgMask::Qzss(m) => m.bits(),
             SigCfgMask::Imes(m) => m.bits(),
+            SigCfgMask::Navic(m) => m.bits(),
             SigCfgMask::Unknown(b) => b,
         }
     }
@@ -263,6 +273,14 @@ bitflags! {
     }
 }
 
+#[ubx_extend_bitflags]
+#[ubx(from, into_raw, rest_reserved)]
+bitflags! {
+    #[derive(Clone, Copy, Debug)]
+    pub struct NavicSigMask: u8 {
+    }
+}
+
 #[derive(Default, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct GnssConfigBlock {
@@ -337,6 +355,7 @@ impl GnssConfigBlock {
             GnssId::QZSS => SigCfgMask::Qzss(QzssSigMask::from_bits_truncate(m)),
             GnssId::SBAS => SigCfgMask::Sbas(SbasSigMask::from_bits_truncate(m)),
             GnssId::IMES => SigCfgMask::Unknown(m),
+            GnssId::NAVIC => SigCfgMask::Navic(NavicSigMask::from_bits_truncate(m)),
         }
     }
 
@@ -513,5 +532,42 @@ mod tests {
         assert_eq!(parsed[1].gnss_id, GnssId::GALILEO);
         assert_eq!(parsed[0].gnss_id as u8, blocks[0].gnss_id as u8);
         assert_eq!(parsed[1].gnss_id as u8, blocks[1].gnss_id as u8);
+    }
+
+    #[test]
+    fn gnss_id_try_from_navic() {
+        assert_eq!(GnssId::try_from(7u8), Ok(GnssId::NAVIC));
+        assert_eq!(GnssId::NAVIC as u8, 7);
+    }
+
+    #[test]
+    fn gnss_id_try_from_eight_is_err() {
+        // NavIC is gnssId 7 (verified on a live NEO-F10N); 8 is unassigned.
+        assert!(GnssId::try_from(8u8).is_err());
+    }
+
+    #[test]
+    fn gnss_id_try_from_out_of_range_is_err() {
+        assert!(GnssId::try_from(9u8).is_err());
+        assert!(GnssId::try_from(255u8).is_err());
+    }
+
+    #[test]
+    #[cfg(not(feature = "ubx_proto14"))]
+    fn navic_sig_cfg_mask_dispatch() {
+        // sigCfgMask is bits 23..16 of flags.
+        let raw_mask: u8 = 0x11;
+        let block = GnssConfigBlock {
+            gnss_id: GnssId::NAVIC,
+            res_trk_ch: 0,
+            max_trk_ch: 0,
+            reserved1: 0,
+            flags: ((raw_mask as u32) << 16) | 0x01,
+        };
+        assert_eq!(block.raw_sig_mask(), raw_mask);
+        match block.sig_cfg_mask() {
+            SigCfgMask::Navic(m) => assert_eq!(m.bits(), raw_mask),
+            other => panic!("expected SigCfgMask::Navic, got {other:?}"),
+        }
     }
 }

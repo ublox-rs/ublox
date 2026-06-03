@@ -1423,18 +1423,27 @@ cfg_val! {
   SignalGpsEna,          0x1031001f, bool,
   SignalGpsL1caEna,      0x10310001, bool,
   SignalGpsL2cEna,       0x10310003, bool,
+  SignalGpsL5Ena,        0x10310004, bool,
   SignalGalEna,          0x10310021, bool,
   SignalGalE1Ena,        0x10310007, bool,
   SignalGalE5bEna,       0x1031000a, bool,
+  SignalGalE5aEna,       0x10310009, bool,
+  SignalGalE6Ena,        0x1031000b, bool,
   SignalBdsEna,          0x10310022, bool,
   SignalBdsB1Ena,        0x1031000d, bool,
   SignalBdsB2Ena,        0x1031000e, bool,
+  SignalBdsB1cEna,       0x1031000f, bool,
+  SignalBdsB2aEna,       0x10310028, bool,
+  SignalBdsB3Ena,        0x10310010, bool,
   SignalQzssEna,         0x10310024, bool,
   SignalQzssL1caEna,     0x10310012, bool,
   SignalQzssL2cEna,      0x10310015, bool,
+  SignalQzssL5Ena,       0x10310017, bool,
   SignalGloEna,          0x10310025, bool,
   SignalGloL1Ena,        0x10310018, bool,
   SignalGLoL2Ena,        0x1031001a, bool,
+  SignalNavicEna,        0x10310026, bool,
+  SignalNavicL5Ena,      0x1031001d, bool,
 
   /// "Undocumented" L5 Health Bit Ignore (see
   /// <https://content.u-blox.com/sites/default/files/documents/GPS-L5-configuration_AppNote_UBX-21038688.pdf>)
@@ -1748,4 +1757,97 @@ pub enum TModePosType {
     ECEF = 0,
     /// Lat/Lon/Height position
     LLH = 1,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Helper: encode a bool-valued CFG key via `write_to`, assert the
+    /// 4-byte little-endian key ID and the 1-byte value, then round-trip
+    /// through `CfgVal::parse` and check the resulting key matches.
+    fn assert_bool_key(val: CfgVal, key_id: u32, value_byte: u8) {
+        let mut buf = [0u8; 5];
+        let written = val.write_to(&mut buf);
+        assert_eq!(written, 5, "bool CFG key+value must encode to 5 bytes");
+        assert_eq!(
+            &buf[..4],
+            &key_id.to_le_bytes()[..],
+            "key ID little-endian mismatch"
+        );
+        assert_eq!(buf[4], value_byte, "value byte mismatch");
+
+        // Round-trip via parse().
+        let parsed = CfgVal::parse(&buf).expect("parse should succeed");
+        assert_eq!(parsed, val, "round-tripped CfgVal mismatch");
+        assert_eq!(parsed.key() as u32, key_id, "round-tripped key mismatch");
+    }
+
+    #[test]
+    fn signal_gps_l5_ena_encodes_correctly() {
+        assert_bool_key(CfgVal::SignalGpsL5Ena(true), 0x10310004, 1);
+        assert_bool_key(CfgVal::SignalGpsL5Ena(false), 0x10310004, 0);
+    }
+
+    #[test]
+    fn signal_gal_e5a_ena_encodes_correctly() {
+        assert_bool_key(CfgVal::SignalGalE5aEna(true), 0x10310009, 1);
+        assert_bool_key(CfgVal::SignalGalE5aEna(false), 0x10310009, 0);
+    }
+
+    #[test]
+    fn signal_gal_e6_ena_encodes_correctly() {
+        assert_bool_key(CfgVal::SignalGalE6Ena(true), 0x1031000b, 1);
+        assert_bool_key(CfgVal::SignalGalE6Ena(false), 0x1031000b, 0);
+    }
+
+    #[test]
+    fn signal_bds_b1c_ena_encodes_correctly() {
+        assert_bool_key(CfgVal::SignalBdsB1cEna(true), 0x1031000f, 1);
+        assert_bool_key(CfgVal::SignalBdsB1cEna(false), 0x1031000f, 0);
+    }
+
+    #[test]
+    fn signal_bds_b2a_ena_encodes_correctly() {
+        assert_bool_key(CfgVal::SignalBdsB2aEna(true), 0x10310028, 1);
+        assert_bool_key(CfgVal::SignalBdsB2aEna(false), 0x10310028, 0);
+    }
+
+    #[test]
+    fn signal_bds_b3_ena_encodes_correctly() {
+        assert_bool_key(CfgVal::SignalBdsB3Ena(true), 0x10310010, 1);
+        assert_bool_key(CfgVal::SignalBdsB3Ena(false), 0x10310010, 0);
+    }
+
+    #[test]
+    fn signal_qzss_l5_ena_encodes_correctly() {
+        assert_bool_key(CfgVal::SignalQzssL5Ena(true), 0x10310017, 1);
+        assert_bool_key(CfgVal::SignalQzssL5Ena(false), 0x10310017, 0);
+    }
+
+    #[test]
+    fn signal_navic_ena_encodes_correctly() {
+        assert_bool_key(CfgVal::SignalNavicEna(true), 0x10310026, 1);
+        assert_bool_key(CfgVal::SignalNavicEna(false), 0x10310026, 0);
+    }
+
+    #[test]
+    fn signal_navic_l5_ena_encodes_correctly() {
+        assert_bool_key(CfgVal::SignalNavicL5Ena(true), 0x1031001d, 1);
+        assert_bool_key(CfgVal::SignalNavicL5Ena(false), 0x1031001d, 0);
+    }
+
+    #[test]
+    fn new_signal_keys_have_expected_key_ids() {
+        // Sanity check the key-ID discriminants line up with the ICD.
+        assert_eq!(CfgKey::SignalGpsL5Ena as u32, 0x10310004);
+        assert_eq!(CfgKey::SignalGalE5aEna as u32, 0x10310009);
+        assert_eq!(CfgKey::SignalGalE6Ena as u32, 0x1031000b);
+        assert_eq!(CfgKey::SignalBdsB1cEna as u32, 0x1031000f);
+        assert_eq!(CfgKey::SignalBdsB2aEna as u32, 0x10310028);
+        assert_eq!(CfgKey::SignalBdsB3Ena as u32, 0x10310010);
+        assert_eq!(CfgKey::SignalQzssL5Ena as u32, 0x10310017);
+        assert_eq!(CfgKey::SignalNavicEna as u32, 0x10310026);
+        assert_eq!(CfgKey::SignalNavicL5Ena as u32, 0x1031001d);
+    }
 }
