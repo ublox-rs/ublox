@@ -13,10 +13,10 @@
 
 use byteorder::{LittleEndian, WriteBytesExt};
 use proptest::prelude::*;
-use ublox::{
-    constants::{UBX_SYNC_CHAR_1, UBX_SYNC_CHAR_2},
-    ParserBuilder, UbxPacket,
-};
+use ublox::{ParserBuilder, UbxPacket};
+
+mod common;
+use common::build_ubx_frame;
 
 /// Represents a single pin in the UBX-MON-HW3 message.
 #[derive(Debug, Clone)]
@@ -61,17 +61,6 @@ impl MonHw3 {
 
         wtr
     }
-}
-
-/// Calculates the 8-bit Fletcher-16 checksum used by U-Blox.
-fn calculate_checksum(data: &[u8]) -> (u8, u8) {
-    let mut ck_a: u8 = 0;
-    let mut ck_b: u8 = 0;
-    for byte in data {
-        ck_a = ck_a.wrapping_add(*byte);
-        ck_b = ck_b.wrapping_add(ck_a);
-    }
-    (ck_a, ck_b)
 }
 
 fn hw_version_strategy() -> impl Strategy<Value = [u8; 10]> {
@@ -126,26 +115,7 @@ pub fn mon_hw3_payload_strategy() -> impl Strategy<Value = MonHw3> {
 pub fn ubx_mon_hw3_frame_strategy() -> impl Strategy<Value = (MonHw3, Vec<u8>)> {
     mon_hw3_payload_strategy().prop_map(|mon_hw3| {
         let payload = mon_hw3.to_bytes();
-        let class_id = 0x0A;
-        let message_id = 0x37;
-        let length = payload.len() as u16;
-
-        // Build the frame core
-        let mut frame_core = Vec::with_capacity(4 + payload.len());
-        frame_core.push(class_id);
-        frame_core.push(message_id);
-        frame_core.write_u16::<LittleEndian>(length).unwrap();
-        frame_core.extend_from_slice(&payload);
-
-        let (ck_a, ck_b) = calculate_checksum(&frame_core);
-
-        // Assemble final frame
-        let mut final_frame = Vec::with_capacity(8 + payload.len());
-        final_frame.push(UBX_SYNC_CHAR_1);
-        final_frame.push(UBX_SYNC_CHAR_2);
-        final_frame.extend_from_slice(&frame_core);
-        final_frame.push(ck_a);
-        final_frame.push(ck_b);
+        let final_frame = build_ubx_frame(0x0A, 0x37, &payload);
 
         (mon_hw3, final_frame)
     })
