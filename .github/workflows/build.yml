@@ -18,7 +18,7 @@ jobs:
   lint-package:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
       - name: Install MSRV
@@ -36,7 +36,7 @@ jobs:
   lint-examples:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
       - name: Install Rust (examples)
@@ -76,7 +76,7 @@ jobs:
           - --no-default-features --features "alloc std ubx_proto14 ubx_proto23"
           - --no-default-features --features "alloc std ubx_proto14 ubx_proto23 ubx_proto27 ubx_proto31 ubx_proto33"
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
       - name: Install MSRV
@@ -106,7 +106,7 @@ jobs:
           - alloc,ubx_proto27
           - serde,ubx_proto27
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
       - name: Install MSRV
@@ -133,7 +133,7 @@ jobs:
           - send-receive
           - simple-parse
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
 
@@ -158,7 +158,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           persist-credentials: false
 
@@ -183,7 +183,7 @@ jobs:
   msrv:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
       - uses: taiki-e/install-action@cargo-hack
@@ -218,7 +218,7 @@ jobs:
           - feature-group: only-explicit-features
             feature: ubx_proto33
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: SemVer Check
         uses: obi1kenobi/cargo-semver-checks-action@v2
         with:
