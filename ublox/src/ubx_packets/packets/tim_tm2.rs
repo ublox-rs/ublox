@@ -63,7 +63,7 @@ impl TimTm2Flags {
     }
 
     pub fn time_base(&self) -> TimTm2TimeBase {
-        match self.0 & 0b11000 {
+        match (self.0 >> 3) & 0b11 {
             0 => TimTm2TimeBase::Receiver,
             1 => TimTm2TimeBase::Gnss,
             2 => TimTm2TimeBase::Utc,
@@ -98,4 +98,20 @@ pub enum TimTm2TimeBase {
     Receiver,
     Gnss,
     Utc,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{TimTm2Flags, TimTm2TimeBase};
+
+    #[test]
+    fn time_base_decodes_bits_3_and_4() {
+        assert_eq!(TimTm2Flags(0 << 3).time_base(), TimTm2TimeBase::Receiver);
+        assert_eq!(TimTm2Flags(1 << 3).time_base(), TimTm2TimeBase::Gnss);
+        assert_eq!(TimTm2Flags(2 << 3).time_base(), TimTm2TimeBase::Utc);
+        assert_eq!(
+            TimTm2Flags(0b1110_0111).time_base(),
+            TimTm2TimeBase::Receiver
+        );
+    }
 }
