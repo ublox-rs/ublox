@@ -58,6 +58,7 @@ use crate::ubx_packets::packets::{
     nav_dop::{NavDop, NavDopOwned, NavDopRef},
     nav_hp_pos_ecef::{NavHpPosEcef, NavHpPosEcefOwned, NavHpPosEcefRef},
     nav_hp_pos_llh::{NavHpPosLlh, NavHpPosLlhOwned, NavHpPosLlhRef},
+    nav_orb::{NavOrb, NavOrbOwned, NavOrbRef},
     nav_other::{
         NavEoe, NavEoeOwned, NavEoeRef, NavOdo, NavOdoOwned, NavOdoRef, NavVelECEF,
         NavVelECEFOwned, NavVelECEFRef,
@@ -65,7 +66,6 @@ use crate::ubx_packets::packets::{
     nav_pos_llh::{NavPosLlh, NavPosLlhOwned, NavPosLlhRef},
     nav_pvt::proto23::{NavPvt, NavPvtOwned, NavPvtRef},
     nav_rel_pos_ned::proto23::{NavRelPosNed, NavRelPosNedOwned, NavRelPosNedRef},
-    nav_orb::{NavOrb, NavOrbOwned, NavOrbRef},
     nav_sat::{NavSat, NavSatOwned, NavSatRef},
     nav_sol::{NavSol, NavSolOwned, NavSolRef},
     nav_status::{NavStatus, NavStatusOwned, NavStatusRef},
