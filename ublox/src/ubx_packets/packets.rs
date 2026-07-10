@@ -91,6 +91,7 @@ pub mod nav_pos_llh;
 pub mod nav_pvt;
 pub mod nav_rel_pos_ned;
 pub mod nav_sat;
+pub mod nav_orb;
 pub mod nav_sig;
 pub mod nav_sol;
 pub mod nav_status;
