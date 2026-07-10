@@ -41,7 +41,6 @@ use crate::ubx_packets::packets::{
     mga_gps_iono::{MgaGpsIono, MgaGpsIonoOwned, MgaGpsIonoRef},
     mga_gps_utc::{MgaGpsUtc, MgaGpsUtcOwned, MgaGpsUtcRef},
     mon_comms::{MonComms, MonCommsOwned, MonCommsRef},
-    nav_orb::{NavOrb, NavOrbOwned, NavOrbRef},
     mon_gnss::{MonGnss, MonGnssOwned, MonGnssRef},
     mon_hw::{MonHw, MonHwOwned, MonHwRef},
     mon_hw2::{MonHw2, MonHw2Owned, MonHw2Ref},
@@ -61,6 +60,7 @@ use crate::ubx_packets::packets::{
     nav_dop::{NavDop, NavDopOwned, NavDopRef},
     nav_hp_pos_ecef::{NavHpPosEcef, NavHpPosEcefOwned, NavHpPosEcefRef},
     nav_hp_pos_llh::{NavHpPosLlh, NavHpPosLlhOwned, NavHpPosLlhRef},
+    nav_orb::{NavOrb, NavOrbOwned, NavOrbRef},
     nav_other::{
         NavEoe, NavEoeOwned, NavEoeRef, NavOdo, NavOdoOwned, NavOdoRef, NavVelECEF,
         NavVelECEFOwned, NavVelECEFRef,
