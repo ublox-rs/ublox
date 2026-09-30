@@ -605,6 +605,8 @@ cfg_val! {
   RateNav,               0x30210002, u16,
   /// Time system to which measurements are aligned
   RateTimeref,           0x20210003, AlignmentToReferenceTime,
+  /// High Priority Navigation Rate, 10 = 10Hz
+  RateNavPrio,           0x20210004, u8,
 
   // CFG-MSGOUT-*
   /// Output rate of the NMEA-GX-DTM message on port I2C
@@ -1048,6 +1050,8 @@ cfg_val! {
   MsgOutUbxMonTxbufUart2, 0x2091019d, u8,
   /// Output rate of the UBX-MON-TXBUF message on port USB
   MsgOutUbxMonTxbufUsb, 0x2091019e, u8,
+  /// Output rate of the UBX-NAV2-PVT message on port USB
+  MsgOutUbxNavAttUsb, 0x20910022, u8,
   /// Output rate of the UBX-NAV-CLOCK message on port I2C
   MsgOutUbxNavClockI2c, 0x20910065, u8,
   /// Output rate of the UBX-NAV-CLOCK message on port SPI
@@ -1178,6 +1182,8 @@ cfg_val! {
   MsgOutUbxNavPvtUart2, 0x20910008, u8,
   /// Output rate of the UBX-NAV-PVT message on port USB
   MsgOutUbxNavPvtUsb, 0x20910009, u8,
+  /// Output rate of the UBX-NAV2-PVT message on port USB
+  MsgOutUbxNav2PvtUsb, 0x20910493, u8,
   /// Output rate of the UBX-NAVRELPOSNED message on port I2C
   MsgOutUbxNavRelposNedI2c, 0x2091008d, u8,
   /// Output rate of the UBX-NAVRELPOSNED message on port SPI
@@ -1516,8 +1522,13 @@ cfg_val! {
   /// This will only be used if CfgTModeModes=SurveyIn.
   TModeSvInAccLimit, 0x40030011,  u32,
 
-  /// CFG-NAVSPG -*: Standard Precision Navigation Configuration
+  /// CFG-NAV2 -*: Secondary Navigation Solution Configuration
+  /// Enable secondary (NAV2) output
+  Nav2OutEnabled, 0x10170001, bool,
+  /// Use SBAS integrity information in the secondary output
+  Nav2SbasUseIntegrity, 0x10170002, bool,
 
+  /// CFG-NAVSPG -*: Standard Precision Navigation Configuration
   /// Position fix mode
   NavSpgFixMode, 0x20110011, NavFixMode,
   /// Initial fix must be a 3d fix
@@ -1648,6 +1659,10 @@ cfg_val! {
   SfCoreImu2CrpLaY, 0x30080003, i16,
   /// Z coordinate of IMU-to-CRP lever-arm in the installation frame (cm)
   SfCoreImu2CrpLaZ, 0x30080004, i16,
+  /// Sensor time tag increment in microseconds
+  SfCoreSenTtagFact, 0x40080006, u32,
+  /// Sensor time tag value range maximum
+  SfCoreSenTtagMax, 0x40080007, u32,
 
   // CFG-SFIMU-*
   /// Time period between each update for the saved temperature-dependent gyroscope bias table (s)
