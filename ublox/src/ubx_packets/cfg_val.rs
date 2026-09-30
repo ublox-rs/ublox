@@ -1050,7 +1050,15 @@ cfg_val! {
   MsgOutUbxMonTxbufUart2, 0x2091019d, u8,
   /// Output rate of the UBX-MON-TXBUF message on port USB
   MsgOutUbxMonTxbufUsb, 0x2091019e, u8,
-  /// Output rate of the UBX-NAV2-PVT message on port USB
+  /// Output rate of the UBX-NAV-ATT message on port I2C
+  MsgOutUbxNavAttI2c, 0x2091001f, u8,
+  /// Output rate of the UBX-NAV-ATT message on port SPI
+  MsgOutUbxNavAttSpi, 0x20910023, u8,
+  /// Output rate of the UBX-NAV-ATT message on port UART1
+  MsgOutUbxNavAttUart1, 0x20910020, u8,
+  /// Output rate of the UBX-NAV-ATT message on port UART2
+  MsgOutUbxNavAttUart2, 0x20910021, u8,
+  /// Output rate of the UBX-NAV-ATT message on port USB
   MsgOutUbxNavAttUsb, 0x20910022, u8,
   /// Output rate of the UBX-NAV-CLOCK message on port I2C
   MsgOutUbxNavClockI2c, 0x20910065, u8,
