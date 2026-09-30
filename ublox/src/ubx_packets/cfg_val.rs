@@ -1190,8 +1190,6 @@ cfg_val! {
   MsgOutUbxNavPvtUart2, 0x20910008, u8,
   /// Output rate of the UBX-NAV-PVT message on port USB
   MsgOutUbxNavPvtUsb, 0x20910009, u8,
-  /// Output rate of the UBX-NAV2-PVT message on port USB
-  MsgOutUbxNav2PvtUsb, 0x20910493, u8,
   /// Output rate of the UBX-NAVRELPOSNED message on port I2C
   MsgOutUbxNavRelposNedI2c, 0x2091008d, u8,
   /// Output rate of the UBX-NAVRELPOSNED message on port SPI
