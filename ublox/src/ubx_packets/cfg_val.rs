@@ -1528,12 +1528,6 @@ cfg_val! {
   /// This will only be used if CfgTModeModes=SurveyIn.
   TModeSvInAccLimit, 0x40030011,  u32,
 
-  /// CFG-NAV2 -*: Secondary Navigation Solution Configuration
-  /// Enable secondary (NAV2) output
-  Nav2OutEnabled, 0x10170001, bool,
-  /// Use SBAS integrity information in the secondary output
-  Nav2SbasUseIntegrity, 0x10170002, bool,
-
   /// CFG-NAVSPG -*: Standard Precision Navigation Configuration
   /// Position fix mode
   NavSpgFixMode, 0x20110011, NavFixMode,
