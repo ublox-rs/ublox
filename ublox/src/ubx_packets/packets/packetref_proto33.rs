@@ -40,7 +40,6 @@ use crate::ubx_packets::packets::{
     mga_gps_eph::{MgaGpsEph, MgaGpsEphOwned, MgaGpsEphRef},
     mga_gps_iono::{MgaGpsIono, MgaGpsIonoOwned, MgaGpsIonoRef},
     mga_gps_utc::{MgaGpsUtc, MgaGpsUtcOwned, MgaGpsUtcRef},
-    mga_ini::{MgaIniAtt, MgaIniPos, MgaIniTimeUtc},
     mga_sf::{MgaSfIni2, MgaSfIni2Owned, MgaSfIni2Ref},
     mon_comms::{MonComms, MonCommsOwned, MonCommsRef},
     mon_gnss::{MonGnss, MonGnssOwned, MonGnssRef},
