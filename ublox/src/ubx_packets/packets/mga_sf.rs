@@ -1,6 +1,4 @@
-#![cfg(any(
-    feature = "ubx_proto33",
-))]
+#![cfg(feature = "ubx_proto33")]
 #[allow(unused_imports, reason = "It is only unused in some feature sets")]
 #[cfg(feature = "serde")]
 use {super::SerializeUbxPacketFields, crate::serde::ser::SerializeMap};
