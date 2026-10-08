@@ -38,7 +38,7 @@ pub(crate) fn is_cstr_valid(bytes: &[u8]) -> bool {
         Some(pos) => pos,
         None => {
             return false;
-        },
+        }
     };
     core::str::from_utf8(&bytes[0..null_pos]).is_ok()
 }

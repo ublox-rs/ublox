@@ -322,7 +322,7 @@ fn extract_packet_ubx<'b, T: UnderlyingBuffer, P: UbxProtocol>(
         Ok(x) => x,
         Err(e) => {
             return Some(Err(e));
-        },
+        }
     };
     let specific_packet_result = P::match_packet(
         class_id,
@@ -350,7 +350,7 @@ impl<T: UnderlyingBuffer, P: UbxProtocol> UbxParserIter<'_, T, P> {
                 None => {
                     self.buf.clear();
                     return None;
-                },
+                }
             };
             self.buf.drain(pos);
 
@@ -464,7 +464,7 @@ impl<T: UnderlyingBuffer, P: UbxProtocol> UbxRtcmParserIter<'_, T, P> {
                         Some(Err(e)) => return Some(Err(e)),
                         None => return None,
                     }
-                },
+                }
                 NextSync::Rtcm(pos) => {
                     self.buf.drain(pos);
 
@@ -476,11 +476,11 @@ impl<T: UnderlyingBuffer, P: UbxProtocol> UbxRtcmParserIter<'_, T, P> {
                         u16::from_be_bytes([self.buf[1], self.buf[2]]) & RTCM_LENGTH_MASK;
 
                     return extract_packet_rtcm(&mut self.buf, pack_len);
-                },
+                }
                 NextSync::Nmea(_) | NextSync::None => {
                     self.buf.clear();
                     return None;
-                },
+                }
             };
         }
         None
@@ -574,7 +574,7 @@ impl<T: UnderlyingBuffer, P: UbxProtocol> UbxRtcmNmeaParserIter<'_, T, P> {
                         Some(Err(e)) => return Some(Err(e)),
                         None => return None,
                     }
-                },
+                }
                 NextSync::Rtcm(pos) => {
                     self.buf.drain(pos);
 
@@ -586,7 +586,7 @@ impl<T: UnderlyingBuffer, P: UbxProtocol> UbxRtcmNmeaParserIter<'_, T, P> {
                         u16::from_be_bytes([self.buf[1], self.buf[2]]) & RTCM_LENGTH_MASK;
 
                     return extract_packet_rtcm(&mut self.buf, pack_len);
-                },
+                }
                 NextSync::Nmea(pos) => {
                     self.buf.drain(pos);
 
@@ -618,11 +618,11 @@ impl<T: UnderlyingBuffer, P: UbxProtocol> UbxRtcmNmeaParserIter<'_, T, P> {
                         }
                         None
                     };
-                },
+                }
                 NextSync::None => {
                     self.buf.clear();
                     return None;
-                },
+                }
             };
         }
         None
@@ -1189,19 +1189,19 @@ mod test {
             Some(Ok(UbxPacket::Proto14(PacketRef::CfgNav5(packet)))) => {
                 // We're good
                 assert_eq!(packet.pacc(), 21);
-            },
+            }
             _ => {
                 panic!()
-            },
+            }
         }
         match it.next() {
             Some(Ok(UbxPacket::Proto14(PacketRef::CfgNav5(packet)))) => {
                 // We're good
                 assert_eq!(packet.pacc(), 18);
-            },
+            }
             _ => {
                 panic!()
-            },
+            }
         }
         assert!(it.next().is_none());
     }
@@ -1217,19 +1217,19 @@ mod test {
             Some(Ok(UbxPacket::Proto23(PacketRef::CfgNav5(packet)))) => {
                 // We're good
                 assert_eq!(packet.pacc(), 21);
-            },
+            }
             _ => {
                 panic!()
-            },
+            }
         }
         match it.next() {
             Some(Ok(UbxPacket::Proto23(PacketRef::CfgNav5(packet)))) => {
                 // We're good
                 assert_eq!(packet.pacc(), 18);
-            },
+            }
             _ => {
                 panic!()
-            },
+            }
         }
         assert!(it.next().is_none());
     }
@@ -1245,19 +1245,19 @@ mod test {
             Some(Ok(UbxPacket::Proto27(PacketRef::CfgNav5(packet)))) => {
                 // We're good
                 assert_eq!(packet.pacc(), 21);
-            },
+            }
             _ => {
                 panic!()
-            },
+            }
         }
         match it.next() {
             Some(Ok(UbxPacket::Proto27(PacketRef::CfgNav5(packet)))) => {
                 // We're good
                 assert_eq!(packet.pacc(), 18);
-            },
+            }
             _ => {
                 panic!()
-            },
+            }
         }
         assert!(it.next().is_none());
     }
@@ -1273,19 +1273,19 @@ mod test {
             Some(Ok(UbxPacket::Proto31(PacketRef::CfgNav5(packet)))) => {
                 // We're good
                 assert_eq!(packet.pacc(), 21);
-            },
+            }
             _ => {
                 panic!()
-            },
+            }
         }
         match it.next() {
             Some(Ok(UbxPacket::Proto31(PacketRef::CfgNav5(packet)))) => {
                 // We're good
                 assert_eq!(packet.pacc(), 18);
-            },
+            }
             _ => {
                 panic!()
-            },
+            }
         }
         assert!(it.next().is_none());
     }
@@ -1301,19 +1301,19 @@ mod test {
             Some(Ok(UbxPacket::Proto33(PacketRef::CfgNav5(packet)))) => {
                 // We're good
                 assert_eq!(packet.pacc(), 21);
-            },
+            }
             _ => {
                 panic!()
-            },
+            }
         }
         match it.next() {
             Some(Ok(UbxPacket::Proto33(PacketRef::CfgNav5(packet)))) => {
                 // We're good
                 assert_eq!(packet.pacc(), 18);
-            },
+            }
             _ => {
                 panic!()
-            },
+            }
         }
         assert!(it.next().is_none());
     }
@@ -1343,7 +1343,7 @@ mod test {
         match it.next() {
             Some(Ok(crate::UbxPacket::Proto14(PacketRef::AckAck(pack)))) => {
                 assert_eq!(ACK_ACK_PAYLOAD_LEN, pack.payload_len());
-            },
+            }
             _ => panic!(),
         }
     }
@@ -1360,7 +1360,7 @@ mod test {
         match it.next() {
             Some(Ok(crate::UbxPacket::Proto23(PacketRef::AckAck(pack)))) => {
                 assert_eq!(ACK_ACK_PAYLOAD_LEN, pack.payload_len());
-            },
+            }
             _ => panic!(),
         }
     }
@@ -1403,7 +1403,7 @@ mod test {
         match it.next() {
             Some(Ok(crate::UbxPacket::Proto14(PacketRef::NavPvt(p)))) => {
                 assert_eq!(NAV_PVT_PROTO14_LEN, p.payload_len())
-            },
+            }
             _ => panic!(),
         }
     }
@@ -1422,7 +1422,7 @@ mod test {
         match it.next() {
             Some(Ok(crate::UbxPacket::Proto23(PacketRef::NavPvt(p)))) => {
                 assert_eq!(NAV_PVT_PROTO23_LEN, p.payload_len())
-            },
+            }
             _ => panic!(),
         }
     }

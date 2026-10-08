@@ -23,9 +23,9 @@ fn extract_only_ack_ack_proto14<T: ublox::UnderlyingBuffer>(
         match pack {
             Ok(UbxPacket::Proto14(ublox::proto14::PacketRef::AckAck(pack))) => {
                 ret.push(Ok((pack.class(), pack.msg_id())));
-            },
+            }
             Err(err) => ret.push(Err(err)),
-            _ => {}, // Ignore other packet types instead of panic
+            _ => {} // Ignore other packet types instead of panic
         }
     }
     ret
@@ -40,9 +40,9 @@ fn extract_only_ack_ack_proto23<T: ublox::UnderlyingBuffer>(
         match pack {
             Ok(UbxPacket::Proto23(ublox::proto23::PacketRef::AckAck(pack))) => {
                 ret.push(Ok((pack.class(), pack.msg_id())));
-            },
+            }
             Err(err) => ret.push(Err(err)),
-            _ => {},
+            _ => {}
         }
     }
     ret
@@ -57,9 +57,9 @@ fn extract_only_ack_ack_proto27<T: ublox::UnderlyingBuffer>(
         match pack {
             Ok(UbxPacket::Proto27(ublox::proto27::PacketRef::AckAck(pack))) => {
                 ret.push(Ok((pack.class(), pack.msg_id())));
-            },
+            }
             Err(err) => ret.push(Err(err)),
-            _ => {},
+            _ => {}
         }
     }
     ret
@@ -74,9 +74,9 @@ fn extract_only_ack_ack_proto31<T: ublox::UnderlyingBuffer>(
         match pack {
             Ok(UbxPacket::Proto31(ublox::proto31::PacketRef::AckAck(pack))) => {
                 ret.push(Ok((pack.class(), pack.msg_id())));
-            },
+            }
             Err(err) => ret.push(Err(err)),
-            _ => {},
+            _ => {}
         }
     }
     ret
@@ -91,9 +91,9 @@ fn extract_only_ack_ack_proto33<T: ublox::UnderlyingBuffer>(
         match pack {
             Ok(UbxPacket::Proto33(ublox::proto33::PacketRef::AckAck(pack))) => {
                 ret.push(Ok((pack.class(), pack.msg_id())));
-            },
+            }
             Err(err) => ret.push(Err(err)),
-            _ => {},
+            _ => {}
         }
     }
     ret
@@ -585,7 +585,7 @@ fn test_parse_cfg_nav5_proto14() {
             Ok(UbxPacket::Proto14(PacketRef::CfgNav5(pack))) => {
                 found = true;
                 test_util_assert_expected_cfg_nav5(&pack);
-            },
+            }
             _ => panic!(),
         }
     }
@@ -606,7 +606,7 @@ fn test_parse_cfg_nav5_proto23() {
             Ok(UbxPacket::Proto23(PacketRef::CfgNav5(pack))) => {
                 found = true;
                 test_util_assert_expected_cfg_nav5(&pack);
-            },
+            }
             _ => panic!(),
         }
     }
@@ -627,7 +627,7 @@ fn test_parse_cfg_nav5_proto27() {
             Ok(UbxPacket::Proto27(PacketRef::CfgNav5(pack))) => {
                 found = true;
                 test_util_assert_expected_cfg_nav5(&pack);
-            },
+            }
             _ => panic!(),
         }
     }
@@ -648,7 +648,7 @@ fn test_parse_cfg_nav5_proto31() {
             Ok(UbxPacket::Proto31(PacketRef::CfgNav5(pack))) => {
                 found = true;
                 test_util_assert_expected_cfg_nav5(&pack);
-            },
+            }
             _ => panic!(),
         }
     }
@@ -669,7 +669,7 @@ fn test_parse_cfg_nav5_proto33() {
             Ok(UbxPacket::Proto33(PacketRef::CfgNav5(pack))) => {
                 found = true;
                 test_util_assert_expected_cfg_nav5(&pack);
-            },
+            }
             _ => panic!(),
         }
     }
@@ -726,7 +726,7 @@ fn test_util_esf_meas_assert_expected_json(pack: UbxPacket) {
             } else {
                 panic!();
             }
-        },
+        }
         UbxPacket::Proto27(packet_ref) => {
             let actual = serde_json::to_value(&packet_ref).unwrap();
             assert_eq!(expected_packet_json, actual);
@@ -736,7 +736,7 @@ fn test_util_esf_meas_assert_expected_json(pack: UbxPacket) {
             } else {
                 panic!();
             }
-        },
+        }
         UbxPacket::Proto31(packet_ref) => {
             let actual = serde_json::to_value(&packet_ref).unwrap();
             assert_eq!(expected_packet_json, actual);
@@ -746,7 +746,7 @@ fn test_util_esf_meas_assert_expected_json(pack: UbxPacket) {
             } else {
                 panic!();
             }
-        },
+        }
         UbxPacket::Proto33(packet_ref) => {
             let actual = serde_json::to_value(&packet_ref).unwrap();
             assert_eq!(expected_packet_json, actual);
@@ -756,7 +756,7 @@ fn test_util_esf_meas_assert_expected_json(pack: UbxPacket) {
             } else {
                 panic!();
             }
-        },
+        }
     }
 }
 
@@ -776,7 +776,7 @@ fn test_esf_meas_serialize_proto23() {
             Ok(UbxPacket::Proto23(pack)) => {
                 test_util_esf_meas_assert_expected_json(ublox::UbxPacket::Proto23(pack));
                 found = true;
-            },
+            }
             _ => panic!(),
         }
     }
@@ -798,7 +798,7 @@ fn test_esf_meas_serialize_proto27() {
             Ok(UbxPacket::Proto27(pack)) => {
                 test_util_esf_meas_assert_expected_json(ublox::UbxPacket::Proto27(pack));
                 found = true;
-            },
+            }
             _ => panic!(),
         }
     }
@@ -820,7 +820,7 @@ fn test_esf_meas_serialize_proto31() {
             Ok(UbxPacket::Proto31(pack)) => {
                 test_util_esf_meas_assert_expected_json(ublox::UbxPacket::Proto31(pack));
                 found = true;
-            },
+            }
             _ => panic!(),
         }
     }
@@ -842,7 +842,7 @@ fn test_esf_meas_serialize_proto33() {
             Ok(UbxPacket::Proto33(pack)) => {
                 test_util_esf_meas_assert_expected_json(ublox::UbxPacket::Proto33(pack));
                 found = true;
-            },
+            }
             _ => panic!(),
         }
     }
@@ -860,7 +860,7 @@ fn test_zero_sized_ackack_proto14() {
     match it.next() {
         Some(Ok(UbxPacket::Proto14(PacketRef::Unknown(_)))) => {
             // This is expected
-        },
+        }
         _ => panic!(),
     }
     assert!(it.next().is_none());
@@ -875,7 +875,7 @@ fn test_zero_sized_ackack_proto23() {
     match it.next() {
         Some(Ok(UbxPacket::Proto23(PacketRef::Unknown(_)))) => {
             // This is expected
-        },
+        }
         _ => panic!(),
     }
     assert!(it.next().is_none());
@@ -890,7 +890,7 @@ fn test_zero_sized_ackack_proto27() {
     match it.next() {
         Some(Ok(UbxPacket::Proto27(PacketRef::Unknown(_)))) => {
             // This is expected
-        },
+        }
         _ => panic!(),
     }
     assert!(it.next().is_none());
@@ -905,7 +905,7 @@ fn test_zero_sized_ackack_proto31() {
     match it.next() {
         Some(Ok(UbxPacket::Proto31(PacketRef::Unknown(_)))) => {
             // This is expected
-        },
+        }
         _ => panic!(),
     }
     assert!(it.next().is_none());
@@ -920,7 +920,7 @@ fn test_zero_sized_ackack_proto33() {
     match it.next() {
         Some(Ok(UbxPacket::Proto33(PacketRef::Unknown(_)))) => {
             // This is expected
-        },
+        }
         _ => panic!(),
     }
     assert!(it.next().is_none());
@@ -952,19 +952,19 @@ fn test_double_start_at_end_proto14() {
         match it.next() {
             Some(Err(_)) => {
                 // First, a buffer-too-small error
-            },
+            }
             _ => panic!(),
         }
         match it.next() {
             Some(Ok(UbxPacket::Proto14(PacketRef::Unknown(_)))) => {
                 // Then an unknown packet
-            },
+            }
             _ => panic!(),
         }
         match it.next() {
             Some(Ok(UbxPacket::Proto14(PacketRef::AckAck(_)))) => {
                 // Then the ackack we passed
-            },
+            }
             _ => panic!(),
         }
         assert!(it.next().is_none());
@@ -973,11 +973,11 @@ fn test_double_start_at_end_proto14() {
     match it.next() {
         Some(Ok(UbxPacket::Proto14(PacketRef::AckAck { .. }))) => {
             // This is what we expect
-        },
+        }
         _ => {
             // Parsing other packets or ending the iteration is a failure
             panic!();
-        },
+        }
     }
     assert!(it.next().is_none());
 }
@@ -1008,19 +1008,19 @@ fn test_double_start_at_end_proto23() {
         match it.next() {
             Some(Err(_)) => {
                 // First, a buffer-too-small error
-            },
+            }
             _ => panic!(),
         }
         match it.next() {
             Some(Ok(UbxPacket::Proto23(PacketRef::Unknown(_)))) => {
                 // Then an unknown packet
-            },
+            }
             _ => panic!(),
         }
         match it.next() {
             Some(Ok(UbxPacket::Proto23(PacketRef::AckAck(_)))) => {
                 // Then the ackack we passed
-            },
+            }
             _ => panic!(),
         }
         assert!(it.next().is_none());
@@ -1029,11 +1029,11 @@ fn test_double_start_at_end_proto23() {
     match it.next() {
         Some(Ok(UbxPacket::Proto23(PacketRef::AckAck { .. }))) => {
             // This is what we expect
-        },
+        }
         _ => {
             // Parsing other packets or ending the iteration is a failure
             panic!();
-        },
+        }
     }
     assert!(it.next().is_none());
 }
@@ -1064,19 +1064,19 @@ fn test_double_start_at_end_proto27() {
         match it.next() {
             Some(Err(_)) => {
                 // First, a buffer-too-small error
-            },
+            }
             _ => panic!(),
         }
         match it.next() {
             Some(Ok(UbxPacket::Proto27(PacketRef::Unknown(_)))) => {
                 // Then an unknown packet
-            },
+            }
             _ => panic!(),
         }
         match it.next() {
             Some(Ok(UbxPacket::Proto27(PacketRef::AckAck(_)))) => {
                 // Then the ackack we passed
-            },
+            }
             _ => panic!(),
         }
         assert!(it.next().is_none());
@@ -1085,11 +1085,11 @@ fn test_double_start_at_end_proto27() {
     match it.next() {
         Some(Ok(UbxPacket::Proto27(PacketRef::AckAck { .. }))) => {
             // This is what we expect
-        },
+        }
         _ => {
             // Parsing other packets or ending the iteration is a failure
             panic!();
-        },
+        }
     }
     assert!(it.next().is_none());
 }
@@ -1120,19 +1120,19 @@ fn test_double_start_at_end_proto31() {
         match it.next() {
             Some(Err(_)) => {
                 // First, a buffer-too-small error
-            },
+            }
             _ => panic!(),
         }
         match it.next() {
             Some(Ok(UbxPacket::Proto31(PacketRef::Unknown(_)))) => {
                 // Then an unknown packet
-            },
+            }
             _ => panic!(),
         }
         match it.next() {
             Some(Ok(UbxPacket::Proto31(PacketRef::AckAck(_)))) => {
                 // Then the ackack we passed
-            },
+            }
             _ => panic!(),
         }
         assert!(it.next().is_none());
@@ -1141,11 +1141,11 @@ fn test_double_start_at_end_proto31() {
     match it.next() {
         Some(Ok(UbxPacket::Proto31(PacketRef::AckAck { .. }))) => {
             // This is what we expect
-        },
+        }
         _ => {
             // Parsing other packets or ending the iteration is a failure
             panic!();
-        },
+        }
     }
     assert!(it.next().is_none());
 }
@@ -1175,19 +1175,19 @@ fn test_double_start_at_end_proto33() {
         match it.next() {
             Some(Err(_)) => {
                 // First, a buffer-too-small error
-            },
+            }
             _ => panic!(),
         }
         match it.next() {
             Some(Ok(UbxPacket::Proto33(PacketRef::Unknown(_)))) => {
                 // Then an unknown packet
-            },
+            }
             _ => panic!(),
         }
         match it.next() {
             Some(Ok(UbxPacket::Proto33(PacketRef::AckAck(_)))) => {
                 // Then the ackack we passed
-            },
+            }
             _ => panic!(),
         }
         assert!(it.next().is_none());
@@ -1196,11 +1196,11 @@ fn test_double_start_at_end_proto33() {
     match it.next() {
         Some(Ok(UbxPacket::Proto33(PacketRef::AckAck { .. }))) => {
             // This is what we expect
-        },
+        }
         _ => {
             // Parsing other packets or ending the iteration is a failure
             panic!();
-        },
+        }
     }
     assert!(it.next().is_none());
 }
@@ -1230,7 +1230,7 @@ fn test_ack_ack_to_owned_can_be_moved_proto14() {
                 std::dbg!(owned);
             });
             thread.join().unwrap();
-        },
+        }
         _ => panic!(),
     };
 }
@@ -1258,7 +1258,7 @@ fn test_ack_ack_to_owned_can_be_moved_proto23() {
                 std::dbg!(owned);
             });
             thread.join().unwrap();
-        },
+        }
         _ => panic!(),
     };
 }
@@ -1286,7 +1286,7 @@ fn test_ack_ack_to_owned_can_be_moved_proto27() {
                 std::dbg!(owned);
             });
             thread.join().unwrap();
-        },
+        }
         _ => panic!(),
     };
 }
@@ -1314,7 +1314,7 @@ fn test_ack_ack_to_owned_can_be_moved_proto31() {
                 std::dbg!(owned);
             });
             thread.join().unwrap();
-        },
+        }
         _ => panic!(),
     };
 }
@@ -1342,7 +1342,7 @@ fn test_ack_ack_to_owned_can_be_moved_proto33() {
                 std::dbg!(owned);
             });
             thread.join().unwrap();
-        },
+        }
         _ => panic!(),
     };
 }

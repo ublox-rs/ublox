@@ -105,7 +105,7 @@ impl NavPvt {
                 // After p_dop, we need: reserved2 (2 bytes) + reserved3 (4 bytes) = 6 bytes
                 wtr.extend_from_slice(&[0u8; 2]); // reserved2: [u8; 2]
                 wtr.extend_from_slice(&[0u8; 4]); // reserved3: [u8; 4]
-            },
+            }
             ProtocolVersion::V23 => {
                 // Proto 23 has 2-byte flags3, then 4 bytes reserved1 (total 92 bytes)
                 wtr.write_u16::<LittleEndian>(self.flags3).unwrap();
@@ -113,7 +113,7 @@ impl NavPvt {
                 wtr.write_i32::<LittleEndian>(self.head_veh).unwrap();
                 wtr.write_i16::<LittleEndian>(self.mag_dec).unwrap();
                 wtr.write_u16::<LittleEndian>(self.mag_acc).unwrap();
-            },
+            }
             ProtocolVersion::V27 | ProtocolVersion::V31 | ProtocolVersion::V33 => {
                 // TODO: Proto 27/33 have 2-byte flags3
                 // Proto 27/31/33 have 1-byte flags3, then 5 bytes reserved1 (total 92 bytes)
@@ -122,7 +122,7 @@ impl NavPvt {
                 wtr.write_i32::<LittleEndian>(self.head_veh).unwrap();
                 wtr.write_i16::<LittleEndian>(self.mag_dec).unwrap();
                 wtr.write_u16::<LittleEndian>(self.mag_acc).unwrap();
-            },
+            }
         }
         wtr
     }

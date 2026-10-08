@@ -103,12 +103,12 @@ fn sfrbx_gps_eph1() {
                             assert_eq!(subframe.week, 318);
                             assert_eq!(subframe.toc, 266_400);
                             assert_eq!(subframe.health, 0);
-                        },
+                        }
                         _ => panic!("UBX-SFRBX (GPS/QZSS) invalid subframe interpretation!"),
                     },
                 }
                 test_passed = true;
-            },
+            }
             Ok(_) => panic!("found invalid packet"),
             Err(e) => panic!("UBX-SFRBX parsing failed with {e}"),
         }
@@ -217,12 +217,12 @@ fn sfrbx_gps_eph2() {
                             assert!((subframe.cuc - -5.587935447693e-008).abs() < 1e-6);
                             assert!((subframe.dn - 1.444277586415e-009).abs() < 1e-9);
                             assert!(!subframe.fit_int_flag);
-                        },
+                        }
                         _ => panic!("UBX-SFRBX (GPS/QZSS) invalid subframe interpretation!"),
                     },
                 }
                 test_passed = true;
-            },
+            }
             Ok(_) => panic!("found invalid packet"),
             Err(e) => panic!("UBX-SFRBX parsing failed with {e}"),
         }
@@ -329,12 +329,12 @@ fn sfrbx_gps_eph3() {
                             assert!((subframe.omega0 - -6.871047024615e-001).abs() < 1e-9);
                             assert!((subframe.omega_dot - -2.449269231874e-009).abs() < 1e-9);
                             assert!((subframe.omega - -6.554632573389e-001).abs() < 1e-9);
-                        },
+                        }
                         _ => panic!("UBX-SFRBX (GPS/QZSS) invalid subframe interpretation!"),
                     },
                 }
                 test_passed = true;
-            },
+            }
             Ok(_) => panic!("found invalid packet"),
             Err(e) => panic!("UBX-SFRBX parsing failed with {e}"),
         }

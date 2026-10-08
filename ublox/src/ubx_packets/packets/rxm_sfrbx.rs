@@ -91,11 +91,11 @@ impl RxmSfrbxRef<'_> {
                 {
                     None
                 }
-            },
+            }
             _ => {
                 // either not supported or not applicable
                 None
-            },
+            }
         }
     }
 
