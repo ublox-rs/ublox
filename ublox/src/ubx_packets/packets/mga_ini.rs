@@ -1,3 +1,10 @@
+#![cfg(not(feature = "ubx_proto14"))]
+
+#[cfg(feature = "serde")]
+use super::SerializeUbxPacketFields;
+#[cfg(feature = "serde")]
+use crate::serde::ser::SerializeMap;
+
 use chrono::prelude::*;
 use chrono::Datelike;
 

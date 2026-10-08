@@ -44,7 +44,7 @@ impl AidIniBuilder {
             (true, yr) => yr - 2000,
             (false, _) => {
                 panic!("AID-INI packet only supports years after 2000");
-            }
+            },
         } * 100
             + tm.month0()) as u16;
         self.tow_or_hms = tm.hour() * 10000 + tm.minute() * 100 + tm.second();

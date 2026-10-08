@@ -470,7 +470,7 @@ impl core::iter::Iterator for GnssConfigBlockIter<'_> {
                     reserved1: (((data >> 24) & 0xFF) as u8),
                     flags,
                 })
-            }
+            },
             Self::Slice(it) => it.next().cloned(),
         }
     }

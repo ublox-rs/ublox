@@ -49,10 +49,10 @@ impl fmt::Display for ParserError {
                     f,
                     "Not valid packet's checksum, expect 0x{expect:02x}, got 0x{got:02x}"
                 )
-            }
+            },
             ParserError::InvalidField { packet, field } => {
                 write!(f, "Invalid field {field} of packet {packet}")
-            }
+            },
             ParserError::InvalidPacketLen {
                 packet,
                 expect,
@@ -62,13 +62,13 @@ impl fmt::Display for ParserError {
                     f,
                     "Invalid packet({packet}) length, expect {expect}, got {got}"
                 )
-            }
+            },
             ParserError::OutOfMemory { required_size } => {
                 write!(
                     f,
                     "Insufficient parser buffer size, required {required_size} bytes"
                 )
-            }
+            },
         }
     }
 }

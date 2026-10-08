@@ -197,7 +197,7 @@ impl core::iter::Iterator for EsfMeasDataIter<'_> {
                     data_type: (((data >> 24) & 0x3F) as u8).into(),
                     data_field,
                 })
-            }
+            },
             Self::Slice(iter) => iter.next().cloned(),
         }
     }
@@ -272,25 +272,25 @@ impl EsfMeasData {
             | EsfSensorType::SpeedTick => {
                 let tick = (self.data_field & DATA_BITMASK as i32) * (self.direction() as i32);
                 SensorData::Tick(tick)
-            }
+            },
             EsfSensorType::Speed => {
                 let value = (self.data_field & DATA_BITMASK as i32) as f32
                     * (self.direction() as f32)
                     * 1e-3;
                 SensorData::Value(value)
-            }
+            },
             EsfSensorType::GyroX | EsfSensorType::GyroY | EsfSensorType::GyroZ => {
                 let value = (self.data_field & DATA_BITMASK as i32) as f32 * 2_f32.powi(-12);
                 SensorData::Value(value)
-            }
+            },
             EsfSensorType::AccX | EsfSensorType::AccY | EsfSensorType::AccZ => {
                 let value = (self.data_field & DATA_BITMASK as i32) as f32 * 2_f32.powi(-10);
                 SensorData::Value(value)
-            }
+            },
             EsfSensorType::GyroTemp => {
                 let value = (self.data_field & DATA_BITMASK as i32) as f32 * 1e-2;
                 SensorData::Value(value)
-            }
+            },
             _ => SensorData::Value(0f32),
         }
     }
