@@ -1,10 +1,17 @@
+#![cfg(not(feature = "ubx_proto14"))]
+
+#[cfg(feature = "serde")]
+use super::SerializeUbxPacketFields;
+#[cfg(feature = "serde")]
+use crate::serde::ser::SerializeMap;
+
 use chrono::prelude::*;
 use chrono::Datelike;
 
+use crate::error::ParserError;
 use crate::{
     ubx_checksum, MemWriter, MemWriterError, PositionLLA, UbxPacketCreator, UbxPacketMeta,
 };
-use crate::error::ParserError;
 use ublox_derive::ubx_packet_recv_send;
 use ublox_derive::ubx_packet_send;
 
@@ -24,7 +31,7 @@ struct MgaIniAtt {
     heading: i32,
     acc_roll: u32,
     acc_pitch: u32,
-    acc_heading: u32
+    acc_heading: u32,
 }
 
 impl MgaIniAttBuilder {
@@ -32,7 +39,7 @@ impl MgaIniAttBuilder {
     pub fn set_attitude(mut self, roll_deg: f32, pitch_deg: f32, heading_deg: f32) -> Self {
         self.msg_type = 0x40; // UBX_MGA_INI_ATT_TYPE
         self.version = 0x00; // UBX_MGA_INI_ATT_VERSION
-        self.age = 0;  // Assume zero age of calibration. Unclear what significance this has.
+        self.age = 0; // Assume zero age of calibration. Unclear what significance this has.
         self.roll = (roll_deg * 100_000.0) as i32;
         self.pitch = (pitch_deg * 100_000.0) as i32;
         self.heading = (heading_deg * 100_000.0) as i32;
@@ -40,7 +47,12 @@ impl MgaIniAttBuilder {
     }
 
     /// Sets the position accuracy (standard deviation) in centimeters.
-    pub fn set_accuracy(mut self, acc_roll_deg: f32, acc_pitch_deg: f32, acc_heading_deg: f32) -> Self {
+    pub fn set_accuracy(
+        mut self,
+        acc_roll_deg: f32,
+        acc_pitch_deg: f32,
+        acc_heading_deg: f32,
+    ) -> Self {
         self.acc_roll = (acc_roll_deg * 100_000.0) as u32;
         self.acc_pitch = (acc_pitch_deg * 100_000.0) as u32;
         self.acc_heading = (acc_heading_deg * 100_000.0) as u32;
