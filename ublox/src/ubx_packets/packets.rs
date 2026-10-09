@@ -63,6 +63,7 @@ pub mod mga_gps_eph;
 pub mod mga_gps_iono;
 pub mod mga_gps_utc;
 pub mod mga_ini;
+pub mod mga_sf;
 
 pub mod mon_comms;
 pub mod mon_gnss;
