@@ -1466,6 +1466,19 @@ cfg_val! {
   TpPolTp1,              0x1005000b, bool,
   TpTimegridTp1,         0x2005000c, AlignmentToReferenceTime,
 
+  TpPeriodTp2,           0x4005000d, u32,
+  TpPeriodLockTp2,       0x4005000e, u32,
+  TpFreqTp2,             0x40050026, u32,
+  TpFreqLockTp2,         0x40050027, u32,
+  TpLenTp2,              0x4005000f, u32,
+  TpLenLockTp2,          0x40050010, u32,
+  TpTp2Ena,              0x10050012, bool,
+  TpSyncGnssTp2,         0x10050013, bool,
+  TpUseLockedTp2,        0x10050014, bool,
+  TpAlignToTowTp2,       0x10050015, bool,
+  TpPolTp2,              0x10050016, bool,
+  TpTimegridTp2,         0x20050017, AlignmentToReferenceTime,
+
   /// CFG-TMode* (Time-only mode settings - position fixed)
   /// Receiver mode
   TModeModeDef, 0x20030001,  CfgTModeModes,
