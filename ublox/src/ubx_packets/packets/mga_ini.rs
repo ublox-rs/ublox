@@ -107,8 +107,13 @@ struct MgaIniPos {
 impl MgaIniPosBuilder {
     pub fn new() -> Self {
         Self {
-            msg_type: 0x01; // UBX_MGA_INI_POS_TYPE_LLH
-            version: 0x00;  // UBX_MGA_INI_POS_VERSION_LLH
+            msg_type: 0x01, // UBX_MGA_INI_POS_TYPE_LLH
+            version: 0x00,  // UBX_MGA_INI_POS_VERSION_LLH
+            reserved0: [0; 2],
+            lat: 0,
+            lon: 0,
+            alt: 0,
+            pos_acc: 0,
         }
     }
 
