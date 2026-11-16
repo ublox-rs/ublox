@@ -35,26 +35,53 @@ struct MgaIniAtt {
 }
 
 impl MgaIniAttBuilder {
-    /// Initializes the builder with the correct type and version, and sets the position.
-    pub fn set_attitude(mut self, roll_deg: f32, pitch_deg: f32, heading_deg: f32) -> Self {
-        self.msg_type = 0x40; // UBX_MGA_INI_ATT_TYPE
-        self.version = 0x00; // UBX_MGA_INI_ATT_VERSION
-        self.age = 0; // Assume zero age of calibration. Unclear what significance this has.
+    /// Initializes the builder with the correct type and version.
+    pub fn new() -> Self {
+        Self {
+            msg_type: 0x40, // UBX_MGA_INI_ATT_TYPE
+            version: 0x00,  // UBX_MGA_INI_ATT_VERSION
+            age: 0,         // Assume zero age of calibration. Unclear what significance this has.
+            roll: 0,
+            pitch: 0,
+            heading: 0,
+            acc_roll: 0,
+            acc_pitch: 0,
+            acc_heading: 0,
+        }
+    }
+
+    /// Sets the roll (degrees) by converting the floating-point input to the underlying integer representation.
+    pub fn set_roll(mut self, roll_deg: f32) -> Self {
         self.roll = (roll_deg * 100_000.0) as i32;
+        self
+    }
+
+    /// Sets the pitch (degrees) by converting the floating-point input to the underlying integer representation.
+    pub fn set_pitch(mut self, pitch_deg: f32) -> Self {
         self.pitch = (pitch_deg * 100_000.0) as i32;
+        self
+    }
+
+    /// Sets the true-north heading/yaw (degrees) by converting the floating-point input to the underlying integer representation.
+    pub fn set_heading(mut self, heading_deg: f32) -> Self {
         self.heading = (heading_deg * 100_000.0) as i32;
         self
     }
 
-    /// Sets the position accuracy (standard deviation) in centimeters.
-    pub fn set_accuracy(
-        mut self,
-        acc_roll_deg: f32,
-        acc_pitch_deg: f32,
-        acc_heading_deg: f32,
-    ) -> Self {
+    /// Sets the roll accuracy (standard deviation) in degrees.
+    pub fn set_roll_accuracy(mut self, acc_roll_deg: f32) -> Self {
         self.acc_roll = (acc_roll_deg * 100_000.0) as u32;
+        self
+    }
+
+    /// Sets the pitch accuracy (standard deviation) in degrees.
+    pub fn set_pitch_accuracy(mut self, acc_pitch_deg: f32) -> Self {
         self.acc_pitch = (acc_pitch_deg * 100_000.0) as u32;
+        self
+    }
+
+    /// Sets the heading accuracy (standard deviation) in degrees.
+    pub fn set_heading_accuracy(mut self, acc_heading_deg: f32) -> Self {
         self.acc_heading = (acc_heading_deg * 100_000.0) as u32;
         self
     }
@@ -78,10 +105,15 @@ struct MgaIniPos {
 }
 
 impl MgaIniPosBuilder {
+    pub fn new() -> Self {
+        Self {
+            msg_type: 0x01; // UBX_MGA_INI_POS_TYPE_LLH
+            version: 0x00;  // UBX_MGA_INI_POS_VERSION_LLH
+        }
+    }
+
     /// Initializes the builder with the correct type and version, and sets the position.
     pub fn set_position(mut self, pos: PositionLLA) -> Self {
-        self.msg_type = 0x01; // UBX_MGA_INI_POS_TYPE_LLH
-        self.version = 0x00; // UBX_MGA_INI_POS_VERSION_LLH
         self.lat = (pos.lat * 10_000_000.0) as i32;
         self.lon = (pos.lon * 10_000_000.0) as i32;
         self.alt = (pos.alt * 100.0) as i32; // Height in centimeters

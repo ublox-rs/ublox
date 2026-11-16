@@ -1,12 +1,12 @@
 #![cfg(feature = "ubx_proto33")]
 
-#[allow(unused_imports, reason = "It is only unused in some feature sets")]
-use crate::serde::ser::SerializeMap;
+#[cfg(feature = "serde")]
+use {super::SerializeUbxPacketFields, crate::serde::ser::SerializeMap};
+
 use crate::ubx_checksum;
 use crate::MemWriter;
 use crate::MemWriterError;
 use crate::ParserError;
-use crate::SerializeUbxPacketFields;
 use crate::UbxPacketCreator;
 use crate::UbxPacketMeta;
 use ublox_derive::ubx_packet_recv_send;
@@ -30,7 +30,13 @@ impl MgaSfIni2Builder {
     }
 
     /// Populate the first data block
-    pub fn set_data(&mut self, calib_data: &alloc::vec::Vec<u8>) {
+    pub fn set_data(&mut self, calib_data: &[u8]) {
         self.data[..calib_data.len()].copy_from_slice(calib_data);
+    }
+}
+
+impl Default for MgaSfIni2Builder {
+    fn default() -> Self {
+        Self::new()
     }
 }
