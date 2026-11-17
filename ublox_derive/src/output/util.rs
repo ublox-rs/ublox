@@ -47,7 +47,16 @@ pub(super) fn generate_serialize_impl(
     let fields = pack_descr.fields.iter().map(|field| {
         let field_name = &field.name;
         let field_accessor = field.intermediate_field_name();
-        if field.size_bytes.is_some() || field.is_optional() {
+        // serde only implements `Serialize` for arrays of up to 32 elements,
+        // so larger raw byte arrays are serialized as slices instead.
+        let is_large_raw_byte_array = !field.has_intermediate_type()
+            && field.is_field_raw_ty_byte_array()
+            && field.size_bytes.is_some_and(|size| size.get() > 32);
+        if is_large_raw_byte_array {
+            quote! {
+                state.serialize_entry(stringify!(#field_name), &self.#field_accessor()[..])?;
+            }
+        } else if field.size_bytes.is_some() || field.is_optional() {
             quote! {
                 state.serialize_entry(stringify!(#field_name), &self.#field_accessor())?;
             }

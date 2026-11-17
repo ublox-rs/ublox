@@ -1,10 +1,91 @@
+#![cfg(not(feature = "ubx_proto14"))]
+
+#[cfg(feature = "serde")]
+use super::SerializeUbxPacketFields;
+#[cfg(feature = "serde")]
+use crate::serde::ser::SerializeMap;
+
 use chrono::prelude::*;
 use chrono::Datelike;
 
+use crate::error::ParserError;
 use crate::{
     ubx_checksum, MemWriter, MemWriterError, PositionLLA, UbxPacketCreator, UbxPacketMeta,
 };
+use ublox_derive::ubx_packet_recv_send;
 use ublox_derive::ubx_packet_send;
+
+#[ubx_packet_recv_send]
+#[ubx(
+    class = 0x13,
+    id = 0x40,
+    fixed_payload_len = 28,
+    flags = "default_for_builder"
+)]
+struct MgaIniAtt {
+    msg_type: u8,
+    version: u8,
+    age: u16,
+    roll: i32,
+    pitch: i32,
+    heading: i32,
+    acc_roll: u32,
+    acc_pitch: u32,
+    acc_heading: u32,
+}
+
+impl MgaIniAttBuilder {
+    /// Initializes the builder with the correct type and version.
+    pub fn new() -> Self {
+        Self {
+            msg_type: 0x40, // UBX_MGA_INI_ATT_TYPE
+            version: 0x00,  // UBX_MGA_INI_ATT_VERSION
+            age: 0,         // Assume zero age of calibration. Unclear what significance this has.
+            roll: 0,
+            pitch: 0,
+            heading: 0,
+            acc_roll: 0,
+            acc_pitch: 0,
+            acc_heading: 0,
+        }
+    }
+
+    /// Sets the roll (degrees) by converting the floating-point input to the underlying integer representation.
+    pub fn set_roll(mut self, roll_deg: f32) -> Self {
+        self.roll = (roll_deg * 100_000.0) as i32;
+        self
+    }
+
+    /// Sets the pitch (degrees) by converting the floating-point input to the underlying integer representation.
+    pub fn set_pitch(mut self, pitch_deg: f32) -> Self {
+        self.pitch = (pitch_deg * 100_000.0) as i32;
+        self
+    }
+
+    /// Sets the true-north heading/yaw (degrees) by converting the floating-point input to the underlying integer representation.
+    pub fn set_heading(mut self, heading_deg: f32) -> Self {
+        self.heading = (heading_deg * 100_000.0) as i32;
+        self
+    }
+
+    /// Sets the roll accuracy (standard deviation) in degrees.
+    pub fn set_roll_accuracy(mut self, acc_roll_deg: f32) -> Self {
+        self.acc_roll = (acc_roll_deg * 100_000.0) as u32;
+        self
+    }
+
+    /// Sets the pitch accuracy (standard deviation) in degrees.
+    pub fn set_pitch_accuracy(mut self, acc_pitch_deg: f32) -> Self {
+        self.acc_pitch = (acc_pitch_deg * 100_000.0) as u32;
+        self
+    }
+
+    /// Sets the heading accuracy (standard deviation) in degrees.
+    pub fn set_heading_accuracy(mut self, acc_heading_deg: f32) -> Self {
+        self.acc_heading = (acc_heading_deg * 100_000.0) as u32;
+        self
+    }
+}
 
 #[ubx_packet_send]
 #[ubx(
@@ -24,10 +105,20 @@ struct MgaIniPos {
 }
 
 impl MgaIniPosBuilder {
+    pub fn new() -> Self {
+        Self {
+            msg_type: 0x01, // UBX_MGA_INI_POS_TYPE_LLH
+            version: 0x00,  // UBX_MGA_INI_POS_VERSION_LLH
+            reserved0: [0; 2],
+            lat: 0,
+            lon: 0,
+            alt: 0,
+            pos_acc: 0,
+        }
+    }
+
     /// Initializes the builder with the correct type and version, and sets the position.
     pub fn set_position(mut self, pos: PositionLLA) -> Self {
-        self.msg_type = 0x01; // UBX_MGA_INI_POS_TYPE_LLH
-        self.version = 0x00; // UBX_MGA_INI_POS_VERSION_LLH
         self.lat = (pos.lat * 10_000_000.0) as i32;
         self.lon = (pos.lon * 10_000_000.0) as i32;
         self.alt = (pos.alt * 100.0) as i32; // Height in centimeters
